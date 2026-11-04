@@ -1,0 +1,72 @@
+body {
+  margin: 0;
+  background: var(--cr-ground);
+  color: var(--cr-ink);
+  font-family: var(--cr-font);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.platform-shell {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.platform-shell h1 {
+  font-size: 24px;
+  font-weight: 650;
+  margin: 0 0 32px;
+}
+
+.platform-shell section {
+  background: var(--cr-surface);
+  padding: 24px;
+  border-radius: var(--cr-panel-radius);
+}
+
+.platform-shell h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.platform-state {
+  font-size: 24px;
+  margin: 12px 0 24px;
+}
+
+.platform-state[data-status='ready'] {
+  color: var(--cr-positive);
+}
+
+.platform-state[data-status='unavailable'] {
+  color: var(--cr-negative);
+}
+
+.platform-shell button {
+  min-height: var(--cr-touch);
+  padding: 8px 16px;
+  font: inherit;
+  font-weight: 600;
+  border: 0;
+  border-radius: var(--cr-radius);
+  background: var(--cr-primary);
+  color: var(--cr-primary-ink);
+  cursor: pointer;
+}
+
+.platform-shell button:hover {
+  background: var(--cr-hover);
+  color: var(--cr-ink);
+}
+
+.platform-shell button:focus-visible {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 3px;
+}
+
+.platform-shell button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
