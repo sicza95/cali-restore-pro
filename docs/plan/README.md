@@ -2,7 +2,7 @@
 
 4 November 2026 · M-PLAN documented; M-00 substrate implemented for review
 
-M-00 adds the Go/PostgreSQL Compose substrate while retaining the UI library. See [operations](../../deploy/README.md) and [verification evidence](../m00-verification.md). M-01 identity remains the next functional slice.
+M-00 adds the Go/PostgreSQL Compose substrate while retaining the UI library. See [operations](../../deploy/README.md) and [verification evidence](../m00-verification.md). M-01 is split into M-01a identity core and M-01b registration/mail/auth screens so each has a bounded review. See the [identity core contract](../m01a-identity.md).
 
 Build the complete application around the existing SolidJS UI foundation before implementing image processing or drawing. Identity and authorization are the first functional slice. A small Docker/API/database bootstrap comes immediately before it so identity is built against real persistence and deployment boundaries. Pricing means **restoration-work estimates**; subscription billing and payments are outside this plan.
 
@@ -46,6 +46,8 @@ One completed milestone means one reviewable PR. M-12 through M-16 form the fina
 | M-16   | End-to-end integration and release qualification | M-15                   | Real geometry drives estimates and all outputs; encrypted collaboration, failure recovery, supported browser/device matrix, sustained 4K/8K-class workloads and physical iPad/Pencil checks satisfy recorded release gates.        |
 
 Each milestone also updates its requirement rows and verification evidence. A mock, schema, happy-path demo or successful build alone never closes a behavior requirement.
+
+M-01 has two named sub-milestones, each with its own PR. **M-01a** delivers database account states, password/session APIs, the platform policy service, explicit operator bootstrap and final-superuser protection. **M-01b depends on M-01a** and completes registration/verification, password and email changes/reset, durable localized mail with retry, and all auth screens/session controls. M-02 depends on both. M-01a alone does not pass the M-01 end-to-end gate or provide public registration. It builds on merged M-00 PR #3 on `feat/storybook-foundations`; retarget after that history reaches `main`.
 
 ## Implementation slices within the early PRs
 
