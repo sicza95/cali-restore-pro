@@ -1,0 +1,39 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "CaliRestore Pro operational API", "version": "0.1.0" },
+  "paths": {
+    "/api/v1/status": {
+      "get": {
+        "operationId": "platformStatus",
+        "summary": "Public readiness; exposes no account or database details",
+        "responses": {
+          "200": {
+            "description": "Database and schema ready",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PlatformStatus" } }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable or incompatible",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PlatformStatus" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "PlatformStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "milestone"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ready", "unavailable"] },
+          "milestone": { "type": "string", "const": "M-00" }
+        }
+      }
+    }
+  }
+}
