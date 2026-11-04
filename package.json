@@ -5,12 +5,20 @@
   "type": "module",
   "description": "CaliRestore Pro UI foundations and iPad-first Storybook",
   "overrides": {
-    "minimatch@^10.0.0": "11.0.1"
+    "minimatch@^10.0.0": "11.0.1",
+    "@hey-api/json-schema-ref-parser": {
+      "js-yaml": "4.3.2"
+    }
   },
   "engines": {
     "node": ">=24 <25"
   },
   "scripts": {
+    "build": "vite build --config vite.app.config.ts",
+    "api:generate": "openapi-ts",
+    "setup:secrets": "node scripts/setup-secrets.mjs",
+    "test:platform": "node scripts/platform-smoke.mjs",
+    "test:app": "playwright test --config playwright.platform.config.ts",
     "dev": "storybook dev -p 6006 --host 127.0.0.1 --no-open --disable-telemetry",
     "storybook": "npm run dev",
     "build-storybook": "storybook build --disable-telemetry",
@@ -28,6 +36,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@eslint/js": "10.0.1",
+    "@hey-api/openapi-ts": "0.99.0",
     "@playwright/test": "1.62.1",
     "@storybook/addon-a11y": "10.6.5",
     "@storybook/addon-docs": "10.6.5",
