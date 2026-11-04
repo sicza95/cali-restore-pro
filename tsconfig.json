@@ -15,5 +15,15 @@
     "noEmit": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src", ".storybook", "tests", "playwright.config.ts", "vite.config.ts"]
+  "include": [
+    "src",
+    ".storybook",
+    "tests",
+    "tests-platform",
+    "playwright.platform.config.ts",
+    "openapi-ts.config.ts",
+    "playwright.config.ts",
+    "vite.config.ts",
+    "vite.app.config.ts"
+  ]
 }
