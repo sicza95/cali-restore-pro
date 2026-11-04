@@ -1,0 +1,136 @@
+name: calirestore
+
+x-runtime: &runtime
+  image: calirestore:${IMAGE_TAG:-local}
+  build:
+    context: .
+    target: runtime
+  read_only: true
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=16m,uid=65532,gid=65532,mode=0700
+  networks: [backend]
+  stop_grace_period: 15s
+
+x-app-env: &app-env
+  APP_ENV: ${APP_ENV:-development}
+  APP_ORIGIN: ${APP_ORIGIN:-http://localhost:8080}
+  DB_HOST: db
+  DB_NAME: calirestore
+  DB_USER: calirestore_app
+  DB_PASSWORD_FILE: /run/secrets/app_db_password
+  DB_SSLMODE: disable
+
+services:
+  db:
+    image: postgres:18.6-bookworm@sha256:5c4783a8cc3f0074912164f94dfa1be4e043438f0f707cf968d7af9a0d31a2c8
+    environment:
+      POSTGRES_DB: calirestore
+      POSTGRES_USER: calirestore_migrator
+      POSTGRES_PASSWORD_FILE: /run/secrets/migration_db_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets: [migration_db_password, app_db_password]
+    volumes:
+      - postgres:/var/lib/postgresql
+      - ./deploy/init-db.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *runtime
+    command: [migrate]
+    environment:
+      <<: *app-env
+      DB_USER: calirestore_migrator
+      DB_PASSWORD_FILE: /run/secrets/migration_db_password
+    secrets: [migration_db_password]
+    depends_on:
+      db: { condition: service_healthy }
+    healthcheck: { disable: true }
+    restart: 'no'
+
+  app:
+    <<: *runtime
+    command: [serve]
+    environment: *app-env
+    networks: [backend, ingress]
+    secrets: [app_db_password]
+    ports: ['127.0.0.1:${APP_PORT:-8080}:8080']
+    volumes: [objects:/data/objects]
+    depends_on:
+      db: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  worker:
+    <<: *runtime
+    command: [worker]
+    environment: *app-env
+    secrets: [app_db_password]
+    volumes: [objects:/data/objects]
+    depends_on:
+      db: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: [CMD, /app/calirestore, worker-healthcheck]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  mail-sink:
+    image: axllent/mailpit:v1.29.4@sha256:0530ab1c658a0f225f148e617522db84053bd1e4879e664c23de5fee44ad6819
+    profiles: [dev]
+    user: '65532:65532'
+    read_only: true
+    tmpfs: ['/tmp:rw,noexec,nosuid,size=32m']
+    ports: ['127.0.0.1:${MAIL_PORT:-8025}:8025']
+    networks: [backend, ingress]
+
+  objects-tool:
+    image: postgres:18.6-bookworm@sha256:5c4783a8cc3f0074912164f94dfa1be4e043438f0f707cf968d7af9a0d31a2c8
+    profiles: [ops]
+    user: '65532:65532'
+    entrypoint: [tar]
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: [objects:/data/objects]
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07
+    profiles: [tunnel]
+    command: [tunnel, --no-autoupdate, run, --token-file, /run/secrets/tunnel_token]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    secrets: [tunnel_token]
+    networks: [backend, ingress]
+    depends_on:
+      app: { condition: service_healthy }
+    restart: unless-stopped
+
+networks:
+  backend:
+    internal: true
+  ingress:
+
+volumes:
+  postgres:
+  objects:
+
+secrets:
+  app_db_password:
+    file: ${SECRETS_DIR:-./deploy/secrets}/app_db_password
+  migration_db_password:
+    file: ${SECRETS_DIR:-./deploy/secrets}/migration_db_password
+  tunnel_token:
+    file: ${SECRETS_DIR:-./deploy/secrets}/tunnel_token
