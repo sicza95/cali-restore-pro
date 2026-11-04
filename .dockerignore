@@ -1,0 +1,12 @@
+.git
+node_modules
+dist
+storybook-static
+test-results
+playwright-report
+.taste-skill
+.env*
+deploy/secrets
+deploy/backups
+output
+*.log

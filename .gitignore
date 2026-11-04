@@ -11,3 +11,6 @@ test-results/
 Thumbs.db
 *.log
 .taste-skill/
+dist/
+deploy/secrets/
+deploy/backups/
