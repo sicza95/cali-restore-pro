@@ -32,16 +32,16 @@ Bootstrap serializes with policy changes. Exactly one initial account seals the 
 
 All paths are below `/api/v1`; the checked-in OpenAPI contract owns request/response shapes.
 
-| Method/path | Result |
-| --- | --- |
-| POST `/auth/login` | Verify email/password, issue cookie and CSRF token |
-| GET `/auth/me` | Current active account, platform capabilities and CSRF token |
-| POST `/auth/confirm` | Verify current password, rotate session, refresh five-minute confirmation |
-| POST `/auth/logout` | Revoke current token and clear cookie |
-| GET `/auth/sessions` | Own session UUIDs/creation times and current marker; no tokens/device fingerprint |
-| POST `/auth/sessions/revoke` | Confirmed recent own single/all revocation; cross-account UUIDs are harmless |
-| POST `/admin/accounts/{id}/policy` | Confirmed recent permitted role/state transition, transactional subject-session revocation |
-| POST `/admin/accounts/{id}/sessions/revoke` | Confirmed recent permitted subject-session revocation |
+| Method/path                                 | Result                                                                                     |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| POST `/auth/login`                          | Verify email/password, issue cookie and CSRF token                                         |
+| GET `/auth/me`                              | Current active account, platform capabilities and CSRF token                               |
+| POST `/auth/confirm`                        | Verify current password, rotate session, refresh five-minute confirmation                  |
+| POST `/auth/logout`                         | Revoke current token and clear cookie                                                      |
+| GET `/auth/sessions`                        | Own session UUIDs/creation times and current marker; no tokens/device fingerprint          |
+| POST `/auth/sessions/revoke`                | Confirmed recent own single/all revocation; cross-account UUIDs are harmless               |
+| POST `/admin/accounts/{id}/policy`          | Confirmed recent permitted role/state transition, transactional subject-session revocation |
+| POST `/admin/accounts/{id}/sessions/revoke` | Confirmed recent permitted subject-session revocation                                      |
 
 No UI claims authentication success, mail delivery or content saving in this slice. The existing connection screen remains unchanged. M-01b will consume these contracts and add the missing public account lifecycle.
 
@@ -51,6 +51,28 @@ Plaintext allowlist added here: normalized account email/UUID, password verifier
 
 Rate records are pruned after their short enforcement window on subsequent admitted requests. Account/session and minimal identity-audit records currently persist until explicit revocation/operator lifecycle; full minimized retention, restore-safe revocation and deletion policies remain M-03/M-07 and block production qualification. Restoring an old substrate backup can still resurrect authentication sessions: M-00 backups are an operator-only foundation, not a qualified identity recovery mechanism. M-01b must carry security transitions into mail and session invalidation; M-07 must make restore honor revocations/deletion ledgers.
 
-Verification results are recorded below after execution. These are synthetic Linux/PostgreSQL tests, not production authentication, cryptographic-content or physical iPad/Safari qualification.
+Application logs follow the M-00 fixed-category allowlist. PostgreSQL/ingress error logging must also be reviewed before real account use; the absence of an application request logger does not prove that infrastructure logs exclude SQL parameter/error details.
+
+## Executed verification · 4 November 2026
+
+Linux amd64 containers on the same Docker Desktop/Go/PostgreSQL toolchain as M-00. The runtime checks use a fresh `calirestore-m01a-validation` project with independent volumes and loopback ports 18080/18026. Only randomized synthetic credentials/accounts are created; the real development stack and its volumes remain untouched.
+
+| Check                                                      | Result                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Go formatting, vet, race and actual PostgreSQL integration | Pass with the dedicated test database; identity tests create another isolated database so migration-history tampering cannot race them                                                                                                                                              |
+| Passwords and least privilege                              | Salt uniqueness, Unicode/wrong-password/malformed-verifier checks; inactive roles and unknown/content/hosting capabilities denied                                                                                                                                                   |
+| Bootstrap and database invariants                          | Concurrent different bootstrap attempts have one winner; same-address rerun preserves verifier; app-role bootstrap/guard/hash/audit/schema writes denied; concurrent direct SQL suspension preserves one active superuser; last demotion/suspension/deletion refused                |
+| Sessions and authorization                                 | Digest-only storage; old sessions remain authenticated without idle logout; stale sensitive confirmation refused; confirmation rotates and revokes old token; cross-account IDs cannot revoke another account; promotion/admin-over-superuser/unverified activation bypasses denied |
+| Policy transitions                                         | Suspension revokes sessions; re-enable does not resurrect them; demotion removes the old administrator session's authority                                                                                                                                                          |
+| HTTP boundaries                                            | Trusted Origin, CSRF, JSON type/size/unknown/trailing fields, explicit confirmation, production cookie flags, generic failures and no-store behavior checked through real DB-backed HTTP handlers                                                                                   |
+| Abuse/resource bounds                                      | Shared account/global fixed-window ceilings, concurrent rate race, process hashing semaphore, restart persistence and 20-session cap pass                                                                                                                                           |
+| Packaged runtime                                           | Fresh Compose boot, mounted-secret operator command and safe rerun, login/me/session list, last-superuser API conflict, password confirmation rotation and logout all pass through the actual Go binary                                                                             |
+| Configuration and failures                                 | Missing/relative/malformed/oversized bootstrap secret rejected without logging credentials; migration replay, database outage, worker readiness and restart smoke pass                                                                                                              |
+| Frontend compatibility                                     | `npm run check`, `npm run build`, generated API regeneration/drift and both existing product browser checks pass; themes/orientations/axe and unavailable/retry behavior retained                                                                                                   |
+| Backup compatibility                                       | Synthetic identity schema/object backup restores into fresh `calirestore-m01a-restore-validation`; existing-volume and tampered-manifest refusals pass; restored writers remain stopped. This does not qualify restore-safe identity revocation                                     |
+
+Final `govulncheck` reports no vulnerabilities after pinning the official crypto revision for GO-2026-5932; the initial finding was in unimported legacy OpenPGP packages. Source/restored identity counts also match: one synthetic account, one active superuser, zero live sessions after logout and one bootstrap audit event. No raw credentials or bearer tokens were printed. Actual PR CI results are separate from these local passes.
+
+`scripts/identity-smoke.mjs` is development-only, requires explicit `IDENTITY_SMOKE_DISPOSABLE=1`, accepts loopback HTTP targets only and refuses a database with existing accounts. It uses a temporary protected credential file, never prints it, and removes it in a finally block. CI runs it against its empty disposable Compose project. The browser UI is unchanged, so no new visual design or physical-device qualification is claimed.
 
 Primary guidance consulted 4 November 2026: [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), [session management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html), and [CSRF prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html). The manual session policy is an explicit product decision, not a claim of conformity to timeout recommendations.

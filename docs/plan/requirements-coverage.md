@@ -76,7 +76,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Planned |
 | PRIV-03     | Should   | Optional passkey sign-in and compatible content unlock              | M-03  | M-16       | Planned |
 | PRIV-04     | Must     | Explicit opt-in remembered trust and session-only shared devices    | M-03  | M-16       | Planned |
-| PRIV-05     | Must     | No routine automatic logout; manual-only local locking              | M-01  | M-16       | Planned |
+| PRIV-05     | Must     | No routine automatic logout; manual-only local locking              | M-01  | M-16       | Partial |
 | PRIV-06     | Must     | Minimum server-readable metadata allowlist                          | M-00  | M-16       | Partial |
 | PRIV-07     | Must     | Explicit sign-out/forget protects recoverable work                  | M-03  | M-16       | Planned |
 | PRIV-08     | Must     | Explicit opt-in for optional crash/performance reporting            | M-02  | M-16       | Planned |
@@ -112,19 +112,21 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | EST-18      | Later    | User-controlled repricing after currency changes                    | M-09  | M-16       | Planned |
 | EST-19      | Later    | Optional project tax after adjustments                              | M-09  | M-16       | Planned |
 | EST-20      | Later    | Monetary rounding and consistent totals                             | M-09  | M-16       | Planned |
-| ADMIN-01    | Must     | Consistent account lifecycle UI                                     | M-01  | M-07       | Planned |
-| ADMIN-02    | Must     | Privilege and content boundaries                                    | M-01  | M-16       | Planned |
+| ADMIN-01    | Must     | Consistent account lifecycle UI                                     | M-01  | M-07       | Partial |
+| ADMIN-02    | Must     | Privilege and content boundaries                                    | M-01  | M-16       | Partial |
 | ADMIN-03    | Must     | Explicit server-feature access grants                               | M-01  | M-07       | Planned |
 | ADMIN-04    | Must     | Account quotas with single shared-project accounting                | M-02  | M-07       | Planned |
 | ADMIN-05    | Must     | Hosting withdrawal preserves data and project rights                | M-02  | M-07       | Planned |
 | ADMIN-06    | Must     | Voluntary deletion resolves project continuity and pending work     | M-02  | M-07       | Planned |
 | ADMIN-07    | Must     | Bounded deletion recovery and encrypted-backup expiry               | M-02  | M-07       | Planned |
-| ADMIN-08    | Must     | Reversible suspension and explicit forced deletion                  | M-01  | M-07       | Planned |
+| ADMIN-08    | Must     | Reversible suspension and explicit forced deletion                  | M-01  | M-07       | Partial |
 | UX-01       | Must     | iPad-first core interactions                                        | M-01  | M-16       | Planned |
 | UX-02       | Must     | English/Hungarian interface and independent report language         | M-01  | M-16       | Planned |
 | UI-01       | Must     | Shared visual/interaction system                                    | M-01  | M-16       | Planned |
 
 ## Completion evidence
+
+M-01a adds [identity-core contracts and executed evidence](../m01a-identity.md): PRIV-05 has manual/revocable authentication without idle/absolute expiry (content locking remains M-03); ADMIN-01 has account-state/session APIs but no lifecycle UI; ADMIN-02 has tested least-privilege platform capabilities, operator bootstrap and database-enforced final-superuser protection (project/content scopes remain later); ADMIN-08 has real suspension/re-enable and atomic session revocation (forced deletion remains blocked). PRIV-06 gains an explicit identity-metadata allowlist; full retention/restore/privacy qualification remains open. Registration, verification/reset/change-email/password, mail and auth screens remain M-01b. No row becomes Accepted here.
 
 PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verification.md). The complete privacy acceptance remains M-16; the bootstrap schema does not close encryption or project-content requirements.
 
