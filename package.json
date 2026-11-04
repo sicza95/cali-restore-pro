@@ -1,0 +1,46 @@
+{
+  "name": "cali-restore-pro",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CaliRestore Pro UI foundations and iPad-first Storybook",
+  "overrides": {
+    "minimatch@^10.0.0": "11.0.1"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "storybook dev -p 6006 --host 127.0.0.1 --no-open --disable-telemetry",
+    "storybook": "npm run dev",
+    "build-storybook": "storybook build --disable-telemetry",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "playwright test",
+    "check": "npm run typecheck && npm run lint && npm run format:check"
+  },
+  "dependencies": {
+    "@fontsource-variable/dm-sans": "5.3.0",
+    "solid-js": "1.9.18"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.62.1",
+    "@storybook/addon-a11y": "10.6.5",
+    "@storybook/addon-docs": "10.6.5",
+    "@types/node": "24.12.2",
+    "eslint": "10.14.0",
+    "eslint-plugin-solid": "0.18.1",
+    "playwright-core": "1.62.1",
+    "prettier": "3.9.10",
+    "storybook": "10.6.5",
+    "storybook-solidjs-vite": "10.7.4",
+    "typescript": "6.0.2",
+    "typescript-eslint": "8.72.1",
+    "vite": "7.3.7",
+    "vite-plugin-solid": "2.11.12"
+  }
+}

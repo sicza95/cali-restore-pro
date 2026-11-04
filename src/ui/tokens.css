@@ -1,0 +1,61 @@
+/* Semantic roles are shared by every component and both themes. */
+.cr-root {
+  --cr-font: 'DM Sans Variable', 'DM Sans', sans-serif;
+  --cr-space-1: 4px;
+  --cr-space-2: 8px;
+  --cr-space-3: 12px;
+  --cr-space-4: 16px;
+  --cr-space-6: 24px;
+  --cr-space-8: 32px;
+  --cr-radius: 8px;
+  --cr-panel-radius: 12px;
+  --cr-touch: 44px;
+  --cr-focus-width: 2px;
+  --cr-ground: #171a1c;
+  --cr-surface: #212527;
+  --cr-raised: #2c3134;
+  --cr-hover: #363d40;
+  --cr-border: #3c4549;
+  --cr-rule: #32393d;
+  --cr-ink: #f3f5f5;
+  --cr-muted: #adb7bc;
+  --cr-accent: #72d9e4;
+  --cr-accent-ink: #112629;
+  --cr-selected: #25454c;
+  --cr-positive: #8ad5b0;
+  --cr-warning: #edc87e;
+  --cr-negative: #ffacac;
+  --cr-primary: #edf3f3;
+  --cr-primary-ink: #172124;
+  --cr-glass: rgb(28 33 36 / 88%);
+  --cr-glass-opaque: #252b2e;
+  --cr-glass-edge: rgb(255 255 255 / 15%);
+  --cr-canvas: #131618;
+  --cr-mask: #64dae9;
+  --cr-shadow-floating: 0 8px 24px rgb(0 0 0 / 15%);
+  color-scheme: dark;
+}
+
+.cr-root[data-theme='light'] {
+  --cr-ground: #eef1f1;
+  --cr-surface: #ffffff;
+  --cr-raised: #f2f5f5;
+  --cr-hover: #e8eded;
+  --cr-border: #c1cbcf;
+  --cr-rule: #e0e6e8;
+  --cr-ink: #202a2e;
+  --cr-muted: #5a686e;
+  --cr-accent: #006b7a;
+  --cr-accent-ink: #ffffff;
+  --cr-selected: #dceef0;
+  --cr-positive: #276d4d;
+  --cr-warning: #805b18;
+  --cr-negative: #ad3737;
+  --cr-primary: #202d32;
+  --cr-primary-ink: #ffffff;
+  --cr-glass: rgb(249 252 252 / 90%);
+  --cr-glass-opaque: #f7fafa;
+  --cr-glass-edge: rgb(33 53 62 / 18%);
+  --cr-canvas: #e3e9e9;
+  color-scheme: light;
+}
