@@ -12,7 +12,17 @@ docker compose --profile dev up --build -d --wait
 
 Open the [app](http://localhost:8080) and [development mail viewer](http://localhost:8025). If a port is occupied, copy `.env.example` to `.env` and change `APP_PORT`/`APP_ORIGIN` or `MAIL_PORT`. The local verification machine uses `MAIL_PORT=18025` because another application owns 8025. PostgreSQL and SMTP have no published ports. App and mail viewer bind only to loopback; only those services and the optional tunnel join the ingress network. The database, migrator and worker stay on the internal network.
 
-The product entry only reports a real connection to the substrate. Registration, durable mail jobs, files, project saves, encryption and editing are later milestones. The worker monitors database/schema availability; it does not claim to process jobs. Mailpit captures future development mail, with no relay configured or messages sent by M-00.
+The product entry only reports a real connection to the substrate. M-01a adds server identity/session/policy APIs and operator bootstrap; registration, durable mail jobs and auth screens follow in M-01b. Files, project saves, encryption and editing are later milestones. The worker monitors database/schema availability; it does not claim to process jobs. Mailpit captures future development mail, with no relay configured or messages sent by this slice.
+
+## One-time superuser bootstrap (M-01a)
+
+After applying migrations, create a protected, ignored `deploy/secrets/bootstrap-superuser.json` containing `email` and `password` JSON strings. Use your own address and a unique password of at least 15 characters (maximum 1024 UTF-8 bytes); no example/default credential is provided. Do not pass the password in shell arguments or commit the file. Alternatively set host `BOOTSTRAP_CREDENTIAL_FILE` to a protected file path. Run:
+
+```sh
+docker compose --profile ops run --rm bootstrap
+```
+
+This separate service mounts the operator migration credential and the one-time file, with no listener, published port or content volume. App/worker never receive either credential. A successful command records one active initial superuser without exposing its identity/password in logs. Repeating the same address is a no-op; another address is refused. A rerun never resets the password or repairs a demoted/suspended account. Remove the one-time file and protect any copies after use. Do not bootstrap a real account into a shared/demo environment by automation. Public registration/email verification and the login screens arrive in M-01b; the operator must establish bootstrap address ownership out of band. See the [identity contract and limitations](../docs/m01a-identity.md).
 
 Storybook remains separate and uses its original commands and synthetic data:
 

@@ -8,9 +8,10 @@ Resolved 4 November 2026. Exact image index digests are checked into `Dockerfile
 | PostgreSQL                           | 18.6 Bookworm                                     | PostgreSQL License; transactional operational metadata                                               |
 | Node                                 | 24.22.2 Bookworm slim                             | Node MIT plus bundled notices; build stage only, same version as `.nvmrc`                            |
 | Distroless static                    | Debian 13 nonroot, immutable digest               | Apache-2.0 project plus Debian/package notices; CA certificates, non-root runtime without shell/Node |
-| pgx/v5                               | 5.11.0                                            | MIT; PostgreSQL pool/driver, the only direct runtime Go module                                       |
+| pgx/v5                               | 5.11.0                                            | MIT; PostgreSQL pool/driver                                                                          |
+| x/crypto                             | 0.58.0                                            | BSD-3-Clause; official Go Argon2id password verification (M-01a)                                     |
 | pgpassfile, pgservicefile, puddle/v2 | Checksummed in `server/go.mod` / `go.sum`         | MIT; pgx transitive dependencies                                                                     |
-| x/text / x/sync                      | 0.41.0 / 0.22.0                                   | BSD-3-Clause; pgx transitive modules; x/text upgraded after the vulnerability scan                   |
+| x/text / x/sync / x/sys              | 0.43.0 / 0.24.0 / 0.49.0                          | BSD-3-Clause; pgx/Argon2 transitive modules                                                          |
 | Mailpit                              | 1.29.4                                            | MIT; optional development mail sink                                                                  |
 | Cloudflared                          | 2026.10.0                                         | Apache-2.0; optional operator-configured tunnel                                                      |
 | @hey-api/openapi-ts                  | 0.99.0                                            | MIT; build-time type generation compatible with existing TypeScript 6                                |
