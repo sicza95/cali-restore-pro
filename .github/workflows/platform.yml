@@ -31,9 +31,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:app
       - name: Quiesced backup and isolated restore
-        run: |
-          node scripts/backup.mjs deploy/backups/ci
-          node scripts/restore.mjs deploy/backups/ci calirestore-restore-ci
+        run: node scripts/backup-smoke.mjs deploy/backups/ci calirestore-restore-ci
       - name: Diagnostics
         if: failure()
         run: docker compose logs --no-color

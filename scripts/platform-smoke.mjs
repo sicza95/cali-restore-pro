@@ -30,6 +30,31 @@ compose(['run', '--rm', 'migrate']);
 // Service code runs non-root, without a shell, with its root filesystem read-only.
 const info = compose(['ps', '-q', 'app'], { encoding: 'utf8', stdio: 'pipe' }).stdout.trim();
 const { spawnSync } = await import('node:child_process');
+const unsafe = spawnSync(
+  'docker',
+  [
+    'compose',
+    'run',
+    '--rm',
+    '--no-deps',
+    '-T',
+    '-e',
+    'APP_ENV=production',
+    '-e',
+    'APP_ORIGIN=http://unsafe.example',
+    'app',
+  ],
+  { encoding: 'utf8' },
+);
+assert.notEqual(unsafe.status, 0, 'unsafe production origin was accepted');
+assert.match(unsafe.stdout, /production APP_ORIGIN requires HTTPS/);
+const missingSecret = spawnSync(
+  'docker',
+  ['compose', 'run', '--rm', '--no-deps', '-T', '-e', 'DB_PASSWORD_FILE=/missing-secret', 'app'],
+  { encoding: 'utf8' },
+);
+assert.notEqual(missingSecret.status, 0, 'missing secret was accepted');
+assert.match(missingSecret.stdout, /cannot read DB_PASSWORD_FILE/);
 const inspect = spawnSync('docker', ['inspect', info], { encoding: 'utf8' });
 assert.equal(inspect.status, 0);
 const [container] = JSON.parse(inspect.stdout);
