@@ -9,6 +9,88 @@ export type PlatformStatus = {
   milestone: 'M-00';
 };
 
+export type IdentityError = {
+  error:
+    | 'invalid_credentials'
+    | 'authentication_required'
+    | 'not_permitted'
+    | 'credential_confirmation_required'
+    | 'identity_conflict'
+    | 'try_later'
+    | 'unavailable'
+    | 'json_required'
+    | 'invalid_request';
+};
+
+export type LoginRequest = {
+  email: string;
+  /**
+   * At least 15 Unicode characters; maximum 1024 UTF-8 bytes. No normalization.
+   */
+  password: string;
+};
+
+export type ConfirmRequest = {
+  password: string;
+};
+
+export type CsrfResponse = {
+  csrfToken: string;
+};
+
+export type IdentityAccount = {
+  id: string;
+  email: string;
+  state: 'pending_verification' | 'active' | 'suspended' | 'pending_deletion';
+  role: 'member' | 'administrator' | 'superuser';
+};
+
+export type CurrentIdentity = {
+  account: IdentityAccount;
+  capabilities: Array<
+    'account.security' | 'accounts.suspend' | 'accounts.sessions.revoke' | 'roles.manage'
+  >;
+  csrfToken: string;
+};
+
+export type SessionInfo = {
+  id: string;
+  createdAt: string;
+  current: boolean;
+};
+
+export type SessionsResponse = {
+  sessions: Array<SessionInfo>;
+};
+
+export type EmptyRequest = {
+  [key: string]: never;
+};
+
+export type OkResponse = {
+  ok: true;
+};
+
+export type RevokeSessionsRequest =
+  | {
+      sessionId: string;
+      confirm: true;
+    }
+  | {
+      all: true;
+      confirm: true;
+    };
+
+export type PolicyRequest = {
+  role: 'member' | 'administrator' | 'superuser';
+  state: 'active' | 'suspended';
+  confirm: true;
+};
+
+export type ConfirmAction = {
+  confirm: true;
+};
+
 export type PlatformStatusData = {
   body?: never;
   path?: never;
@@ -33,3 +115,445 @@ export type PlatformStatusResponses = {
 };
 
 export type PlatformStatusResponse = PlatformStatusResponses[keyof PlatformStatusResponses];
+
+export type IdentityLoginData = {
+  body: LoginRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/login';
+};
+
+export type IdentityLoginErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityLoginError = IdentityLoginErrors[keyof IdentityLoginErrors];
+
+export type IdentityLoginResponses = {
+  /**
+   * Success
+   */
+  200: CsrfResponse;
+};
+
+export type IdentityLoginResponse = IdentityLoginResponses[keyof IdentityLoginResponses];
+
+export type IdentityCurrentData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/me';
+};
+
+export type IdentityCurrentErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityCurrentError = IdentityCurrentErrors[keyof IdentityCurrentErrors];
+
+export type IdentityCurrentResponses = {
+  /**
+   * Success
+   */
+  200: CurrentIdentity;
+};
+
+export type IdentityCurrentResponse = IdentityCurrentResponses[keyof IdentityCurrentResponses];
+
+export type IdentityConfirmData = {
+  body: ConfirmRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/confirm';
+};
+
+export type IdentityConfirmErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityConfirmError = IdentityConfirmErrors[keyof IdentityConfirmErrors];
+
+export type IdentityConfirmResponses = {
+  /**
+   * Success
+   */
+  200: CsrfResponse;
+};
+
+export type IdentityConfirmResponse = IdentityConfirmResponses[keyof IdentityConfirmResponses];
+
+export type IdentityLogoutData = {
+  body: EmptyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/logout';
+};
+
+export type IdentityLogoutErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityLogoutError = IdentityLogoutErrors[keyof IdentityLogoutErrors];
+
+export type IdentityLogoutResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type IdentityLogoutResponse = IdentityLogoutResponses[keyof IdentityLogoutResponses];
+
+export type IdentitySessionsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/sessions';
+};
+
+export type IdentitySessionsErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentitySessionsError = IdentitySessionsErrors[keyof IdentitySessionsErrors];
+
+export type IdentitySessionsResponses = {
+  /**
+   * Success
+   */
+  200: SessionsResponse;
+};
+
+export type IdentitySessionsResponse = IdentitySessionsResponses[keyof IdentitySessionsResponses];
+
+export type IdentityRevokeSessionsData = {
+  body: RevokeSessionsRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/sessions/revoke';
+};
+
+export type IdentityRevokeSessionsErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityRevokeSessionsError =
+  IdentityRevokeSessionsErrors[keyof IdentityRevokeSessionsErrors];
+
+export type IdentityRevokeSessionsResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type IdentityRevokeSessionsResponse =
+  IdentityRevokeSessionsResponses[keyof IdentityRevokeSessionsResponses];
+
+export type IdentitySetPolicyData = {
+  body: PolicyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/v1/admin/accounts/{id}/policy';
+};
+
+export type IdentitySetPolicyErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentitySetPolicyError = IdentitySetPolicyErrors[keyof IdentitySetPolicyErrors];
+
+export type IdentitySetPolicyResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type IdentitySetPolicyResponse =
+  IdentitySetPolicyResponses[keyof IdentitySetPolicyResponses];
+
+export type IdentityAdminRevokeSessionsData = {
+  body: ConfirmAction;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/v1/admin/accounts/{id}/sessions/revoke';
+};
+
+export type IdentityAdminRevokeSessionsErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityAdminRevokeSessionsError =
+  IdentityAdminRevokeSessionsErrors[keyof IdentityAdminRevokeSessionsErrors];
+
+export type IdentityAdminRevokeSessionsResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type IdentityAdminRevokeSessionsResponse =
+  IdentityAdminRevokeSessionsResponses[keyof IdentityAdminRevokeSessionsResponses];
