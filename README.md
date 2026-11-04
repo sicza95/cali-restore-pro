@@ -49,8 +49,18 @@ tests/            Browser interactions, layouts and accessibility
 docs/             Agreed visual direction and boundaries
 ```
 
-There is no legacy application migration or production backend in this repository.
+M-00 adds a Go/PostgreSQL platform substrate alongside this UI library. It serves a small connection screen; account, project, encryption and editing workflows are still later milestones. No legacy application code or project formats are imported.
+
+## Run the platform
+
+```sh
+npm ci
+npm run setup:secrets
+docker compose --profile dev up --build -d --wait
+```
+
+Open the [app](http://localhost:8080). Docker builds the product frontend and Go 1.27.3 service, starts private PostgreSQL 18.6, runs one-shot migrations, and starts app/worker only after those pass. Node and a shell are absent from the non-root runtime. Existing Storybook commands above remain independent. See [platform operations](deploy/README.md) for configuration, port overrides, health checks, tests, backup/restore, optional mail/tunnel profiles and the production boundaries.
 
 ## Platform implementation plan
 
-The [platform-first implementation plan](docs/plan/README.md) defines Docker deployment, the proposed Go/PostgreSQL backend, identity and superuser management, encryption, files, projects, sharing/revocation, offline recovery, administration, estimates and complete tool UI. Image processing and the drawing engine come in the final implementation phase. Each milestone gets its own PR; this planning increment does not add a runtime backend.
+The [platform-first implementation plan](docs/plan/README.md) defines Docker deployment, the Go/PostgreSQL backend, identity and superuser management, encryption, files, projects, sharing/revocation, offline recovery, administration, estimates and complete tool UI. Image processing and the drawing engine come in the final phase. Each milestone gets its own PR; [M-00 evidence](docs/m00-verification.md) distinguishes the substrate from later application behavior.

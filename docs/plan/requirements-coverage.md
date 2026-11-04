@@ -77,7 +77,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | PRIV-03     | Should   | Optional passkey sign-in and compatible content unlock              | M-03  | M-16       | Planned |
 | PRIV-04     | Must     | Explicit opt-in remembered trust and session-only shared devices    | M-03  | M-16       | Planned |
 | PRIV-05     | Must     | No routine automatic logout; manual-only local locking              | M-01  | M-16       | Planned |
-| PRIV-06     | Must     | Minimum server-readable metadata allowlist                          | M-00  | M-16       | Planned |
+| PRIV-06     | Must     | Minimum server-readable metadata allowlist                          | M-00  | M-16       | Partial |
 | PRIV-07     | Must     | Explicit sign-out/forget protects recoverable work                  | M-03  | M-16       | Planned |
 | PRIV-08     | Must     | Explicit opt-in for optional crash/performance reporting            | M-02  | M-16       | Planned |
 | SHARE-01    | Later    | Recipient-aware encrypted sharing                                   | M-03  | M-16       | Planned |
@@ -126,20 +126,22 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 
 ## Completion evidence
 
+PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verification.md). The complete privacy acceptance remains M-16; the bootstrap schema does not close encryption or project-content requirements.
+
 When a PR implements part of a row, change its status to Partial and link the PR plus relevant test/evidence record. Mark Accepted only after the full preserved acceptance condition passes, including appropriate failure, permission and device checks. Record any changed behavior as a decision rather than silently rewriting the baseline.
 
 The pre-existing Storybook library is partial UI evidence, not acceptance of UI-01 across the full app. M-08 mocks are control/workflow evidence only. M-09 fixture calculations and M-11 fixture encoders do not establish valid real-image measurements or physical-device capability.
 
 ## Additional requirements from the current instruction
 
-| Item                                               | Owner / acceptance                                                             |
-| -------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Docker-served app, old infrastructure as reference | M-00; clean boot, migrations, restart and coherent volume restore              |
-| More performant backend option                     | M-00 proposes Go; measured backend load evidence before claiming improvement   |
-| Explicit superuser and rule hierarchy              | M-01/M-02; least privilege, bootstrap and atomic final-superuser protection    |
-| Mailing and registration                           | M-01; verification/reset/security/invitation routing, retry and abuse controls |
-| Complete tool/control UI before drawing            | M-08; registry and responsive EN/HU review coverage                            |
-| Restoration-work pricing, no subscription billing  | M-09; confirmed calculation rules and client-only encrypted data               |
-| PDF/other complex output generation late           | M-10/M-11; fixtures first, real selected-revision qualification M-16           |
-| Image processing/drawing last                      | M-12 through M-16; no production engine hidden inside platform work            |
-| Frequent commits and a PR for every milestone      | Every milestone; conventional commits, clear dependencies and validation       |
+| Item                                               | Owner / acceptance                                                                                  |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Docker-served app, old infrastructure as reference | M-00 implemented; [boot, migration, restart and substrate restore evidence](../m00-verification.md) |
+| More performant backend option                     | M-00 proposes Go; measured backend load evidence before claiming improvement                        |
+| Explicit superuser and rule hierarchy              | M-01/M-02; least privilege, bootstrap and atomic final-superuser protection                         |
+| Mailing and registration                           | M-01; verification/reset/security/invitation routing, retry and abuse controls                      |
+| Complete tool/control UI before drawing            | M-08; registry and responsive EN/HU review coverage                                                 |
+| Restoration-work pricing, no subscription billing  | M-09; confirmed calculation rules and client-only encrypted data                                    |
+| PDF/other complex output generation late           | M-10/M-11; fixtures first, real selected-revision qualification M-16                                |
+| Image processing/drawing last                      | M-12 through M-16; no production engine hidden inside platform work                                 |
+| Frequent commits and a PR for every milestone      | Every milestone; conventional commits, clear dependencies and validation                            |
