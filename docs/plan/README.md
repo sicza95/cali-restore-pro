@@ -1,6 +1,6 @@
 # Platform-first implementation plan
 
-4 November 2026 · M-PLAN documented; M-00 substrate implemented for review
+4 November 2026 · M-00 merged; M-01a identity core implemented for review
 
 M-00 adds the Go/PostgreSQL Compose substrate while retaining the UI library. See [operations](../../deploy/README.md) and [verification evidence](../m00-verification.md). M-01 is split into M-01a identity core and M-01b registration/mail/auth screens so each has a bounded review. See the [identity core contract](../m01a-identity.md).
 

@@ -27,6 +27,9 @@ jobs:
       - run: docker compose -f compose.yaml -f deploy/compose.test.yaml run --build --rm test
       - run: docker run --rm calirestore-test:local go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - run: docker compose --profile dev up --build -d --wait
+      - run: node scripts/identity-smoke.mjs
+        env:
+          IDENTITY_SMOKE_DISPOSABLE: '1'
       - run: npm run test:platform
       - run: npx playwright install --with-deps chromium
       - run: npm run test:app
