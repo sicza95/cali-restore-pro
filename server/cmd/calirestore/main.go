@@ -2,18 +2,22 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sicza95/cali-restore-pro/server/internal/config"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/platform"
 	"github.com/sicza95/cali-restore-pro/server/migrations"
 )
@@ -30,7 +34,7 @@ func main() {
 
 func run(ctx context.Context, args []string) error {
 	if len(args) != 1 {
-		return errors.New("usage: calirestore serve|worker|migrate|healthcheck|worker-healthcheck")
+		return errors.New("usage: calirestore serve|worker|migrate|bootstrap-superuser|healthcheck|worker-healthcheck")
 	}
 	if args[0] == "healthcheck" {
 		return healthcheck()
@@ -46,7 +50,7 @@ func run(ctx context.Context, args []string) error {
 		}
 		return nil
 	}
-	if args[0] != "serve" && args[0] != "worker" && args[0] != "migrate" {
+	if args[0] != "serve" && args[0] != "worker" && args[0] != "migrate" && args[0] != "bootstrap-superuser" {
 		return errors.New("unknown command")
 	}
 	c, err := config.Load()
@@ -81,13 +85,21 @@ func run(ctx context.Context, args []string) error {
 	if err := ready(start); err != nil {
 		return errors.New("database or schema not ready; run migrations first")
 	}
+	if args[0] == "bootstrap-superuser" {
+		return bootstrap(ctx, pool)
+	}
 	if args[0] == "worker" {
 		return worker(ctx, c, ready)
 	}
 	if _, err := os.Stat(filepath.Join(c.StaticDir, "index.html")); err != nil {
 		return errors.New("frontend build missing")
 	}
-	srv := &http.Server{Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+	identities, err := identity.New(pool)
+	if err != nil {
+		return errors.New("identity initialization failed")
+	}
+	auth := identity.NewHTTP(identities, c.Origin, strings.HasPrefix(c.Origin, "https://"))
+	srv := &http.Server{Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
 	stopped := make(chan error, 1)
 	go func() { stopped <- srv.ListenAndServe() }()
 	slog.Info("HTTP server started")
@@ -102,6 +114,39 @@ func run(ctx context.Context, args []string) error {
 		_ = srv.Close()
 		return errors.New("HTTP shutdown timed out")
 	}
+	return nil
+}
+
+func bootstrap(ctx context.Context, pool *pgxpool.Pool) error {
+	path := os.Getenv("BOOTSTRAP_CREDENTIAL_FILE")
+	if !filepath.IsAbs(path) {
+		return errors.New("BOOTSTRAP_CREDENTIAL_FILE must be an absolute mounted secret path")
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return errors.New("cannot read bootstrap credential file")
+	}
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil || !info.Mode().IsRegular() || info.Size() > 4096 {
+		return errors.New("invalid bootstrap credential file")
+	}
+	var credential struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	d := json.NewDecoder(io.LimitReader(f, 4097))
+	d.DisallowUnknownFields()
+	if err := d.Decode(&credential); err != nil {
+		return errors.New("invalid bootstrap credential file")
+	}
+	if err := d.Decode(new(any)); err != io.EOF {
+		return errors.New("invalid bootstrap credential file")
+	}
+	if err := identity.Bootstrap(ctx, pool, credential.Email, credential.Password); err != nil {
+		return errors.New("bootstrap refused; check credentials, migration role and bootstrap state")
+	}
+	slog.Info("superuser bootstrap complete")
 	return nil
 }
 

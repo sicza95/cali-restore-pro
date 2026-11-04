@@ -12,8 +12,11 @@ import (
 
 type Readiness func(context.Context) error
 
-func Handler(web fs.FS, ready Readiness) http.Handler {
+func Handler(web fs.FS, ready Readiness, register ...func(*http.ServeMux)) http.Handler {
 	mux := http.NewServeMux()
+	for _, routes := range register {
+		routes(mux)
+	}
 	write := func(w http.ResponseWriter, status int, value any) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")

@@ -69,6 +69,22 @@ services:
       migrate: { condition: service_completed_successfully }
     restart: unless-stopped
 
+  bootstrap:
+    <<: *runtime
+    profiles: [ops]
+    command: [bootstrap-superuser]
+    environment:
+      <<: *app-env
+      DB_USER: calirestore_migrator
+      DB_PASSWORD_FILE: /run/secrets/migration_db_password
+      BOOTSTRAP_CREDENTIAL_FILE: /run/secrets/bootstrap_credential
+    secrets: [migration_db_password, bootstrap_credential]
+    depends_on:
+      db: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck: { disable: true }
+    restart: 'no'
+
   worker:
     <<: *runtime
     command: [worker]
@@ -134,3 +150,5 @@ secrets:
     file: ${SECRETS_DIR:-./deploy/secrets}/migration_db_password
   tunnel_token:
     file: ${SECRETS_DIR:-./deploy/secrets}/tunnel_token
+  bootstrap_credential:
+    file: ${BOOTSTRAP_CREDENTIAL_FILE:-./deploy/secrets/bootstrap-superuser.json}
