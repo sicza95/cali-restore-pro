@@ -2,6 +2,8 @@
 
 This is the first named sub-milestone of M-01, based on merged [M-00 #3](https://github.com/sicza95/cali-restore-pro/pull/3). It supplies the server identity foundation; M-01b completes registration, mail and auth screens. No account/content workflow is accepted solely by this core.
 
+Review: [M-01a PR #4](https://github.com/sicza95/cali-restore-pro/pull/4), targeting the merged prerequisite history on `feat/storybook-foundations`. The local evidence below is separate from GitHub CI results.
+
 ## Persistence and authority
 
 Migration `0002_identity.sql` adds accounts, sessions, a sealed bootstrap/active-superuser guard, bounded authentication-rate counters and minimal identity audit events. Accounts have independent `member`, `administrator`, `superuser` roles and `pending_verification`, `active`, `suspended`, `pending_deletion` states. Only active accounts authenticate. Verification/deletion transitions have no endpoint in this slice; changing a policy cannot activate an unverified or deletion-pending account.
