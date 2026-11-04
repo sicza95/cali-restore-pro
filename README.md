@@ -50,3 +50,7 @@ docs/             Agreed visual direction and boundaries
 ```
 
 There is no legacy application migration or production backend in this repository.
+
+## Platform implementation plan
+
+The [platform-first implementation plan](docs/plan/README.md) defines Docker deployment, the proposed Go/PostgreSQL backend, identity and superuser management, encryption, files, projects, sharing/revocation, offline recovery, administration, estimates and complete tool UI. Image processing and the drawing engine come in the final implementation phase. Each milestone gets its own PR; this planning increment does not add a runtime backend.
