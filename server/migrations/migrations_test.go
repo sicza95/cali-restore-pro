@@ -24,7 +24,7 @@ func TestPostgresMigrations(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer pool.Close()
-	if _, err := pool.Exec(ctx, `DROP TABLE IF EXISTS schema_migrations; DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='calirestore_app') THEN CREATE ROLE calirestore_app; END IF; END $$`); err != nil {
+	if _, err := pool.Exec(ctx, `SELECT pg_advisory_xact_lock(72401600); DROP SCHEMA public CASCADE; CREATE SCHEMA public; DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='calirestore_app') THEN CREATE ROLE calirestore_app; END IF; END $$`); err != nil {
 		t.Fatal(err)
 	}
 	if err := Check(ctx, pool); err == nil {
@@ -43,7 +43,11 @@ func TestPostgresMigrations(t *testing.T) {
 		t.Fatal(err)
 	}
 	var count int
-	if err := pool.QueryRow(ctx, "SELECT count(*) FROM schema_migrations").Scan(&count); err != nil || count != 1 {
+	names, _, err := history()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := pool.QueryRow(ctx, "SELECT count(*) FROM schema_migrations").Scan(&count); err != nil || count != len(names) {
 		t.Fatalf("migration count %d: %v", count, err)
 	}
 	// Use a dedicated acquired connection so role checks cannot hop pool sessions.
