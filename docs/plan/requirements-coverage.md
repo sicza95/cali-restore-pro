@@ -1,0 +1,145 @@
+# Requirements coverage and acceptance tracking
+
+All catalogue requirements are planned; none is marked complete by this documentation PR. The [preserved acceptance catalogue](requirements-baseline.md) contains the original IDs, priorities and full acceptance text so review does not depend on untracked workspace documents. The [plan](README.md) changes delivery order, not required behavior.
+
+**First** means schema, contract, platform implementation or explicit UI work begins there. **Acceptance** is the earliest planned milestone with the complete real behavior/evidence, not a completion claim. Priority labels are preserved from the earlier delivery baseline; the milestone columns define the new order. Engine-dependent workflows are retested together in M-16 even when a bounded feature can pass earlier. PRIV-03 remains the baseline optional passkey extension with compatibility qualification; its row does not make passkeys a prerequisite for core authentication/recovery.
+
+Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catalogue, assessed against the latest 4 November 2026 platform-first direction. Additional confirmed lifecycle, financial, history, source/export and device details are carried into this pack's access, workflow and estimation contracts.
+
+| Requirement | Priority | Behavior                                                            | First | Acceptance | Status  |
+| ----------- | -------- | ------------------------------------------------------------------- | ----- | ---------- | ------- |
+| PROJ-01     | Must     | Durable project identity, name, and revision                        | M-05  | M-05       | Planned |
+| PROJ-02     | Must     | New/Open/Recent/Import are coherent                                 | M-05  | M-08       | Planned |
+| PROJ-03     | Must     | Local recovery plus authorized optional remote sync                 | M-03  | M-16       | Planned |
+| PROJ-04     | Must     | Self-contained encrypted portable backup                            | M-07  | M-16       | Planned |
+| PROJ-05     | Must     | Revision-conflict protection                                        | M-07  | M-16       | Planned |
+| PROJ-06     | Must     | Restoration projects contain one or more objects                    | M-05  | M-05       | Planned |
+| PROJ-07     | Must     | Explicit offline selections and protected local work                | M-07  | M-16       | Planned |
+| PROJ-08     | Must     | Uncapped initial counts with one active surface                     | M-05  | M-16       | Planned |
+| CHECK-01    | Must     | Optional user-named assessment checkpoints                          | M-05  | M-15       | Planned |
+| CHECK-02    | Must     | Linked checkpoint comparison with coverage/area changes             | M-08  | M-15       | Planned |
+| CHECK-03    | Must     | Recoverable checkpoint restoration                                  | M-08  | M-15       | Planned |
+| SURF-01     | Must     | Objects contain named, separately assessed surfaces                 | M-05  | M-13       | Planned |
+| SURF-02     | Must     | Shared surface mapping from aligned images                          | M-08  | M-14       | Planned |
+| IMG-04      | Must     | Mapping and reference-only image roles                              | M-05  | M-13       | Planned |
+| ALIGN-01    | Must     | Automatic-first alignment with user verification                    | M-08  | M-13       | Planned |
+| ALIGN-02    | Must     | Detail-photo realignment preserves global drawing                   | M-08  | M-13       | Planned |
+| ALIGN-03    | Must     | Accepted partial mapped areas with reference-only fallback          | M-08  | M-13       | Planned |
+| IMG-01      | Must     | Seven validated initial image-format families                       | M-04  | M-16       | Planned |
+| IMG-02      | Must     | Preserve original source                                            | M-04  | M-13       | Planned |
+| IMG-03      | Must     | Large-source import separated from editing                          | M-04  | M-16       | Planned |
+| IMG-05      | Must     | 8K-class source-image workload                                      | M-04  | M-16       | Planned |
+| FRAME-01    | Must     | Crop, rotate, flip, rectify/perspective and required skew workflows | M-08  | M-13       | Planned |
+| FRAME-02    | Must     | Separate view navigation from document transforms                   | M-08  | M-14       | Planned |
+| FRAME-03    | Must     | Later main-reference transforms carry shared mask space             | M-05  | M-13       | Planned |
+| FRAME-04    | Must     | Main-reference crop clips measurement without deleting drawing      | M-05  | M-13       | Planned |
+| CAL-01      | Must     | Two first-class physical calibration methods                        | M-08  | M-13       | Planned |
+| CAL-02      | Must     | Calibration provenance and invalidation                             | M-08  | M-13       | Planned |
+| CAL-03      | Must     | Reference-format-independent calibration                            | M-08  | M-13       | Planned |
+| MASK-01     | Must     | Responsive brush and erase with selectable commit behaviour         | M-08  | M-16       | Planned |
+| MASK-02     | Must     | Precise pen and shape workflows                                     | M-08  | M-14       | Planned |
+| MASK-03     | Must     | Point and curve editing for every mask                              | M-08  | M-14       | Planned |
+| MASK-04     | Must     | Vector mask source of truth with derived display caches             | M-05  | M-13       | Planned |
+| MASK-05     | Must     | Source-dependent fine detail without a fixed physical minimum       | M-08  | M-16       | Planned |
+| MASK-06     | Must     | Lightweight encrypted recovery of layer-owned painting drafts       | M-03  | M-15       | Planned |
+| MASK-07     | Must     | Constant-width defaults with optional pressure-sensitive width      | M-08  | M-16       | Planned |
+| MASK-08     | Must     | Optional adjustable stroke stabilization                            | M-08  | M-16       | Planned |
+| MASK-09     | Must     | Surface-relative brush and eraser size                              | M-08  | M-16       | Planned |
+| LAYER-01    | Must     | Layer CRUD, rename, ordering, visibility, lock, opacity             | M-05  | M-14       | Planned |
+| LAYER-02    | Must     | Preserve master/crop measurement with non-destructive drawing       | M-05  | M-13       | Planned |
+| LAYER-03    | Must     | Fill, colour, pattern and outline                                   | M-08  | M-15       | Planned |
+| LAYER-04    | Must     | Folder-like damage categories with per-layer and union totals       | M-05  | M-13       | Planned |
+| LAYER-05    | Must     | Optional nested folders with unique descendant totals               | M-05  | M-13       | Planned |
+| HIST-01     | Must     | Chronological, bounded surface-wide undo/redo                       | M-08  | M-15       | Planned |
+| HIST-02     | Must     | Multitouch Undo/Redo with a shared rapid-tap window                 | M-08  | M-16       | Planned |
+| HIST-03     | Must     | Bounded encrypted local history across reopening                    | M-03  | M-15       | Planned |
+| MEAS-01     | Must     | Trustworthy per-layer coverage and area                             | M-08  | M-13       | Planned |
+| MEAS-02     | Must     | Explicit measurement states                                         | M-08  | M-13       | Planned |
+| MEAS-03     | Must     | Flat-surface measurement with an extensible method boundary         | M-05  | M-13       | Planned |
+| MEAS-04     | Must     | Unique overall damage area with full category breakdowns            | M-08  | M-13       | Planned |
+| MEAS-05     | Must     | Actual geometry coverage with visual-only opacity                   | M-08  | M-13       | Planned |
+| MEAS-06     | Must     | Preserve work and inputs through empty/incomplete assessment        | M-05  | M-16       | Planned |
+| MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Planned |
+| OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Planned |
+| OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Planned |
+| OUT-03      | Must     | Printable PDF map and standard client report                        | M-10  | M-16       | Planned |
+| OUT-04      | Must     | Separate normal outputs, backups, and diagnostics                   | M-07  | M-16       | Planned |
+| OUT-05      | Must     | Explicit assessment versions per report surface                     | M-10  | M-16       | Planned |
+| OUT-06      | Must     | Five initial export formats                                         | M-10  | M-16       | Planned |
+| OUT-07      | Must     | Optional report branding with defaults/overrides                    | M-02  | M-16       | Planned |
+| OUT-08      | Must     | Selected-content-only export files                                  | M-10  | M-16       | Planned |
+| OUT-09      | Must     | Export metadata defaults with explicit inclusion                    | M-10  | M-16       | Planned |
+| OUT-10      | Must     | Snapshot and editable-estimate XLSX modes                           | M-09  | M-16       | Planned |
+| OUT-11      | Must     | Labelled drafts and valid final measurement claims                  | M-09  | M-16       | Planned |
+| OUT-12      | Must     | Inherited output units with an individual-output override           | M-05  | M-16       | Planned |
+| PRIV-01     | Must     | Client-side content encryption                                      | M-03  | M-16       | Planned |
+| PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Planned |
+| PRIV-03     | Should   | Optional passkey sign-in and compatible content unlock              | M-03  | M-16       | Planned |
+| PRIV-04     | Must     | Explicit opt-in remembered trust and session-only shared devices    | M-03  | M-16       | Planned |
+| PRIV-05     | Must     | No routine automatic logout; manual-only local locking              | M-01  | M-16       | Planned |
+| PRIV-06     | Must     | Minimum server-readable metadata allowlist                          | M-00  | M-16       | Planned |
+| PRIV-07     | Must     | Explicit sign-out/forget protects recoverable work                  | M-03  | M-16       | Planned |
+| PRIV-08     | Must     | Explicit opt-in for optional crash/performance reporting            | M-02  | M-16       | Planned |
+| SHARE-01    | Later    | Recipient-aware encrypted sharing                                   | M-03  | M-16       | Planned |
+| SHARE-02    | Later    | Independent editing with read-only defaults                         | M-01  | M-16       | Planned |
+| SHARE-03    | Later    | Three estimate-sharing levels per collaborator                      | M-03  | M-16       | Planned |
+| SHARE-04    | Later    | Equal project owners with ownership continuity                      | M-05  | M-07       | Planned |
+| SHARE-05    | Later    | Independent/offline collaboration with preserved conflicts          | M-07  | M-16       | Planned |
+| SHARE-06    | Later    | Revocation protects online access and future updates                | M-03  | M-16       | Planned |
+| SHARE-07    | Later    | Locked local recovery of unsynced edits after removal               | M-03  | M-16       | Planned |
+| SHARE-08    | Later    | Owner-controlled older-checkpoint access                            | M-03  | M-16       | Planned |
+| SHARE-09    | Later    | Account-bound accepted invitations with identity-change review      | M-01  | M-06       | Planned |
+| SHARE-10    | Later    | Read-only quote-level estimate summary                              | M-06  | M-16       | Planned |
+| PAT-01      | Later    | Visual repeating-tile pattern editor                                | M-08  | M-15       | Planned |
+| PAT-02      | Later    | Reusable versioned patterns with consistent output                  | M-05  | M-16       | Planned |
+| EST-01      | Later    | User phase/productivity profiles and layer/detail overrides         | M-09  | M-16       | Planned |
+| EST-02      | Later    | Itemized estimate snapshots                                         | M-09  | M-16       | Planned |
+| EST-03      | Later    | User-defined work breakdown with editable starter phases            | M-09  | M-16       | Planned |
+| EST-04      | Later    | Individual-object, whole-project and selected-object estimates      | M-09  | M-16       | Planned |
+| EST-05      | Later    | Independent, explicit scope for every work phase                    | M-09  | M-16       | Planned |
+| EST-06      | Later    | One mask per phase with independent cloning                         | M-09  | M-16       | Planned |
+| EST-07      | Later    | Three per-phase pricing methods                                     | M-09  | M-16       | Planned |
+| EST-08      | Later    | Exactly one editable time/productivity input                        | M-09  | M-16       | Planned |
+| EST-09      | Later    | Area-change behaviour follows effort input mode                     | M-09  | M-16       | Planned |
+| EST-10      | Later    | User-controlled detail breakdown                                    | M-09  | M-16       | Planned |
+| EST-11      | Later    | Manual effort multiplier in initial estimation                      | M-09  | M-16       | Planned |
+| EST-12      | Later    | Optional additional material costs per phase                        | M-09  | M-16       | Planned |
+| EST-13      | Later    | Final-time input and explicit response to multiplier edits          | M-09  | M-16       | Planned |
+| EST-14      | Later    | Optional object/project extras with estimate inclusion              | M-09  | M-16       | Planned |
+| EST-15      | Later    | Extra-item price and labour-hour calculations                       | M-09  | M-16       | Planned |
+| EST-16      | Later    | Optional monetary percentage adjustments at project level           | M-09  | M-16       | Planned |
+| EST-17      | Later    | One currency per project                                            | M-09  | M-16       | Planned |
+| EST-18      | Later    | User-controlled repricing after currency changes                    | M-09  | M-16       | Planned |
+| EST-19      | Later    | Optional project tax after adjustments                              | M-09  | M-16       | Planned |
+| EST-20      | Later    | Monetary rounding and consistent totals                             | M-09  | M-16       | Planned |
+| ADMIN-01    | Must     | Consistent account lifecycle UI                                     | M-01  | M-07       | Planned |
+| ADMIN-02    | Must     | Privilege and content boundaries                                    | M-01  | M-16       | Planned |
+| ADMIN-03    | Must     | Explicit server-feature access grants                               | M-01  | M-07       | Planned |
+| ADMIN-04    | Must     | Account quotas with single shared-project accounting                | M-02  | M-07       | Planned |
+| ADMIN-05    | Must     | Hosting withdrawal preserves data and project rights                | M-02  | M-07       | Planned |
+| ADMIN-06    | Must     | Voluntary deletion resolves project continuity and pending work     | M-02  | M-07       | Planned |
+| ADMIN-07    | Must     | Bounded deletion recovery and encrypted-backup expiry               | M-02  | M-07       | Planned |
+| ADMIN-08    | Must     | Reversible suspension and explicit forced deletion                  | M-01  | M-07       | Planned |
+| UX-01       | Must     | iPad-first core interactions                                        | M-01  | M-16       | Planned |
+| UX-02       | Must     | English/Hungarian interface and independent report language         | M-01  | M-16       | Planned |
+| UI-01       | Must     | Shared visual/interaction system                                    | M-01  | M-16       | Planned |
+
+## Completion evidence
+
+When a PR implements part of a row, change its status to Partial and link the PR plus relevant test/evidence record. Mark Accepted only after the full preserved acceptance condition passes, including appropriate failure, permission and device checks. Record any changed behavior as a decision rather than silently rewriting the baseline.
+
+The pre-existing Storybook library is partial UI evidence, not acceptance of UI-01 across the full app. M-08 mocks are control/workflow evidence only. M-09 fixture calculations and M-11 fixture encoders do not establish valid real-image measurements or physical-device capability.
+
+## Additional requirements from the current instruction
+
+| Item                                               | Owner / acceptance                                                             |
+| -------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Docker-served app, old infrastructure as reference | M-00; clean boot, migrations, restart and coherent volume restore              |
+| More performant backend option                     | M-00 proposes Go; measured backend load evidence before claiming improvement   |
+| Explicit superuser and rule hierarchy              | M-01/M-02; least privilege, bootstrap and atomic final-superuser protection    |
+| Mailing and registration                           | M-01; verification/reset/security/invitation routing, retry and abuse controls |
+| Complete tool/control UI before drawing            | M-08; registry and responsive EN/HU review coverage                            |
+| Restoration-work pricing, no subscription billing  | M-09; confirmed calculation rules and client-only encrypted data               |
+| PDF/other complex output generation late           | M-10/M-11; fixtures first, real selected-revision qualification M-16           |
+| Image processing/drawing last                      | M-12 through M-16; no production engine hidden inside platform work            |
+| Frequent commits and a PR for every milestone      | Every milestone; conventional commits, clear dependencies and validation       |
