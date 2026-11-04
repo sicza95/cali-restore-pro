@@ -2,6 +2,8 @@
 
 Status: implementation proposal, 4 November 2026. See the [milestones](README.md) for delivery order and the [access contract](access-and-encryption.md) for security semantics.
 
+M-00 now implements the Go/PostgreSQL Compose substrate described below. [Operations](../../deploy/README.md), [pinned versions](../../deploy/versions.md) and [evidence](../m00-verification.md) record the concrete boundary; later application and recovery behavior remains proposed.
+
 ## Backend choice
 
 Keep SolidJS, TypeScript, Vite, semantic CSS and Storybook. Recommend **Go** for the new backend: a compiled service with explicit concurrency/cancellation boundaries and streaming I/O fits ciphertext transfer, access policy and background work. Start with `net/http`, PostgreSQL through `pgx`, explicit SQL migrations and an OpenAPI contract generating the TypeScript client. Add libraries only for concrete needs; pin supported versions and validate licenses/security at M-00.
