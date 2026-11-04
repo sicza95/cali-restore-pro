@@ -2,6 +2,8 @@
 
 M-00 implements the Docker/API/database substrate. The next functional slice is M-01 identity. No project, account, mail-delivery, content-encryption, sync, measurement or drawing acceptance is claimed.
 
+Implementation and checks are tracked in [M-00 PR #3](https://github.com/sicza95/cali-restore-pro/pull/3).
+
 ## Scope and prerequisite
 
 This milestone is based on `feat/storybook-foundations`, which contains both merged prerequisite PRs [UI #1](https://github.com/sicza95/cali-restore-pro/pull/1) and [M-PLAN #2](https://github.com/sicza95/cali-restore-pro/pull/2). At implementation time `main` contained the UI squash only; the planning PR had merged into the UI branch. The M-00 PR targets that branch so the review diff contains only M-00. Retarget after the planning branch reaches `main`; no automatic merge is requested.
