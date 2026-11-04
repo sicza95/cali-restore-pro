@@ -2,9 +2,6 @@ name: calirestore
 
 x-runtime: &runtime
   image: calirestore:${IMAGE_TAG:-local}
-  build:
-    context: .
-    target: runtime
   read_only: true
   init: true
   cap_drop: [ALL]
@@ -58,6 +55,9 @@ services:
 
   app:
     <<: *runtime
+    build:
+      context: .
+      target: runtime
     command: [serve]
     environment: *app-env
     networks: [backend, ingress]
