@@ -1,6 +1,8 @@
 # Platform-first implementation plan
 
-4 November 2026 · Planning milestone M-PLAN · Implementation has not started
+4 November 2026 · M-PLAN documented; M-00 substrate implemented for review
+
+M-00 adds the Go/PostgreSQL Compose substrate while retaining the UI library. See [operations](../../deploy/README.md) and [verification evidence](../m00-verification.md). M-01 identity remains the next functional slice.
 
 Build the complete application around the existing SolidJS UI foundation before implementing image processing or drawing. Identity and authorization are the first functional slice. A small Docker/API/database bootstrap comes immediately before it so identity is built against real persistence and deployment boundaries. Pricing means **restoration-work estimates**; subscription billing and payments are outside this plan.
 
