@@ -40,7 +40,7 @@ for (const volume of [`${project}_postgres`, `${project}_objects`]) {
 const target = (args, options) => compose(['-p', project, ...args], options);
 target(['up', '-d', '--wait', 'db']);
 // Seed volume ownership from the non-root runtime image without starting it.
-target(['create', '--no-deps', 'app']);
+target(['create', 'app']);
 const read = (file, args) => {
   const fd = openSync(resolve(directory, file), 'r');
   try {
