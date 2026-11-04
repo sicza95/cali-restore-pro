@@ -4,3 +4,6 @@ playwright-report
 test-results
 package-lock.json
 public
+server
+deploy/secrets
+deploy/backups
