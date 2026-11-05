@@ -91,6 +91,45 @@ export type ConfirmAction = {
   confirm: true;
 };
 
+export type RegisterRequest = {
+  email: string;
+  password: string;
+  language?: 'en' | 'hu';
+};
+
+export type ResendVerificationRequest = {
+  email: string;
+  language?: 'en' | 'hu';
+};
+
+export type ForgotPasswordRequest = {
+  email: string;
+  language?: 'en' | 'hu';
+};
+
+export type VerifyEmailRequest = {
+  token: string;
+};
+
+export type ResetPasswordRequest = {
+  token: string;
+  password: string;
+};
+
+export type ConfirmEmailRequest = {
+  token: string;
+};
+
+export type ChangePasswordRequest = {
+  password: string;
+  confirm: true;
+};
+
+export type ChangeEmailRequest = {
+  email: string;
+  confirm: true;
+};
+
 export type PlatformStatusData = {
   body?: never;
   path?: never;
@@ -557,3 +596,457 @@ export type IdentityAdminRevokeSessionsResponses = {
 
 export type IdentityAdminRevokeSessionsResponse =
   IdentityAdminRevokeSessionsResponses[keyof IdentityAdminRevokeSessionsResponses];
+
+export type IdentityRegisterData = {
+  body: RegisterRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/register';
+};
+
+export type IdentityRegisterErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityRegisterError = IdentityRegisterErrors[keyof IdentityRegisterErrors];
+
+export type IdentityRegisterResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityRegisterResponse = IdentityRegisterResponses[keyof IdentityRegisterResponses];
+
+export type IdentityResendVerificationData = {
+  body: ResendVerificationRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/resend-verification';
+};
+
+export type IdentityResendVerificationErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityResendVerificationError =
+  IdentityResendVerificationErrors[keyof IdentityResendVerificationErrors];
+
+export type IdentityResendVerificationResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityResendVerificationResponse =
+  IdentityResendVerificationResponses[keyof IdentityResendVerificationResponses];
+
+export type IdentityForgotPasswordData = {
+  body: ForgotPasswordRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/forgot-password';
+};
+
+export type IdentityForgotPasswordErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityForgotPasswordError =
+  IdentityForgotPasswordErrors[keyof IdentityForgotPasswordErrors];
+
+export type IdentityForgotPasswordResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityForgotPasswordResponse =
+  IdentityForgotPasswordResponses[keyof IdentityForgotPasswordResponses];
+
+export type IdentityVerifyEmailData = {
+  body: VerifyEmailRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/verify-email';
+};
+
+export type IdentityVerifyEmailErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityVerifyEmailError = IdentityVerifyEmailErrors[keyof IdentityVerifyEmailErrors];
+
+export type IdentityVerifyEmailResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityVerifyEmailResponse =
+  IdentityVerifyEmailResponses[keyof IdentityVerifyEmailResponses];
+
+export type IdentityResetPasswordData = {
+  body: ResetPasswordRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/reset-password';
+};
+
+export type IdentityResetPasswordErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityResetPasswordError =
+  IdentityResetPasswordErrors[keyof IdentityResetPasswordErrors];
+
+export type IdentityResetPasswordResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityResetPasswordResponse =
+  IdentityResetPasswordResponses[keyof IdentityResetPasswordResponses];
+
+export type IdentityConfirmEmailData = {
+  body: ConfirmEmailRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/confirm-email';
+};
+
+export type IdentityConfirmEmailErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityConfirmEmailError =
+  IdentityConfirmEmailErrors[keyof IdentityConfirmEmailErrors];
+
+export type IdentityConfirmEmailResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityConfirmEmailResponse =
+  IdentityConfirmEmailResponses[keyof IdentityConfirmEmailResponses];
+
+export type IdentityChangePasswordData = {
+  body: ChangePasswordRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/change-password';
+};
+
+export type IdentityChangePasswordErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityChangePasswordError =
+  IdentityChangePasswordErrors[keyof IdentityChangePasswordErrors];
+
+export type IdentityChangePasswordResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityChangePasswordResponse =
+  IdentityChangePasswordResponses[keyof IdentityChangePasswordResponses];
+
+export type IdentityChangeEmailData = {
+  body: ChangeEmailRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/change-email';
+};
+
+export type IdentityChangeEmailErrors = {
+  /**
+   * Invalid, expired or used link / invalid request
+   */
+  400: unknown;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityChangeEmailError = IdentityChangeEmailErrors[keyof IdentityChangeEmailErrors];
+
+export type IdentityChangeEmailResponses = {
+  /**
+   * Accepted; public account existence is not disclosed
+   */
+  200: OkResponse;
+};
+
+export type IdentityChangeEmailResponse =
+  IdentityChangeEmailResponses[keyof IdentityChangeEmailResponses];

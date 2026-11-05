@@ -54,6 +54,8 @@ func failure(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, ErrCredentials):
 		status, code = 401, "invalid_credentials"
+	case errors.Is(err, ErrLink):
+		status, code = 400, "invalid_or_expired_link"
 	case errors.Is(err, ErrUnauthorized):
 		status, code = 401, "authentication_required"
 	case errors.Is(err, ErrForbidden):
@@ -148,6 +150,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			next(w, r.WithContext(ctx))
 		})
 	}
+	h.lifecycleRoutes(route)
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			Email    string `json:"email"`

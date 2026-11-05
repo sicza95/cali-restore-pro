@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -88,15 +89,40 @@ func run(ctx context.Context, args []string) error {
 	if args[0] == "bootstrap-superuser" {
 		return bootstrap(ctx, pool)
 	}
-	if args[0] == "worker" {
-		return worker(ctx, c, ready)
-	}
-	if _, err := os.Stat(filepath.Join(c.StaticDir, "index.html")); err != nil {
-		return errors.New("frontend build missing")
-	}
 	identities, err := identity.New(pool)
 	if err != nil {
 		return errors.New("identity initialization failed")
+	}
+	keyPath := os.Getenv("MAIL_KEY_FILE")
+	if !filepath.IsAbs(keyPath) {
+		return errors.New("MAIL_KEY_FILE must be an absolute mounted secret path")
+	}
+	keyText, err := os.ReadFile(keyPath)
+	if err != nil {
+		return errors.New("cannot read mail key")
+	}
+	key, err := hex.DecodeString(strings.TrimSpace(string(keyText)))
+	if err != nil || identities.ConfigureMail(key, c.Origin) != nil {
+		return errors.New("invalid mail key")
+	}
+	if args[0] == "worker" {
+		address, from := os.Getenv("SMTP_ADDRESS"), os.Getenv("SMTP_FROM")
+		if address == "" || from == "" {
+			return errors.New("SMTP_ADDRESS and SMTP_FROM are required")
+		}
+		password := ""
+		if path := os.Getenv("SMTP_PASSWORD_FILE"); path != "" {
+			data, e := os.ReadFile(path)
+			if e != nil {
+				return errors.New("cannot read SMTP password")
+			}
+			password = strings.TrimRight(string(data), "\r\n")
+		}
+		send := identity.SMTPTransport(address, from, os.Getenv("SMTP_USERNAME"), password, c.Mode == "production")
+		return worker(ctx, c, ready, func(ctx context.Context) error { return identities.DeliverMail(ctx, send) })
+	}
+	if _, err := os.Stat(filepath.Join(c.StaticDir, "index.html")); err != nil {
+		return errors.New("frontend build missing")
 	}
 	auth := identity.NewHTTP(identities, c.Origin, strings.HasPrefix(c.Origin, "https://"))
 	srv := &http.Server{Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
@@ -150,15 +176,17 @@ func bootstrap(ctx context.Context, pool *pgxpool.Pool) error {
 	return nil
 }
 
-func worker(ctx context.Context, c config.Config, ready platform.Readiness) error {
-	// M-00 monitors its dependencies only. Durable jobs/outbox begin at M-01.
+func worker(ctx context.Context, c config.Config, ready platform.Readiness, deliver func(context.Context) error) error {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 	defer os.Remove(c.HeartbeatFile)
 	wasReady := false
 	for {
-		check, cancel := context.WithTimeout(ctx, 2*time.Second)
+		check, cancel := context.WithTimeout(ctx, 12*time.Second)
 		err := ready(check)
+		if err == nil {
+			err = deliver(check)
+		}
 		cancel()
 		if err == nil {
 			err = os.WriteFile(c.HeartbeatFile, []byte("ready\n"), 0600)

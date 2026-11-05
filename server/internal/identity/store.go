@@ -2,6 +2,7 @@ package identity
 
 import (
 	"context"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -27,9 +28,11 @@ const mutationLock = 72401601
 const maxSessions = 20
 
 type Service struct {
-	pool  *pgxpool.Pool
-	slots chan struct{}
-	dummy string
+	pool       *pgxpool.Pool
+	slots      chan struct{}
+	dummy      string
+	mailCipher cipher.AEAD
+	origin     string
 }
 
 type Session struct {
@@ -331,6 +334,9 @@ func (s *Service) SetPolicy(ctx context.Context, raw, subject, role, state strin
 		if pgErrCode(err) == "23514" {
 			return ErrConflict
 		}
+		return err
+	}
+	if _, err = tx.Exec(ctx, `DELETE FROM identity_links WHERE account_id=$1`, subject); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, `DELETE FROM sessions WHERE account_id=$1`, subject); err != nil {
