@@ -75,7 +75,7 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 			}
 			var hosted bool
 			err = h.service.pool.QueryRow(r.Context(),
-				`SELECT EXISTS (SELECT 1 FROM hosted_projects WHERE owner_id=$1)`, id).Scan(&hosted)
+				`SELECT EXISTS (SELECT 1 FROM project_owners WHERE account_id=$1)`, id).Scan(&hosted)
 			if err != nil {
 				failure(w, err)
 				return
