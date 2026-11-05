@@ -40,7 +40,7 @@ func TestLeastPrivilege(t *testing.T) {
 			if a.Allows(ManageRoles) != (state == "active" && role == "superuser") {
 				t.Fatal(a)
 			}
-			if a.Allows(SuspendAccounts) != (state == "active" && (role == "superuser" || role == "administrator")) {
+			if a.Allows(SuspendAccounts) != (state == "active" && role == "superuser") {
 				t.Fatal(a)
 			}
 			for _, forbidden := range []Capability{"project.read", "project.write", "content.decrypt", "hosting.create", "unknown"} {

@@ -138,6 +138,9 @@ func TestPostgresIdentity(t *testing.T) {
 			t.Fatal(err)
 		}
 		ids[a.name] = id
+		if a.role == "administrator" {
+			mustExec("UPDATE accounts SET admin_permissions=1 WHERE id=$1", id)
+		}
 	}
 	t.Run("neutral credentials and persistent opaque revocable sessions", func(t *testing.T) {
 		for _, email := range []string{"missing@example.test", "pending@example.test", "suspended@example.test"} {

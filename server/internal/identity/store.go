@@ -16,6 +16,7 @@ import (
 )
 
 var (
+	ErrInvalid      = errors.New("invalid request")
 	ErrCredentials  = errors.New("invalid credentials")
 	ErrUnauthorized = errors.New("authentication required")
 	ErrForbidden    = errors.New("not permitted")
@@ -84,9 +85,9 @@ func session(ctx context.Context, q rowQuery, raw string) (Session, error) {
 	if !validToken(raw) {
 		return s, ErrUnauthorized
 	}
-	err := q.QueryRow(ctx, `SELECT s.id, a.id, a.email, a.state, a.role, s.created_at, s.verified_at
+	err := q.QueryRow(ctx, `SELECT s.id, a.id, a.email, a.state, a.role, a.admin_permissions, s.created_at, s.verified_at
         FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_digest=$1 AND a.state='active'`, digest(raw)).Scan(
-		&s.ID, &s.Account.ID, &s.Account.Email, &s.Account.State, &s.Account.Role, &s.CreatedAt, &s.VerifiedAt)
+		&s.ID, &s.Account.ID, &s.Account.Email, &s.Account.State, &s.Account.Role, &s.Account.AdminPermissions, &s.CreatedAt, &s.VerifiedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return s, ErrUnauthorized
 	}
@@ -252,6 +253,10 @@ func recent(s Session) error {
 // An empty sessionID revokes all sessions of the subject, including the actor's
 // current one if it belongs to that account. Cross-account IDs never act as own.
 func (s *Service) Revoke(ctx context.Context, raw, subject, sessionID string) error {
+	return s.revoke(ctx, raw, subject, sessionID, false)
+}
+
+func (s *Service) revoke(ctx context.Context, raw, subject, sessionID string, adminRoute bool) error {
 	tx, err := beginMutation(ctx, s.pool)
 	if err != nil {
 		return err
@@ -264,7 +269,7 @@ func (s *Service) Revoke(ctx context.Context, raw, subject, sessionID string) er
 	if err = recent(actor); err != nil {
 		return err
 	}
-	if actor.Account.ID != subject {
+	if adminRoute || actor.Account.ID != subject {
 		if !actor.Account.Allows(RevokeAccountSessions) {
 			return ErrForbidden
 		}
@@ -330,7 +335,7 @@ func (s *Service) SetPolicy(ctx context.Context, raw, subject, role, state strin
 	if oldRole == role && oldState == state {
 		return tx.Commit(ctx)
 	}
-	if _, err = tx.Exec(ctx, `UPDATE accounts SET role=$2,state=$3 WHERE id=$1`, subject, role, state); err != nil {
+	if _, err = tx.Exec(ctx, `UPDATE accounts SET role=$2,state=$3,admin_permissions=CASE WHEN role=$2 THEN admin_permissions ELSE 0 END WHERE id=$1`, subject, role, state); err != nil {
 		if pgErrCode(err) == "23514" {
 			return ErrConflict
 		}
