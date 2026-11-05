@@ -19,3 +19,17 @@ the acceptance cases and independent cryptographic review gate.
 Go formatting, vet and race tests passed against disposable PostgreSQL.
 The tests cover upgrading a previously hosted project, creating a project
 with its initial owner and rejecting a host who has no ownership record.
+
+## Invitation API
+
+Migration `0007` stores invitations to existing active accounts. An owner
+issues an invitation using the recipient's verified email address. The API
+binds it to the immutable account ID and the address at issue time. The
+recipient can list their pending invitations and explicitly accept one
+within 24 hours. Reissue after cancellation or expiry replaces the invitation
+ID. Owners can cancel an invitation before secure activation, including
+after the recipient accepts.
+
+Acceptance records intent while secure activation is pending. It confers
+zero file or project access. Email delivery, browser controls, scope
+selection and recipient key verification are subsequent work.
