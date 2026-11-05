@@ -4,6 +4,7 @@ import {
   chunkBytes,
   chunkCount,
   fileCipher,
+  originalKey,
   parseManifest,
   partBytes,
   sourceManifest,
@@ -130,6 +131,12 @@ export function encryptedFiles(
   }
 
   return {
+    async exportOriginalKey(ref: Ref) {
+      await ready(ref);
+      const key = await originalKey(root, account, ref.project, ref.id, true);
+      locked.throwIfAborted();
+      return new Uint8Array(await crypto.subtle.exportKey('raw', key));
+    },
     async stage(project: string, file: File, options: Options = {}) {
       locked.throwIfAborted();
       const ref = { project, id: crypto.randomUUID() };
@@ -218,7 +225,7 @@ export function encryptedFiles(
   };
 }
 
-async function readBounded(response: Response, size: number) {
+export async function readBounded(response: Response, size: number) {
   const reader = response.body?.getReader();
   if (!reader) throw new Error('Missing ciphertext');
   const bytes = new Uint8Array(size);

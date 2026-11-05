@@ -7,18 +7,26 @@ import {
 } from '../../../platform/projects/fixture-sharing';
 import type { SharingEnvelope } from '../../../platform/projects/fixture-sharing';
 import type { SharedProject } from '../../../platform/projects/shared-project';
+import type { SharedOriginal } from '../../../platform/projects/shared-originals';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { invitationCopy } from './copy';
 import type { InboxInvitation, InvitationModel } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
 import { ProjectInvitations } from './ProjectInvitations';
+import { SharedOriginals } from './SharedOriginals';
 import './styles.css';
 
 export function InvitationInbox(props: { model: InvitationModel; vault: LocalVault }) {
   const c = () => invitationCopy[props.model.lang()];
   const inbox = useInvitations<InboxInvitation>(props.model, '/invitations');
-  const [opened, setOpened] = createSignal<{ id: string; project?: SharedProject }>();
+  const [opened, setOpened] = createSignal<{
+    id: string;
+    project?: SharedProject;
+    originals: SharedOriginal[];
+    sender: string;
+    locked: AbortSignal;
+  }>();
   return (
     <section class="invitation-panel" aria-label={c().heading}>
       <SharingFingerprint
@@ -84,14 +92,20 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                         account: grant.senderId,
                         fingerprint,
                       });
-                      const project = await openSharedContent(key.pair, grant.senderKey, grant, {
+                      const content = await openSharedContent(key.pair, grant.senderKey, grant, {
                         project: item.projectId,
                         invitation: item.id,
                         sender: grant.senderId,
                         recipient: props.model.account()!.id,
                       });
                       key.signal.throwIfAborted();
-                      setOpened({ id: item.id, project });
+                      setOpened({
+                        id: item.id,
+                        project: content?.project,
+                        originals: content?.originals ?? [],
+                        sender: grant.senderId,
+                        locked: key.signal,
+                      });
                     }, false);
                   }}
                 >
@@ -131,6 +145,16 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                               </div>
                             )}
                           </For>
+                          <Show when={result().originals.length}>
+                            <SharedOriginals
+                              files={result().originals}
+                              invitation={item.id}
+                              project={item.projectId}
+                              sender={result().sender}
+                              locked={result().locked}
+                              language={props.model.lang()}
+                            />
+                          </Show>
                           <Show when={item.coOwner}>
                             <ProjectInvitations
                               projectId={item.projectId}

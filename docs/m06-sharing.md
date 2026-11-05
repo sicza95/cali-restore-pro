@@ -56,9 +56,9 @@ recipient account can fetch it. The browser authenticates and decrypts the
 envelope with the pinned sender key before displaying the project name,
 revision, object and surface names, and effective surface units.
 
-The grant is a single saved revision, capped at 64 KiB of plaintext. Original
-files, attachment references, and financial settings stay outside the
-snapshot. Migration `0009` preserves existing assessment sample grants
+The grant is a single saved revision, capped at 64 KiB of plaintext.
+Financial settings stay outside the snapshot. Original files can be
+included explicitly as described below. Migration `0009` preserves existing assessment sample grants
 and labels new snapshots with their own format. Live updates, other
 content scopes, sharing identity recovery and rotation
 remain separate work. The independent cryptographic review gate continues
@@ -110,4 +110,25 @@ transactions, so they authorize and charge the same host.
 
 Both accounts keep their ownership when hosting changes. The new host can
 then remove the former host. Transfer changes server-side storage
-responsibility. Sharing original file decryption keys is separate work.
+responsibility. It does not transfer a previous host's private vault.
+
+## Shared originals
+
+When activating an invitation, the hosting owner can include all attached
+originals from the local project, up to 64 files per grant. The browser
+uploads their existing encrypted manifests and chunks through the hosted
+file API. It includes names and individual file keys inside the authenticated
+HPKE envelope. The vault root stays on the owner's device. Migration
+`0013` ties each allowed opaque file ID to the invitation grant. Activation
+records these links only for committed files in the same hosted project.
+
+The recipient decrypts in the browser, verifies the encrypted manifest and
+each chunk, and saves the original. The server checks the recipient and
+active grant for metadata and every chunk. Revocation removes those links
+with the grant and denies new requests. Already delivered bytes cannot be
+recalled. Hosted ciphertext remains under the host's storage quota and can
+be reused for another authorized grant.
+
+The live browser test downloads and compares the exact original bytes. It
+also checks that the transport carries ciphertext and that recipient
+metadata, manifest and data requests return 404 after revocation.

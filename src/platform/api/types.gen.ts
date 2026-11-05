@@ -1779,6 +1779,7 @@ export type ActivateInvitationContentData = {
     encapsulation: string;
     ciphertext: string;
     format?: 'fixture-v1' | 'project-v1';
+    fileIds?: Array<string>;
   };
   headers: {
     Origin: string;
@@ -2059,3 +2060,63 @@ export type ProposeHostingTransferResponses = {
 
 export type ProposeHostingTransferResponse =
   ProposeHostingTransferResponses[keyof ProposeHostingTransferResponses];
+
+export type GetSharedOriginalData = {
+  body?: never;
+  path: {
+    invitation: string;
+    file: string;
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/files/{file}';
+};
+
+export type GetSharedOriginalErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type GetSharedOriginalError = GetSharedOriginalErrors[keyof GetSharedOriginalErrors];
+
+export type GetSharedOriginalResponses = {
+  /**
+   * File reservation or committed file
+   */
+  200: EncryptedFileRecord;
+};
+
+export type GetSharedOriginalResponse =
+  GetSharedOriginalResponses[keyof GetSharedOriginalResponses];
+
+export type GetSharedOriginalPartData = {
+  body?: never;
+  path: {
+    invitation: string;
+    file: string;
+    part: number;
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/files/{file}/parts/{part}';
+};
+
+export type GetSharedOriginalPartErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type GetSharedOriginalPartError =
+  GetSharedOriginalPartErrors[keyof GetSharedOriginalPartErrors];
+
+export type GetSharedOriginalPartResponses = {
+  /**
+   * Verified ciphertext part
+   */
+  200: Blob | File;
+};
+
+export type GetSharedOriginalPartResponse =
+  GetSharedOriginalPartResponses[keyof GetSharedOriginalPartResponses];
