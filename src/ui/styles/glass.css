@@ -1,0 +1,29 @@
+.cr-glass {
+  background: var(--cr-glass-opaque);
+  color: var(--cr-ink);
+  border: 1px solid var(--cr-glass-edge);
+  border-radius: var(--cr-panel-radius);
+  box-shadow: var(--cr-shadow-floating);
+}
+
+@supports (backdrop-filter: blur(12px)) {
+  .cr-glass {
+    background: var(--cr-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+.cr-root[data-transparency='opaque'] .cr-glass {
+  background: var(--cr-glass-opaque);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .cr-glass {
+    background: var(--cr-glass-opaque);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

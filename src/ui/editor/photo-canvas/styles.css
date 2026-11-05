@@ -1,0 +1,112 @@
+.cr-opacity-layer,
+.cr-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.cr-canvas {
+  position: relative;
+  overflow: hidden;
+}
+
+.cr-photo-space {
+  position: absolute;
+  inset: 0;
+}
+
+.cr-photo-space img,
+.cr-map-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.cr-canvas[data-detail='true'] .cr-photo-space {
+  transform: scale(2);
+  transform-origin: 26% 22%;
+}
+
+.cr-mask-fill {
+  fill: var(--cr-mask);
+  fill-opacity: var(--cr-mask-opacity, 0.4);
+  stroke: var(--cr-mask);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.cr-crack-mask {
+  fill: none;
+  stroke: #f2ce82;
+  stroke-width: 5;
+  stroke-opacity: 0.85;
+}
+
+.cr-treatment-mask {
+  fill-opacity: 0.8;
+  stroke: #f2ce82;
+  stroke-width: 2;
+}
+
+.cr-canvas-region > .cr-tool-rail {
+  position: absolute;
+  z-index: 1;
+  top: 16px;
+  left: 16px;
+}
+
+.cr-canvas-label {
+  position: absolute;
+  top: 16px;
+  left: 90px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 7px;
+  font-size: 11px;
+}
+
+.cr-live-dot {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cr-accent);
+}
+
+.cr-scale {
+  position: absolute;
+  bottom: 86px;
+  left: 20px;
+  width: 155px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 11px;
+}
+
+.cr-scale > div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.cr-scale-line {
+  display: block;
+  height: 7px;
+  border: 1px solid currentColor;
+  border-top: 0;
+}
+
+.cr-canvas-caption {
+  position: absolute;
+  bottom: 19px;
+  right: 18px;
+  color: #fff;
+  background: #252b2e;
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+}

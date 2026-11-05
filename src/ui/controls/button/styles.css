@@ -1,0 +1,54 @@
+.cr-button {
+  min-height: var(--cr-touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--cr-radius);
+  white-space: nowrap;
+  font-weight: 500;
+  line-height: 1;
+  background: transparent;
+}
+
+.cr-button--secondary {
+  background: var(--cr-surface);
+  border-color: var(--cr-border);
+}
+
+.cr-button--primary {
+  color: var(--cr-primary-ink) !important;
+  background: var(--cr-primary);
+}
+
+.cr-button--danger {
+  color: var(--cr-negative) !important;
+  border-color: currentColor;
+}
+
+.cr-button--ghost {
+  color: var(--cr-muted);
+}
+
+.cr-button:hover:not(:disabled) {
+  background: var(--cr-hover);
+  color: var(--cr-ink);
+}
+
+.cr-button--primary:hover:not(:disabled) {
+  background: var(--cr-accent);
+  color: var(--cr-accent-ink) !important;
+}
+
+.cr-button:disabled {
+  color: var(--cr-muted);
+  border-color: var(--cr-rule);
+  cursor: not-allowed;
+}
+
+.cr-button--primary:disabled {
+  background: var(--cr-raised);
+  color: var(--cr-muted) !important;
+}

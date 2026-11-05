@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { EditorWorkspace } from '../ui/EditorWorkspace';
+import { EditorWorkspace } from '../ui';
 
 const meta = {
   title: 'Editor/Workspace',

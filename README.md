@@ -40,6 +40,8 @@ Local Playwright tests use installed Chrome. CI installs its pinned Chromium ver
 
 ## Structure
 
+See the [source layout conventions](docs/source-layout.md) for module boundaries and file size.
+
 ```text
 .storybook/       Storybook configuration and review controls
 src/ui/           UI components and semantic CSS tokens

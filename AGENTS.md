@@ -3,6 +3,7 @@
 This repository starts with the UI library. It is not a replacement editing engine.
 
 - Use SolidJS, TypeScript and semantic CSS. Components live in `src/ui`; Storybook compositions live in `src/stories`.
+- Follow the [source layout conventions](docs/source-layout.md). Organize code by feature and keep authored source files within 400 lines. Keep types, constants and utilities with the scope that owns them.
 - Keep production renderer, persistence, encryption and project data independent of the UI. Stories use synthetic in-memory data.
 - iPad first: 1194 × 834 landscape and 834 × 1194 portrait. Tools stay on the left. Portrait inspectors dock below the canvas.
 - Use tokens for both themes. Translucency is reserved for floating tools and masks; fields and inspectors are opaque. Preserve the opaque fallback and reduced-transparency preference.
