@@ -9,8 +9,12 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
 }
-.invitation-panel li > :is(form, p) {
+.invitation-panel li > :is(form, p, .shared-project) {
   grid-column: 1 / -1;
+}
+.shared-project h3 {
+  margin: 8px 0 4px;
+  font-size: 14px;
 }
 .project-workspace > .invitation-panel {
   margin: 0 0 16px;

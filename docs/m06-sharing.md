@@ -38,7 +38,7 @@ acceptance secrets. In the browser, project owners enable hosting, issue
 invitations and cancel them before activation. Recipients unlock their vault
 to accept and open invitations.
 
-## Secure activation for an assessment sample
+## Secure activation for a project snapshot
 
 The browser registers an immutable P-256 sharing public key against the
 authenticated account. The corresponding random seed and peer fingerprints
@@ -48,23 +48,28 @@ a trusted channel. A changed fingerprint for a pinned account stops the
 operation. The current vault backup and device transfer cover the original
 snapshot. Sharing keys require the browser vault in which they were created.
 
-The owner seals one synthetic assessment with authenticated HPKE
+The owner seals a read-only snapshot of the saved project with authenticated HPKE
 (P-256/HKDF-SHA256/AES-128-GCM). Associated data binds both account IDs,
-the project and invitation IDs, and the assessment sample scope, format
+the project and invitation IDs, and the project assessment scope, format
 and epoch. The API atomically records the active invitation and ciphertext
 only for an accepted invitation with the expected recipient key. Only the
 recipient account can fetch it. The browser authenticates and decrypts the
-envelope with the pinned sender key before displaying the sample.
+envelope with the pinned sender key before displaying the project name,
+revision, object and surface names, and effective surface units.
 
-The grant covers the synthetic sample. Project documents, original files,
-estimate and history scopes, sharing identity recovery and rotation, and
-revocation remain separate work. The independent cryptographic review gate
-continues to apply to collaborative production use.
+The grant is a single saved revision, capped at 64 KiB of plaintext. Original
+files, attachment references, and financial settings stay outside the
+snapshot. Migration `0009` preserves existing assessment sample grants
+and labels new snapshots with their own format. Live updates, other
+content scopes, sharing identity recovery and rotation, and revocation
+remain separate work. The independent cryptographic review gate continues
+to apply to collaborative production use.
 
 The live Chromium test uses two isolated browser contexts and synthetic
 active accounts against the Go API and disposable PostgreSQL. It exercises
 issuance, acceptance, fingerprint mismatch, recipient-only retrieval,
-rejection of altered ciphertext, and reopening after vault lock. To run it
+rejection of altered ciphertext, and reopening the project snapshot after
+vault lock. To run it
 against a disposable app, set `SMOKE_ORIGIN`, `M06_OWNER_SESSION` and
 `M06_RECIPIENT_SESSION` for seeded synthetic sessions. The owner needs
 hosting entitlement and quota. The recipient address is

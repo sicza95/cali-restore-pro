@@ -3052,8 +3052,8 @@
         }
       ],
       "post": {
-        "operationId": "activateInvitationFixture",
-        "summary": "Publish an encrypted synthetic assessment for an accepted invitation",
+        "operationId": "activateInvitationContent",
+        "summary": "Publish an encrypted project snapshot for an accepted invitation",
         "security": [
           {
             "sessionCookie": []
@@ -3098,7 +3098,11 @@
                   "ciphertext": {
                     "type": "string",
                     "minLength": 24,
-                    "maxLength": 512
+                    "maxLength": 87404
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": ["fixture-v1", "project-v1"]
                   }
                 },
                 "additionalProperties": false
@@ -3170,6 +3174,76 @@
                       "type": "string",
                       "minLength": 88,
                       "maxLength": 88
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/{invitation}/content": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getInvitationContent",
+        "summary": "Fetch the authenticated recipient’s encrypted project content",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated recipient envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["encapsulation", "ciphertext", "senderId", "senderKey", "format"],
+                  "properties": {
+                    "encapsulation": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    },
+                    "ciphertext": {
+                      "type": "string",
+                      "minLength": 24,
+                      "maxLength": 87404
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "senderKey": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    },
+                    "format": {
+                      "type": "string",
+                      "enum": ["fixture-v1", "project-v1"]
                     }
                   }
                 }
