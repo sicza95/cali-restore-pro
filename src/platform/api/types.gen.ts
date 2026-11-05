@@ -1561,6 +1561,43 @@ export type PutEncryptedPartResponses = {
 
 export type PutEncryptedPartResponse = PutEncryptedPartResponses[keyof PutEncryptedPartResponses];
 
+export type ListOwnedProjectInvitationsData = {
+  body?: never;
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations';
+};
+
+export type ListOwnedProjectInvitationsErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type ListOwnedProjectInvitationsError =
+  ListOwnedProjectInvitationsErrors[keyof ListOwnedProjectInvitationsErrors];
+
+export type ListOwnedProjectInvitationsResponses = {
+  /**
+   * List up to 100 invitations for a project owner
+   */
+  200: {
+    invitations: Array<{
+      id: string;
+      email: string;
+      state: 'pending' | 'accepted' | 'active';
+      recipientId: string;
+      recipientKey?: string;
+    }>;
+  };
+};
+
+export type ListOwnedProjectInvitationsResponse =
+  ListOwnedProjectInvitationsResponses[keyof ListOwnedProjectInvitationsResponses];
+
 export type CreateProjectInvitationData = {
   body: {
     email: string;
@@ -1652,13 +1689,14 @@ export type ListProjectInvitationsError =
 
 export type ListProjectInvitationsResponses = {
   /**
-   * Pending invitations
+   * List up to 100 invitations for the signed-in recipient
    */
   200: {
     invitations: Array<{
       id: string;
       projectId: string;
       expiresAt: string;
+      state: 'pending' | 'accepted' | 'active';
     }>;
   };
 };
@@ -1698,3 +1736,108 @@ export type AcceptProjectInvitationResponses = {
 
 export type AcceptProjectInvitationResponse =
   AcceptProjectInvitationResponses[keyof AcceptProjectInvitationResponses];
+
+export type RegisterSharingIdentityData = {
+  body: {
+    publicKey: string;
+  };
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/sharing-identity';
+};
+
+export type RegisterSharingIdentityErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type RegisterSharingIdentityError =
+  RegisterSharingIdentityErrors[keyof RegisterSharingIdentityErrors];
+
+export type RegisterSharingIdentityResponses = {
+  /**
+   * Saved
+   */
+  204: void;
+};
+
+export type RegisterSharingIdentityResponse =
+  RegisterSharingIdentityResponses[keyof RegisterSharingIdentityResponses];
+
+export type ActivateInvitationFixtureData = {
+  body: {
+    recipientKey: string;
+    encapsulation: string;
+    ciphertext: string;
+  };
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/activate';
+};
+
+export type ActivateInvitationFixtureErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type ActivateInvitationFixtureError =
+  ActivateInvitationFixtureErrors[keyof ActivateInvitationFixtureErrors];
+
+export type ActivateInvitationFixtureResponses = {
+  /**
+   * Saved
+   */
+  204: void;
+};
+
+export type ActivateInvitationFixtureResponse =
+  ActivateInvitationFixtureResponses[keyof ActivateInvitationFixtureResponses];
+
+export type GetInvitationFixtureData = {
+  body?: never;
+  path: {
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/fixture';
+};
+
+export type GetInvitationFixtureErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type GetInvitationFixtureError =
+  GetInvitationFixtureErrors[keyof GetInvitationFixtureErrors];
+
+export type GetInvitationFixtureResponses = {
+  /**
+   * Fetch the authenticated recipient’s encrypted assessment sample
+   */
+  200: {
+    encapsulation: string;
+    ciphertext: string;
+    senderId: string;
+    senderKey: string;
+  };
+};
+
+export type GetInvitationFixtureResponse =
+  GetInvitationFixtureResponses[keyof GetInvitationFixtureResponses];

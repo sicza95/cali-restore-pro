@@ -32,7 +32,7 @@ func MailText(p mailPayload, origin string) (string, string) {
 			subject = "CaliRestore Pro projektmeghívó"
 			body = "Projektmeghívót kaptál. Jelentkezz be ezzel az e-mail-címmel a függő meghívók megtekintéséhez."
 		}
-		return subject, body + "\n\n" + origin + "/"
+		return subject, body + "\n\n" + origin + "/invitations"
 	case "verify":
 		body = "Verify your email address. This link is valid for 24 hours."
 		if p.Language == "hu" {

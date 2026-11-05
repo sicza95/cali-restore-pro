@@ -12,6 +12,7 @@ export type Route =
   | 'preferences'
   | 'admin'
   | 'projects'
+  | 'invitations'
   | (typeof publicRoutes)[number];
 export type Submit = (event: SubmitEvent, action: string, success: Message) => void;
 export type AuthResponse = {

@@ -13,13 +13,43 @@ type pendingInvitation struct {
 	ID        string    `json:"id"`
 	ProjectID string    `json:"projectId"`
 	ExpiresAt time.Time `json:"expiresAt"`
+	State     string    `json:"state"`
+}
+
+type ownerInvitation struct {
+	ID           string `json:"id"`
+	Email        string `json:"email"`
+	State        string `json:"state"`
+	RecipientID  string `json:"recipientId"`
+	RecipientKey string `json:"recipientKey,omitempty"`
+}
+
+func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]ownerInvitation, error) {
+	if err := a.requireProjectOwner(ctx, project); err != nil {
+		return nil, err
+	}
+	rows, err := a.tx.Query(ctx, `SELECT i.id,i.recipient_email,i.state,i.recipient_id,
+ CASE WHEN i.state='accepted' AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END
+ FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
+ LEFT JOIN sharing_identities k ON k.account_id=i.recipient_id
+ WHERE project_id=$1 AND (i.state IN ('accepted','active') OR (i.state='pending' AND expires_at>clock_timestamp()))
+ ORDER BY i.expires_at DESC,i.id LIMIT 100`, project)
+	if err != nil {
+		return nil, err
+	}
+	list, err := pgx.CollectRows(rows, pgx.RowToStructByPos[ownerInvitation])
+	if list == nil {
+		list = []ownerInvitation{}
+	}
+	return list, err
 }
 
 func (a fileAccess) pendingInvitations(ctx context.Context) ([]pendingInvitation, error) {
-	rows, err := a.tx.Query(ctx, `SELECT i.id,i.project_id,i.expires_at
+	rows, err := a.tx.Query(ctx, `SELECT i.id,i.project_id,i.expires_at,i.state
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
- WHERE i.recipient_id=$1 AND r.email=i.recipient_email AND i.state='pending'
- AND i.expires_at>clock_timestamp() ORDER BY i.expires_at,i.id LIMIT 100`, a.account)
+ WHERE i.recipient_id=$1 AND r.email=i.recipient_email
+ AND (i.state IN ('accepted','active') OR (i.state='pending' AND i.expires_at>clock_timestamp()))
+ ORDER BY i.state DESC,i.expires_at,i.id LIMIT 100`, a.account)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +119,24 @@ func (a fileAccess) cancelInvitation(ctx context.Context, project, id string) er
 
 func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 	const projectInvitations = "/api/v1/hosted-projects/{project}/invitations"
+	route("GET "+projectInvitations, true, func(w http.ResponseWriter, r *http.Request) {
+		project := r.PathValue("project")
+		if !uuid(project) {
+			failure(w, ErrInvalid)
+			return
+		}
+		var list []ownerInvitation
+		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
+			var err error
+			list, err = a.ownerInvitations(r.Context(), project)
+			return err
+		})
+		if err != nil {
+			fileFailure(w, err)
+			return
+		}
+		respond(w, http.StatusOK, map[string]any{"invitations": list})
+	})
 	route("GET /api/v1/invitations", true, func(w http.ResponseWriter, r *http.Request) {
 		var list []pendingInvitation
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {

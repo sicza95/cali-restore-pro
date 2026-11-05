@@ -1,5 +1,6 @@
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
 import { createSignal, For, Show } from 'solid-js';
+import type { JSX } from 'solid-js';
 import { newObject, newSurface, projectName } from '../../../platform/projects/projects';
 import type {
   RestorationObject,
@@ -20,6 +21,7 @@ export function ProjectDetail(props: {
   busy: boolean;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
   onSave: (project: SavedProject) => Promise<void>;
+  sharing: JSX.Element;
 }) {
   const c = () => projectCopy[props.language];
   const [objectId, setObject] = createSignal('');
@@ -50,6 +52,7 @@ export function ProjectDetail(props: {
           {props.project.archived ? c().restore : c().archive}
         </button>
       </div>
+      {props.sharing}
       <Show when={!props.project.archived}>
         <div class="project-detail">
           <section class="project-pane">

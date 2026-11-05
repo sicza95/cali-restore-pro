@@ -81,7 +81,11 @@ export function createAccountAccess() {
       await api(action, body);
       if (action === 'login') {
         sessionChanges?.postMessage(null);
-        window.location.assign('/settings/security');
+        window.location.assign(
+          new URLSearchParams(location.search).get('next') === 'invitations'
+            ? '/invitations'
+            : '/settings/security',
+        );
         return;
       }
       if (sessionEndingActions.includes(action)) {
@@ -180,6 +184,8 @@ export function createAccountAccess() {
     can,
     loaded,
     read,
+    request: <T>(path: string, body?: object, method?: string) =>
+      requestAuth<T>(path, csrf(), body, method),
     run,
     busy,
     confirmed,

@@ -129,6 +129,31 @@ export class LocalVault {
     return projectDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
+  async sharingIdentity(pin?: { account: string; fingerprint: string }) {
+    const { root, row, epoch } = this.#unlocked();
+    const saved = row.sharingIdentity;
+    const data = saved
+      ? (JSON.parse(await open(root, this.account, 'sharing-identity', saved)) as {
+          seed: string;
+          pins: Record<string, string>;
+        })
+      : { seed: newCode(), pins: {} as Record<string, string> };
+    this.#assert(epoch);
+    if (pin && Object.hasOwn(data.pins, pin.account) && data.pins[pin.account] !== pin.fingerprint)
+      throw new Error('Sharing identity changed');
+    if (!saved || (pin && data.pins[pin.account] !== pin.fingerprint)) {
+      if (pin) data.pins[pin.account] = pin.fingerprint;
+      const sharingIdentity = await seal(
+        root,
+        this.account,
+        'sharing-identity',
+        JSON.stringify(data),
+      );
+      await this.#update(row, { ...row, stamp: newCode(), sharingIdentity }, epoch);
+    }
+    return { seed: data.seed, signal: this.#fileAccess.signal };
+  }
+
   async save(text: string) {
     const { root, row, epoch } = this.#unlocked();
     const envelope = await seal(root, this.account, 'snapshot', text);
