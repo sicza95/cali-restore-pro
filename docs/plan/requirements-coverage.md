@@ -120,13 +120,15 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | ADMIN-06    | Must     | Voluntary deletion resolves project continuity and pending work     | M-02  | M-07       | Planned |
 | ADMIN-07    | Must     | Bounded deletion recovery and encrypted-backup expiry               | M-02  | M-07       | Planned |
 | ADMIN-08    | Must     | Reversible suspension and explicit forced deletion                  | M-01  | M-07       | Partial |
-| UX-01       | Must     | iPad-first core interactions                                        | M-01  | M-16       | Planned |
-| UX-02       | Must     | English/Hungarian interface and independent report language         | M-01  | M-16       | Planned |
-| UI-01       | Must     | Shared visual/interaction system                                    | M-01  | M-16       | Planned |
+| UX-01       | Must     | iPad-first core interactions                                        | M-01  | M-16       | Partial |
+| UX-02       | Must     | English/Hungarian interface and independent report language         | M-01  | M-16       | Partial |
+| UI-01       | Must     | Shared visual/interaction system                                    | M-01  | M-16       | Partial |
 
 ## Completion evidence
 
 M-01a adds [identity-core contracts and executed evidence](../m01a-identity.md): PRIV-05 has manual/revocable authentication without idle/absolute expiry (content locking remains M-03); ADMIN-01 has account-state/session APIs but no lifecycle UI; ADMIN-02 has tested least-privilege platform capabilities, operator bootstrap and database-enforced final-superuser protection (project/content scopes remain later); ADMIN-08 has real suspension/re-enable and atomic session revocation (forced deletion remains blocked). PRIV-06 gains an explicit identity-metadata allowlist; full retention/restore/privacy qualification remains open. Registration, verification/reset/change-email/password, mail and auth screens remain M-01b. No row becomes Accepted here.
+
+M-01b adds [account lifecycle and verification evidence](../m01b-account-lifecycle.md). ADMIN-01 gains public registration, verification, recovery and security controls. PRIV-05 gains explicit session controls and revocation on credential changes. PRIV-06 gains a mail metadata boundary and encrypted queue payloads. UX-01, UX-02 and UI-01 gain touch, bilingual and shared-token evidence for the auth surfaces. Full administration, physical device checks, independent report language and release qualification remain in their planned milestones.
 
 PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verification.md). The complete privacy acceptance remains M-16; the bootstrap schema does not close encryption or project-content requirements.
 

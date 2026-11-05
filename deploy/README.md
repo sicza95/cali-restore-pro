@@ -1,4 +1,4 @@
-# M-00 platform operations
+# Platform operations
 
 Use Docker Desktop with Linux containers (or Docker Engine) and Docker Compose 2.24+; Node 24.22.2 is pinned in `.nvmrc`. Go 1.27.3 and PostgreSQL 18.6 run in pinned containers, so a host Go/PostgreSQL installation is optional. Commands run from the repository root.
 
@@ -12,7 +12,13 @@ docker compose --profile dev up --build -d --wait
 
 Open the [app](http://localhost:8080) and [development mail viewer](http://localhost:8025). If a port is occupied, copy `.env.example` to `.env` and change `APP_PORT`/`APP_ORIGIN` or `MAIL_PORT`. The local verification machine uses `MAIL_PORT=18025` because another application owns 8025. PostgreSQL and SMTP have no published ports. App and mail viewer bind only to loopback; only those services and the optional tunnel join the ingress network. The database, migrator and worker stay on the internal network.
 
-The product entry only reports a real connection to the substrate. M-01a adds server identity/session/policy APIs and operator bootstrap; registration, durable mail jobs and auth screens follow in M-01b. Files, project saves, encryption and editing are later milestones. The worker monitors database/schema availability; it does not claim to process jobs. Mailpit captures future development mail, with no relay configured or messages sent by this slice.
+The app serves account access and security screens. The worker delivers verification, reset and security messages to Mailpit in the development profile. Mailpit exposes message bodies and links to anyone with access to the viewer. Use synthetic accounts in development.
+
+## Account mail
+
+For an existing checkout, rerun `npm run setup:secrets` to add `mail_key`, then rebuild the stack and apply migration 0003. The app and worker use the same mounted key. Keep it stable across restarts and store it separately from the database backup. A worker with a different key cannot deliver existing queued mail.
+
+Compose defaults to `mail-sink:1025` with a development sender. For a production deployment, configure `SMTP_ADDRESS`, `SMTP_FROM`, and worker access to a trusted SMTP relay. Production requires certificate-verified STARTTLS. For authenticated SMTP, pass `SMTP_USERNAME` and mount a worker-only `SMTP_PASSWORD_FILE` using a Compose override. Production relay delivery and recovery qualification remain separate gates. See the [account lifecycle contract](../docs/m01b-account-lifecycle.md).
 
 ## One-time superuser bootstrap (M-01a)
 
@@ -22,7 +28,7 @@ After applying migrations, create a protected, ignored `deploy/secrets/bootstrap
 docker compose --profile ops run --rm bootstrap
 ```
 
-This separate service mounts the operator migration credential and the one-time file, with no listener, published port or content volume. App/worker never receive either credential. A successful command records one active initial superuser without exposing its identity/password in logs. Repeating the same address is a no-op; another address is refused. A rerun never resets the password or repairs a demoted/suspended account. Remove the one-time file and protect any copies after use. Do not bootstrap a real account into a shared/demo environment by automation. Public registration/email verification and the login screens arrive in M-01b; the operator must establish bootstrap address ownership out of band. See the [identity contract and limitations](../docs/m01a-identity.md).
+This separate service mounts the operator migration credential and the one-time file, with no listener, published port or content volume. App/worker never receive either credential. A successful command records one active initial superuser without exposing its identity/password in logs. Repeating the same address is a no-op; another address is refused. A rerun never resets the password or repairs a demoted/suspended account. Remove the one-time file and protect any copies after use. Do not bootstrap a real account into a shared/demo environment by automation. The operator establishes bootstrap address ownership out of band. See the [identity contract and limitations](../docs/m01a-identity.md).
 
 Storybook remains separate and uses its original commands and synthetic data:
 
@@ -37,7 +43,7 @@ npm test
 
 ## Configuration and secrets
 
-`npm run setup:secrets` creates two independent random 256-bit passwords in ignored `deploy/secrets`, without printing or replacing them. The private host directory is mode 0700, with files readable by the non-root container through Compose's file secret mounts. Protect this directory with equivalent Windows ACLs. Production operators supply protected secret files themselves. Never bake secrets into images, commit them, or place passwords in command arguments.
+`npm run setup:secrets` creates two independent random 256-bit passwords and a separate 256-bit mail key in ignored `deploy/secrets`, without printing or replacing them. The private host directory is mode 0700, with files readable by the non-root container through Compose's file secret mounts. Protect this directory with equivalent Windows ACLs. Production operators supply protected secret files themselves. Never bake secrets into images, commit them, or place passwords in command arguments.
 
 | Setting                                             | Meaning                                                                                       |
 | --------------------------------------------------- | --------------------------------------------------------------------------------------------- |
