@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -102,6 +103,11 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	invitations := project + "/invitations"
 	recipient := []byte(`{"email":"bob@example.test"}`)
 	want("POST", invitations, bob, recipient, false, 404)
+	want("POST", invitations, alice, recipient, false, 503)
+	if err := s.ConfigureMail(make([]byte, 32), origin); err != nil {
+		t.Fatal(err)
+	}
+	exec(`UPDATE accounts SET language='hu' WHERE email='bob@example.test'`)
 	issue := func() string {
 		t.Helper()
 		var invite struct{ ID string }
@@ -113,6 +119,18 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	}
 	accept := func(invite string) string { return "/api/v1/invitations/" + invite + "/accept" }
 	first := issue()
+	delivered := false
+	err = s.DeliverMail(ctx, func(_ context.Context, to, subject, body string) error {
+		delivered = true
+		if to != "bob@example.test" || subject != "CaliRestore Pro projektmeghívó" ||
+			!strings.HasSuffix(body, origin+"/") || strings.Contains(body, first) || strings.Contains(body, "c0ffee00") {
+			t.Error("invitation notification did not match recipient, language or privacy requirements")
+		}
+		return nil
+	})
+	if err != nil || !delivered {
+		t.Fatalf("invitation notification was not delivered: %v", err)
+	}
 	for raw, visible := range map[string]bool{alice: false, bob: true} {
 		inbox := want("GET", "/api/v1/invitations", raw, nil, false, 200)
 		if bytes.Contains(inbox.Body.Bytes(), []byte(first)) != visible {
