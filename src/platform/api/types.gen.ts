@@ -1593,6 +1593,8 @@ export type ListOwnedProjectInvitationsResponses = {
       recipientKey?: string;
       coOwner: boolean;
       sourceIds?: Array<string>;
+      estimateScope: 'none' | 'estimate-summary' | 'estimate-full';
+      shareHistory: boolean;
     }>;
     originalEpoch: string | '';
   };
@@ -1605,6 +1607,8 @@ export type CreateProjectInvitationData = {
   body: {
     email: string;
     coOwner?: boolean;
+    estimateScope?: 'none' | 'estimate-summary' | 'estimate-full';
+    shareHistory?: boolean;
   };
   headers: {
     Origin: string;
@@ -1702,6 +1706,8 @@ export type ListProjectInvitationsResponses = {
       expiresAt: string;
       state: 'pending' | 'accepted' | 'active';
       coOwner: boolean;
+      estimateScope: 'none' | 'estimate-summary' | 'estimate-full';
+      shareHistory: boolean;
     }>;
   };
 };
@@ -1784,6 +1790,11 @@ export type ActivateInvitationContentData = {
     fileIds?: Array<string>;
     sourceIds?: Array<string>;
     originalEpoch?: string | '';
+    scopes?: Array<{
+      scope: 'estimate-summary' | 'estimate-full' | 'history';
+      encapsulation: string;
+      ciphertext: string;
+    }>;
   };
   headers: {
     Origin: string;
@@ -2166,3 +2177,38 @@ export type RotateInvitationOriginalsResponses = {
 
 export type RotateInvitationOriginalsResponse =
   RotateInvitationOriginalsResponses[keyof RotateInvitationOriginalsResponses];
+
+export type GetInvitationScopeData = {
+  body?: never;
+  path: {
+    invitation: string;
+    scope: 'estimate-summary' | 'estimate-full' | 'history';
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/scopes/{scope}';
+};
+
+export type GetInvitationScopeErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type GetInvitationScopeError = GetInvitationScopeErrors[keyof GetInvitationScopeErrors];
+
+export type GetInvitationScopeResponses = {
+  /**
+   * Authenticated recipient envelope
+   */
+  200: {
+    scope: 'estimate-summary' | 'estimate-full' | 'history';
+    encapsulation: string;
+    ciphertext: string;
+    senderId: string;
+    senderKey: string;
+  };
+};
+
+export type GetInvitationScopeResponse =
+  GetInvitationScopeResponses[keyof GetInvitationScopeResponses];
