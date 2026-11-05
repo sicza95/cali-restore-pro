@@ -6,16 +6,19 @@ import {
   sharingFingerprint,
 } from '../../../platform/projects/fixture-sharing';
 import type { LocalVault } from '../../../platform/vault/vault';
-import type { SavedProject } from '../../../platform/projects/types';
+import type { SharedProject } from '../../../platform/projects/shared-project';
 import { invitationCopy } from './copy';
 import type { InvitationModel, SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
+import { ProjectOwners } from './ProjectOwners';
 import './styles.css';
 
 export function ProjectInvitations(props: {
   projectId: string;
-  project: SavedProject;
+  project: SharedProject;
+  canHost?: boolean;
+  onLeave?: () => void;
   model: InvitationModel;
   vault: LocalVault;
 }) {
@@ -31,8 +34,11 @@ export function ProjectInvitations(props: {
           model={props.model}
           path={path}
           projectPath={projectPath}
+          projectId={props.projectId}
           project={props.project}
           vault={props.vault}
+          canHost={props.canHost}
+          onLeave={props.onLeave}
         />
       </Show>
     </details>
@@ -43,20 +49,25 @@ function InvitationControls(props: {
   model: InvitationModel;
   path: string;
   projectPath: string;
-  project: SavedProject;
+  projectId: string;
+  project: SharedProject;
+  canHost?: boolean;
+  onLeave?: () => void;
   vault: LocalVault;
 }) {
   const c = () => invitationCopy[props.model.lang()];
   const sent = useInvitations<SentInvitation>(props.model, props.path);
   return (
     <>
-      <Show when={sent.failed() || (sent.error() && sent.error() !== 'not_found')}>
+      <Show
+        when={sent.failed() || (sent.error() && (sent.error() !== 'not_found' || !props.canHost))}
+      >
         <p role="alert">{c().error}</p>
       </Show>
       <Show when={sent.loading()}>
         <p role="status">{c().loading}</p>
       </Show>
-      <Show when={sent.error() === 'not_found'}>
+      <Show when={sent.error() === 'not_found' && props.canHost}>
         <p>{c().hostHelp}</p>
         <button
           class="secondary"
@@ -67,6 +78,14 @@ function InvitationControls(props: {
         </button>
       </Show>
       <Show when={!sent.error() && !sent.loading()}>
+        <ProjectOwners
+          model={props.model}
+          projectPath={props.projectPath}
+          onRemoved={(id) => {
+            if (id === props.model.account()?.id && props.onLeave) props.onLeave();
+            else void sent.refetch();
+          }}
+        />
         <SharingFingerprint
           model={props.model}
           vault={props.vault}
@@ -78,8 +97,9 @@ function InvitationControls(props: {
             event.preventDefault();
             const form = event.currentTarget;
             const email = String(new FormData(form).get('email') ?? '');
+            const coOwner = new FormData(form).has('coOwner');
             void sent
-              .run(() => props.model.request(props.path, { email }))
+              .run(() => props.model.request(props.path, { email, coOwner }))
               .then((ok) => {
                 if (ok) form.reset();
               });
@@ -89,13 +109,20 @@ function InvitationControls(props: {
             {c().recipient}
             <input type="email" name="email" required maxLength={254} disabled={sent.busy()} />
           </label>
+          <label class="confirmation">
+            <input type="checkbox" name="coOwner" disabled={sent.busy()} />
+            {c().inviteCoOwner}
+          </label>
           <button disabled={sent.busy()}>{c().issue}</button>
         </form>
         <ul class="session-list">
           <For each={sent.rows()} fallback={<li>{c().empty}</li>}>
             {(item) => (
               <li>
-                <strong>{item.email}</strong>
+                <strong>
+                  {item.email}
+                  {item.coOwner ? ' · ' + c().coOwner : ''}
+                </strong>
                 <span>{c()[item.state]}</span>
                 <Show when={item.state === 'pending' || item.state === 'accepted'}>
                   <button
@@ -110,7 +137,7 @@ function InvitationControls(props: {
                     {c().cancel}
                   </button>
                 </Show>
-                <Show when={item.state === 'active'}>
+                <Show when={item.state === 'active' && !item.coOwner}>
                   <button
                     class="secondary"
                     disabled={sent.busy()}
@@ -147,7 +174,7 @@ function InvitationControls(props: {
                             key.pair,
                             recipientKey(),
                             {
-                              project: project.id,
+                              project: props.projectId,
                               invitation: item.id,
                               sender,
                               recipient: item.recipientId,

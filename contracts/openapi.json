@@ -2661,6 +2661,10 @@
                   "email": {
                     "type": "string",
                     "format": "email"
+                  },
+                  "coOwner": {
+                    "type": "boolean",
+                    "default": false
                   }
                 },
                 "additionalProperties": false
@@ -2723,7 +2727,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id", "email", "state", "recipientId"],
+                        "required": ["id", "email", "state", "recipientId", "coOwner"],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -2745,6 +2749,9 @@
                             "type": "string",
                             "minLength": 88,
                             "maxLength": 88
+                          },
+                          "coOwner": {
+                            "type": "boolean"
                           }
                         }
                       }
@@ -2863,7 +2870,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id", "projectId", "expiresAt", "state"],
+                        "required": ["id", "projectId", "expiresAt", "state", "coOwner"],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -2880,6 +2887,9 @@
                           "state": {
                             "type": "string",
                             "enum": ["pending", "accepted", "active"]
+                          },
+                          "coOwner": {
+                            "type": "boolean"
                           }
                         }
                       }
@@ -3323,6 +3333,157 @@
         "responses": {
           "204": {
             "description": "Access revoked"
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/owners": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listProjectOwners",
+        "summary": "List owners of a project for an authenticated owner",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project owners",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["owners"],
+                  "properties": {
+                    "owners": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["id", "email", "host"],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "host": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/owners/{owner}/remove": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "owner",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "removeProjectOwner",
+        "summary": "Remove a co-owner and revoke their snapshot access",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Owner removed"
+          },
+          "409": {
+            "description": "The target is the last owner or the current hosting owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
           },
           "default": {
             "description": "Transfer, authentication or policy error",

@@ -65,9 +65,9 @@ func (s *Service) withFiles(ctx context.Context, raw string, fn func(fileAccess)
 	var a fileAccess
 	a.tx = tx
 	var state string
-	// Account first: serialize reservations with quota changes and suspension.
+	// Serialize quota and suspension changes while allowing foreign-key checks.
 	err = tx.QueryRow(ctx, `SELECT a.id,a.state,a.server_features,a.quota_mib::bigint*1048576
- FROM accounts a JOIN sessions s ON s.account_id=a.id WHERE s.token_digest=$1 FOR UPDATE OF a`, digest(raw)).
+ FROM accounts a JOIN sessions s ON s.account_id=a.id WHERE s.token_digest=$1 FOR NO KEY UPDATE OF a`, digest(raw)).
 		Scan(&a.account, &state, &a.hosting, &a.quota)
 	if errors.Is(err, pgx.ErrNoRows) || err == nil && state != "active" {
 		return ErrUnauthorized
