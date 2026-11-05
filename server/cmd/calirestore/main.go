@@ -29,7 +29,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	if err := run(ctx, os.Args[1:]); err != nil {
-		slog.Error("command failed")
+		logCommandFailure(slog.Default(), err)
 		os.Exit(1)
 	}
 }
