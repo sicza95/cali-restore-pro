@@ -1,4 +1,5 @@
 import { For, Show } from 'solid-js';
+import { VaultSection } from './VaultSection';
 import { ConfirmField } from '../confirm-field/ConfirmField';
 import { EmailField } from '../email-field/EmailField';
 import { PasswordField } from '../password-field/PasswordField';
@@ -18,6 +19,9 @@ export function AccountSecurity(props: AccountSecurityProps) {
       {(owner) => (
         <>
           <p class="account-email">{owner().email}</p>
+          <Show when={owner().id} keyed>
+            {(id) => <VaultSection account={id} language={props.model.lang()} />}
+          </Show>
           <section class="account-section">
             <div>
               <h2>{props.model.t('confirmPassword')}</h2>

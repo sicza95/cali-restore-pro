@@ -1,0 +1,33 @@
+.vault-panel {
+  min-width: 0;
+}
+
+.vault-panel p {
+  margin: 0;
+}
+
+.vault-panel textarea {
+  min-height: 7rem;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.vault-panel textarea:focus-visible {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 3px;
+}
+
+.vault-panel input[type='file'] {
+  min-width: 0;
+}
+
+.vault-panel [role='alert'] {
+  border-inline-start: 3px solid var(--cr-negative);
+  padding-inline-start: 12px;
+}
