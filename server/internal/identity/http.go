@@ -159,6 +159,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 	h.adminRoutes(route)
 	if h.objects != nil {
 		h.fileRoutes(route, *h.objects)
+		h.invitationRoutes(route)
 	}
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {

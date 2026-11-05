@@ -1560,3 +1560,141 @@ export type PutEncryptedPartResponses = {
 };
 
 export type PutEncryptedPartResponse = PutEncryptedPartResponses[keyof PutEncryptedPartResponses];
+
+export type CreateProjectInvitationData = {
+  body: {
+    email: string;
+  };
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations';
+};
+
+export type CreateProjectInvitationErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type CreateProjectInvitationError =
+  CreateProjectInvitationErrors[keyof CreateProjectInvitationErrors];
+
+export type CreateProjectInvitationResponses = {
+  /**
+   * Pending acceptance
+   */
+  201: {
+    id: string;
+    state: 'pending';
+  };
+};
+
+export type CreateProjectInvitationResponse =
+  CreateProjectInvitationResponses[keyof CreateProjectInvitationResponses];
+
+export type CancelProjectInvitationData = {
+  body: EmptyRequest;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/cancel';
+};
+
+export type CancelProjectInvitationErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type CancelProjectInvitationError =
+  CancelProjectInvitationErrors[keyof CancelProjectInvitationErrors];
+
+export type CancelProjectInvitationResponses = {
+  /**
+   * Cancelled
+   */
+  204: void;
+};
+
+export type CancelProjectInvitationResponse =
+  CancelProjectInvitationResponses[keyof CancelProjectInvitationResponses];
+
+export type ListProjectInvitationsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/invitations';
+};
+
+export type ListProjectInvitationsErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type ListProjectInvitationsError =
+  ListProjectInvitationsErrors[keyof ListProjectInvitationsErrors];
+
+export type ListProjectInvitationsResponses = {
+  /**
+   * Pending invitations
+   */
+  200: {
+    invitations: Array<{
+      id: string;
+      projectId: string;
+      expiresAt: string;
+    }>;
+  };
+};
+
+export type ListProjectInvitationsResponse =
+  ListProjectInvitationsResponses[keyof ListProjectInvitationsResponses];
+
+export type AcceptProjectInvitationData = {
+  body: EmptyRequest;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/accept';
+};
+
+export type AcceptProjectInvitationErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type AcceptProjectInvitationError =
+  AcceptProjectInvitationErrors[keyof AcceptProjectInvitationErrors];
+
+export type AcceptProjectInvitationResponses = {
+  /**
+   * Accepted and awaiting secure activation
+   */
+  204: void;
+};
+
+export type AcceptProjectInvitationResponse =
+  AcceptProjectInvitationResponses[keyof AcceptProjectInvitationResponses];

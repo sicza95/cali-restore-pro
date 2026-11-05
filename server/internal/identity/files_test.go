@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -73,11 +74,10 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	project := "/api/v1/hosted-projects/c0ffee00-0000-4000-8000-000000000000"
 	id := func(i int) string { return fmt.Sprintf("f11e0000-0000-4000-8000-%012d", i) }
 	file := func(i int) string { return project + "/files/" + id(i) }
-	json := func(s string) []byte { return []byte(s) }
-	noBody := json("{}")
+	noBody := []byte("{}")
 	manifest := bytes.Repeat([]byte{0x99}, 32)
 	chunk := bytes.Repeat([]byte{0xaa}, 600016)
-	shape := json(`{"sourceBytes":600000,"manifestBytes":32}`)
+	shape := []byte(`{"sourceBytes":600000,"manifestBytes":32}`)
 	want("PUT", project, "", noBody, false, 401)
 	want("PUT", project, alice, noBody, false, 204)
 	want("PUT", project, alice, noBody, false, 204)
@@ -97,6 +97,40 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	if got := want("GET", preflight, bob, nil, false, 200).Body.String(); !bytes.Contains([]byte(got), []byte("project_continuity_unavailable")) {
 		t.Fatalf("unhosted account preflight: %s", got)
 	}
+	want("PUT", file(1), bob, shape, false, 404)
+
+	invitations := project + "/invitations"
+	recipient := []byte(`{"email":"bob@example.test"}`)
+	want("POST", invitations, bob, recipient, false, 404)
+	issue := func() string {
+		t.Helper()
+		var invite struct{ ID string }
+		w := want("POST", invitations, alice, recipient, false, 201)
+		if err := json.Unmarshal(w.Body.Bytes(), &invite); err != nil || !uuid(invite.ID) {
+			t.Fatalf("invalid invitation: %v", err)
+		}
+		return invite.ID
+	}
+	accept := func(invite string) string { return "/api/v1/invitations/" + invite + "/accept" }
+	first := issue()
+	for raw, visible := range map[string]bool{alice: false, bob: true} {
+		inbox := want("GET", "/api/v1/invitations", raw, nil, false, 200)
+		if bytes.Contains(inbox.Body.Bytes(), []byte(first)) != visible {
+			t.Fatal("invitation visibility did not match the recipient")
+		}
+	}
+	want("POST", accept(first), alice, noBody, false, 400)
+	exec(`UPDATE accounts SET email='changed@example.test' WHERE email='bob@example.test'`)
+	want("POST", accept(first), bob, noBody, false, 400)
+	exec(`UPDATE accounts SET email='bob@example.test' WHERE email='changed@example.test'`)
+	want("POST", invitations+"/"+first+"/cancel", alice, noBody, false, 204)
+	second := issue()
+	want("POST", accept(first), bob, noBody, false, 400)
+	exec(`UPDATE project_invitations SET expires_at=now()-interval '1 second' WHERE id=$1`, second)
+	want("POST", accept(second), bob, noBody, false, 400)
+	third := issue()
+	want("POST", accept(third), bob, noBody, false, 204)
+	want("POST", accept(third), bob, noBody, false, 400)
 	want("PUT", file(1), bob, shape, false, 404)
 
 	// Two concurrent requests together exceed the same hosting account's quota.
@@ -146,7 +180,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 		t.Fatal("retrieval changed bytes")
 	}
 	exec(`UPDATE accounts SET server_features=true,quota_mib=1 WHERE email='alice@example.test'`)
-	small := json(`{"sourceBytes":128,"manifestBytes":32}`)
+	small := []byte(`{"sourceBytes":128,"manifestBytes":32}`)
 	want("PUT", file(3), alice, small, false, 200)
 	want("PUT", file(3)+"/parts/0", alice, manifest, true, 204)
 	want("DELETE", file(3), alice, nil, false, 204)
