@@ -5,6 +5,7 @@ import type { VaultRow } from './store';
 import { encryptedFiles } from './files';
 import { revisionQueue } from './revision-queue';
 import { projectDocuments } from './project-store';
+import { originalPins } from './original-pins';
 
 export class LocalVault {
   #root?: CryptoKey;
@@ -123,6 +124,11 @@ export class LocalVault {
   files() {
     const { root, row } = this.#unlocked();
     return encryptedFiles(root, this.account, row.stamp, this.#fileAccess.signal);
+  }
+
+  originalPins() {
+    const { root } = this.#unlocked();
+    return originalPins(root, this.account, () => this.#row?.stamp ?? '', this.#fileAccess.signal);
   }
 
   projects() {

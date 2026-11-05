@@ -3,6 +3,8 @@ import { openSharedOriginal } from '../../../platform/projects/shared-originals'
 import type { SharedOriginal } from '../../../platform/projects/shared-originals';
 import type { Language } from '../types';
 import { invitationCopy } from './copy';
+import { pinCopy, saveOriginal } from './OfflineOriginals';
+import type { useOfflineOriginals } from './OfflineOriginals';
 
 export function SharedOriginals(props: {
   files: SharedOriginal[];
@@ -10,11 +12,15 @@ export function SharedOriginals(props: {
   project: string;
   sender: string;
   locked: AbortSignal;
+  offline: ReturnType<typeof useOfflineOriginals>;
   language: Language;
 }) {
   const c = () => invitationCopy[props.language];
+  const p = () => pinCopy[props.language];
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
+  const [pinning, setPinning] = createSignal<AbortController>();
+  const [progress, setProgress] = createSignal(0);
   const lifetime = new AbortController();
   onCleanup(() => lifetime.abort());
 
@@ -32,16 +38,31 @@ export function SharedOriginals(props: {
         signal,
       );
       signal.throwIfAborted();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = name;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      saveOriginal({ name, blob });
     } catch {
       if (!signal.aborted) setFailed(true);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function pin(file: SharedOriginal) {
+    const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, props.locked, lifetime.signal]);
+    setProgress(0);
+    setFailed(false);
+    setPinning(controller);
+    try {
+      await props.offline.pins.pin(
+        { invitation: props.invitation, project: props.project, sender: props.sender },
+        file,
+        { signal, progress: (done, total) => setProgress(done / total) },
+      );
+      await props.offline.refresh();
+    } catch {
+      if (!signal.aborted) setFailed(true);
+    } finally {
+      setPinning(undefined);
     }
   }
 
@@ -51,6 +72,12 @@ export function SharedOriginals(props: {
       <Show when={busy()}>
         <p role="status">{c().downloadingOriginal}</p>
       </Show>
+      <Show when={pinning()}>
+        <progress aria-label={p().progress} max={1} value={progress()} />
+        <button class="secondary" onClick={() => pinning()?.abort()}>
+          {p().cancel}
+        </button>
+      </Show>
       <Show when={failed()}>
         <p role="alert">{c().error}</p>
       </Show>
@@ -59,9 +86,33 @@ export function SharedOriginals(props: {
           {(file) => (
             <li>
               <span>{file.name}</span>
-              <button class="secondary" disabled={busy()} onClick={() => void download(file)}>
-                {c().downloadOriginal}
-              </button>
+              <div class="original-actions">
+                <button
+                  class="secondary"
+                  disabled={busy() || !!pinning() || !props.offline.online()}
+                  onClick={() => void download(file)}
+                >
+                  {c().downloadOriginal}
+                </button>
+                <Show
+                  when={props.offline
+                    .rows()
+                    .some((row) => row.invitation === props.invitation && row.id === file.id)}
+                  fallback={
+                    <button
+                      class="secondary"
+                      disabled={
+                        busy() || !!pinning() || !props.offline.online() || props.offline.checking()
+                      }
+                      onClick={() => void pin(file)}
+                    >
+                      {p().pin}
+                    </button>
+                  }
+                >
+                  <span>{p().ready}</span>
+                </Show>
+              </div>
             </li>
           )}
         </For>

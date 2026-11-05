@@ -19,10 +19,14 @@
   margin: 8px 0 4px;
   font-size: 14px;
 }
-.owner-actions {
+.owner-actions,
+.original-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+.original-actions {
+  align-items: center;
 }
 .project-workspace > .invitation-panel {
   margin: 0 0 16px;
