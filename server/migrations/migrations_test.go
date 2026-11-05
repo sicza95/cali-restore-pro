@@ -42,6 +42,7 @@ func TestPostgresMigrations(t *testing.T) {
 	if err := Check(ctx, pool); err != nil {
 		t.Fatal(err)
 	}
+	checkOwnershipBackfill(t, ctx, pool)
 	var count int
 	names, _, err := history()
 	if err != nil {
@@ -76,5 +77,44 @@ func TestPostgresMigrations(t *testing.T) {
 	}
 	if err := Check(ctx, pool); err == nil {
 		t.Fatal("modified applied migration ready")
+	}
+}
+
+func checkOwnershipBackfill(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	t.Helper()
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback(context.Background())
+	exec := func(sql string) {
+		t.Helper()
+		if _, err := tx.Exec(ctx, sql); err != nil {
+			t.Fatal(err)
+		}
+	}
+	migrate := func(name string) {
+		t.Helper()
+		body, err := files.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		exec(string(body))
+	}
+	exec(`CREATE SCHEMA ownership_upgrade;
+ SET LOCAL search_path TO ownership_upgrade;
+ CREATE TABLE accounts (id uuid PRIMARY KEY);
+ CREATE TABLE sessions (created_at timestamptz)`)
+	migrate("0005_encrypted_files.sql")
+	exec(`INSERT INTO accounts VALUES ('a0000000-0000-4000-8000-000000000001');
+ INSERT INTO hosted_projects VALUES ('b0000000-0000-4000-8000-000000000001','a0000000-0000-4000-8000-000000000001')`)
+	migrate("0006_project_ownership.sql")
+	var ok bool
+	err = tx.QueryRow(ctx, `SELECT EXISTS (
+ SELECT 1 FROM hosted_projects p JOIN project_owners o ON o.project_id=p.id AND o.account_id=p.host_id
+ WHERE p.id='b0000000-0000-4000-8000-000000000001' AND p.host_id='a0000000-0000-4000-8000-000000000001'
+ )`).Scan(&ok)
+	if err != nil || !ok {
+		t.Fatalf("existing host was not backfilled as owner: %v", err)
 	}
 }

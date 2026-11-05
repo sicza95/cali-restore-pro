@@ -82,6 +82,14 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	want("PUT", project, alice, noBody, false, 204)
 	want("PUT", project, alice, noBody, false, 204)
 	want("PUT", project, bob, noBody, false, 404)
+	var owners int
+	if err := admin.QueryRow(ctx, `SELECT count(*) FROM project_owners o
+ JOIN hosted_projects p ON p.id=o.project_id AND p.host_id=o.account_id`).Scan(&owners); err != nil || owners != 1 {
+		t.Fatalf("expected one initial owner matching the host, got %d: %v", owners, err)
+	}
+	if _, err := admin.Exec(ctx, `UPDATE hosted_projects SET host_id=(SELECT id FROM accounts WHERE email='bob@example.test')`); err == nil {
+		t.Fatal("database accepted a host who does not own the project")
+	}
 	preflight := "/api/v1/account/deletion-preflight"
 	if got := want("GET", preflight, alice, nil, false, 200).Body.String(); !bytes.Contains([]byte(got), []byte("hosted_projects_require_continuity")) {
 		t.Fatalf("hosted owner preflight: %s", got)
