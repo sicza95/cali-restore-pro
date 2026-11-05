@@ -4,6 +4,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { createDecipheriv } from 'node:crypto';
 import { captureOriginalKey } from './invitation-crypto';
+import { verifyCheckpointGrants } from './invitation-checkpoints';
+import { verifyHostingTransfer } from './invitation-hosting';
 import { verifyScopeEdits } from './invitation-scopes';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
@@ -131,6 +133,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await inbox.getByRole('button', { name: 'Open shared content' }).click();
     await expect(inbox.locator('.invitation-panel [role=alert]')).toBeVisible();
     await expect(inbox.getByText('Synthetic chapel')).toHaveCount(0);
+    await expect(inbox.getByRole('heading', { name: 'Baseline inspection' })).toHaveCount(0);
     await inbox.getByRole('button', { name: 'Open shared content' }).click();
     await expect(inbox.getByText('Synthetic chapel')).toBeVisible();
 
@@ -201,6 +204,26 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
       ownerCode,
       remainingCode,
     );
+    const checkpoints = await verifyCheckpointGrants(
+      project
+        .locator('li')
+        .filter({ has: project.getByText('recipient@example.test', { exact: true }) })
+        .filter({ has: project.locator('details.scope-editor') })
+        .last(),
+      remainingRow,
+      inbox,
+      remainingInbox,
+      scopes,
+      remainingScopes,
+      ownerCode,
+      recipientCode,
+      remainingCode,
+    );
+    await project.screenshot({
+      path: info.outputPath('checkpoints-landscape.png'),
+      fullPage: true,
+    });
+    await inbox.screenshot({ path: info.outputPath('checkpoints-portrait.png'), fullPage: true });
     const remainingOriginals = '/api/v1/invitations/' + remainingList.invitations[0].id + '/files/';
     expect(
       (
@@ -213,6 +236,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await inbox.screenshot({ path: info.outputPath('invitation-portrait.png'), fullPage: true });
     await inbox.getByRole('button', { name: 'Lock vault' }).click();
     await expect(inbox.getByText('Synthetic chapel')).toHaveCount(0);
+    await expect(inbox.getByRole('heading', { name: 'Baseline inspection' })).toHaveCount(0);
     await inbox.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
     await inbox.getByRole('button', { name: 'Open shared content' }).click();
@@ -240,6 +264,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await expect(project.getByText('Access revoked')).toBeVisible();
     expect((await recipient.request.get(content)).status()).toBe(404);
     expect((await recipient.request.get(scopes + 'estimate-summary')).status()).toBe(404);
+    expect((await recipient.request.get(checkpoints.revokedWithInvitation)).status()).toBe(404);
     for (const suffix of ['', '/parts/0', '/parts/1']) {
       expect((await recipient.request.get(original + suffix)).status()).toBe(404);
     }
@@ -267,6 +292,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     expect((await recipient.request.get(remainingOriginals + newId + '/parts/1')).status()).toBe(
       404,
     );
+    expect((await remaining.request.get(checkpoints.preservedDuringRotation)).status()).toBe(200);
     const rotatedPart = await remaining.request.get(remainingOriginals + newId + '/parts/1');
     expect(rotatedPart.status()).toBe(200);
     const newCiphertext = await rotatedPart.body();
@@ -343,52 +369,17 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await inbox.getByText('Project invitations', { exact: true }).click();
     const recipientOwners = inbox.getByRole('region', { name: 'Project owners' });
     await expect(recipientOwners.getByText('owner@example.test')).toBeVisible();
-    const projectPath = owners.slice(0, -'/owners'.length);
-    const file = projectPath + '/files/5c39da35-dea3-4049-9d7e-ff4a3e4119db';
-    const reservation = { sourceBytes: 600000, manifestBytes: 32 };
-    expect((await owner.request.put(file, { ...mutation, data: reservation })).status()).toBe(200);
-
-    await ownerList.getByRole('button', { name: 'Offer hosting transfer' }).click();
-    await expect(ownerList.getByText(/Awaiting hosting acceptance/)).toBeVisible();
-    const pending = await (await owner.request.get(owners)).json();
-    expect(pending.owners.find((row: { host: boolean }) => row.host).id).toBe(ownerAuth.account.id);
-    const accept = projectPath + '/hosting-transfer/' + pending.hostingTransfer.id + '/accept';
-    expect((await owner.request.post(accept, mutation)).status()).toBe(404);
-    const stillHost = await owner.request.post(removeHost, mutation);
-    expect(await stillHost.json()).toEqual({ error: 'owner_is_project_host' });
-
-    await inbox
-      .locator('details.invitation-panel')
-      .getByRole('button', { name: 'Refresh invitations' })
-      .click();
-    inbox.once('dialog', (dialog) => dialog.accept());
-    await recipientOwners.getByRole('button', { name: 'Accept hosting transfer' }).click();
-    await expect(
-      recipientOwners.getByRole('button', { name: 'Accept hosting transfer' }),
-    ).toHaveCount(0);
-    const accepted = await (await recipient.request.get(owners)).json();
-    expect(accepted.hostingTransfer).toBeNull();
-    expect(accepted.owners.find((row: { host: boolean }) => row.host).id).toBe(session.account.id);
-    expect((await owner.request.put(file, { ...mutation, data: reservation })).status()).toBe(404);
-    const recipientMutation = {
-      headers: { Origin: baseURL!, 'X-CSRF-Token': session.csrfToken },
-      data: reservation,
-    };
-    expect((await recipient.request.put(file, recipientMutation)).status()).toBe(200);
-    const excess = await recipient.request.put(
-      projectPath + '/files/8419bb28-4783-4f90-b994-be8203832be0',
-      recipientMutation,
+    await verifyHostingTransfer(
+      inbox,
+      project,
+      ownerList,
+      recipientOwners,
+      owners,
+      removeHost,
+      ownerAuth.account.id,
+      session,
+      mutation,
     );
-    expect(await excess.json()).toEqual({ error: 'storage_quota_exceeded' });
-
-    inbox.once('dialog', (dialog) => dialog.accept());
-    await recipientOwners.getByRole('button', { name: 'Remove co-owner' }).click();
-    await expect(recipientOwners.getByText('owner@example.test')).toHaveCount(0);
-    expect((await owner.request.get(owners)).status()).toBe(404);
-    const finalOwners = await (await recipient.request.get(owners)).json();
-    expect(finalOwners.owners).toEqual([
-      { id: session.account.id, email: 'recipient@example.test', host: true },
-    ]);
   } finally {
     await owner.close();
     await recipient.close();

@@ -15,6 +15,7 @@ import type { InvitationModel, SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
 import { ProjectOwners } from './ProjectOwners';
+import { Checkpoints } from './Checkpoints';
 import { EditScopes } from './EditScopes';
 import './styles.css';
 
@@ -152,6 +153,13 @@ function InvitationControls(props: {
                   {[c().assessment, ...optionalScopes(item).map((scope) => c()[scope])].join(' · ')}
                 </p>
                 <Show when={item.state === 'active'}>
+                  <Checkpoints
+                    invitation={item.id}
+                    project={props.projectId}
+                    owner={{ item, path: props.path + '/' + item.id }}
+                    model={props.model}
+                    vault={props.vault}
+                  />
                   <EditScopes
                     item={item}
                     project={props.projectId}

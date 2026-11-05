@@ -188,3 +188,27 @@ The browser test removes full estimate access and verifies that both
 estimate endpoints deny access while the same assessment and history
 envelopes remain available and open in the recipient's browser. It then
 adds summary access and checks that full estimate access stays unavailable.
+
+## Selected checkpoints
+
+After secure activation, a project owner can open **Share selected
+checkpoints** on an invitation and share or remove each synthetic inspection
+record independently. A recipient can list and open only the checkpoints
+granted to their active invitation. The list carries opaque IDs; titles and
+descriptions are encrypted. Existing invitations retain their separate
+history sample and estimate settings.
+
+Migration `0017` stores one authenticated HPKE envelope per invitation and
+checkpoint. Each seal uses a fresh encryption context and binds the checkpoint
+ID, project, invitation, sender and recipient. Each sample is self-contained:
+it has no image, assessment or estimate keys and grants no dependencies.
+Removing one grant leaves the others in place. Revoking the invitation
+deletes its checkpoint grants, while original-file rotation preserves them.
+Previously fetched content may remain with its recipient.
+
+The live Chromium test exercises two recipients with disjoint selections,
+direct requests for ungranted IDs, cross-invitation requests, non-owner
+management attempts, ciphertext substitution, vault lock and revocation.
+This is evidence for the synthetic sharing workflow. Named checkpoint
+authoring, real dependency closures, current/future history access and
+report/export integration remain later work.

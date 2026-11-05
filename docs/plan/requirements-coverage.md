@@ -87,7 +87,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | SHARE-05    | Later    | Independent/offline collaboration with preserved conflicts          | M-07  | M-16       | Planned |
 | SHARE-06    | Later    | Revocation protects online access and future updates                | M-03  | M-16       | Planned |
 | SHARE-07    | Later    | Locked local recovery of unsynced edits after removal               | M-03  | M-16       | Planned |
-| SHARE-08    | Later    | Owner-controlled older-checkpoint access                            | M-03  | M-16       | Planned |
+| SHARE-08    | Later    | Owner-controlled older-checkpoint access                            | M-03  | M-16       | Partial |
 | SHARE-09    | Later    | Account-bound accepted invitations with identity-change review      | M-01  | M-06       | Planned |
 | SHARE-10    | Later    | Read-only quote-level estimate summary                              | M-06  | M-16       | Planned |
 | PAT-01      | Later    | Visual repeating-tile pattern editor                                | M-08  | M-15       | Planned |
@@ -155,3 +155,5 @@ The pre-existing Storybook library is partial UI evidence, not acceptance of UI-
 | PDF/other complex output generation late           | M-10/M-11; fixtures first, real selected-revision qualification M-16                                |
 | Image processing/drawing last                      | M-12 through M-16; no production engine hidden inside platform work                                 |
 | Frequent commits and a PR for every milestone      | Every milestone; conventional commits, clear dependencies and validation                            |
+
+SHARE-08 evidence: [M-06 selected grants](../m06-sharing.md#selected-checkpoints) cover synthetic checkpoints. Named checkpoint authoring and real dependency enforcement remain planned.

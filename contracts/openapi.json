@@ -4033,6 +4033,317 @@
         }
       }
     },
+    "/api/v1/hosted-projects/{project}/invitations/{invitation}/checkpoints": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listOwnerCheckpointGrants",
+        "summary": "List checkpoint IDs shared on an active invitation as project owner",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["checkpointIds"],
+                  "properties": {
+                    "checkpointIds": {
+                      "type": "array",
+                      "maxItems": 64,
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, access or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/invitations/{invitation}/checkpoints/{checkpoint}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "checkpoint",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "grantInvitationCheckpoint",
+        "summary": "Grant one encrypted checkpoint to an active invitation",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["recipientKey", "encapsulation", "ciphertext"],
+                "properties": {
+                  "recipientKey": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  },
+                  "encapsulation": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  },
+                  "ciphertext": {
+                    "type": "string",
+                    "minLength": 24,
+                    "maxLength": 2048
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Checkpoint grant updated"
+          },
+          "default": {
+            "description": "Authentication, access or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "revokeInvitationCheckpoint",
+        "summary": "Remove one checkpoint grant from an active invitation",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Checkpoint grant updated"
+          },
+          "default": {
+            "description": "Authentication, access or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/{invitation}/checkpoints": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "listRecipientCheckpointGrants",
+        "summary": "List only checkpoints granted to the signed-in recipient",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["checkpointIds"],
+                  "properties": {
+                    "checkpointIds": {
+                      "type": "array",
+                      "maxItems": 64,
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, access or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/{invitation}/checkpoints/{checkpoint}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "checkpoint",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getInvitationCheckpoint",
+        "summary": "Fetch a single checkpoint envelope granted to the signed-in recipient",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "checkpointId",
+                    "encapsulation",
+                    "ciphertext",
+                    "senderId",
+                    "senderKey"
+                  ],
+                  "properties": {
+                    "checkpointId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "encapsulation": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    },
+                    "ciphertext": {
+                      "type": "string",
+                      "minLength": 24,
+                      "maxLength": 2048
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "senderKey": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Authentication, access or validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/invitations/{invitation}/scopes/{scope}": {
       "parameters": [
         {

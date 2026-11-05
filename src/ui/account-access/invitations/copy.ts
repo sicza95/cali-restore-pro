@@ -1,5 +1,13 @@
 export const invitationCopy = {
   en: {
+    editCheckpoints: 'Share selected checkpoints',
+    sharedCheckpoints: 'Shared checkpoints',
+    shareCheckpoint: 'Share checkpoint',
+    removeCheckpoint: 'Remove checkpoint access',
+    openCheckpoint: 'Open checkpoint',
+    checkpointSenderCode: 'Verified checkpoint sender fingerprint',
+    noCheckpoints: 'No checkpoints have been shared with you.',
+    loadingCheckpoints: 'Loading checkpoints…',
     heading: 'Project invitations',
     recipient: 'Recipient email',
     issue: 'Send invitation',
@@ -63,6 +71,14 @@ export const invitationCopy = {
     reference: 'Project reference',
   },
   hu: {
+    editCheckpoints: 'Kiválasztott állapotmentések megosztása',
+    sharedCheckpoints: 'Megosztott állapotmentések',
+    shareCheckpoint: 'Állapotmentés megosztása',
+    removeCheckpoint: 'Hozzáférés visszavonása',
+    openCheckpoint: 'Állapotmentés megnyitása',
+    checkpointSenderCode: 'Az állapotmentés küldőjének ellenőrzött ujjlenyomata',
+    noCheckpoints: 'Még nem osztottak meg veled állapotmentést.',
+    loadingCheckpoints: 'Állapotmentések betöltése…',
     heading: 'Projektmeghívók',
     recipient: 'A címzett e-mail-címe',
     issue: 'Meghívó küldése',
