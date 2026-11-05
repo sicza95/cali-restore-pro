@@ -204,6 +204,25 @@ export type EncryptedFileRecord = {
   state: 'staged' | 'committed';
 };
 
+export type ProjectRevisionHead = {
+  revision: number;
+  epoch: string;
+  salt: string;
+  ciphertext: string;
+};
+
+export type ProjectRevisionState = {
+  epoch: string;
+  head: ProjectRevisionHead | null;
+};
+
+export type ProjectRevisionWrite = {
+  expected: number;
+  epoch: string;
+  salt: string;
+  ciphertext: string;
+};
+
 export type PlatformStatusData = {
   body?: never;
   path?: never;
@@ -2426,3 +2445,125 @@ export type UpdateInvitationScopesResponses = {
 
 export type UpdateInvitationScopesResponse =
   UpdateInvitationScopesResponses[keyof UpdateInvitationScopesResponses];
+
+export type GetProjectRevisionData = {
+  body?: never;
+  headers: {
+    'X-Sync-Account': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/revision';
+};
+
+export type GetProjectRevisionErrors = {
+  /**
+   * Invalid request
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Session required
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Access unavailable
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Project not found or not owned
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Request failed
+   */
+  500: {
+    error: string;
+  };
+};
+
+export type GetProjectRevisionError = GetProjectRevisionErrors[keyof GetProjectRevisionErrors];
+
+export type GetProjectRevisionResponses = {
+  /**
+   * Current epoch and optional ciphertext head
+   */
+  200: ProjectRevisionState;
+};
+
+export type GetProjectRevisionResponse =
+  GetProjectRevisionResponses[keyof GetProjectRevisionResponses];
+
+export type PutProjectRevisionData = {
+  body: ProjectRevisionWrite;
+  headers: {
+    'X-Sync-Account': string;
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/revision';
+};
+
+export type PutProjectRevisionErrors = {
+  /**
+   * Invalid request
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Session required
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Access unavailable
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Project not found or not owned
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Revision or epoch changed, rotation is pending, or hosting quota was exceeded
+   */
+  409: {
+    error: string;
+  };
+  /**
+   * Request failed
+   */
+  500: {
+    error: string;
+  };
+};
+
+export type PutProjectRevisionError = PutProjectRevisionErrors[keyof PutProjectRevisionErrors];
+
+export type PutProjectRevisionResponses = {
+  /**
+   * Committed ciphertext head or acknowledgement of an identical replay
+   */
+  200: ProjectRevisionState;
+};
+
+export type PutProjectRevisionResponse =
+  PutProjectRevisionResponses[keyof PutProjectRevisionResponses];

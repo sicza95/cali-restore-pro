@@ -169,6 +169,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		h.checkpointRoutes(route)
 		h.ownerRoutes(route)
 		h.hostingRoutes(route)
+		h.revisionRoutes(route)
 	}
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {

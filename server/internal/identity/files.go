@@ -136,9 +136,11 @@ func (a fileAccess) record(ctx context.Context, project, id string) (fileRecord,
 
 func (a fileAccess) usage(ctx context.Context) (int64, error) {
 	var used int64
-	err := a.tx.QueryRow(ctx, `SELECT coalesce(sum(f.charged_bytes),0)::bigint
- FROM encrypted_files f JOIN hosted_projects p ON p.id=f.project_id
- WHERE p.host_id=$1`, a.account).Scan(&used)
+	err := a.tx.QueryRow(ctx, `SELECT
+ (SELECT coalesce(sum(f.charged_bytes),0)::bigint FROM encrypted_files f
+  JOIN hosted_projects p ON p.id=f.project_id WHERE p.host_id=$1) +
+ (SELECT coalesce(sum(octet_length(r.salt)+octet_length(r.ciphertext)),0)::bigint
+  FROM project_revision_heads r JOIN hosted_projects p ON p.id=r.project_id WHERE p.host_id=$1)`, a.account).Scan(&used)
 	return used, err
 }
 
