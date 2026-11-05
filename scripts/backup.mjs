@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { compose } from './compose.mjs';
+import { requireEmptyHosting } from './substrate-backup.mjs';
 
 export async function checksum(file) {
   const hash = createHash('sha256');
@@ -34,6 +35,7 @@ if (import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   };
   try {
     compose(['stop', 'app', 'worker']);
+    requireEmptyHosting(compose);
     write('database.dump', [
       'exec',
       '-T',

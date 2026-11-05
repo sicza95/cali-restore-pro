@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { checksum } from './backup.mjs';
 import { compose } from './compose.mjs';
+import { requireEmptyHosting } from './substrate-backup.mjs';
 
 const [, , input, project] = process.argv;
 if (
@@ -61,6 +62,7 @@ read('database.dump', [
   '--no-owner',
   '--exit-on-error',
 ]);
+requireEmptyHosting(target);
 read('objects.tar', [
   'run',
   '--rm',
