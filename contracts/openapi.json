@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "CaliRestore Pro platform API",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "paths": {
     "/api/v1/status": {
@@ -958,6 +958,854 @@
           }
         }
       }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "identityRegister",
+        "summary": "register; success acknowledges a durable transaction, not email delivery",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/resend-verification": {
+      "post": {
+        "operationId": "identityResendVerification",
+        "summary": "resend-verification; success acknowledges a durable transaction, not email delivery",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendVerificationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "operationId": "identityForgotPassword",
+        "summary": "forgot-password; success acknowledges a durable transaction, not email delivery",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "operationId": "identityVerifyEmail",
+        "summary": "verify-email; success acknowledges a durable transaction, not email delivery",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "identityResetPassword",
+        "summary": "reset-password; success acknowledges a durable transaction, not email delivery",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/confirm-email": {
+      "post": {
+        "operationId": "identityConfirmEmail",
+        "summary": "confirm-email; success acknowledges a durable transaction, not email delivery",
+        "security": [],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "operationId": "identityChangePassword",
+        "summary": "change-password; success acknowledges a durable transaction, not email delivery",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-email": {
+      "post": {
+        "operationId": "identityChangeEmail",
+        "summary": "change-email; success acknowledges a durable transaction, not email delivery",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted; public account existence is not disclosed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, expired or used link / invalid request"
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeEmailRequest"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1188,6 +2036,132 @@
         "additionalProperties": false,
         "required": ["confirm"],
         "properties": {
+          "confirm": {
+            "type": "boolean",
+            "const": true
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 1024
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "hu"],
+            "default": "en"
+          }
+        }
+      },
+      "ResendVerificationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "hu"],
+            "default": "en"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "hu"],
+            "default": "en"
+          }
+        }
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["token"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["token", "password"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 1024
+          }
+        }
+      },
+      "ConfirmEmailRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["token"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["password", "confirm"],
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 15,
+            "maxLength": 1024
+          },
+          "confirm": {
+            "type": "boolean",
+            "const": true
+          }
+        }
+      },
+      "ChangeEmailRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "confirm"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
           "confirm": {
             "type": "boolean",
             "const": true
