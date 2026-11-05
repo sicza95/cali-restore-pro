@@ -131,8 +131,8 @@ export class LocalVault {
   }
 
   revisions() {
-    const { root, row } = this.#unlocked();
-    return revisionQueue(root, this.account, row.stamp, this.#fileAccess.signal);
+    const { root } = this.#unlocked();
+    return revisionQueue(root, this.account, () => this.#row?.stamp ?? '', this.#fileAccess.signal);
   }
 
   async sharingIdentity(pin?: { account: string; fingerprint: string }) {

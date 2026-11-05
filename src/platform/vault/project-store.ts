@@ -4,7 +4,7 @@ import { assertID } from './file-format';
 import { accountRange, connect, projectTable, vaultTable } from './store';
 import type { VaultRow } from './store';
 
-type Row = { id: string; revision: number; envelope: Envelope };
+export type ProjectRow = { id: string; revision: number; envelope: Envelope };
 
 export function projectDocuments(
   root: CryptoKey,
@@ -46,10 +46,21 @@ export function projectDocuments(
   }
 
   return {
+    async changed(id: string, after: number) {
+      assertID(id);
+      const row = await transact<ProjectRow | undefined>('readonly', (store, finish) => {
+        const request = store.get([account, id]);
+        request.onsuccess = () => finish(request.result as ProjectRow | undefined);
+      });
+      if (!row || row.revision <= after) return;
+      const text = await open(root, account, `project:${id}:${row.revision}`, row.envelope);
+      signal.throwIfAborted();
+      return { revision: row.revision, text };
+    },
     async list() {
-      const rows = await transact<Row[]>('readonly', (store, finish) => {
+      const rows = await transact<ProjectRow[]>('readonly', (store, finish) => {
         const request = store.getAll(accountRange(account));
-        request.onsuccess = () => finish(request.result as Row[]);
+        request.onsuccess = () => finish(request.result as ProjectRow[]);
       });
       const result = await Promise.all(
         rows.map(async ({ id, revision, envelope }) => {
@@ -72,9 +83,9 @@ export function projectDocuments(
         const key = [account, id];
         const request = store.get(key);
         request.onsuccess = () => {
-          if (((request.result as Row | undefined)?.revision ?? 0) !== expected) abort();
+          if (((request.result as ProjectRow | undefined)?.revision ?? 0) !== expected) abort();
           else {
-            store.put({ id, revision, envelope } satisfies Row, key);
+            store.put({ id, revision, envelope } satisfies ProjectRow, key);
             finish(undefined);
           }
         };
