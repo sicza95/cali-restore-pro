@@ -13,22 +13,39 @@ import { readBounded } from '../vault/files';
 export const maxSharedOriginals = 64;
 export type SharedOriginal = { id: string; name: string; key: string };
 
+async function versionedOriginalId(project: string, epoch: string, source: string) {
+  if (!epoch) return source;
+  const text = new TextEncoder().encode(
+    ['calirestore-original-epoch-v1', project, epoch, source].join(':'),
+  );
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', text), 0, 16);
+  const hex = Array.from(hash, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join('-');
+}
+
 export async function publishOriginals(
   vault: LocalVault,
   project: string,
   ids: string[],
+  epoch: string,
   csrf: string,
   signal: AbortSignal,
 ) {
   if (ids.length > maxSharedOriginals) throw new Error('Too many shared originals');
   const files = vault.files();
   const originals: SharedOriginal[] = [];
-  for (const id of ids) {
+  for (const source of ids) {
     signal.throwIfAborted();
-    const ref = { project, id };
+    const ref = { project, id: source };
+    const id = await versionedOriginalId(project, epoch, source);
     const { name } = await files.metadata(ref);
-    await files.upload(ref, { csrf, signal });
-    const key = await files.exportOriginalKey(ref);
+    const key = await files.publishOriginal(ref, id, { csrf, signal });
     try {
       signal.throwIfAborted();
       originals.push({ id, name, key: btoa(String.fromCharCode(...key)) });
