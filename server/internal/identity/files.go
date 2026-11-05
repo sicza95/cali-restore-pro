@@ -90,9 +90,9 @@ func (s *Service) withFiles(ctx context.Context, raw string, fn func(fileAccess)
 	return tx.Commit(ctx)
 }
 
-func (a fileAccess) owns(ctx context.Context, project string) error {
+func (a fileAccess) hosts(ctx context.Context, project string) error {
 	var found int
-	err := a.tx.QueryRow(ctx, `SELECT 1 FROM hosted_projects WHERE id=$1 AND owner_id=$2`, project, a.account).Scan(&found)
+	err := a.tx.QueryRow(ctx, `SELECT 1 FROM hosted_projects WHERE id=$1 AND host_id=$2`, project, a.account).Scan(&found)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return errFileMissing
 	}
@@ -114,7 +114,7 @@ func (a fileAccess) usage(ctx context.Context) (int64, error) {
 	var used int64
 	err := a.tx.QueryRow(ctx, `SELECT coalesce(sum(f.charged_bytes),0)::bigint
  FROM encrypted_files f JOIN hosted_projects p ON p.id=f.project_id
- WHERE p.owner_id=$1`, a.account).Scan(&used)
+ WHERE p.host_id=$1`, a.account).Scan(&used)
 	return used, err
 }
 

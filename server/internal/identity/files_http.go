@@ -44,7 +44,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 			var reply func()
 			err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 				if pattern != "PUT "+projects {
-					if err := a.owns(r.Context(), project); err != nil {
+					if err := a.hosts(r.Context(), project); err != nil {
 						return err
 					}
 				}
@@ -67,7 +67,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 		if !decode(w, r, &b) {
 			return nil, nil
 		}
-		if err := a.owns(r.Context(), project); err == nil {
+		if err := a.hosts(r.Context(), project); err == nil {
 			return empty(w), nil
 		} else if !errors.Is(err, errFileMissing) {
 			return nil, err
@@ -75,7 +75,10 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 		if !a.hosting || a.quota == 0 {
 			return nil, ErrForbidden
 		}
-		tag, err := a.tx.Exec(r.Context(), `INSERT INTO hosted_projects(id,owner_id) VALUES($1,$2) ON CONFLICT DO NOTHING`, project, a.account)
+		tag, err := a.tx.Exec(r.Context(), `WITH created AS (
+ INSERT INTO hosted_projects(id,host_id) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING id,host_id
+ )
+ INSERT INTO project_owners(project_id,account_id) SELECT id,host_id FROM created`, project, a.account)
 		if err == nil && tag.RowsAffected() == 0 {
 			err = errFileMissing
 		}
