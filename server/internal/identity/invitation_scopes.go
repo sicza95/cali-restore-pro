@@ -42,26 +42,7 @@ func (a fileAccess) linkScopes(ctx context.Context, id string, grants []scopeEnv
 		Scan(&scope.EstimateScope, &scope.ShareHistory); err != nil {
 		return err
 	}
-	want := 0
-	if scope.EstimateScope != "none" {
-		want++
-	}
-	if scope.ShareHistory {
-		want++
-	}
-	if len(grants) != want {
-		return ErrConflict
-	}
-	for _, grant := range grants {
-		if grant.Scope != scope.EstimateScope && !(grant.Scope == "history" && scope.ShareHistory) {
-			return ErrConflict
-		}
-		if _, err := a.tx.Exec(ctx, `INSERT INTO invitation_scope_grants(invitation_id,scope,encapsulation,ciphertext)
- VALUES($1,$2,$3,$4)`, id, grant.Scope, grant.Encapsulation, grant.Ciphertext); err != nil {
-			return err
-		}
-	}
-	return nil
+	return a.insertNewScopes(ctx, id, invitationScope{EstimateScope: "none"}, scope, grants)
 }
 
 func (h *HTTP) scopeRoutes(route func(string, bool, http.HandlerFunc)) {
@@ -78,10 +59,10 @@ func (h *HTTP) scopeRoutes(route func(string, bool, http.HandlerFunc)) {
 		}
 		grant.Scope = scope
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
-			return a.tx.QueryRow(r.Context(), `SELECT s.encapsulation,s.ciphertext,g.sender_id,k.public_key
+			return a.tx.QueryRow(r.Context(), `SELECT s.encapsulation,s.ciphertext,s.sender_id,k.public_key
  FROM invitation_scope_grants s JOIN invitation_grants g ON g.invitation_id=s.invitation_id
  JOIN project_invitations i ON i.id=g.invitation_id JOIN accounts r ON r.id=i.recipient_id
- JOIN sharing_identities k ON k.account_id=g.sender_id
+ JOIN sharing_identities k ON k.account_id=s.sender_id
  WHERE i.id=$1 AND i.recipient_id=$2 AND i.state='active' AND r.email=i.recipient_email AND s.scope=$3`,
 				id, a.account, scope).Scan(&grant.Encapsulation, &grant.Ciphertext, &grant.SenderID, &grant.SenderKey)
 		})
@@ -94,4 +75,5 @@ func (h *HTTP) scopeRoutes(route func(string, bool, http.HandlerFunc)) {
 		}
 		respond(w, http.StatusOK, grant)
 	})
+	route("POST /api/v1/hosted-projects/{project}/invitations/{invitation}/scopes", true, h.changeInvitationScopes)
 }

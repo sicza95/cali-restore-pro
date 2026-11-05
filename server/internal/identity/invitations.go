@@ -36,7 +36,7 @@ func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]own
 		return nil, err
 	}
 	rows, err := a.tx.Query(ctx, `SELECT i.id,i.recipient_email,i.state,i.recipient_id,
- CASE WHEN (i.state='accepted' OR rotation.ids IS NOT NULL)
+ CASE WHEN i.state IN ('accepted','active')
  AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END,
  i.co_owner,rotation.ids,i.estimate_scope,i.share_history
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
@@ -89,6 +89,10 @@ func (a fileAccess) requireProjectOwner(ctx context.Context, project string) err
 type invitationScope struct {
 	EstimateScope string `json:"estimateScope"`
 	ShareHistory  bool   `json:"shareHistory"`
+}
+
+func (scope invitationScope) valid() bool {
+	return scope.EstimateScope == "none" || scope.EstimateScope == "estimate-summary" || scope.EstimateScope == "estimate-full"
 }
 
 func (s *Service) invite(ctx context.Context, a fileAccess, project, email string, coOwner bool, scope invitationScope) (string, error) {
@@ -207,11 +211,10 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			failure(w, ErrInvalid)
 			return
 		}
-		switch body.EstimateScope {
-		case "":
+		if body.EstimateScope == "" {
 			body.EstimateScope = "none"
-		case "none", "estimate-summary", "estimate-full":
-		default:
+		}
+		if !body.invitationScope.valid() {
 			failure(w, ErrInvalid)
 			return
 		}

@@ -4,6 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { createDecipheriv } from 'node:crypto';
 import { captureOriginalKey } from './invitation-crypto';
+import { verifyScopeEdits } from './invitation-scopes';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
 const recipientSession = process.env.M06_RECIPIENT_SESSION;
@@ -192,6 +193,14 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await expect(
       remainingInbox.getByRole('region', { name: 'History sample' }).getByText('Checkpoint 1'),
     ).toBeVisible();
+    await verifyScopeEdits(
+      remainingRow,
+      remaining.request,
+      remainingInbox,
+      remainingScopes,
+      ownerCode,
+      remainingCode,
+    );
     const remainingOriginals = '/api/v1/invitations/' + remainingList.invitations[0].id + '/files/';
     expect(
       (

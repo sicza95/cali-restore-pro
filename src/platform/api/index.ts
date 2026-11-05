@@ -265,5 +265,10 @@ export type {
   RotateInvitationOriginalsResponses,
   SessionInfo,
   SessionsResponse,
+  UpdateInvitationScopesData,
+  UpdateInvitationScopesError,
+  UpdateInvitationScopesErrors,
+  UpdateInvitationScopesResponse,
+  UpdateInvitationScopesResponses,
   VerifyEmailRequest,
 } from './types.gen';
