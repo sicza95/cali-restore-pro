@@ -123,7 +123,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	err = s.DeliverMail(ctx, func(_ context.Context, to, subject, body string) error {
 		delivered = true
 		if to != "bob@example.test" || subject != "CaliRestore Pro projektmeghívó" ||
-			!strings.HasSuffix(body, origin+"/") || strings.Contains(body, first) || strings.Contains(body, "c0ffee00") {
+			!strings.HasSuffix(body, origin+"/invitations") || strings.Contains(body, first) || strings.Contains(body, "c0ffee00") {
 			t.Error("invitation notification did not match recipient, language or privacy requirements")
 		}
 		return nil
@@ -148,6 +148,15 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	want("POST", accept(second), bob, noBody, false, 400)
 	third := issue()
 	want("POST", accept(third), bob, noBody, false, 204)
+	want("GET", invitations, bob, nil, false, 404)
+	for _, w := range []*httptest.ResponseRecorder{
+		want("GET", invitations, alice, nil, false, 200),
+		want("GET", "/api/v1/invitations", bob, nil, false, 200),
+	} {
+		if !bytes.Contains(w.Body.Bytes(), []byte(`"state":"accepted"`)) {
+			t.Fatal("accepted invitation disappeared before secure activation")
+		}
+	}
 	want("POST", accept(third), bob, noBody, false, 400)
 	want("PUT", file(1), bob, shape, false, 404)
 

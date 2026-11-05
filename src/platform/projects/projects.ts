@@ -49,17 +49,19 @@ function validate(project: Project, id: string) {
 }
 
 export function localProjects(vault: LocalVault) {
-  const documents = vault.projects();
   return {
     async list() {
-      return (await documents.list()).map(({ id, revision, text }) => ({
+      return (await vault.projects().list()).map(({ id, revision, text }) => ({
         ...validate(JSON.parse(text) as Project, id),
         revision,
       }));
     },
     async save({ revision, ...value }: SavedProject) {
       const next = validate({ ...value, updatedAt: Date.now() }, value.id);
-      return { ...next, revision: await documents.save(next.id, revision, JSON.stringify(next)) };
+      return {
+        ...next,
+        revision: await vault.projects().save(next.id, revision, JSON.stringify(next)),
+      };
     },
   };
 }

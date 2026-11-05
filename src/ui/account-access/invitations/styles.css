@@ -1,0 +1,31 @@
+.invitation-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--cr-rule);
+  background: var(--cr-surface);
+  overflow-wrap: anywhere;
+}
+.invitation-panel .session-list li {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+.invitation-panel li > :is(form, p) {
+  grid-column: 1 / -1;
+}
+.project-workspace > .invitation-panel {
+  margin: 0 0 16px;
+}
+.project-workspace > .invitation-panel:not([open]) {
+  padding-block: 0;
+}
+.invitation-panel button {
+  justify-self: start;
+}
+.invitation-panel > button:last-child {
+  margin-top: 12px;
+}
+@media (max-width: 560px) {
+  .invitation-panel .session-list li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -4,12 +4,18 @@ import { localProjects, newProject } from '../../../platform/projects/projects';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
+import type { createAccountAccess } from '../createAccountAccess';
+import { ProjectInvitations } from '../invitations/ProjectInvitations';
 import { ProjectDetail } from './ProjectDetail';
 import { projectCopy } from './project-copy';
 import { NameForm } from './forms';
 import './styles.css';
 
-export function ProjectWorkspace(props: { vault: LocalVault; language: Language }) {
+export function ProjectWorkspace(props: {
+  vault: LocalVault;
+  language: Language;
+  model: ReturnType<typeof createAccountAccess>;
+}) {
   const c = () => projectCopy[props.language];
   const local = localProjects(untrack(() => props.vault));
   const [projects, { mutate, refetch }] = createResource<{
@@ -167,6 +173,13 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
               busy={busy()}
               onRun={run}
               onSave={save}
+              sharing={
+                <Show when={!current()!.archived && current()!.id} keyed>
+                  {(id) => (
+                    <ProjectInvitations project={id} model={props.model} vault={props.vault} />
+                  )}
+                </Show>
+              }
             />
           </Show>
         </Show>
