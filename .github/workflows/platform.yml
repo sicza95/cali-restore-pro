@@ -2,7 +2,7 @@ name: Platform substrate
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
 
 permissions:
@@ -32,6 +32,7 @@ jobs:
           IDENTITY_SMOKE_DISPOSABLE: '1'
       - run: npm run test:platform
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:sync
       - run: npm run test:files
       - run: npm run test:app
         env:

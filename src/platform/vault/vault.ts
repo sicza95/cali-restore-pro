@@ -3,6 +3,7 @@ import type { Envelope } from './crypto';
 import { commitVault, readVault } from './store';
 import type { VaultRow } from './store';
 import { encryptedFiles } from './files';
+import { revisionQueue } from './revision-queue';
 import { projectDocuments } from './project-store';
 
 export class LocalVault {
@@ -127,6 +128,11 @@ export class LocalVault {
   projects() {
     const { root, row } = this.#unlocked();
     return projectDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
+  }
+
+  revisions() {
+    const { root, row } = this.#unlocked();
+    return revisionQueue(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
   async sharingIdentity(pin?: { account: string; fingerprint: string }) {
