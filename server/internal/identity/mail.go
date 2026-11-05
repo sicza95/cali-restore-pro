@@ -25,6 +25,14 @@ func MailText(p mailPayload, origin string) (string, string) {
 	}
 	route := "/verify-email"
 	switch p.Purpose {
+	case "project-invitation":
+		subject = "CaliRestore Pro project invitation"
+		body = "You received a project invitation. Sign in with this email address to review pending invitations."
+		if p.Language == "hu" {
+			subject = "CaliRestore Pro projektmeghívó"
+			body = "Projektmeghívót kaptál. Jelentkezz be ezzel az e-mail-címmel a függő meghívók megtekintéséhez."
+		}
+		return subject, body + "\n\n" + origin + "/"
 	case "verify":
 		body = "Verify your email address. This link is valid for 24 hours."
 		if p.Language == "hu" {

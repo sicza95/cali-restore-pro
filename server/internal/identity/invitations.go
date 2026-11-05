@@ -39,11 +39,12 @@ func (a fileAccess) requireProjectOwner(ctx context.Context, project string) err
 	return err
 }
 
-func (a fileAccess) invite(ctx context.Context, project, email string) (string, error) {
+func (s *Service) invite(ctx context.Context, a fileAccess, project, email string) (string, error) {
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return "", err
 	}
-	var id string
+	var id, lang string
+	var expires time.Time
 	err := a.tx.QueryRow(ctx, `INSERT INTO project_invitations (project_id,recipient_id,recipient_email)
  SELECT $1,r.id,r.email FROM accounts r
  WHERE r.email=$2 AND r.state='active' AND NOT EXISTS (
@@ -54,11 +55,14 @@ func (a fileAccess) invite(ctx context.Context, project, email string) (string, 
  WHERE project_invitations.state='cancelled' OR (
    project_invitations.state='pending' AND project_invitations.expires_at<=clock_timestamp()
  )
- RETURNING id`, project, email).Scan(&id)
+ RETURNING id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email).Scan(&id, &expires, &lang)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrConflict
 	}
-	return id, err
+	if err != nil {
+		return "", err
+	}
+	return id, s.enqueue(ctx, a.tx, email, lang, "project-invitation", "", expires)
 }
 
 func (a fileAccess) acceptInvitation(ctx context.Context, id string) error {
@@ -123,7 +127,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 		var id string
 		err = h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			var err error
-			id, err = a.invite(r.Context(), project, email)
+			id, err = h.service.invite(r.Context(), a, project, email)
 			return err
 		})
 		if err != nil {
