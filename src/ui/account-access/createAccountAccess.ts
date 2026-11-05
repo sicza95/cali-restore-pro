@@ -42,7 +42,19 @@ export function createAccountAccess() {
     if (result.csrfToken) setCsrf(result.csrfToken);
     return result;
   };
-  const clearSession = () => {
+  const lockVault = () => {
+    window.dispatchEvent(new Event('calirestore-session-end'));
+    const id = account()?.id;
+    if (id && typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('calirestore-vault');
+      channel.postMessage(id);
+      channel.close();
+    }
+  };
+  let sessionChanges: BroadcastChannel | undefined;
+  const clearSession = (notify = true) => {
+    if (notify && account()) sessionChanges?.postMessage(account()?.id);
+    window.dispatchEvent(new Event('calirestore-session-end'));
     setAccount(undefined);
     setCapabilities([]);
     setCsrf('');
@@ -68,6 +80,7 @@ export function createAccountAccess() {
     try {
       await api(action, body);
       if (action === 'login') {
+        sessionChanges?.postMessage(null);
         window.location.assign('/settings/security');
         return;
       }
@@ -127,6 +140,12 @@ export function createAccountAccess() {
   createEffect(applyAccountPreferences);
   const deviceTheme = window.matchMedia('(prefers-color-scheme: dark)');
   onMount(() => {
+    if (typeof BroadcastChannel !== 'undefined') {
+      sessionChanges = new BroadcastChannel('calirestore-auth');
+      sessionChanges.onmessage = ({ data }) => {
+        if (account() && (data === null || data === account()?.id)) clearSession(false);
+      };
+    }
     deviceTheme.addEventListener('change', applyAccountPreferences);
     document.documentElement.lang = lang();
     void refreshConnection();
@@ -142,7 +161,10 @@ export function createAccountAccess() {
       })
       .finally(() => setLoaded(true));
   });
-  onCleanup(() => deviceTheme.removeEventListener('change', applyAccountPreferences));
+  onCleanup(() => {
+    sessionChanges?.close();
+    deviceTheme.removeEventListener('change', applyAccountPreferences);
+  });
   const revokeSession = async (session: Session) => {
     if (!(await run('sessions/revoke', { sessionId: session.id, confirm: true }, 'success')))
       return;
@@ -175,7 +197,10 @@ export function createAccountAccess() {
     sessionError,
     sessions,
     setRevokeConfirmed,
-    signOut: () => void run('logout', {}, 'success'),
+    signOut: () => {
+      lockVault();
+      void run('logout', {}, 'success');
+    },
     submit,
     t,
     view,
