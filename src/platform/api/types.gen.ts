@@ -48,7 +48,13 @@ export type IdentityAccount = {
 export type CurrentIdentity = {
   account: IdentityAccount;
   capabilities: Array<
-    'account.security' | 'accounts.suspend' | 'accounts.sessions.revoke' | 'roles.manage'
+    | 'account.security'
+    | 'accounts.suspend'
+    | 'accounts.sessions.revoke'
+    | 'roles.manage'
+    | 'accounts.view'
+    | 'accounts.entitlements'
+    | 'operations.view'
   >;
   csrfToken: string;
 };
@@ -128,6 +134,63 @@ export type ChangePasswordRequest = {
 export type ChangeEmailRequest = {
   email: string;
   confirm: true;
+};
+
+export type AdminAccount = {
+  id: string;
+  email: string;
+  role: 'member' | 'administrator' | 'superuser';
+  state: 'pending_verification' | 'active' | 'suspended' | 'pending_deletion';
+  serverFeatures: boolean;
+  quotaMiB: number;
+  permissions: number;
+  sessions: number;
+};
+
+export type AdminAccountPage = {
+  accounts: Array<AdminAccount>;
+  /**
+   * Opaque page cursor; empty at end
+   */
+  next: string;
+};
+
+export type AdminOperations = {
+  audit: Array<{
+    actorId: string;
+    subjectId: string;
+    action: string;
+    at: string;
+  }>;
+  mail: {
+    pending: number;
+    sent: number;
+    failed: number;
+  };
+  jobs: Array<{
+    id: string;
+    status: 'pending' | 'sent' | 'failed';
+    attempts: number;
+    at: string;
+  }>;
+};
+
+export type AdminControls =
+  | {
+      confirm: true;
+      entitlement: {
+        serverFeatures: boolean;
+        quotaMiB: number;
+      };
+    }
+  | {
+      confirm: true;
+      permissions: number;
+    };
+
+export type DeletionPreflight = {
+  eligible: false;
+  reason: 'project_continuity_unavailable';
 };
 
 export type PlatformStatusData = {
@@ -1050,3 +1113,215 @@ export type IdentityChangeEmailResponses = {
 
 export type IdentityChangeEmailResponse =
   IdentityChangeEmailResponses[keyof IdentityChangeEmailResponses];
+
+export type AdminListAccountsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    q?: string;
+    after?: string;
+  };
+  url: '/api/v1/admin/accounts';
+};
+
+export type AdminListAccountsErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type AdminListAccountsError = AdminListAccountsErrors[keyof AdminListAccountsErrors];
+
+export type AdminListAccountsResponses = {
+  /**
+   * Success
+   */
+  200: AdminAccountPage;
+};
+
+export type AdminListAccountsResponse =
+  AdminListAccountsResponses[keyof AdminListAccountsResponses];
+
+export type AdminOperationsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/admin/operations';
+};
+
+export type AdminOperationsErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type AdminOperationsError = AdminOperationsErrors[keyof AdminOperationsErrors];
+
+export type AdminOperationsResponses = {
+  /**
+   * Success
+   */
+  200: AdminOperations;
+};
+
+export type AdminOperationsResponse = AdminOperationsResponses[keyof AdminOperationsResponses];
+
+export type AdminSetControlsData = {
+  /**
+   * Confirmed settings change
+   */
+  body: AdminControls;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/v1/admin/accounts/{id}/controls';
+};
+
+export type AdminSetControlsErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  409: IdentityError;
+  /**
+   * Request rejected
+   */
+  415: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type AdminSetControlsError = AdminSetControlsErrors[keyof AdminSetControlsErrors];
+
+export type AdminSetControlsResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type AdminSetControlsResponse = AdminSetControlsResponses[keyof AdminSetControlsResponses];
+
+export type AccountDeletionPreflightData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/account/deletion-preflight';
+};
+
+export type AccountDeletionPreflightErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type AccountDeletionPreflightError =
+  AccountDeletionPreflightErrors[keyof AccountDeletionPreflightErrors];
+
+export type AccountDeletionPreflightResponses = {
+  /**
+   * Success
+   */
+  200: DeletionPreflight;
+};
+
+export type AccountDeletionPreflightResponse =
+  AccountDeletionPreflightResponses[keyof AccountDeletionPreflightResponses];
+
+export type AdminDeletionPreflightData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/v1/admin/accounts/{id}/deletion-preflight';
+};
+
+export type AdminDeletionPreflightErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type AdminDeletionPreflightError =
+  AdminDeletionPreflightErrors[keyof AdminDeletionPreflightErrors];
+
+export type AdminDeletionPreflightResponses = {
+  /**
+   * Success
+   */
+  200: DeletionPreflight;
+};
+
+export type AdminDeletionPreflightResponse =
+  AdminDeletionPreflightResponses[keyof AdminDeletionPreflightResponses];
