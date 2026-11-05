@@ -38,8 +38,9 @@ the editor compares the latest local copy with the decrypted cloud copy. An owne
 can publish the local copy or adopt the cloud copy; either selection is staged
 against the reviewed revision. If the server has advanced to another epoch, the
 editor reads the old head with its old key and provisions a fresh key for the
-new epoch. It stops if an existing head cannot be decrypted. Offline original pins, portable project backups and lifecycle and
-retention enforcement remain separate M-07 work.
+new epoch. It stops if an existing head cannot be decrypted. [Offline original
+pins](m07-offline-originals.md) are covered separately. Portable project backups
+and lifecycle and retention enforcement remain M-07 work.
 
 An owner with a readable cloud head can share its epoch key from **Cloud sync**.
 Enter the receiving owner's account ID (shown under **Open a synced project

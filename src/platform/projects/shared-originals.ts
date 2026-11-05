@@ -12,6 +12,50 @@ import { readBounded } from '../vault/files';
 
 export const maxSharedOriginals = 64;
 export type SharedOriginal = { id: string; name: string; key: string };
+export type OriginalGrant = { invitation: string; project: string; sender: string };
+
+export class OriginalAccessDenied extends Error {}
+
+export async function requestOriginal(
+  invitation: string,
+  id: string,
+  signal: AbortSignal,
+  part?: number,
+) {
+  assertID(invitation);
+  assertID(id);
+  const path = '/api/v1/invitations/' + invitation + '/files/' + id;
+  signal.throwIfAborted();
+  const response = await fetch(path + (part === undefined ? '' : '/parts/' + part), {
+    cache: 'no-store',
+    redirect: 'error',
+    signal,
+  });
+  if ([401, 403, 404, 410].includes(response.status)) throw new OriginalAccessDenied();
+  if (!response.ok) throw new Error('Original unavailable');
+  return response;
+}
+
+export async function requestOriginalShape(invitation: string, id: string, signal: AbortSignal) {
+  const { sourceBytes, manifestBytes } = (await (
+    await requestOriginal(invitation, id, signal)
+  ).json()) as FileShape;
+  const shape = { sourceBytes, manifestBytes };
+  assertShape(shape);
+  return shape;
+}
+
+export async function sharedOriginalCipher(
+  project: string,
+  sender: string,
+  original: SharedOriginal,
+) {
+  const bytes = Uint8Array.from(atob(original.key), (character) => character.charCodeAt(0));
+  const key = await crypto.subtle
+    .importKey('raw', bytes, 'AES-GCM', false, ['decrypt'])
+    .finally(() => bytes.fill(0));
+  return fileCipherWithKey(key, sender, project, original.id);
+}
 
 async function versionedOriginalId(project: string, epoch: string, source: string) {
   if (!epoch) return source;
@@ -85,26 +129,11 @@ export async function openSharedOriginal(
   original: SharedOriginal,
   signal: AbortSignal,
 ) {
-  assertID(invitation);
-  assertID(project);
-  assertID(sender);
-  assertID(original.id);
-  const path = '/api/v1/invitations/' + invitation + '/files/' + original.id;
-  const get = async (suffix = '') => {
-    signal.throwIfAborted();
-    const response = await fetch(path + suffix, { cache: 'no-store', redirect: 'error', signal });
-    if (!response.ok) throw new Error('Original unavailable');
-    return response;
-  };
-  const shape = (await (await get()).json()) as FileShape;
-  assertShape(shape);
-  const bytes = Uint8Array.from(atob(original.key), (character) => character.charCodeAt(0));
-  const key = await crypto.subtle
-    .importKey('raw', bytes, 'AES-GCM', false, ['decrypt'])
-    .finally(() => bytes.fill(0));
-  const cipher = fileCipherWithKey(key, sender, project, original.id);
+  const get = (part?: number) => requestOriginal(invitation, original.id, signal, part);
+  const shape = await requestOriginalShape(invitation, original.id, signal);
+  const cipher = await sharedOriginalCipher(project, sender, original);
   const part = async (index: number) =>
-    cipher.open(index, await readBounded(await get('/parts/' + index), partBytes(shape, index)));
+    cipher.open(index, await readBounded(await get(index), partBytes(shape, index)));
   const manifest = parseManifest(await part(0), shape);
   const chunks: ArrayBuffer[] = [];
   for (let index = 1; index <= chunkCount(shape); index++) chunks.push(await part(index));

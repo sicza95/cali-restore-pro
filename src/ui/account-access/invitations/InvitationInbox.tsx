@@ -19,11 +19,13 @@ import { SharingFingerprint } from './SharingFingerprint';
 import { ProjectInvitations } from './ProjectInvitations';
 import { Checkpoints } from './Checkpoints';
 import { SharedOriginals } from './SharedOriginals';
+import { OfflineOriginals, useOfflineOriginals } from './OfflineOriginals';
 import './styles.css';
 
 export function InvitationInbox(props: { model: InvitationModel; vault: LocalVault }) {
   const c = () => invitationCopy[props.model.lang()];
   const inbox = useInvitations<InboxInvitation>(props.model, '/invitations');
+  const offline = useOfflineOriginals(props.vault.originalPins());
   const [opened, setOpened] = createSignal<{
     id: string;
     project?: SharedProject;
@@ -34,6 +36,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
   }>();
   return (
     <section class="invitation-panel" aria-label={c().heading}>
+      <OfflineOriginals model={offline} language={props.model.lang()} />
       <SharingFingerprint
         model={props.model}
         vault={props.vault}
@@ -218,6 +221,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                               project={item.projectId}
                               sender={result().sender}
                               locked={result().locked}
+                              offline={offline}
                               language={props.model.lang()}
                             />
                           </Show>

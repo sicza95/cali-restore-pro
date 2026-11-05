@@ -14,7 +14,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | PROJ-04     | Must     | Self-contained encrypted portable backup                            | M-07  | M-16       | Planned |
 | PROJ-05     | Must     | Revision-conflict protection                                        | M-07  | M-16       | Partial |
 | PROJ-06     | Must     | Restoration projects contain one or more objects                    | M-05  | M-05       | Passed  |
-| PROJ-07     | Must     | Explicit offline selections and protected local work                | M-07  | M-16       | Planned |
+| PROJ-07     | Must     | Explicit offline selections and protected local work                | M-07  | M-16       | Partial |
 | PROJ-08     | Must     | Uncapped initial counts with one active surface                     | M-05  | M-16       | Partial |
 | CHECK-01    | Must     | Optional user-named assessment checkpoints                          | M-05  | M-15       | Planned |
 | CHECK-02    | Must     | Linked checkpoint comparison with coverage/area changes             | M-08  | M-15       | Planned |
@@ -160,4 +160,4 @@ SHARE-08 evidence: [M-06 selected grants](../m06-sharing.md#selected-checkpoints
 
 SHARE-06 evidence: [M-06 revocation during transfers](../m06-sharing.md#revocation-during-transfers) covers hosted originals. Live updates to other scopes and offline recovery remain planned.
 
-PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using epoch keys paired between owner devices. Offline original pins are still planned.
+PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using epoch keys paired between owner devices. [Offline original pins](../m07-offline-originals.md) cover encrypted shared originals in an unlocked invitation workspace, including access checks on reconnect. Cold offline startup remains unqualified.

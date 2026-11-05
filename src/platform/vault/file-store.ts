@@ -1,8 +1,14 @@
 import { connect, fileTable, vaultTable } from './store';
 import type { VaultRow } from './store';
 import type { FileShape } from './file-format';
+import type { Envelope } from './crypto';
 
-export type LocalFile = FileShape & { project: string; ready: boolean; started: number };
+export type LocalFile = FileShape & {
+  project: string;
+  ready: boolean;
+  started: number;
+  pin?: Envelope;
+};
 
 export function localFiles(account: string, stamp: string) {
   async function run<T>(
@@ -37,6 +43,23 @@ export function localFiles(account: string, stamp: string) {
   }
 
   return {
+    pins: () =>
+      run<{ id: string; pin: Envelope }[]>('readonly', (s, result) => {
+        const rows: { id: string; pin: Envelope }[] = [];
+        const r = s.openCursor(
+          IDBKeyRange.bound([account, 'pin:'], [account, 'pin;'], false, true),
+        );
+        r.onsuccess = () => {
+          const cursor = r.result;
+          if (!cursor) return result(rows);
+          const [, id, part] = cursor.key as [string, string, number?];
+          if (part === undefined) {
+            const header = cursor.value as LocalFile;
+            if (header.ready && header.pin) rows.push({ id, pin: header.pin });
+          }
+          cursor.continue([account, id, []]);
+        };
+      }),
     header: (id: string) =>
       run<LocalFile | undefined>('readonly', (s, result) => {
         const r = s.get([account, id]);
