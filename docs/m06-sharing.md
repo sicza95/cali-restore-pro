@@ -31,5 +31,8 @@ ID. Owners can cancel an invitation before secure activation, including
 after the recipient accepts.
 
 Acceptance records intent while secure activation is pending. It confers
-zero file or project access. Email delivery, browser controls, scope
-selection and recipient key verification are subsequent work.
+zero file or project access. Issuance queues a localized email through the
+durable outbox in the same transaction as the invitation. The notification
+links to the app and contains no project identifiers or acceptance secrets.
+Browser controls, scope selection and recipient key verification are
+subsequent work.
