@@ -8,6 +8,7 @@ export const copy = {
     'verify-email': 'Verify email',
     'confirm-email': 'Confirm new email',
     security: 'Account security',
+    projects: 'Projects',
     email: 'Email address',
     password: 'Password',
     newPassword: 'New password',
@@ -31,7 +32,7 @@ export const copy = {
     securityHelp:
       'Confirm your current password before changing credentials or revoking sessions. Confirmation lasts five minutes.',
     accessHelp: 'Sign in to your restoration account. Content unlock is a separate step.',
-    upcoming: 'Project storage and restoration tools are coming in later releases.',
+    upcoming: 'Projects are saved in this browser. Restoration tools are coming in later releases.',
     neutral:
       'If this address is eligible, an email is queued. Check your inbox and spam folder. Delivery may take a few minutes.',
     adminSaved: 'Account change saved.',
@@ -63,6 +64,7 @@ export const copy = {
     'verify-email': 'E-mail-cím megerősítése',
     'confirm-email': 'Új e-mail-cím megerősítése',
     security: 'Fiókbiztonság',
+    projects: 'Projektek',
     email: 'E-mail-cím',
     password: 'Jelszó',
     newPassword: 'Új jelszó',
@@ -86,7 +88,8 @@ export const copy = {
     securityHelp:
       'A módosítások és a munkamenetek visszavonása előtt erősítsd meg a jelenlegi jelszavad. A megerősítés öt percig érvényes.',
     accessHelp: 'Jelentkezz be a restaurálási fiókodba. A tartalom feloldása külön lépés.',
-    upcoming: 'A projekttárolás és a restaurálási eszközök későbbi kiadásokban érkeznek.',
+    upcoming:
+      'A projektek ebben a böngészőben tárolódnak. A restaurálási eszközök később érkeznek.',
     neutral:
       'Ha a cím jogosult, a levél küldési sorba került. Nézd meg a beérkezett és a levélszemét mappát. A kézbesítés néhány percig tarthat.',
     adminSaved: 'A fiókmódosítás mentve.',

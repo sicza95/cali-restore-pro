@@ -3,13 +3,16 @@ import type { Envelope } from './crypto';
 export type VaultRow = { envelope: Envelope; remembered?: CryptoKey; stamp: string };
 export const vaultTable = 'accounts';
 export const fileTable = 'encrypted-files';
+export const projectTable = 'encrypted-projects';
+export const accountRange = (account: string) => IDBKeyRange.bound([account], [account, []]);
 
 export async function connect() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('calirestore-vault', 2);
+    const request = indexedDB.open('calirestore-vault', 3);
     request.onupgradeneeded = (event) => {
       if (event.oldVersion < 1) request.result.createObjectStore(vaultTable);
-      request.result.createObjectStore(fileTable);
+      if (event.oldVersion < 2) request.result.createObjectStore(fileTable);
+      request.result.createObjectStore(projectTable);
     };
     request.onblocked = () => reject(new Error('Close older vault tabs and retry'));
     request.onerror = () => reject(request.error);
@@ -41,7 +44,9 @@ export async function commitVault(
   const db = await connect();
   try {
     await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction([vaultTable, fileTable], 'readwrite', { durability: 'strict' });
+      const tx = db.transaction([vaultTable, fileTable, projectTable], 'readwrite', {
+        durability: 'strict',
+      });
       tx.oncomplete = () => resolve();
       tx.onabort = () => reject(tx.error ?? new Error('Vault changed or transaction aborted'));
       const store = tx.objectStore(vaultTable);
@@ -53,7 +58,8 @@ export async function commitVault(
           store.put(next, account);
         } else {
           store.delete(account);
-          tx.objectStore(fileTable).delete(IDBKeyRange.bound([account], [account, []]));
+          tx.objectStore(fileTable).delete(accountRange(account));
+          tx.objectStore(projectTable).delete(accountRange(account));
         }
       };
     });

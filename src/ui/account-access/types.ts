@@ -6,7 +6,13 @@ export type Translate = (key: Message) => string;
 export type Session = { id: string; createdAt: string; current: boolean };
 export type Account = { id: string; email: string; state: string; role: string };
 export type Route =
-  'login' | 'security' | 'profile' | 'preferences' | 'admin' | (typeof publicRoutes)[number];
+  | 'login'
+  | 'security'
+  | 'profile'
+  | 'preferences'
+  | 'admin'
+  | 'projects'
+  | (typeof publicRoutes)[number];
 export type Submit = (event: SubmitEvent, action: string, success: Message) => void;
 export type AuthResponse = {
   error?: string;
