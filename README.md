@@ -49,7 +49,7 @@ tests/            Browser interactions, layouts and accessibility
 docs/             Agreed visual direction and boundaries
 ```
 
-M-00 adds a Go/PostgreSQL platform substrate alongside this UI library. M-01a adds [server identity/session APIs and operator superuser bootstrap](docs/m01a-identity.md). The app still serves the small connection screen; registration, mail and auth screens follow in M-01b. Project, encryption and editing workflows are later milestones. No legacy application code or project formats are imported.
+M-00 adds a Go/PostgreSQL platform substrate alongside this UI library. M-01a adds [server identity/session APIs and operator superuser bootstrap](docs/m01a-identity.md). M-01b adds [registration, credential recovery, localized mail and account security screens](docs/m01b-account-lifecycle.md). Project, encryption and editing workflows are later milestones. No legacy application code or project formats are imported.
 
 ## Run the platform
 
