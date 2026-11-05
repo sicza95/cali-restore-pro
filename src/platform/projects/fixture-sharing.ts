@@ -1,7 +1,7 @@
 import { Aes128Gcm, CipherSuite, DhkemP256HkdfSha256, HkdfSha256 } from '@hpke/core';
 import type { LocalVault } from '../vault/vault';
-import { parseSharedProject, projectSnapshot } from './shared-project';
-import type { SavedProject } from './types';
+import { parseSharedProject } from './shared-project';
+import type { SharedProject } from './shared-project';
 
 const suite = new CipherSuite({
   kem: new DhkemP256HkdfSha256(),
@@ -63,10 +63,10 @@ export async function sealProjectSnapshot(
   senderKey: CryptoKeyPair,
   recipient: string,
   context: GrantContext,
-  project: SavedProject,
+  project: SharedProject,
 ) {
   const format = 'project-v1';
-  const plaintext = encoder.encode(JSON.stringify(projectSnapshot(project)));
+  const plaintext = encoder.encode(JSON.stringify(project));
   if (plaintext.byteLength > 64 * 1024) throw new Error('Project snapshot exceeds 64 KiB');
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
   const result = await suite.seal(

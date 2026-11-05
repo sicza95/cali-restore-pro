@@ -12,6 +12,7 @@ import { invitationCopy } from './copy';
 import type { InboxInvitation, InvitationModel } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
+import { ProjectInvitations } from './ProjectInvitations';
 import './styles.css';
 
 export function InvitationInbox(props: { model: InvitationModel; vault: LocalVault }) {
@@ -40,6 +41,9 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                 {c().reference} {item.projectId}
               </strong>
               <span>{c()[item.state]}</span>
+              <Show when={item.coOwner}>
+                <span>{c().coOwner}</span>
+              </Show>
               <Show when={item.state === 'pending'}>
                 <time dateTime={item.expiresAt}>
                   {new Intl.DateTimeFormat(props.model.lang(), {
@@ -127,6 +131,18 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                               </div>
                             )}
                           </For>
+                          <Show when={item.coOwner}>
+                            <ProjectInvitations
+                              projectId={item.projectId}
+                              project={project()}
+                              model={props.model}
+                              vault={props.vault}
+                              onLeave={() => {
+                                setOpened(undefined);
+                                void inbox.refetch();
+                              }}
+                            />
+                          </Show>
                         </section>
                       )}
                     </Show>

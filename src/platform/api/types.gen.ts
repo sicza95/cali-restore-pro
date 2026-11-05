@@ -1591,6 +1591,7 @@ export type ListOwnedProjectInvitationsResponses = {
       state: 'pending' | 'accepted' | 'active' | 'revoked';
       recipientId: string;
       recipientKey?: string;
+      coOwner: boolean;
     }>;
   };
 };
@@ -1601,6 +1602,7 @@ export type ListOwnedProjectInvitationsResponse =
 export type CreateProjectInvitationData = {
   body: {
     email: string;
+    coOwner?: boolean;
   };
   headers: {
     Origin: string;
@@ -1697,6 +1699,7 @@ export type ListProjectInvitationsResponses = {
       projectId: string;
       expiresAt: string;
       state: 'pending' | 'accepted' | 'active';
+      coOwner: boolean;
     }>;
   };
 };
@@ -1911,3 +1914,74 @@ export type RevokeProjectInvitationResponses = {
 
 export type RevokeProjectInvitationResponse =
   RevokeProjectInvitationResponses[keyof RevokeProjectInvitationResponses];
+
+export type ListProjectOwnersData = {
+  body?: never;
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/owners';
+};
+
+export type ListProjectOwnersErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type ListProjectOwnersError = ListProjectOwnersErrors[keyof ListProjectOwnersErrors];
+
+export type ListProjectOwnersResponses = {
+  /**
+   * Project owners
+   */
+  200: {
+    owners: Array<{
+      id: string;
+      email: string;
+      host: boolean;
+    }>;
+  };
+};
+
+export type ListProjectOwnersResponse =
+  ListProjectOwnersResponses[keyof ListProjectOwnersResponses];
+
+export type RemoveProjectOwnerData = {
+  body: EmptyRequest;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    owner: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/owners/{owner}/remove';
+};
+
+export type RemoveProjectOwnerErrors = {
+  /**
+   * The target is the last owner or the current hosting owner
+   */
+  409: IdentityError;
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type RemoveProjectOwnerError = RemoveProjectOwnerErrors[keyof RemoveProjectOwnerErrors];
+
+export type RemoveProjectOwnerResponses = {
+  /**
+   * Owner removed
+   */
+  204: void;
+};
+
+export type RemoveProjectOwnerResponse =
+  RemoveProjectOwnerResponses[keyof RemoveProjectOwnerResponses];
