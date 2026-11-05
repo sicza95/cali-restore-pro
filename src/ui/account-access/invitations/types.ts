@@ -8,4 +8,5 @@ export type SentInvitation = Omit<Invitation, 'state'> & {
   email: string;
   recipientId: string;
   recipientKey?: string;
+  sourceIds?: string[];
 };

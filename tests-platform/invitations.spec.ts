@@ -2,9 +2,11 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
+import { createDecipheriv } from 'node:crypto';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
 const recipientSession = process.env.M06_RECIPIENT_SESSION;
+const remainingSession = process.env.M06_REMAINING_SESSION;
 
 async function setupVault(page: Page) {
   await page.getByLabel(/Remember this browser/).check();
@@ -18,20 +20,44 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
   baseURL,
 }, info) => {
   test.skip(
-    !ownerSession || !recipientSession,
-    'Requires isolated seeded owner and recipient sessions',
+    !ownerSession || !recipientSession || !remainingSession,
+    'Requires isolated seeded owner and two recipient sessions',
   );
+  test.setTimeout(60_000);
   const owner = await browser.newContext({ baseURL, viewport: { width: 1194, height: 834 } });
   const recipient = await browser.newContext({ baseURL, viewport: { width: 834, height: 1194 } });
+  const remaining = await browser.newContext({ baseURL, viewport: { width: 834, height: 1194 } });
   try {
     for (const [context, value] of [
       [owner, ownerSession!],
       [recipient, recipientSession!],
+      [remaining, remainingSession!],
     ] as const) {
       await context.addCookies([{ name: 'calirestore_session', value, url: baseURL! }]);
     }
     const project = await owner.newPage();
     const inbox = await recipient.newPage();
+    const remainingInbox = await remaining.newPage();
+    let oldKey = '';
+    await inbox.exposeFunction('captureOriginalKey', (value: string) => {
+      oldKey = value;
+    });
+    await inbox.addInitScript(() => {
+      const decrypt = SubtleCrypto.prototype.decrypt;
+      SubtleCrypto.prototype.decrypt = async function (algorithm, key, data) {
+        const result = await decrypt.call(this, algorithm, key, data);
+        try {
+          const envelope = JSON.parse(new TextDecoder().decode(result));
+          if (envelope.originals?.[0]?.key)
+            await (
+              window as unknown as { captureOriginalKey: (key: string) => Promise<void> }
+            ).captureOriginalKey(envelope.originals[0].key);
+        } catch {
+          // Most decrypted records do not contain sharing metadata.
+        }
+        return result;
+      };
+    });
     await project.goto('/projects');
     await setupVault(project);
     await project.getByLabel('Project name').fill('Synthetic chapel');
@@ -122,6 +148,33 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const openedFile = await download;
     expect(openedFile.suggestedFilename()).toBe('shared-plaster.bin');
     expect(await readFile(await openedFile.path())).toEqual(originalBytes);
+    expect(Buffer.from(oldKey, 'base64')).toHaveLength(32);
+
+    await project.getByLabel('Recipient email').fill('remaining@example.test');
+    await project.getByRole('button', { name: 'Send invitation' }).click();
+    const remainingRow = project
+      .getByRole('listitem')
+      .filter({ hasText: 'remaining@example.test' });
+    await expect(remainingRow.getByText('Awaiting acceptance')).toBeVisible();
+    await remainingInbox.goto('/invitations');
+    await setupVault(remainingInbox);
+    await remainingInbox.getByRole('button', { name: 'Accept invitation' }).click();
+    await remainingInbox.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
+    const remainingCode = await remainingInbox.locator('.invitation-panel code').innerText();
+    await project.getByRole('button', { name: 'Refresh invitations' }).click();
+    await remainingRow.getByLabel('Verified recipient fingerprint').fill(remainingCode);
+    await remainingRow
+      .getByRole('checkbox', { name: 'Include all attached original files' })
+      .check();
+    await remainingRow.getByRole('button', { name: 'Share project snapshot' }).click();
+    await expect(remainingRow.getByText('Shared content available')).toBeVisible();
+    const remainingList = await (await remaining.request.get('/api/v1/invitations')).json();
+    const remainingOriginals = '/api/v1/invitations/' + remainingList.invitations[0].id + '/files/';
+    expect(
+      (
+        await remaining.request.get(remainingOriginals + activation.fileIds[0] + '/parts/1')
+      ).status(),
+    ).toBe(200);
     expect((await new AxeBuilder({ page: project }).analyze()).violations).toEqual([]);
     expect((await new AxeBuilder({ page: inbox }).analyze()).violations).toEqual([]);
     await project.screenshot({ path: info.outputPath('invitation-landscape.png'), fullPage: true });
@@ -147,12 +200,68 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     expect((await recipient.request.get(content)).status()).toBe(200);
 
     project.once('dialog', (dialog) => dialog.accept());
-    await project.getByRole('button', { name: 'Revoke access' }).click();
+    await project
+      .getByRole('listitem')
+      .filter({ hasText: 'recipient@example.test' })
+      .getByRole('button', { name: 'Revoke access' })
+      .click();
     await expect(project.getByText('Access revoked')).toBeVisible();
     expect((await recipient.request.get(content)).status()).toBe(404);
     for (const suffix of ['', '/parts/0', '/parts/1']) {
       expect((await recipient.request.get(original + suffix)).status()).toBe(404);
     }
+    expect(
+      (
+        await remaining.request.get(remainingOriginals + activation.fileIds[0] + '/parts/1')
+      ).status(),
+    ).toBe(200);
+    await remainingRow.getByLabel('Verified recipient fingerprint').fill(remainingCode);
+    const rotation = project.waitForRequest(
+      (request) => request.method() === 'POST' && request.url().endsWith('/rotate-originals'),
+    );
+    await remainingRow.getByRole('button', { name: 'Rotate original-file keys' }).click();
+    const rotated = (await rotation).postDataJSON();
+    const newId = rotated.fileIds[0];
+    expect(newId).not.toBe(activation.fileIds[0]);
+    await expect(
+      remainingRow.getByRole('button', { name: 'Rotate original-file keys' }),
+    ).toHaveCount(0);
+    expect(
+      (
+        await remaining.request.get(remainingOriginals + activation.fileIds[0] + '/parts/1')
+      ).status(),
+    ).toBe(404);
+    expect((await recipient.request.get(remainingOriginals + newId + '/parts/1')).status()).toBe(
+      404,
+    );
+    const rotatedPart = await remaining.request.get(remainingOriginals + newId + '/parts/1');
+    expect(rotatedPart.status()).toBe(200);
+    const newCiphertext = await rotatedPart.body();
+    const ownerAccount = await (await owner.request.get('/api/v1/auth/me')).json();
+    const iv = Buffer.alloc(12);
+    iv.writeUInt32BE(1, 8);
+    const decipher = createDecipheriv('aes-256-gcm', Buffer.from(oldKey, 'base64'), iv);
+    decipher.setAAD(
+      Buffer.from(
+        JSON.stringify([
+          'calirestore-original',
+          1,
+          ownerAccount.account.id,
+          list.invitations[0].projectId,
+          newId,
+          1,
+        ]),
+      ),
+    );
+    decipher.setAuthTag(newCiphertext.subarray(-16));
+    decipher.update(newCiphertext.subarray(0, -16));
+    expect(() => decipher.final()).toThrow();
+    await remainingInbox.getByRole('button', { name: 'Refresh invitations' }).click();
+    await remainingInbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
+    await remainingInbox.getByRole('button', { name: 'Open shared content' }).click();
+    const rotatedDownload = remainingInbox.waitForEvent('download');
+    await remainingInbox.getByRole('button', { name: 'Download original' }).click();
+    expect(await readFile(await (await rotatedDownload).path())).toEqual(originalBytes);
     await inbox.getByRole('button', { name: 'Download original' }).click();
     await expect(
       inbox.getByRole('region', { name: 'Shared originals' }).getByRole('alert'),
@@ -243,12 +352,13 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await recipientOwners.getByRole('button', { name: 'Remove co-owner' }).click();
     await expect(recipientOwners.getByText('owner@example.test')).toHaveCount(0);
     expect((await owner.request.get(owners)).status()).toBe(404);
-    const remaining = await (await recipient.request.get(owners)).json();
-    expect(remaining.owners).toEqual([
+    const finalOwners = await (await recipient.request.get(owners)).json();
+    expect(finalOwners.owners).toEqual([
       { id: session.account.id, email: 'recipient@example.test', host: true },
     ]);
   } finally {
     await owner.close();
     await recipient.close();
+    await remaining.close();
   }
 });

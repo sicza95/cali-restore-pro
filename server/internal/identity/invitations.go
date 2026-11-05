@@ -18,12 +18,13 @@ type pendingInvitation struct {
 }
 
 type ownerInvitation struct {
-	ID           string `json:"id"`
-	Email        string `json:"email"`
-	State        string `json:"state"`
-	RecipientID  string `json:"recipientId"`
-	RecipientKey string `json:"recipientKey,omitempty"`
-	CoOwner      bool   `json:"coOwner"`
+	ID           string   `json:"id"`
+	Email        string   `json:"email"`
+	State        string   `json:"state"`
+	RecipientID  string   `json:"recipientId"`
+	RecipientKey string   `json:"recipientKey,omitempty"`
+	CoOwner      bool     `json:"coOwner"`
+	SourceIDs    []string `json:"sourceIds,omitempty"`
 }
 
 func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]ownerInvitation, error) {
@@ -31,10 +32,15 @@ func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]own
 		return nil, err
 	}
 	rows, err := a.tx.Query(ctx, `SELECT i.id,i.recipient_email,i.state,i.recipient_id,
- CASE WHEN i.state='accepted' AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END,
- i.co_owner
+ CASE WHEN (i.state='accepted' OR rotation.ids IS NOT NULL)
+ AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END,
+ i.co_owner,rotation.ids
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
  LEFT JOIN sharing_identities k ON k.account_id=i.recipient_id
+ LEFT JOIN LATERAL (
+  SELECT array_agg(o.source_id::text ORDER BY o.source_id) AS ids FROM invitation_originals o
+  WHERE o.invitation_id=i.id HAVING bool_or(EXISTS (SELECT 1 FROM retired_originals x WHERE x.file_id=o.file_id))
+ ) rotation ON i.state='active'
  WHERE project_id=$1 AND (i.state IN ('accepted','active','revoked') OR (i.state='pending' AND expires_at>clock_timestamp()))
  ORDER BY i.expires_at DESC,i.id LIMIT 100`, project)
 	if err != nil {
@@ -137,8 +143,7 @@ func (a fileAccess) revokeInvitation(ctx context.Context, project, id string) er
 	if tag.RowsAffected() == 0 {
 		return errFileMissing
 	}
-	_, err = a.tx.Exec(ctx, `DELETE FROM invitation_grants WHERE invitation_id=$1`, id)
-	return err
+	return a.dropInvitationGrant(ctx, project, id)
 }
 
 func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
@@ -150,16 +155,20 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			return
 		}
 		var list []ownerInvitation
+		var epoch string
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			var err error
 			list, err = a.ownerInvitations(r.Context(), project)
-			return err
+			if err != nil {
+				return err
+			}
+			return a.tx.QueryRow(r.Context(), `SELECT coalesce(original_epoch::text,'') FROM hosted_projects WHERE id=$1`, project).Scan(&epoch)
 		})
 		if err != nil {
 			fileFailure(w, err)
 			return
 		}
-		respond(w, http.StatusOK, map[string]any{"invitations": list})
+		respond(w, http.StatusOK, map[string]any{"invitations": list, "originalEpoch": epoch})
 	})
 	route("GET /api/v1/invitations", true, func(w http.ResponseWriter, r *http.Request) {
 		var list []pendingInvitation

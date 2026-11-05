@@ -130,12 +130,53 @@ export function encryptedFiles(
     }
   }
 
+  async function uploadParts(
+    ref: Ref,
+    shape: FileShape,
+    options: RemoteOptions,
+    read: (part: number) => Promise<ArrayBuffer>,
+  ) {
+    const path = filePath(ref);
+    const signal = signalFor(options);
+    const reservation = await request(path, signal, 'PUT', options.csrf, JSON.stringify(shape));
+    const state = ((await reservation.json()) as { state: string }).state;
+    if (state === 'committed') return;
+    if (state !== 'staged') throw new Error('Unexpected transfer state');
+    for (let part = 0; part <= chunkCount(shape); part++) {
+      signal.throwIfAborted();
+      await request(path + '/parts/' + part, signal, 'PUT', options.csrf, await read(part));
+      if (part > 0)
+        options.progress?.(Math.min(part * chunkBytes, shape.sourceBytes), shape.sourceBytes);
+    }
+    await request(path + '/commit', signal, 'POST', options.csrf, '{}');
+  }
+
+  async function exportKey(ref: Ref) {
+    const key = await originalKey(root, account, ref.project, ref.id, true);
+    locked.throwIfAborted();
+    return new Uint8Array(await crypto.subtle.exportKey('raw', key));
+  }
+
   return {
-    async exportOriginalKey(ref: Ref) {
-      await ready(ref);
-      const key = await originalKey(root, account, ref.project, ref.id, true);
-      locked.throwIfAborted();
-      return new Uint8Array(await crypto.subtle.exportKey('raw', key));
+    async publishOriginal(ref: Ref, versionId: string, options: RemoteOptions) {
+      const { sourceBytes, manifestBytes } = await ready(ref);
+      const shape = { sourceBytes, manifestBytes };
+      const version = { ...ref, id: versionId };
+      const localPart = (part: number) => readPart(ref.id, shape, part);
+      if (ref.id === versionId) await uploadParts(ref, shape, options, localPart);
+      else {
+        const previous = await cipher(ref);
+        const next = await cipher(version);
+        await uploadParts(version, shape, options, async (part) => {
+          const plain = await previous.open(part, await localPart(part));
+          try {
+            return await next.seal(part, plain);
+          } finally {
+            new Uint8Array(plain).fill(0);
+          }
+        });
+      }
+      return exportKey(version);
     },
     async stage(project: string, file: File, options: Options = {}) {
       locked.throwIfAborted();
@@ -181,26 +222,9 @@ export function encryptedFiles(
       await request(projectPath(project), signalFor(options), 'PUT', options.csrf, '{}');
     },
     async upload(ref: Ref, options: RemoteOptions) {
-      const path = filePath(ref);
-      const signal = signalFor(options);
       const { sourceBytes, manifestBytes } = await ready(ref);
       const shape = { sourceBytes, manifestBytes };
-      const reservation = await request(path, signal, 'PUT', options.csrf, JSON.stringify(shape));
-      const state = ((await reservation.json()) as { state: string }).state;
-      if (state === 'committed') return;
-      if (state !== 'staged') throw new Error('Unexpected transfer state');
-      for (let part = 0; part <= chunkCount(shape); part++) {
-        signal.throwIfAborted();
-        await request(
-          path + '/parts/' + part,
-          signal,
-          'PUT',
-          options.csrf,
-          await readPart(ref.id, shape, part),
-        );
-        if (part > 0) options.progress?.(Math.min(part * chunkBytes, sourceBytes), sourceBytes);
-      }
-      await request(path + '/commit', signal, 'POST', options.csrf, '{}');
+      await uploadParts(ref, shape, options, (part) => readPart(ref.id, shape, part));
     },
     async cancelUpload(ref: Ref, options: RemoteOptions) {
       await request(filePath(ref), signalFor(options), 'DELETE', options.csrf);

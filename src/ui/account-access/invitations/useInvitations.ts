@@ -4,9 +4,13 @@ import type { InvitationModel } from './types';
 export function useInvitations<T>(model: InvitationModel, path: string) {
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
-  const [result, { refetch }] = createResource<{ invitations?: T[]; error?: string }>(async () => {
+  const [result, { refetch }] = createResource<{
+    invitations?: T[];
+    originalEpoch?: string;
+    error?: string;
+  }>(async () => {
     try {
-      return await model.request<{ invitations: T[] }>(path);
+      return await model.request<{ invitations: T[]; originalEpoch?: string }>(path);
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'unavailable' };
     }
@@ -28,5 +32,14 @@ export function useInvitations<T>(model: InvitationModel, path: string) {
       setBusy(false);
     }
   }
-  return { busy, failed, rows, error, loading: () => result.loading, run, refetch };
+  return {
+    busy,
+    failed,
+    rows,
+    error,
+    originalEpoch: () => result()?.originalEpoch ?? '',
+    loading: () => result.loading,
+    run,
+    refetch,
+  };
 }

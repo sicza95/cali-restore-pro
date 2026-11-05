@@ -2721,7 +2721,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["invitations"],
+                  "required": ["invitations", "originalEpoch"],
                   "properties": {
                     "invitations": {
                       "type": "array",
@@ -2752,9 +2752,30 @@
                           },
                           "coOwner": {
                             "type": "boolean"
+                          },
+                          "sourceIds": {
+                            "type": "array",
+                            "maxItems": 64,
+                            "uniqueItems": true,
+                            "items": {
+                              "type": "string",
+                              "format": "uuid"
+                            }
                           }
                         }
                       }
+                    },
+                    "originalEpoch": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "string",
+                          "const": ""
+                        }
+                      ]
                     }
                   }
                 }
@@ -3122,6 +3143,27 @@
                       "type": "string",
                       "format": "uuid"
                     }
+                  },
+                  "sourceIds": {
+                    "type": "array",
+                    "maxItems": 64,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "originalEpoch": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      {
+                        "type": "string",
+                        "const": ""
+                      }
+                    ]
                   }
                 },
                 "additionalProperties": false
@@ -3789,6 +3831,132 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/invitations/{invitation}/rotate-originals": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "rotateInvitationOriginals",
+        "summary": "Replace a surviving grant with freshly encrypted original-file versions",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "recipientKey",
+                  "encapsulation",
+                  "ciphertext",
+                  "fileIds",
+                  "sourceIds",
+                  "originalEpoch"
+                ],
+                "properties": {
+                  "recipientKey": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  },
+                  "encapsulation": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  },
+                  "ciphertext": {
+                    "type": "string",
+                    "minLength": 24,
+                    "maxLength": 87404
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": ["fixture-v1", "project-v1"]
+                  },
+                  "fileIds": {
+                    "type": "array",
+                    "maxItems": 64,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "sourceIds": {
+                    "type": "array",
+                    "maxItems": 64,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "originalEpoch": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Original-file grant rotated"
           },
           "default": {
             "description": "Transfer, authentication or policy error",
