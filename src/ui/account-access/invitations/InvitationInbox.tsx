@@ -3,9 +3,12 @@ import { createSignal, For, Show } from 'solid-js';
 import {
   localSharingKey,
   openSharedContent,
+  openScope,
   sharingFingerprint,
 } from '../../../platform/projects/fixture-sharing';
-import type { SharingEnvelope } from '../../../platform/projects/fixture-sharing';
+import type { ScopeEnvelope, SharingEnvelope } from '../../../platform/projects/fixture-sharing';
+import { optionalScopes } from '../../../platform/projects/sharing-scopes';
+import type { OptionalScope } from '../../../platform/projects/sharing-scopes';
 import type { SharedProject } from '../../../platform/projects/shared-project';
 import type { SharedOriginal } from '../../../platform/projects/shared-originals';
 import type { LocalVault } from '../../../platform/vault/vault';
@@ -26,6 +29,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
     originals: SharedOriginal[];
     sender: string;
     locked: AbortSignal;
+    scope?: { id: OptionalScope; rows: string[] };
   }>();
   return (
     <section class="invitation-panel" aria-label={c().heading}>
@@ -49,6 +53,9 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                 {c().reference} {item.projectId}
               </strong>
               <span>{c()[item.state]}</span>
+              <p>
+                {[c().assessment, ...optionalScopes(item).map((scope) => c()[scope])].join(' · ')}
+              </p>
               <Show when={item.coOwner}>
                 <span>{c().coOwner}</span>
               </Show>
@@ -81,23 +88,47 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                     const code = String(new FormData(event.currentTarget).get('fingerprint') ?? '')
                       .trim()
                       .toLowerCase();
+                    const selected = optionalScopes(item).find(
+                      (scope) => scope === (event.submitter as HTMLButtonElement | null)?.value,
+                    );
                     setOpened(undefined);
                     void inbox.run(async () => {
                       const grant = await props.model.request<
-                        SharingEnvelope & { senderId: string; senderKey: string }
-                      >('/invitations/' + item.id + '/content');
+                        (SharingEnvelope | ScopeEnvelope) & { senderId: string; senderKey: string }
+                      >(
+                        '/invitations/' + item.id + (selected ? '/scopes/' + selected : '/content'),
+                      );
                       const fingerprint = await sharingFingerprint(grant.senderKey);
                       if (code !== fingerprint) throw new Error('Fingerprint mismatch');
                       const key = await localSharingKey(props.vault, {
                         account: grant.senderId,
                         fingerprint,
                       });
-                      const content = await openSharedContent(key.pair, grant.senderKey, grant, {
+                      const context = {
                         project: item.projectId,
                         invitation: item.id,
                         sender: grant.senderId,
                         recipient: props.model.account()!.id,
-                      });
+                      };
+                      const scoped =
+                        selected && 'scope' in grant
+                          ? {
+                              id: selected,
+                              rows: await openScope(
+                                key.pair,
+                                grant.senderKey,
+                                grant,
+                                context,
+                                selected,
+                              ),
+                            }
+                          : undefined;
+                      if (selected && !scoped) throw new Error('Missing scope');
+                      const content =
+                        !selected && 'format' in grant
+                          ? await openSharedContent(key.pair, grant.senderKey, grant, context)
+                          : undefined;
+                      if (!selected && !('format' in grant)) throw new Error('Missing assessment');
                       key.signal.throwIfAborted();
                       setOpened({
                         id: item.id,
@@ -105,6 +136,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                         originals: content?.originals ?? [],
                         sender: grant.senderId,
                         locked: key.signal,
+                        scope: scoped,
                       });
                     }, false);
                   }}
@@ -116,13 +148,40 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                       required
                       pattern="[a-fA-F0-9]{64}"
                       spellcheck={false}
+                      disabled={inbox.loading() || inbox.busy()}
                     />
                   </label>
-                  <button disabled={inbox.busy()}>{c().open}</button>
+                  <button disabled={inbox.loading() || inbox.busy()}>{c().open}</button>
+                  <For each={optionalScopes(item)}>
+                    {(scope) => (
+                      <button
+                        class="secondary"
+                        value={scope}
+                        disabled={inbox.loading() || inbox.busy()}
+                      >
+                        {c()[scope]}
+                      </button>
+                    )}
+                  </For>
                 </form>
                 <Show when={opened()?.id === item.id && opened()}>
                   {(result) => (
-                    <Show when={result().project} fallback={<p role="status">{c().sample}</p>}>
+                    <Show
+                      when={result().project}
+                      fallback={
+                        <Show when={result().scope} fallback={<p role="status">{c().sample}</p>}>
+                          {(scope) => (
+                            <section class="shared-project" aria-label={c()[scope().id]}>
+                              <h2>{c()[scope().id]}</h2>
+                              <p>{c().sampleOnly}</p>
+                              <ul>
+                                <For each={scope().rows}>{(row) => <li>{row}</li>}</For>
+                              </ul>
+                            </section>
+                          )}
+                        </Show>
+                      }
+                    >
                       {(project) => (
                         <section class="shared-project" aria-label={c().snapshot}>
                           <h2>{project().name}</h2>

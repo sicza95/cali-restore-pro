@@ -165,6 +165,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		h.fileRoutes(route, *h.objects)
 		h.invitationRoutes(route)
 		h.activationRoutes(route)
+		h.scopeRoutes(route)
 		h.ownerRoutes(route)
 		h.hostingRoutes(route)
 	}

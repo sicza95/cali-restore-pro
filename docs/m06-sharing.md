@@ -154,3 +154,25 @@ originals remain with their recipients.
 The live test uses three browser sessions. It checks that the surviving
 recipient can download the rotated original and that the revoked
 recipient's actual previous file key fails authentication on the new bytes.
+
+## Assessment, estimate and history scopes
+
+Assessment is the default grant. Owners can add either an estimate summary
+or a full estimate and can independently add a history checkpoint. The
+invitation shows the chosen scopes before acceptance. Activation commits
+only when the supplied scope envelopes exactly match those choices.
+
+Migration `0015` adds independent HPKE envelopes for the optional scopes.
+Each uses a fresh encryption context and authenticates the scope, project,
+invitation, sender and recipient. The server returns only the requested
+scope for the active recipient. Revocation removes all of the invitation's
+envelopes. Original-file rotation replaces the assessment envelope and
+preserves any independently granted estimate and history envelopes.
+
+Assessment uses the saved project snapshot. Estimate and history grants
+currently carry labeled synthetic records while the estimate and checkpoint
+workspaces are pending. The history sample has no financial inputs. The
+browser test checks assessment plus summary access for one recipient and
+assessment plus full estimate and history access for another. It also
+checks unauthorized requests, a ciphertext swap between scopes, and
+revocation of the summary grant.

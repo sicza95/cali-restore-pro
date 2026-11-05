@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { createDecipheriv } from 'node:crypto';
+import { captureOriginalKey } from './invitation-crypto';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
 const recipientSession = process.env.M06_RECIPIENT_SESSION;
@@ -38,26 +39,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const project = await owner.newPage();
     const inbox = await recipient.newPage();
     const remainingInbox = await remaining.newPage();
-    let oldKey = '';
-    await inbox.exposeFunction('captureOriginalKey', (value: string) => {
-      oldKey = value;
-    });
-    await inbox.addInitScript(() => {
-      const decrypt = SubtleCrypto.prototype.decrypt;
-      SubtleCrypto.prototype.decrypt = async function (algorithm, key, data) {
-        const result = await decrypt.call(this, algorithm, key, data);
-        try {
-          const envelope = JSON.parse(new TextDecoder().decode(result));
-          if (envelope.originals?.[0]?.key)
-            await (
-              window as unknown as { captureOriginalKey: (key: string) => Promise<void> }
-            ).captureOriginalKey(envelope.originals[0].key);
-        } catch {
-          // Most decrypted records do not contain sharing metadata.
-        }
-        return result;
-      };
-    });
+    const oldKey = await captureOriginalKey(inbox);
     await project.goto('/projects');
     await setupVault(project);
     await project.getByLabel('Project name').fill('Synthetic chapel');
@@ -78,6 +60,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await project.getByText('Project invitations', { exact: true }).click();
     await project.getByRole('button', { name: 'Enable hosting' }).click();
     await project.getByLabel('Recipient email').fill('recipient@example.test');
+    await project.getByLabel('Estimate access (sample data)').selectOption('estimate-summary');
     await project.getByRole('button', { name: 'Send invitation' }).click();
     await expect(project.getByText('Awaiting acceptance')).toBeVisible();
     await project.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
@@ -89,7 +72,9 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await expect(inbox.getByText('Awaiting secure activation')).toBeVisible();
     const list = await (await recipient.request.get('/api/v1/invitations')).json();
     const content = '/api/v1/invitations/' + list.invitations[0].id + '/content';
+    const scopes = '/api/v1/invitations/' + list.invitations[0].id + '/scopes/';
     expect((await recipient.request.get(content)).status()).toBe(404);
+    expect((await recipient.request.get(scopes + 'estimate-summary')).status()).toBe(404);
     await inbox.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
     const recipientCode = await inbox.locator('.invitation-panel code').innerText();
 
@@ -116,9 +101,21 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const sealed = await (await recipient.request.get(content)).json();
     expect(sealed.format).toBe('project-v1');
     expect(JSON.stringify(sealed)).not.toMatch(/Synthetic chapel|North wall|Upper plaster/);
+    const summary = await recipient.request.get(scopes + 'estimate-summary');
+    expect(summary.status()).toBe(200);
+    expect(await summary.text()).not.toContain('1,250 EUR');
+    expect((await recipient.request.get(scopes + 'estimate-full')).status()).toBe(404);
+    expect((await recipient.request.get(scopes + 'history')).status()).toBe(404);
+    expect((await owner.request.get(scopes + 'estimate-summary')).status()).toBe(404);
 
     await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
+    await inbox.getByRole('button', { name: 'Estimate summary sample' }).click();
+    await expect(
+      inbox.getByRole('region', { name: 'Estimate summary sample' }).getByText('1,250 EUR'),
+    ).toBeVisible();
+    await expect(inbox.getByRole('button', { name: 'Full estimate sample' })).toHaveCount(0);
+    await expect(inbox.getByRole('button', { name: 'History sample' })).toHaveCount(0);
     await inbox.route(
       '**' + content,
       async (route) => {
@@ -148,9 +145,11 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const openedFile = await download;
     expect(openedFile.suggestedFilename()).toBe('shared-plaster.bin');
     expect(await readFile(await openedFile.path())).toEqual(originalBytes);
-    expect(Buffer.from(oldKey, 'base64')).toHaveLength(32);
+    expect(Buffer.from(oldKey(), 'base64')).toHaveLength(32);
 
     await project.getByLabel('Recipient email').fill('remaining@example.test');
+    await project.getByLabel('Estimate access (sample data)').selectOption('estimate-full');
+    await project.getByRole('checkbox', { name: 'Include a history checkpoint sample' }).check();
     await project.getByRole('button', { name: 'Send invitation' }).click();
     const remainingRow = project
       .getByRole('listitem')
@@ -169,6 +168,30 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await remainingRow.getByRole('button', { name: 'Share project snapshot' }).click();
     await expect(remainingRow.getByText('Shared content available')).toBeVisible();
     const remainingList = await (await remaining.request.get('/api/v1/invitations')).json();
+    const remainingScopes = '/api/v1/invitations/' + remainingList.invitations[0].id + '/scopes/';
+    expect((await remaining.request.get(remainingScopes + 'estimate-summary')).status()).toBe(404);
+    expect((await recipient.request.get(remainingScopes + 'history')).status()).toBe(404);
+    const fullEnvelope = await (
+      await remaining.request.get(remainingScopes + 'estimate-full')
+    ).json();
+    await remainingInbox.getByRole('button', { name: 'Refresh invitations' }).click();
+    await remainingInbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
+    await remainingInbox.getByRole('button', { name: 'Full estimate sample' }).click();
+    await expect(
+      remainingInbox.getByRole('region', { name: 'Full estimate sample' }).getByText('62.50 EUR/h'),
+    ).toBeVisible();
+    await remainingInbox.route(
+      '**' + remainingScopes + 'history',
+      (route) => route.fulfill({ json: { ...fullEnvelope, scope: 'history' } }),
+      { times: 1 },
+    );
+    await remainingInbox.getByRole('button', { name: 'History sample' }).click();
+    await expect(remainingInbox.locator('.invitation-panel [role=alert]')).toBeVisible();
+    await expect(remainingInbox.getByRole('region', { name: 'History sample' })).toHaveCount(0);
+    await remainingInbox.getByRole('button', { name: 'History sample' }).click();
+    await expect(
+      remainingInbox.getByRole('region', { name: 'History sample' }).getByText('Checkpoint 1'),
+    ).toBeVisible();
     const remainingOriginals = '/api/v1/invitations/' + remainingList.invitations[0].id + '/files/';
     expect(
       (
@@ -207,6 +230,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
       .click();
     await expect(project.getByText('Access revoked')).toBeVisible();
     expect((await recipient.request.get(content)).status()).toBe(404);
+    expect((await recipient.request.get(scopes + 'estimate-summary')).status()).toBe(404);
     for (const suffix of ['', '/parts/0', '/parts/1']) {
       expect((await recipient.request.get(original + suffix)).status()).toBe(404);
     }
@@ -240,7 +264,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const ownerAccount = await (await owner.request.get('/api/v1/auth/me')).json();
     const iv = Buffer.alloc(12);
     iv.writeUInt32BE(1, 8);
-    const decipher = createDecipheriv('aes-256-gcm', Buffer.from(oldKey, 'base64'), iv);
+    const decipher = createDecipheriv('aes-256-gcm', Buffer.from(oldKey(), 'base64'), iv);
     decipher.setAAD(
       Buffer.from(
         JSON.stringify([
