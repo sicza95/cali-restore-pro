@@ -39,7 +39,7 @@ export function newProject(
   };
 }
 
-function validate(project: Project, id: string) {
+export function validateProject(project: Project, id: string) {
   if (project.id !== id || project.version !== 1 || project.settings?.version !== 1)
     throw new Error('Unsupported project document');
   if (!project.objects.length || project.objects.some((object) => !object.surfaces.length))
@@ -52,12 +52,12 @@ export function localProjects(vault: LocalVault) {
   return {
     async list() {
       return (await vault.projects().list()).map(({ id, revision, text }) => ({
-        ...validate(JSON.parse(text) as Project, id),
+        ...validateProject(JSON.parse(text) as Project, id),
         revision,
       }));
     },
     async save({ revision, ...value }: SavedProject) {
-      const next = validate({ ...value, updatedAt: Date.now() }, value.id);
+      const next = validateProject({ ...value, updatedAt: Date.now() }, value.id);
       return {
         ...next,
         revision: await vault.projects().save(next.id, revision, JSON.stringify(next)),

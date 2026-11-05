@@ -5,12 +5,13 @@ import { assertID } from '../vault/file-format';
 type Ciphertext = Omit<Envelope, 'version'>;
 export type RevisionHead = Ciphertext & { revision: number; epoch: string };
 export type RevisionState = { epoch: string; head: RevisionHead | null };
+export type RevisionBase = { epoch: string; head: { revision: number } | null };
 export type RevisionKey = { epoch: string; key: CryptoKey };
 export type RevisionWrite = Ciphertext & { expected: number; epoch: string };
 
 export async function sealRevision(
   project: string,
-  state: RevisionState,
+  state: RevisionBase,
   key: RevisionKey,
   text: string,
 ): Promise<RevisionWrite> {
