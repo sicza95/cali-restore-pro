@@ -4111,6 +4111,142 @@
           }
         }
       }
+    },
+    "/api/v1/hosted-projects/{project}/invitations/{invitation}/scopes": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "updateInvitationScopes",
+        "summary": "Change estimate and history scopes for an active invitation",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["previous", "next"],
+                "properties": {
+                  "previous": {
+                    "type": "object",
+                    "required": ["estimateScope", "shareHistory"],
+                    "properties": {
+                      "estimateScope": {
+                        "type": "string",
+                        "enum": ["none", "estimate-summary", "estimate-full"]
+                      },
+                      "shareHistory": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "next": {
+                    "type": "object",
+                    "required": ["estimateScope", "shareHistory"],
+                    "properties": {
+                      "estimateScope": {
+                        "type": "string",
+                        "enum": ["none", "estimate-summary", "estimate-full"]
+                      },
+                      "shareHistory": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "recipientKey": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  },
+                  "grants": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                      "type": "object",
+                      "required": ["scope", "encapsulation", "ciphertext"],
+                      "properties": {
+                        "scope": {
+                          "type": "string",
+                          "enum": ["estimate-summary", "estimate-full", "history"]
+                        },
+                        "encapsulation": {
+                          "type": "string",
+                          "minLength": 88,
+                          "maxLength": 88
+                        },
+                        "ciphertext": {
+                          "type": "string",
+                          "minLength": 24,
+                          "maxLength": 2048
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Sharing scopes updated"
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

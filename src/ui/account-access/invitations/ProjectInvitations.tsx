@@ -15,6 +15,7 @@ import type { InvitationModel, SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
 import { ProjectOwners } from './ProjectOwners';
+import { EditScopes } from './EditScopes';
 import './styles.css';
 
 export function ProjectInvitations(props: {
@@ -150,6 +151,17 @@ function InvitationControls(props: {
                 <p>
                   {[c().assessment, ...optionalScopes(item).map((scope) => c()[scope])].join(' · ')}
                 </p>
+                <Show when={item.state === 'active'}>
+                  <EditScopes
+                    item={item}
+                    project={props.projectId}
+                    path={props.path + '/' + item.id + '/scopes'}
+                    model={props.model}
+                    vault={props.vault}
+                    busy={sent.busy()}
+                    run={sent.run}
+                  />
+                </Show>
                 <Show when={item.state === 'pending' || item.state === 'accepted'}>
                   <button
                     class="secondary"
@@ -183,6 +195,7 @@ function InvitationControls(props: {
                 <Show
                   when={
                     item.recipientKey &&
+                    (item.state === 'accepted' || !!item.sourceIds?.length) &&
                     (!item.sourceIds?.length || props.canHost) &&
                     item.recipientKey
                   }

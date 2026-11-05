@@ -12,6 +12,9 @@
 .invitation-panel li > :is(form, p, .shared-project) {
   grid-column: 1 / -1;
 }
+.scope-editor {
+  grid-column: 1 / -1;
+}
 .shared-project h3 {
   margin: 8px 0 4px;
   font-size: 14px;

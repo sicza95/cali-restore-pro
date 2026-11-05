@@ -2212,3 +2212,52 @@ export type GetInvitationScopeResponses = {
 
 export type GetInvitationScopeResponse =
   GetInvitationScopeResponses[keyof GetInvitationScopeResponses];
+
+export type UpdateInvitationScopesData = {
+  body: {
+    previous: {
+      estimateScope: 'none' | 'estimate-summary' | 'estimate-full';
+      shareHistory: boolean;
+    };
+    next: {
+      estimateScope: 'none' | 'estimate-summary' | 'estimate-full';
+      shareHistory: boolean;
+    };
+    recipientKey?: string;
+    grants?: Array<{
+      scope: 'estimate-summary' | 'estimate-full' | 'history';
+      encapsulation: string;
+      ciphertext: string;
+    }>;
+  };
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/scopes';
+};
+
+export type UpdateInvitationScopesErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type UpdateInvitationScopesError =
+  UpdateInvitationScopesErrors[keyof UpdateInvitationScopesErrors];
+
+export type UpdateInvitationScopesResponses = {
+  /**
+   * Sharing scopes updated
+   */
+  204: void;
+};
+
+export type UpdateInvitationScopesResponse =
+  UpdateInvitationScopesResponses[keyof UpdateInvitationScopesResponses];
