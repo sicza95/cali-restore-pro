@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -28,7 +29,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	if err := run(ctx, os.Args[1:]); err != nil {
-		slog.Error("command failed", "reason", err.Error())
+		slog.Error("command failed")
 		os.Exit(1)
 	}
 }
@@ -125,7 +126,7 @@ func run(ctx context.Context, args []string) error {
 		return errors.New("frontend build missing")
 	}
 	auth := identity.NewHTTP(identities, c.Origin, strings.HasPrefix(c.Origin, "https://"))
-	srv := &http.Server{Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+	srv := &http.Server{ErrorLog: log.New(httpDiagnostic{slog.Default()}, "", 0), Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
 	stopped := make(chan error, 1)
 	go func() { stopped <- srv.ListenAndServe() }()
 	slog.Info("HTTP server started")
