@@ -1943,6 +1943,11 @@ export type ListProjectOwnersResponses = {
       email: string;
       host: boolean;
     }>;
+    hostingTransfer: {
+      id: string;
+      fromId: string;
+      toId: string;
+    } | null;
   };
 };
 
@@ -1985,3 +1990,72 @@ export type RemoveProjectOwnerResponses = {
 
 export type RemoveProjectOwnerResponse =
   RemoveProjectOwnerResponses[keyof RemoveProjectOwnerResponses];
+
+export type AcceptHostingTransferData = {
+  body: EmptyRequest;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    transfer: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/hosting-transfer/{transfer}/accept';
+};
+
+export type AcceptHostingTransferErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type AcceptHostingTransferError =
+  AcceptHostingTransferErrors[keyof AcceptHostingTransferErrors];
+
+export type AcceptHostingTransferResponses = {
+  /**
+   * Hosting responsibility transferred
+   */
+  204: void;
+};
+
+export type AcceptHostingTransferResponse =
+  AcceptHostingTransferResponses[keyof AcceptHostingTransferResponses];
+
+export type ProposeHostingTransferData = {
+  body: {
+    toId: string;
+  };
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/hosting-transfer';
+};
+
+export type ProposeHostingTransferErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type ProposeHostingTransferError =
+  ProposeHostingTransferErrors[keyof ProposeHostingTransferErrors];
+
+export type ProposeHostingTransferResponses = {
+  /**
+   * Hosting transfer offered
+   */
+  204: void;
+};
+
+export type ProposeHostingTransferResponse =
+  ProposeHostingTransferResponses[keyof ProposeHostingTransferResponses];
