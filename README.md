@@ -63,6 +63,15 @@ docker compose --profile dev up --build -d --wait
 
 Open the [app](http://localhost:8080). Docker builds the product frontend and Go 1.27.3 service, starts private PostgreSQL 18.6, runs one-shot migrations, and starts app/worker only after those pass. Node and a shell are absent from the non-root runtime. Existing Storybook commands above remain independent. See [platform operations](deploy/README.md) for configuration, port overrides, health checks, tests, backup/restore, optional mail/tunnel profiles and the production boundaries.
 
+### Sign in to the local app
+
+1. If you need an account, open [Create account](http://localhost:8080/register) and register with a test address such as `restorer@example.test` and a password of at least 15 characters.
+2. Open [Mailpit](http://localhost:8025), find the verification email for that address, and follow the link to confirm the account. If you changed the ports in `.env`, use your configured `APP_ORIGIN` for the app and `MAIL_PORT` for Mailpit.
+3. Open [Sign in](http://localhost:8080/login) and use the email and password you registered. If you already have a verified account in this local database, start here.
+4. To work on projects, select **Projects** after signing in and set up or unlock the browser vault.
+
+For admin access, follow the [one-time superuser bootstrap](deploy/README.md#one-time-superuser-bootstrap-m-01a), then sign in with the credentials you configured.
+
 ## Platform implementation plan
 
 The [platform-first implementation plan](docs/plan/README.md) defines Docker deployment, the Go/PostgreSQL backend, identity and superuser management, encryption, files, projects, sharing/revocation, offline recovery, administration, estimates and complete tool UI. Image processing and the drawing engine come in the final phase. Each milestone gets its own PR; [M-00 evidence](docs/m00-verification.md) distinguishes the substrate from later application behavior.
