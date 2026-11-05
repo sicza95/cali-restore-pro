@@ -16,6 +16,11 @@
   margin: 8px 0 4px;
   font-size: 14px;
 }
+.owner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .project-workspace > .invitation-panel {
   margin: 0 0 16px;
 }

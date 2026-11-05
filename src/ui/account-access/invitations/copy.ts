@@ -18,6 +18,12 @@ export const invitationCopy = {
     hostOwner: 'Hosting owner',
     removeOwner: 'Remove co-owner',
     removeOwnerConfirm: 'Remove this co-owner’s management and snapshot access?',
+    offerHosting: 'Offer hosting transfer',
+    transferPending: 'Awaiting hosting acceptance from',
+    acceptHosting: 'Accept hosting transfer',
+    acceptHostingConfirm: 'Take responsibility for this project’s hosted storage and quota usage?',
+    hostingQuota: 'Your remaining storage quota is too small for this project.',
+    hostingIneligible: 'Your account needs hosting enabled and a storage quota to accept.',
     identity: 'Show my sharing fingerprint',
     identityHelp:
       'Compare fingerprints through a trusted channel before granting or opening access.',
@@ -59,6 +65,13 @@ export const invitationCopy = {
     hostOwner: 'A szerveres tárolásért felelős tulajdonos',
     removeOwner: 'Társtulajdonos eltávolítása',
     removeOwnerConfirm: 'Megszünteted a társtulajdonos kezelési és megtekintési jogát?',
+    offerHosting: 'Szerveres tárolás átadásának felajánlása',
+    transferPending: 'A szerveres tárolás átvételére vár',
+    acceptHosting: 'Szerveres tárolás átvétele',
+    acceptHostingConfirm:
+      'Átveszed a projekt szerveres tárolását és a kvóta felhasználásával járó felelősséget?',
+    hostingQuota: 'A fennmaradó tárhelykvótád nem elegendő ehhez a projekthez.',
+    hostingIneligible: 'Az átvételhez engedélyezett szerveres tárolás és tárhelykvóta szükséges.',
     identity: 'Saját megosztási ujjlenyomat megjelenítése',
     identityHelp:
       'A hozzáférés megadása vagy megnyitása előtt ellenőrizd az ujjlenyomatot megbízható csatornán.',

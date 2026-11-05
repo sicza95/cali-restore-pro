@@ -12,7 +12,7 @@ async function setupVault(page: Page) {
   await page.getByRole('button', { name: 'Set up vault' }).click();
 }
 
-test('verified recipient opens an encrypted project snapshot until the owner revokes access', async ({
+test('project sharing, revocation and accepted hosting transfer preserve ownership', async ({
   browser,
   baseURL,
 }, info) => {
@@ -166,21 +166,54 @@ test('verified recipient opens an encrypted project snapshot until the owner rev
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
     await inbox.getByRole('button', { name: 'Open shared content' }).click();
     await inbox.getByText('Project invitations', { exact: true }).click();
-    await expect(
-      inbox.getByRole('region', { name: 'Project owners' }).getByText('owner@example.test'),
-    ).toBeVisible();
+    const recipientOwners = inbox.getByRole('region', { name: 'Project owners' });
+    await expect(recipientOwners.getByText('owner@example.test')).toBeVisible();
+    const projectPath = owners.slice(0, -'/owners'.length);
+    const file = projectPath + '/files/5c39da35-dea3-4049-9d7e-ff4a3e4119db';
+    const reservation = { sourceBytes: 600000, manifestBytes: 32 };
+    expect((await owner.request.put(file, { ...mutation, data: reservation })).status()).toBe(200);
 
-    project.once('dialog', (dialog) => dialog.accept());
-    await ownerList.getByRole('button', { name: 'Remove co-owner' }).click();
-    await expect(project.getByText('Access revoked')).toBeVisible();
-    expect((await recipient.request.get(owners)).status()).toBe(404);
-    expect(
-      (
-        await recipient.request.get('/api/v1/invitations/' + renewed.invitations[0].id + '/content')
-      ).status(),
-    ).toBe(404);
-    const stillLastOwner = await owner.request.post(removeHost, mutation);
-    expect(await stillLastOwner.json()).toEqual({ error: 'last_project_owner' });
+    await ownerList.getByRole('button', { name: 'Offer hosting transfer' }).click();
+    await expect(ownerList.getByText(/Awaiting hosting acceptance/)).toBeVisible();
+    const pending = await (await owner.request.get(owners)).json();
+    expect(pending.owners.find((row: { host: boolean }) => row.host).id).toBe(ownerAuth.account.id);
+    const accept = projectPath + '/hosting-transfer/' + pending.hostingTransfer.id + '/accept';
+    expect((await owner.request.post(accept, mutation)).status()).toBe(404);
+    const stillHost = await owner.request.post(removeHost, mutation);
+    expect(await stillHost.json()).toEqual({ error: 'owner_is_project_host' });
+
+    await inbox
+      .locator('details.invitation-panel')
+      .getByRole('button', { name: 'Refresh invitations' })
+      .click();
+    inbox.once('dialog', (dialog) => dialog.accept());
+    await recipientOwners.getByRole('button', { name: 'Accept hosting transfer' }).click();
+    await expect(
+      recipientOwners.getByRole('button', { name: 'Accept hosting transfer' }),
+    ).toHaveCount(0);
+    const accepted = await (await recipient.request.get(owners)).json();
+    expect(accepted.hostingTransfer).toBeNull();
+    expect(accepted.owners.find((row: { host: boolean }) => row.host).id).toBe(session.account.id);
+    expect((await owner.request.put(file, { ...mutation, data: reservation })).status()).toBe(404);
+    const recipientMutation = {
+      headers: { Origin: baseURL!, 'X-CSRF-Token': session.csrfToken },
+      data: reservation,
+    };
+    expect((await recipient.request.put(file, recipientMutation)).status()).toBe(200);
+    const excess = await recipient.request.put(
+      projectPath + '/files/8419bb28-4783-4f90-b994-be8203832be0',
+      recipientMutation,
+    );
+    expect(await excess.json()).toEqual({ error: 'storage_quota_exceeded' });
+
+    inbox.once('dialog', (dialog) => dialog.accept());
+    await recipientOwners.getByRole('button', { name: 'Remove co-owner' }).click();
+    await expect(recipientOwners.getByText('owner@example.test')).toHaveCount(0);
+    expect((await owner.request.get(owners)).status()).toBe(404);
+    const remaining = await (await recipient.request.get(owners)).json();
+    expect(remaining.owners).toEqual([
+      { id: session.account.id, email: 'recipient@example.test', host: true },
+    ]);
   } finally {
     await owner.close();
     await recipient.close();
