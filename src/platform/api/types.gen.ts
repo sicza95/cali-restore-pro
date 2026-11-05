@@ -193,6 +193,17 @@ export type DeletionPreflight = {
   reason: 'project_continuity_unavailable';
 };
 
+export type EncryptedFileShape = {
+  sourceBytes: number;
+  manifestBytes: number;
+};
+
+export type EncryptedFileRecord = {
+  sourceBytes: number;
+  manifestBytes: number;
+  state: 'staged' | 'committed';
+};
+
 export type PlatformStatusData = {
   body?: never;
   path?: never;
@@ -1325,3 +1336,227 @@ export type AdminDeletionPreflightResponses = {
 
 export type AdminDeletionPreflightResponse =
   AdminDeletionPreflightResponses[keyof AdminDeletionPreflightResponses];
+
+export type EnableProjectHostingData = {
+  body: EmptyRequest;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}';
+};
+
+export type EnableProjectHostingErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type EnableProjectHostingError =
+  EnableProjectHostingErrors[keyof EnableProjectHostingErrors];
+
+export type EnableProjectHostingResponses = {
+  /**
+   * Accepted
+   */
+  204: void;
+};
+
+export type EnableProjectHostingResponse =
+  EnableProjectHostingResponses[keyof EnableProjectHostingResponses];
+
+export type CancelEncryptedFileData = {
+  body?: never;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    file: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/files/{file}';
+};
+
+export type CancelEncryptedFileErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type CancelEncryptedFileError = CancelEncryptedFileErrors[keyof CancelEncryptedFileErrors];
+
+export type CancelEncryptedFileResponses = {
+  /**
+   * Accepted
+   */
+  204: void;
+};
+
+export type CancelEncryptedFileResponse =
+  CancelEncryptedFileResponses[keyof CancelEncryptedFileResponses];
+
+export type GetEncryptedFileData = {
+  body?: never;
+  path: {
+    project: string;
+    file: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/files/{file}';
+};
+
+export type GetEncryptedFileErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type GetEncryptedFileError = GetEncryptedFileErrors[keyof GetEncryptedFileErrors];
+
+export type GetEncryptedFileResponses = {
+  /**
+   * File reservation or committed file
+   */
+  200: EncryptedFileRecord;
+};
+
+export type GetEncryptedFileResponse = GetEncryptedFileResponses[keyof GetEncryptedFileResponses];
+
+export type ReserveEncryptedFileData = {
+  body: EncryptedFileShape;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    file: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/files/{file}';
+};
+
+export type ReserveEncryptedFileErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type ReserveEncryptedFileError =
+  ReserveEncryptedFileErrors[keyof ReserveEncryptedFileErrors];
+
+export type ReserveEncryptedFileResponses = {
+  /**
+   * File reservation or committed file
+   */
+  200: EncryptedFileRecord;
+};
+
+export type ReserveEncryptedFileResponse =
+  ReserveEncryptedFileResponses[keyof ReserveEncryptedFileResponses];
+
+export type CommitEncryptedFileData = {
+  body: EmptyRequest;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    file: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/files/{file}/commit';
+};
+
+export type CommitEncryptedFileErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type CommitEncryptedFileError = CommitEncryptedFileErrors[keyof CommitEncryptedFileErrors];
+
+export type CommitEncryptedFileResponses = {
+  /**
+   * Accepted
+   */
+  204: void;
+};
+
+export type CommitEncryptedFileResponse =
+  CommitEncryptedFileResponses[keyof CommitEncryptedFileResponses];
+
+export type GetEncryptedPartData = {
+  body?: never;
+  path: {
+    project: string;
+    file: string;
+    part: number;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/files/{file}/parts/{part}';
+};
+
+export type GetEncryptedPartErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type GetEncryptedPartError = GetEncryptedPartErrors[keyof GetEncryptedPartErrors];
+
+export type GetEncryptedPartResponses = {
+  /**
+   * Verified ciphertext part
+   */
+  200: Blob | File;
+};
+
+export type GetEncryptedPartResponse = GetEncryptedPartResponses[keyof GetEncryptedPartResponses];
+
+export type PutEncryptedPartData = {
+  body: Blob | File;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+    'X-Ciphertext-SHA256': string;
+  };
+  path: {
+    project: string;
+    file: string;
+    part: number;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/files/{file}/parts/{part}';
+};
+
+export type PutEncryptedPartErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type PutEncryptedPartError = PutEncryptedPartErrors[keyof PutEncryptedPartErrors];
+
+export type PutEncryptedPartResponses = {
+  /**
+   * Accepted
+   */
+  204: void;
+};
+
+export type PutEncryptedPartResponse = PutEncryptedPartResponses[keyof PutEncryptedPartResponses];

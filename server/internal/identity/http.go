@@ -16,6 +16,7 @@ type HTTP struct {
 	service            *Service
 	origin, cookieName string
 	secure             bool
+	objects            *fileObjects
 }
 
 func NewHTTP(service *Service, origin string, secure bool) *HTTP {
@@ -25,6 +26,8 @@ func NewHTTP(service *Service, origin string, secure bool) *HTTP {
 	}
 	return &HTTP{service: service, origin: strings.TrimRight(origin, "/"), cookieName: name, secure: secure}
 }
+
+func (h *HTTP) EnableFiles(root string) { h.objects = &fileObjects{root: root} }
 
 func (h *HTTP) raw(r *http.Request) string {
 	c, err := r.Cookie(h.cookieName)
@@ -154,6 +157,9 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 	}
 	h.lifecycleRoutes(route)
 	h.adminRoutes(route)
+	if h.objects != nil {
+		h.fileRoutes(route, *h.objects)
+	}
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			Email    string `json:"email"`

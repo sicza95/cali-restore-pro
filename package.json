@@ -18,6 +18,7 @@
     "api:generate": "openapi-ts",
     "setup:secrets": "node scripts/setup-secrets.mjs",
     "test:platform": "node scripts/platform-smoke.mjs",
+    "test:files": "playwright test --config playwright.files.config.ts",
     "test:app": "playwright test --config playwright.platform.config.ts",
     "dev": "storybook dev -p 6006 --host 127.0.0.1 --no-open --disable-telemetry",
     "storybook": "npm run dev",

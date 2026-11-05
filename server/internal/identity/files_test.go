@@ -1,0 +1,160 @@
+package identity
+
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"sync"
+	"testing"
+)
+
+func TestPostgresEncryptedFiles(t *testing.T) {
+	admin, app := identityDB(t)
+	ctx := context.Background()
+	s, err := New(app)
+	if err != nil {
+		t.Fatal(err)
+	}
+	exec := func(sql string, args ...any) {
+		t.Helper()
+		if _, err := admin.Exec(ctx, sql, args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	account := func(email string) string {
+		var id string
+		err := admin.QueryRow(ctx, `INSERT INTO accounts(email,password_hash,state,role,server_features,quota_mib)
+  VALUES ($1,'synthetic hash','active','member',true,1) RETURNING id`, email).Scan(&id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw := token()
+		exec(`INSERT INTO sessions(account_id,token_digest) VALUES($1,$2)`, id, digest(raw))
+		return raw
+	}
+	alice, bob := account("alice@example.test"), account("bob@example.test")
+	root := t.TempDir()
+	origin := "https://test.example"
+	h := NewHTTP(s, origin, false)
+	h.EnableFiles(root)
+	mux := http.NewServeMux()
+	h.Register(mux)
+	request := func(method, path, raw string, body []byte, binary bool) *httptest.ResponseRecorder {
+		r := httptest.NewRequest(method, path, bytes.NewReader(body))
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Origin", origin)
+		r.Header.Set("X-CSRF-Token", CSRF(raw))
+		if raw != "" {
+			r.AddCookie(&http.Cookie{Name: h.cookieName, Value: raw})
+		}
+		if binary {
+			r.Header.Set("Content-Type", "application/octet-stream")
+			digest := sha256.Sum256(body)
+			r.Header.Set("X-Ciphertext-SHA256", hex.EncodeToString(digest[:]))
+		}
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+		return w
+	}
+	want := func(method, path, raw string, body []byte, binary bool, status int) *httptest.ResponseRecorder {
+		t.Helper()
+		w := request(method, path, raw, body, binary)
+		if w.Code != status {
+			t.Fatalf("%s %s: got %d, want %d: %s", method, path, w.Code, status, w.Body.String())
+		}
+		return w
+	}
+	project := "/api/v1/hosted-projects/c0ffee00-0000-4000-8000-000000000000"
+	id := func(i int) string { return fmt.Sprintf("f11e0000-0000-4000-8000-%012d", i) }
+	file := func(i int) string { return project + "/files/" + id(i) }
+	json := func(s string) []byte { return []byte(s) }
+	noBody := json("{}")
+	manifest := bytes.Repeat([]byte{0x99}, 32)
+	chunk := bytes.Repeat([]byte{0xaa}, 600016)
+	shape := json(`{"sourceBytes":600000,"manifestBytes":32}`)
+	want("PUT", project, "", noBody, false, 401)
+	want("PUT", project, alice, noBody, false, 204)
+	want("PUT", project, alice, noBody, false, 204)
+	want("PUT", project, bob, noBody, false, 404)
+	want("PUT", file(1), bob, shape, false, 404)
+
+	// Two concurrent requests together exceed the same hosting account's quota.
+	results := make(chan int, 2)
+	var wg sync.WaitGroup
+	for i := 1; i <= 2; i++ {
+		wg.Go(func() { results <- request("PUT", file(i), alice, shape, false).Code })
+	}
+	wg.Wait()
+	a, b := <-results, <-results
+	if a+b != 200+409 || a == b {
+		t.Fatalf("quota race: %d %d", a, b)
+	}
+	i := 1
+	if request("PUT", file(1), alice, shape, false).Code != 200 {
+		i = 2
+	}
+	path := file(i)
+	want("GET", path, alice, nil, false, 404)
+	want("POST", path+"/commit", alice, noBody, false, 409)
+	want("PUT", path+"/parts/0", alice, manifest, true, 204)
+	want("PUT", path+"/parts/0", alice, manifest, true, 204)
+	want("PUT", path+"/parts/0", alice, bytes.Repeat([]byte{2}, 32), true, 409)
+	want("PUT", path+"/parts/1", alice, chunk[:10], true, 400)
+	want("PUT", path+"/parts/1", alice, chunk, true, 204)
+	chunkPath := filepath.Join(root, id(i), "1")
+	if err := os.WriteFile(chunkPath, bytes.Repeat([]byte{3}, len(chunk)), 0600); err != nil {
+		t.Fatal(err)
+	}
+	want("POST", path+"/commit", alice, noBody, false, 409)
+	if err := os.Remove(chunkPath); err != nil {
+		t.Fatal(err)
+	}
+	want("POST", path+"/commit", alice, noBody, false, 409)
+	want("PUT", path+"/parts/1", alice, chunk, true, 204)
+	exec(`UPDATE accounts SET server_features=false WHERE email='alice@example.test'`)
+	want("POST", path+"/commit", alice, noBody, false, 403)
+	exec(`UPDATE accounts SET server_features=true WHERE email='alice@example.test'`)
+	want("POST", path+"/commit", alice, noBody, false, 204)
+	want("POST", path+"/commit", alice, noBody, false, 204)
+	want("PUT", path+"/parts/1", alice, chunk, true, 409)
+	want("DELETE", path, alice, nil, false, 409)
+	want("GET", path, bob, nil, false, 404)
+	exec(`UPDATE accounts SET server_features=false,quota_mib=0 WHERE email='alice@example.test'`)
+	got := want("GET", path+"/parts/1", alice, nil, false, 200)
+	if !bytes.Equal(got.Body.Bytes(), chunk) {
+		t.Fatal("retrieval changed bytes")
+	}
+	exec(`UPDATE accounts SET server_features=true,quota_mib=1 WHERE email='alice@example.test'`)
+	small := json(`{"sourceBytes":128,"manifestBytes":32}`)
+	want("PUT", file(3), alice, small, false, 200)
+	want("PUT", file(3)+"/parts/0", alice, manifest, true, 204)
+	want("DELETE", file(3), alice, nil, false, 204)
+	want("POST", file(3)+"/commit", alice, noBody, false, 409)
+	want("PUT", file(4), alice, small, false, 200)
+	want("PUT", file(4)+"/parts/0", alice, manifest, true, 204)
+	exec(`UPDATE encrypted_files SET expires_at=clock_timestamp()-interval '1 minute' WHERE id=$1`, id(4))
+	want("PUT", file(4)+"/parts/1", alice, make([]byte, 144), true, 409)
+	for range 2 {
+		if err := s.CleanExpiredFiles(ctx, root); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, i := range []int{3, 4} {
+		if _, err := os.Stat(filepath.Join(root, id(i))); !os.IsNotExist(err) {
+			t.Fatalf("orphan %d still present: %v", i, err)
+		}
+	}
+	want("GET", path+"/parts/1", alice, nil, false, 200)
+	if err := os.Remove(chunkPath); err != nil {
+		t.Fatal(err)
+	}
+	want("GET", path+"/parts/1", alice, nil, false, 503)
+	exec(`DELETE FROM sessions WHERE token_digest=$1`, digest(alice))
+	want("GET", path, alice, nil, false, 401)
+}

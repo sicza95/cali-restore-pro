@@ -2,12 +2,14 @@ import { importCode, newCode, open, parseEnvelope, seal } from './crypto';
 import type { Envelope } from './crypto';
 import { commitVault, readVault } from './store';
 import type { VaultRow } from './store';
+import { encryptedFiles } from './files';
 
 export class LocalVault {
   #root?: CryptoKey;
   #row?: VaultRow;
   #pairing?: string;
   #epoch = 0;
+  #fileAccess = new AbortController();
   #channel = new BroadcastChannel('calirestore-vault');
   #closed = false;
 
@@ -25,6 +27,8 @@ export class LocalVault {
 
   lock(broadcast = true) {
     this.#epoch++;
+    this.#fileAccess.abort();
+    this.#fileAccess = new AbortController();
     this.#root = undefined;
     this.#row = undefined;
     this.#pairing = undefined;
@@ -112,6 +116,11 @@ export class LocalVault {
     await commitVault(this.account, row.stamp, next);
     this.#assert(epoch);
     this.#row = next;
+  }
+
+  files() {
+    const { root, row } = this.#unlocked();
+    return encryptedFiles(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
   async save(text: string) {

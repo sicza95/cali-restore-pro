@@ -32,12 +32,18 @@ jobs:
           IDENTITY_SMOKE_DISPOSABLE: '1'
       - run: npm run test:platform
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:files
       - run: npm run test:app
         env:
           IDENTITY_SMOKE_DISPOSABLE: '1'
           SMOKE_ORIGIN: http://localhost:8080
       - name: Quiesced backup and isolated restore
         run: node scripts/backup-smoke.mjs deploy/backups/ci calirestore-restore-ci
+      - name: Encrypted file transfer and restart
+        run: node scripts/encrypted-files-smoke.mjs
+        env:
+          IDENTITY_SMOKE_DISPOSABLE: '1'
+          SMOKE_ORIGIN: http://localhost:8080
       - name: Diagnostics
         if: failure()
         run: docker compose logs --no-color

@@ -106,6 +106,10 @@ func run(ctx context.Context, args []string) error {
 	if err != nil || identities.ConfigureMail(key, c.Origin) != nil {
 		return errors.New("invalid mail key")
 	}
+	objectRoot := filepath.Join(c.ObjectDir, "encrypted-v1")
+	if err := os.MkdirAll(objectRoot, 0700); err != nil {
+		return errors.New("cannot initialize encrypted object storage")
+	}
 	if args[0] == "worker" {
 		address, from := os.Getenv("SMTP_ADDRESS"), os.Getenv("SMTP_FROM")
 		if address == "" || from == "" {
@@ -120,12 +124,15 @@ func run(ctx context.Context, args []string) error {
 			password = strings.TrimRight(string(data), "\r\n")
 		}
 		send := identity.SMTPTransport(address, from, os.Getenv("SMTP_USERNAME"), password, c.Mode == "production")
-		return worker(ctx, c, ready, func(ctx context.Context) error { return identities.DeliverMail(ctx, send) })
+		return worker(ctx, c, ready, func(ctx context.Context) error {
+			return errors.Join(identities.CleanExpiredFiles(ctx, objectRoot), identities.DeliverMail(ctx, send))
+		})
 	}
 	if _, err := os.Stat(filepath.Join(c.StaticDir, "index.html")); err != nil {
 		return errors.New("frontend build missing")
 	}
 	auth := identity.NewHTTP(identities, c.Origin, strings.HasPrefix(c.Origin, "https://"))
+	auth.EnableFiles(objectRoot)
 	srv := &http.Server{ErrorLog: log.New(httpDiagnostic{slog.Default()}, "", 0), Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
 	stopped := make(chan error, 1)
 	go func() { stopped <- srv.ListenAndServe() }()
