@@ -65,11 +65,26 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 				failure(w, err)
 				return
 			}
-			if id := r.PathValue("id"); id != "" && (!uuid(id) || !actor.Account.Allows(ManageRoles)) {
+			id := r.PathValue("id")
+			if id != "" && (!uuid(id) || !actor.Account.Allows(ManageRoles)) {
 				failure(w, ErrForbidden)
 				return
 			}
-			respond(w, 200, map[string]any{"eligible": false, "reason": "project_continuity_unavailable"})
+			if id == "" {
+				id = actor.Account.ID
+			}
+			var hosted bool
+			err = h.service.pool.QueryRow(r.Context(),
+				`SELECT EXISTS (SELECT 1 FROM hosted_projects WHERE owner_id=$1)`, id).Scan(&hosted)
+			if err != nil {
+				failure(w, err)
+				return
+			}
+			reason := "project_continuity_unavailable"
+			if hosted {
+				reason = "hosted_projects_require_continuity"
+			}
+			respond(w, 200, map[string]any{"eligible": false, "reason": reason})
 		})
 	}
 }

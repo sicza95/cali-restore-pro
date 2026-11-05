@@ -190,7 +190,7 @@ export type AdminControls =
 
 export type DeletionPreflight = {
   eligible: false;
-  reason: 'project_continuity_unavailable';
+  reason: 'project_continuity_unavailable' | 'hosted_projects_require_continuity';
 };
 
 export type EncryptedFileShape = {

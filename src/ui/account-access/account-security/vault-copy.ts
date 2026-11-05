@@ -1,6 +1,7 @@
 const en = {
   heading: 'Local content vault',
   help: 'Try encrypted storage with sample text only. Account sign-in and vault unlock are separate.',
+  projectHelp: 'Unlock to open projects saved in this browser. Keep your recovery key safe.',
   empty: 'No vault on this browser',
   locked: 'Vault locked',
   unlocked: 'Vault unlocked',
@@ -38,6 +39,8 @@ export const vaultCopy: Record<'en' | 'hu', typeof en> = {
   hu: {
     heading: 'Helyi tartalomtár',
     help: 'Csak mintaszöveggel próbálja ki a titkosított tárolást. A bejelentkezés és a tár feloldása külön művelet.',
+    projectHelp:
+      'Oldja fel a tárat az ebben a böngészőben mentett projektekhez. Őrizze meg a helyreállítási kulcsot.',
     empty: 'Ebben a böngészőben nincs tartalomtár',
     locked: 'A tartalomtár zárolva van',
     unlocked: 'A tartalomtár fel van oldva',

@@ -1,3 +1,4 @@
+import type { DeletionPreflight } from '../../../../platform/api/types.gen';
 import { createSignal, For, Show } from 'solid-js';
 import { ConfirmField } from '../../confirm-field/ConfirmField';
 import { settingsCopy } from '../constants';
@@ -6,7 +7,7 @@ import type { AdminAccount, SettingsProps } from '../types';
 export function AccountRow(props: SettingsProps & { account: AdminAccount; refresh: () => void }) {
   const a = () => props.account;
   const c = () => settingsCopy[props.model.lang()];
-  const [blocked, setBlocked] = createSignal(false);
+  const [blocked, setBlocked] = createSignal<DeletionPreflight['reason']>();
   const ready = () => a().state === 'active' || a().state === 'suspended';
   const disabled = () => props.model.busy() || !props.model.confirmed();
   const apply = (action: string, body: object) =>
@@ -148,16 +149,20 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
                 class="secondary"
                 disabled={props.model.busy()}
                 onClick={async () => {
-                  const result = await props.model.read<{ eligible: boolean }>(
+                  const result = await props.model.read<DeletionPreflight>(
                     '/admin/accounts/' + a().id + '/deletion-preflight',
                   );
-                  setBlocked(result?.eligible === false);
+                  setBlocked(result?.reason);
                 }}
               >
                 {c().preflight}
               </button>
               <Show when={blocked()}>
-                <p role="status">{c().blocked}</p>
+                <p role="status">
+                  {blocked() === 'hosted_projects_require_continuity'
+                    ? c().blockedHosted
+                    : c().blocked}
+                </p>
               </Show>
             </div>
           </Show>
