@@ -19,6 +19,7 @@ x-app-env: &app-env
   DB_USER: calirestore_app
   DB_PASSWORD_FILE: /run/secrets/app_db_password
   DB_SSLMODE: disable
+  MAIL_KEY_FILE: /run/secrets/mail_key
 
 services:
   db:
@@ -61,7 +62,7 @@ services:
     command: [serve]
     environment: *app-env
     networks: [backend, ingress]
-    secrets: [app_db_password]
+    secrets: [app_db_password, mail_key]
     ports: ['127.0.0.1:${APP_PORT:-8080}:8080']
     volumes: [objects:/data/objects]
     depends_on:
@@ -88,8 +89,11 @@ services:
   worker:
     <<: *runtime
     command: [worker]
-    environment: *app-env
-    secrets: [app_db_password]
+    environment:
+      <<: *app-env
+      SMTP_ADDRESS: ${SMTP_ADDRESS:-mail-sink:1025}
+      SMTP_FROM: ${SMTP_FROM:-accounts@calirestore.invalid}
+    secrets: [app_db_password, mail_key]
     volumes: [objects:/data/objects]
     depends_on:
       db: { condition: service_healthy }
@@ -144,6 +148,8 @@ volumes:
   objects:
 
 secrets:
+  mail_key:
+    file: ${SECRETS_DIR:-./deploy/secrets}/mail_key
   app_db_password:
     file: ${SECRETS_DIR:-./deploy/secrets}/app_db_password
   migration_db_password:

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const directory = resolve(process.argv[2] ?? process.env.SECRETS_DIR ?? 'deploy/secrets');
 mkdirSync(directory, { recursive: true, mode: 0o700 });
-for (const name of ['app_db_password', 'migration_db_password']) {
+for (const name of ['app_db_password', 'migration_db_password', 'mail_key']) {
   try {
     writeFileSync(resolve(directory, name), `${randomBytes(32).toString('hex')}\n`, {
       flag: 'wx',

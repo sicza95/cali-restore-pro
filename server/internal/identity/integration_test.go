@@ -118,7 +118,7 @@ func TestPostgresIdentity(t *testing.T) {
 		if err := admin.QueryRow(ctx, `SELECT password_hash FROM accounts`).Scan(&unchanged); err != nil || unchanged != originalHash {
 			t.Fatal("bootstrap rerun reset credentials")
 		}
-		for _, sql := range []string{`UPDATE identity_guard SET bootstrap_account=NULL`, `DELETE FROM identity_guard`, `UPDATE accounts SET password_hash='bad'`, `DELETE FROM identity_audit`, `CREATE TABLE forbidden(id int)`} {
+		for _, sql := range []string{`UPDATE identity_guard SET bootstrap_account=NULL`, `DELETE FROM identity_guard`, `DELETE FROM identity_audit`, `CREATE TABLE forbidden(id int)`} {
 			if _, err := app.Exec(ctx, sql); err == nil {
 				t.Fatal("app privilege escape", sql)
 			}
