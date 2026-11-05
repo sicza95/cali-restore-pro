@@ -1,18 +1,22 @@
-export { Icon } from './Icon';
-export type { IconName } from './Icon';
-export {
-  Button,
-  IconButton,
-  ToolRail,
-  SaveStatus,
-  RangeControl,
-  Field,
-  Switch,
-  tools,
-} from './controls';
-export type { ButtonProps, Tool, SaveState } from './controls';
-export { LayerPanel, Area } from './LayerPanel';
-export type { LayerId } from './LayerPanel';
-export { CalibrationDialog } from './CalibrationDialog';
-export { EditorWorkspace, PhotoCanvas, PhotoStrip } from './EditorWorkspace';
-export type { EditorWorkspaceProps } from './EditorWorkspace';
+export { Icon } from './icon/Icon';
+export type { IconName } from './icon/types';
+export { Button } from './controls/button/Button';
+export { IconButton } from './controls/icon-button/IconButton';
+export { Field } from './controls/field/Field';
+export { RangeControl } from './controls/range-control/RangeControl';
+export { SaveStatus } from './controls/save-status/SaveStatus';
+export { Switch } from './controls/switch/Switch';
+export { ToolRail } from './controls/tool-rail/ToolRail';
+export { tools } from './controls/tool-rail/constants';
+export type { ButtonProps } from './controls/button/types';
+export type { Tool } from './controls/tool-rail/types';
+export type { SaveState } from './controls/save-status/types';
+export { Area } from './editor/area/Area';
+export { CalibrationDialog } from './editor/calibration-dialog/CalibrationDialog';
+export { EditorWorkspace } from './editor/editor-workspace/EditorWorkspace';
+export { LayerPanel } from './editor/layer-panel/LayerPanel';
+export { PhotoCanvas } from './editor/photo-canvas/PhotoCanvas';
+export { PhotoStrip } from './editor/photo-strip/PhotoStrip';
+export { referencePhoto } from './editor/constants';
+export type { EditorWorkspaceProps } from './editor/editor-workspace/types';
+export type { LayerId } from './editor/types';

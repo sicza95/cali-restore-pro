@@ -1,6 +1,6 @@
 import { For } from 'solid-js';
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { Icon } from '../ui/Icon';
+import { Icon } from '../ui';
 
 const meta = { title: 'Foundations/Tokens', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;

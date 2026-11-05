@@ -1,0 +1,28 @@
+.cr-save {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--cr-muted);
+}
+
+.cr-save > svg {
+  color: var(--cr-positive);
+}
+
+.cr-save[data-state='offline'] > svg {
+  color: var(--cr-muted);
+}
+
+.cr-save[data-state='error'] {
+  color: var(--cr-negative);
+}
+
+.cr-save[data-state='error'] > svg {
+  color: inherit;
+}
+
+.cr-save-short {
+  display: none;
+}

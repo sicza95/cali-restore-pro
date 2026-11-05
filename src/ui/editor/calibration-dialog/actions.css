@@ -1,0 +1,16 @@
+.cr-form-summary {
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 0 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--cr-rule);
+  border-bottom: 1px solid var(--cr-rule);
+  font-size: 13px;
+}
+
+.cr-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}

@@ -1,0 +1,138 @@
+@media (max-width: 1100px) {
+  .cr-editor-header {
+    gap: 16px;
+    padding: 0 16px;
+  }
+  .cr-editor-brand > span {
+    display: none;
+  }
+  .cr-editor-identity {
+    padding-left: 16px;
+  }
+  .cr-save-long {
+    display: none;
+  }
+  .cr-save-short {
+    display: inline;
+  }
+  .cr-commit-label {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .cr-editor-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 286px;
+  }
+  .cr-inspector {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    grid-template-rows: 52px minmax(0, 1fr);
+  }
+  .cr-inspector-tabs {
+    grid-column: 1 / -1;
+  }
+  .cr-inspector-body {
+    grid-row: 2;
+  }
+  .cr-inspector-footer {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    border-top: 0;
+    border-left: 1px solid var(--cr-rule);
+  }
+  .cr-layer-selection {
+    display: none;
+  }
+  .cr-phase-group {
+    margin-top: 12px;
+  }
+  .cr-boundary {
+    margin-bottom: 4px;
+  }
+}
+
+@media (max-width: 640px) {
+  .cr-editor {
+    grid-template-rows: 60px minmax(0, 1fr) 84px;
+    min-height: 760px;
+  }
+  .cr-editor-header {
+    gap: 8px;
+    padding: 0 12px;
+  }
+  .cr-editor-identity {
+    padding-left: 8px;
+  }
+  .cr-editor-identity > span,
+  .cr-export-button,
+  .cr-header-tools > button:nth-child(2) {
+    display: none;
+  }
+  .cr-editor-identity h1 {
+    font-size: 15px;
+  }
+  .cr-header-tools {
+    gap: 0;
+  }
+  .cr-editor-workspace {
+    grid-template-rows: minmax(0, 1fr) 270px;
+  }
+  .cr-inspector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cr-inspector-footer {
+    display: none;
+  }
+  .cr-tool-rail {
+    left: 10px !important;
+    top: 10px !important;
+  }
+  .cr-tool:nth-child(n + 5) {
+    display: none;
+  }
+  .cr-canvas-label {
+    left: 80px;
+    top: 10px;
+  }
+  .cr-canvas-caption,
+  .cr-tool-context .cr-range,
+  .cr-context-divider,
+  .cr-footer-context {
+    display: none;
+  }
+  .cr-scale {
+    left: auto;
+    right: 12px;
+    bottom: 18px;
+    width: 130px;
+  }
+  .cr-editor-footer {
+    gap: 12px;
+    padding: 8px 16px;
+  }
+  .cr-photo-thumbnail {
+    width: 88px;
+    height: 60px;
+  }
+  .cr-zoom small {
+    max-width: 80px;
+  }
+  .cr-editor--focus {
+    grid-template-rows: 60px minmax(0, 1fr) 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-root *,
+  .cr-root *::before,
+  .cr-root *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

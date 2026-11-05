@@ -1,0 +1,64 @@
+.cr-root,
+.cr-root *,
+.cr-root *::before,
+.cr-root *::after {
+  box-sizing: border-box;
+}
+
+.cr-root {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--cr-ground);
+  color: var(--cr-ink);
+  font: 400 14px/1.45 var(--cr-font);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+}
+
+.cr-root :is(button, input, select) {
+  font: inherit;
+}
+
+.cr-root button {
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.cr-root button:not(:disabled) {
+  cursor: pointer;
+}
+
+.cr-root :focus-visible {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 3px;
+}
+
+.cr-root svg {
+  flex: none;
+  vertical-align: middle;
+}
+
+.cr-root :is(h1, h2, h3, p) {
+  margin: 0;
+}
+
+.cr-root h1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.cr-root h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cr-root h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
