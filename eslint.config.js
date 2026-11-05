@@ -26,4 +26,8 @@ export default tseslint.config(
   },
   ...tseslint.configs.recommended,
   { ...solid, files: ['**/*.tsx'] },
+  {
+    files: ['**/*.{js,mjs,ts,tsx}'],
+    rules: { 'max-lines': ['error', 400] },
+  },
 );

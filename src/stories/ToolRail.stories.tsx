@@ -1,8 +1,7 @@
 import { createSignal } from 'solid-js';
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { ToolRail } from '../ui/controls';
-import type { Tool } from '../ui/controls';
-import { referencePhoto } from '../ui/EditorWorkspace';
+import { ToolRail, referencePhoto } from '../ui';
+import type { Tool } from '../ui';
 
 const meta = { title: 'Editor/Tool rail', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;

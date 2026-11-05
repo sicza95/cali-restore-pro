@@ -1,0 +1,7 @@
+.cr-editor-footer {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+  padding: 12px 20px;
+}

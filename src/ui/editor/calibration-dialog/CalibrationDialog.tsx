@@ -1,20 +1,19 @@
 import { createSignal, createUniqueId, onCleanup, onMount } from 'solid-js';
-import { Button, Field, IconButton } from './controls';
+import { Button } from '../../controls/button/Button';
+import { IconButton } from '../../controls/icon-button/IconButton';
+import { Field } from '../../controls/field/Field';
+import { isPositiveLength } from './utils';
+import type { CalibrationDialogProps } from './types';
 
 /** Presentation-only form. The caller owns persistence and measurement changes. */
-export function CalibrationDialog(props: {
-  onClose: () => void;
-  onApply: (dimensions: { widthCm: number; heightCm: number }) => void;
-}) {
+export function CalibrationDialog(props: CalibrationDialogProps) {
   let dialog: HTMLDialogElement | undefined;
   const id = createUniqueId();
   const [width, setWidth] = createSignal('300');
   const [height, setHeight] = createSignal('200');
   const [submitted, setSubmitted] = createSignal(false);
-  const valid = (value: string) =>
-    value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) > 0;
   const error = (value: string) =>
-    submitted() && !valid(value) ? 'Enter a positive length.' : undefined;
+    submitted() && !isPositiveLength(value) ? 'Enter a positive length.' : undefined;
 
   onMount(() => {
     if (!dialog) return;
@@ -44,7 +43,7 @@ export function CalibrationDialog(props: {
         onSubmit={(event) => {
           event.preventDefault();
           setSubmitted(true);
-          if (valid(width()) && valid(height()))
+          if (isPositiveLength(width()) && isPositiveLength(height()))
             props.onApply({ widthCm: Number(width()), heightCm: Number(height()) });
           else dialog?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
         }}
@@ -83,7 +82,7 @@ export function CalibrationDialog(props: {
         <div class="cr-form-summary">
           <span>Plane area</span>
           <output>
-            {valid(width()) && valid(height())
+            {isPositiveLength(width()) && isPositiveLength(height())
               ? `${((Number(width()) * Number(height())) / 10000).toFixed(2)} m²`
               : '—'}
           </output>

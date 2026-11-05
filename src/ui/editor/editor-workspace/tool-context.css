@@ -1,0 +1,21 @@
+.cr-tool-context {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 50px;
+  padding: 0 14px;
+  font-size: 12px;
+}
+
+.cr-context-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--cr-border);
+}
+
+.cr-tool-context .cr-range input {
+  width: 90px;
+}
