@@ -2,10 +2,11 @@
 import { createSignal, For, Show } from 'solid-js';
 import {
   localSharingKey,
-  sealFixture,
+  sealProjectSnapshot,
   sharingFingerprint,
 } from '../../../platform/projects/fixture-sharing';
 import type { LocalVault } from '../../../platform/vault/vault';
+import type { SavedProject } from '../../../platform/projects/types';
 import { invitationCopy } from './copy';
 import type { InvitationModel, SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
@@ -13,12 +14,13 @@ import { SharingFingerprint } from './SharingFingerprint';
 import './styles.css';
 
 export function ProjectInvitations(props: {
-  project: string;
+  projectId: string;
+  project: SavedProject;
   model: InvitationModel;
   vault: LocalVault;
 }) {
   const c = () => invitationCopy[props.model.lang()];
-  const projectPath = '/hosted-projects/' + props.project;
+  const projectPath = '/hosted-projects/' + props.projectId;
   const path = projectPath + '/invitations';
   const [open, setOpen] = createSignal(false);
   return (
@@ -41,7 +43,7 @@ function InvitationControls(props: {
   model: InvitationModel;
   path: string;
   projectPath: string;
-  project: string;
+  project: SavedProject;
   vault: LocalVault;
 }) {
   const c = () => invitationCopy[props.model.lang()];
@@ -126,12 +128,18 @@ function InvitationControls(props: {
                             account: item.recipientId,
                             fingerprint,
                           });
-                          const grant = await sealFixture(key.pair, recipientKey(), {
-                            project: props.project,
-                            invitation: item.id,
-                            sender,
-                            recipient: item.recipientId,
-                          });
+                          const project = props.project;
+                          const grant = await sealProjectSnapshot(
+                            key.pair,
+                            recipientKey(),
+                            {
+                              project: project.id,
+                              invitation: item.id,
+                              sender,
+                              recipient: item.recipientId,
+                            },
+                            project,
+                          );
                           key.signal.throwIfAborted();
                           await props.model.request('/sharing-identity', {
                             publicKey: key.publicKey,
@@ -144,6 +152,7 @@ function InvitationControls(props: {
                         });
                       }}
                     >
+                      <p>{c().scope}</p>
                       <label>
                         {c().recipientCode}
                         <input

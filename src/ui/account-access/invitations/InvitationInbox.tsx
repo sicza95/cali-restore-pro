@@ -2,10 +2,11 @@
 import { createSignal, For, Show } from 'solid-js';
 import {
   localSharingKey,
-  openFixture,
+  openSharedContent,
   sharingFingerprint,
 } from '../../../platform/projects/fixture-sharing';
-import type { FixtureEnvelope } from '../../../platform/projects/fixture-sharing';
+import type { SharingEnvelope } from '../../../platform/projects/fixture-sharing';
+import type { SharedProject } from '../../../platform/projects/shared-project';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { invitationCopy } from './copy';
 import type { InboxInvitation, InvitationModel } from './types';
@@ -16,7 +17,7 @@ import './styles.css';
 export function InvitationInbox(props: { model: InvitationModel; vault: LocalVault }) {
   const c = () => invitationCopy[props.model.lang()];
   const inbox = useInvitations<InboxInvitation>(props.model, '/invitations');
-  const [opened, setOpened] = createSignal('');
+  const [opened, setOpened] = createSignal<{ id: string; project?: SharedProject }>();
   return (
     <section class="invitation-panel" aria-label={c().heading}>
       <SharingFingerprint
@@ -68,25 +69,25 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                     const code = String(new FormData(event.currentTarget).get('fingerprint') ?? '')
                       .trim()
                       .toLowerCase();
-                    setOpened('');
+                    setOpened(undefined);
                     void inbox.run(async () => {
                       const grant = await props.model.request<
-                        FixtureEnvelope & { senderId: string; senderKey: string }
-                      >('/invitations/' + item.id + '/fixture');
+                        SharingEnvelope & { senderId: string; senderKey: string }
+                      >('/invitations/' + item.id + '/content');
                       const fingerprint = await sharingFingerprint(grant.senderKey);
                       if (code !== fingerprint) throw new Error('Fingerprint mismatch');
                       const key = await localSharingKey(props.vault, {
                         account: grant.senderId,
                         fingerprint,
                       });
-                      await openFixture(key.pair, grant.senderKey, grant, {
+                      const project = await openSharedContent(key.pair, grant.senderKey, grant, {
                         project: item.projectId,
                         invitation: item.id,
                         sender: grant.senderId,
                         recipient: props.model.account()!.id,
                       });
                       key.signal.throwIfAborted();
-                      setOpened(item.id);
+                      setOpened({ id: item.id, project });
                     }, false);
                   }}
                 >
@@ -101,8 +102,35 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                   </label>
                   <button disabled={inbox.busy()}>{c().open}</button>
                 </form>
-                <Show when={opened() === item.id}>
-                  <p role="status">{c().sample}</p>
+                <Show when={opened()?.id === item.id && opened()}>
+                  {(result) => (
+                    <Show when={result().project} fallback={<p role="status">{c().sample}</p>}>
+                      {(project) => (
+                        <section class="shared-project" aria-label={c().snapshot}>
+                          <h2>{project().name}</h2>
+                          <p>
+                            {c().snapshot} · {c().revision} {project().revision}
+                          </p>
+                          <For each={project().objects}>
+                            {(object) => (
+                              <div>
+                                <h3>{object.name}</h3>
+                                <ul>
+                                  <For each={object.surfaces}>
+                                    {(surface) => (
+                                      <li>
+                                        {surface.name} · {c()[surface.units]}
+                                      </li>
+                                    )}
+                                  </For>
+                                </ul>
+                              </div>
+                            )}
+                          </For>
+                        </section>
+                      )}
+                    </Show>
+                  )}
                 </Show>
               </Show>
             </li>
@@ -116,7 +144,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
         class="secondary"
         disabled={inbox.loading() || inbox.busy()}
         onClick={() => {
-          setOpened('');
+          setOpened(undefined);
           void inbox.refetch();
         }}
       >

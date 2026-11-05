@@ -176,7 +176,12 @@ export function ProjectWorkspace(props: {
               sharing={
                 <Show when={!current()!.archived && current()!.id} keyed>
                   {(id) => (
-                    <ProjectInvitations project={id} model={props.model} vault={props.vault} />
+                    <ProjectInvitations
+                      projectId={id}
+                      project={current()!}
+                      model={props.model}
+                      vault={props.vault}
+                    />
                   )}
                 </Show>
               }

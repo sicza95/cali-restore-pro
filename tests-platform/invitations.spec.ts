@@ -12,7 +12,7 @@ async function setupVault(page: Page) {
   await page.getByRole('button', { name: 'Set up vault' }).click();
 }
 
-test('verified recipient opens an activated assessment sample', async ({
+test('verified recipient opens an encrypted project snapshot', async ({
   browser,
   baseURL,
 }, info) => {
@@ -35,6 +35,11 @@ test('verified recipient opens an activated assessment sample', async ({
     await setupVault(project);
     await project.getByLabel('Project name').fill('Synthetic chapel');
     await project.getByRole('button', { name: 'New project' }).click();
+    await project.getByLabel('Add object').fill('North wall');
+    await project.getByRole('button', { name: 'Add object' }).click();
+    await project.getByLabel('Add surface').fill('Upper plaster');
+    await project.getByRole('button', { name: 'Add surface' }).click();
+    await expect(project.getByText('Upper plaster · Metric')).toBeVisible();
     await project.getByText('Project invitations', { exact: true }).click();
     await project.getByRole('button', { name: 'Enable hosting' }).click();
     await project.getByLabel('Recipient email').fill('recipient@example.test');
@@ -48,25 +53,32 @@ test('verified recipient opens an activated assessment sample', async ({
     await inbox.getByRole('button', { name: 'Accept invitation' }).click();
     await expect(inbox.getByText('Awaiting secure activation')).toBeVisible();
     const list = await (await recipient.request.get('/api/v1/invitations')).json();
-    const fixture = '/api/v1/invitations/' + list.invitations[0].id + '/fixture';
-    expect((await recipient.request.get(fixture)).status()).toBe(404);
+    const content = '/api/v1/invitations/' + list.invitations[0].id + '/content';
+    expect((await recipient.request.get(content)).status()).toBe(404);
     await inbox.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
     const recipientCode = await inbox.locator('.invitation-panel code').innerText();
 
     await project.getByRole('button', { name: 'Refresh invitations' }).click();
     await project.getByLabel('Verified recipient fingerprint').fill('0'.repeat(64));
-    await project.getByRole('button', { name: 'Activate sample access' }).click();
+    await project.getByRole('button', { name: 'Share project snapshot' }).click();
     await expect(project.locator('.invitation-panel [role=alert]')).toBeVisible();
-    expect((await recipient.request.get(fixture)).status()).toBe(404);
+    expect((await recipient.request.get(content)).status()).toBe(404);
     await project.getByLabel('Verified recipient fingerprint').fill(recipientCode);
-    await project.getByRole('button', { name: 'Activate sample access' }).click();
-    await expect(project.getByText('Assessment sample available')).toBeVisible();
-    expect((await owner.request.get(fixture)).status()).toBe(404);
+    const upload = project.waitForRequest(
+      (request) => request.method() === 'POST' && request.url().endsWith('/activate'),
+    );
+    await project.getByRole('button', { name: 'Share project snapshot' }).click();
+    await expect(project.getByText('Shared content available')).toBeVisible();
+    expect((await upload).postData()).not.toMatch(/Synthetic chapel|North wall|Upper plaster/);
+    expect((await owner.request.get(content)).status()).toBe(404);
+    const sealed = await (await recipient.request.get(content)).json();
+    expect(sealed.format).toBe('project-v1');
+    expect(JSON.stringify(sealed)).not.toMatch(/Synthetic chapel|North wall|Upper plaster/);
 
     await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
     await inbox.route(
-      '**' + fixture,
+      '**' + content,
       async (route) => {
         const response = await route.fetch();
         const grant = await response.json();
@@ -76,29 +88,23 @@ test('verified recipient opens an activated assessment sample', async ({
       },
       { times: 1 },
     );
-    await inbox.getByRole('button', { name: 'Open assessment sample' }).click();
+    await inbox.getByRole('button', { name: 'Open shared content' }).click();
     await expect(inbox.locator('.invitation-panel [role=alert]')).toBeVisible();
-    await expect(inbox.getByText('Synthetic assessment: surface condition recorded.')).toHaveCount(
-      0,
-    );
-    await inbox.getByRole('button', { name: 'Open assessment sample' }).click();
-    await expect(
-      inbox.getByText('Synthetic assessment: surface condition recorded.'),
-    ).toBeVisible();
+    await expect(inbox.getByText('Synthetic chapel')).toHaveCount(0);
+    await inbox.getByRole('button', { name: 'Open shared content' }).click();
+    await expect(inbox.getByText('Synthetic chapel')).toBeVisible();
+    await expect(inbox.getByRole('heading', { name: 'North wall' })).toBeVisible();
+    await expect(inbox.getByText('Upper plaster · Metric')).toBeVisible();
     expect((await new AxeBuilder({ page: project }).analyze()).violations).toEqual([]);
     expect((await new AxeBuilder({ page: inbox }).analyze()).violations).toEqual([]);
     await project.screenshot({ path: info.outputPath('invitation-landscape.png'), fullPage: true });
     await inbox.screenshot({ path: info.outputPath('invitation-portrait.png'), fullPage: true });
     await inbox.getByRole('button', { name: 'Lock vault' }).click();
-    await expect(inbox.getByText('Synthetic assessment: surface condition recorded.')).toHaveCount(
-      0,
-    );
+    await expect(inbox.getByText('Synthetic chapel')).toHaveCount(0);
     await inbox.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
-    await inbox.getByRole('button', { name: 'Open assessment sample' }).click();
-    await expect(
-      inbox.getByText('Synthetic assessment: surface condition recorded.'),
-    ).toBeVisible();
+    await inbox.getByRole('button', { name: 'Open shared content' }).click();
+    await expect(inbox.getByText('Synthetic chapel')).toBeVisible();
   } finally {
     await owner.close();
     await recipient.close();

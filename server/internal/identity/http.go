@@ -77,12 +77,16 @@ func failure(w http.ResponseWriter, err error) {
 }
 
 func decode(w http.ResponseWriter, r *http.Request, dst any) bool {
+	return decodeBounded(w, r, dst, 4096)
+}
+
+func decodeBounded(w http.ResponseWriter, r *http.Request, dst any, limit int64) bool {
 	media, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil || media != "application/json" {
 		respond(w, 415, map[string]string{"error": "json_required"})
 		return false
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, 4096)
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	d := json.NewDecoder(r.Body)
 	d.DisallowUnknownFields()
 	var body json.RawMessage

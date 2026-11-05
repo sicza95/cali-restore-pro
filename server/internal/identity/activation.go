@@ -19,12 +19,13 @@ func validSharingPoint(text string) bool {
 	return err == nil
 }
 
-type fixtureGrant struct {
+type invitationGrant struct {
 	Encapsulation string `json:"encapsulation"`
 	Ciphertext    string `json:"ciphertext"`
+	Format        string `json:"format,omitempty"`
 }
 
-func (a fileAccess) activateFixture(ctx context.Context, project, id, recipientKey string, grant fixtureGrant) error {
+func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipientKey string, grant invitationGrant) error {
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return err
 	}
@@ -36,16 +37,16 @@ func (a fileAccess) activateFixture(ctx context.Context, project, id, recipientK
  AND EXISTS (SELECT 1 FROM sharing_identities WHERE account_id=$4)
  RETURNING i.id
  )
- INSERT INTO invitation_fixture_grants(invitation_id,sender_id,encapsulation,ciphertext)
- SELECT id,$4,$5,$6 FROM activated`, id, project, recipientKey, a.account, grant.Encapsulation, grant.Ciphertext)
+ INSERT INTO invitation_grants(invitation_id,sender_id,encapsulation,ciphertext,format)
+ SELECT id,$4,$5,$6,$7 FROM activated`, id, project, recipientKey, a.account, grant.Encapsulation, grant.Ciphertext, grant.Format)
 	if err == nil && tag.RowsAffected() != 1 {
 		return ErrConflict
 	}
 	return err
 }
 
-type receivedFixture struct {
-	fixtureGrant
+type receivedInvitation struct {
+	invitationGrant
 	SenderID  string `json:"senderId"`
 	SenderKey string `json:"senderKey"`
 }
@@ -82,22 +83,32 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 	})
 	route("POST /api/v1/hosted-projects/{project}/invitations/{invitation}/activate", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
-			fixtureGrant
+			invitationGrant
 			RecipientKey string `json:"recipientKey"`
 		}
-		if !decode(w, r, &body) {
+		if !decodeBounded(w, r, &body, 90*1024) {
+			return
+		}
+		maxBytes := 384
+		switch body.Format {
+		case "", "fixture-v1":
+			body.Format = "fixture-v1"
+		case "project-v1":
+			maxBytes = 64*1024 + 16
+		default:
+			failure(w, ErrInvalid)
 			return
 		}
 		project, id := r.PathValue("project"), r.PathValue("invitation")
 		ciphertext, err := base64.StdEncoding.Strict().DecodeString(body.Ciphertext)
 		if !uuid(project) || !uuid(id) || !validSharingPoint(body.RecipientKey) ||
 			!validSharingPoint(body.Encapsulation) || err != nil || len(ciphertext) < 16 ||
-			len(ciphertext) > 384 || base64.StdEncoding.EncodeToString(ciphertext) != body.Ciphertext {
+			len(ciphertext) > maxBytes || base64.StdEncoding.EncodeToString(ciphertext) != body.Ciphertext {
 			failure(w, ErrInvalid)
 			return
 		}
 		err = h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
-			return a.activateFixture(r.Context(), project, id, body.RecipientKey, body.fixtureGrant)
+			return a.activateInvitation(r.Context(), project, id, body.RecipientKey, body.invitationGrant)
 		})
 		if err != nil {
 			fileFailure(w, err)
@@ -105,19 +116,20 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	})
-	route("GET /api/v1/invitations/{invitation}/fixture", true, func(w http.ResponseWriter, r *http.Request) {
+	read := func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("invitation")
 		if !uuid(id) {
 			failure(w, ErrInvalid)
 			return
 		}
-		var grant receivedFixture
+		var grant receivedInvitation
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
-			return a.tx.QueryRow(r.Context(), `SELECT g.encapsulation,g.ciphertext,g.sender_id,k.public_key
- FROM invitation_fixture_grants g JOIN project_invitations i ON i.id=g.invitation_id
+			return a.tx.QueryRow(r.Context(), `SELECT g.encapsulation,g.ciphertext,g.sender_id,k.public_key,g.format
+ FROM invitation_grants g JOIN project_invitations i ON i.id=g.invitation_id
  JOIN sharing_identities k ON k.account_id=g.sender_id JOIN accounts r ON r.id=i.recipient_id
- WHERE i.id=$1 AND i.recipient_id=$2 AND i.state='active' AND r.email=i.recipient_email`, id, a.account).
-				Scan(&grant.Encapsulation, &grant.Ciphertext, &grant.SenderID, &grant.SenderKey)
+ WHERE i.id=$1 AND i.recipient_id=$2 AND i.state='active' AND r.email=i.recipient_email
+ AND (NOT $3 OR g.format='fixture-v1')`, id, a.account, r.Pattern == "GET /api/v1/invitations/{invitation}/fixture").
+				Scan(&grant.Encapsulation, &grant.Ciphertext, &grant.SenderID, &grant.SenderKey, &grant.Format)
 		})
 		if errors.Is(err, pgx.ErrNoRows) {
 			err = errFileMissing
@@ -127,5 +139,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			return
 		}
 		respond(w, http.StatusOK, grant)
-	})
+	}
+	route("GET /api/v1/invitations/{invitation}/fixture", true, read)
+	route("GET /api/v1/invitations/{invitation}/content", true, read)
 }

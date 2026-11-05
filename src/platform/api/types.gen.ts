@@ -1770,11 +1770,12 @@ export type RegisterSharingIdentityResponses = {
 export type RegisterSharingIdentityResponse =
   RegisterSharingIdentityResponses[keyof RegisterSharingIdentityResponses];
 
-export type ActivateInvitationFixtureData = {
+export type ActivateInvitationContentData = {
   body: {
     recipientKey: string;
     encapsulation: string;
     ciphertext: string;
+    format?: 'fixture-v1' | 'project-v1';
   };
   headers: {
     Origin: string;
@@ -1788,25 +1789,25 @@ export type ActivateInvitationFixtureData = {
   url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/activate';
 };
 
-export type ActivateInvitationFixtureErrors = {
+export type ActivateInvitationContentErrors = {
   /**
    * Transfer, authentication or policy error
    */
   default: IdentityError;
 };
 
-export type ActivateInvitationFixtureError =
-  ActivateInvitationFixtureErrors[keyof ActivateInvitationFixtureErrors];
+export type ActivateInvitationContentError =
+  ActivateInvitationContentErrors[keyof ActivateInvitationContentErrors];
 
-export type ActivateInvitationFixtureResponses = {
+export type ActivateInvitationContentResponses = {
   /**
    * Saved
    */
   204: void;
 };
 
-export type ActivateInvitationFixtureResponse =
-  ActivateInvitationFixtureResponses[keyof ActivateInvitationFixtureResponses];
+export type ActivateInvitationContentResponse =
+  ActivateInvitationContentResponses[keyof ActivateInvitationContentResponses];
 
 export type GetInvitationFixtureData = {
   body?: never;
@@ -1841,3 +1842,38 @@ export type GetInvitationFixtureResponses = {
 
 export type GetInvitationFixtureResponse =
   GetInvitationFixtureResponses[keyof GetInvitationFixtureResponses];
+
+export type GetInvitationContentData = {
+  body?: never;
+  path: {
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/content';
+};
+
+export type GetInvitationContentErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type GetInvitationContentError =
+  GetInvitationContentErrors[keyof GetInvitationContentErrors];
+
+export type GetInvitationContentResponses = {
+  /**
+   * Authenticated recipient envelope
+   */
+  200: {
+    encapsulation: string;
+    ciphertext: string;
+    senderId: string;
+    senderKey: string;
+    format: 'fixture-v1' | 'project-v1';
+  };
+};
+
+export type GetInvitationContentResponse =
+  GetInvitationContentResponses[keyof GetInvitationContentResponses];
