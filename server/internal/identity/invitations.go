@@ -14,6 +14,7 @@ type pendingInvitation struct {
 	ProjectID string    `json:"projectId"`
 	ExpiresAt time.Time `json:"expiresAt"`
 	State     string    `json:"state"`
+	CoOwner   bool      `json:"coOwner"`
 }
 
 type ownerInvitation struct {
@@ -22,6 +23,7 @@ type ownerInvitation struct {
 	State        string `json:"state"`
 	RecipientID  string `json:"recipientId"`
 	RecipientKey string `json:"recipientKey,omitempty"`
+	CoOwner      bool   `json:"coOwner"`
 }
 
 func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]ownerInvitation, error) {
@@ -29,7 +31,8 @@ func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]own
 		return nil, err
 	}
 	rows, err := a.tx.Query(ctx, `SELECT i.id,i.recipient_email,i.state,i.recipient_id,
- CASE WHEN i.state='accepted' AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END
+ CASE WHEN i.state='accepted' AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END,
+ i.co_owner
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
  LEFT JOIN sharing_identities k ON k.account_id=i.recipient_id
  WHERE project_id=$1 AND (i.state IN ('accepted','active','revoked') OR (i.state='pending' AND expires_at>clock_timestamp()))
@@ -45,7 +48,7 @@ func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]own
 }
 
 func (a fileAccess) pendingInvitations(ctx context.Context) ([]pendingInvitation, error) {
-	rows, err := a.tx.Query(ctx, `SELECT i.id,i.project_id,i.expires_at,i.state
+	rows, err := a.tx.Query(ctx, `SELECT i.id,i.project_id,i.expires_at,i.state,i.co_owner
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
  WHERE i.recipient_id=$1 AND r.email=i.recipient_email
  AND (i.state IN ('accepted','active') OR (i.state='pending' AND i.expires_at>clock_timestamp()))
@@ -61,6 +64,10 @@ func (a fileAccess) pendingInvitations(ctx context.Context) ([]pendingInvitation
 }
 
 func (a fileAccess) requireProjectOwner(ctx context.Context, project string) error {
+	// Serialize ownership changes with owner-authorized invitation operations.
+	if _, err := a.tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1, 6011))`, project); err != nil {
+		return err
+	}
 	var exists bool
 	err := a.tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM project_owners WHERE project_id=$1 AND account_id=$2)`, project, a.account).Scan(&exists)
 	if err == nil && !exists {
@@ -69,23 +76,24 @@ func (a fileAccess) requireProjectOwner(ctx context.Context, project string) err
 	return err
 }
 
-func (s *Service) invite(ctx context.Context, a fileAccess, project, email string) (string, error) {
+func (s *Service) invite(ctx context.Context, a fileAccess, project, email string, coOwner bool) (string, error) {
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return "", err
 	}
 	var id, lang string
 	var expires time.Time
-	err := a.tx.QueryRow(ctx, `INSERT INTO project_invitations (project_id,recipient_id,recipient_email)
- SELECT $1,r.id,r.email FROM accounts r
+	err := a.tx.QueryRow(ctx, `INSERT INTO project_invitations (project_id,recipient_id,recipient_email,co_owner)
+ SELECT $1,r.id,r.email,$3 FROM accounts r
  WHERE r.email=$2 AND r.state='active' AND NOT EXISTS (
    SELECT 1 FROM project_owners o WHERE o.project_id=$1 AND o.account_id=r.id
  )
  ON CONFLICT (project_id,recipient_id) DO UPDATE
- SET id=excluded.id, recipient_email=excluded.recipient_email, expires_at=excluded.expires_at, state='pending'
+ SET id=excluded.id, recipient_email=excluded.recipient_email, expires_at=excluded.expires_at,
+ co_owner=excluded.co_owner, state='pending'
  WHERE project_invitations.state IN ('cancelled','revoked') OR (
    project_invitations.state='pending' AND project_invitations.expires_at<=clock_timestamp()
  )
- RETURNING id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email).Scan(&id, &expires, &lang)
+ RETURNING id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email, coOwner).Scan(&id, &expires, &lang)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrConflict
 	}
@@ -122,7 +130,7 @@ func (a fileAccess) revokeInvitation(ctx context.Context, project, id string) er
 		return err
 	}
 	tag, err := a.tx.Exec(ctx, `UPDATE project_invitations SET state='revoked'
- WHERE id=$1 AND project_id=$2 AND state IN ('active','revoked')`, id, project)
+ WHERE id=$1 AND project_id=$2 AND NOT co_owner AND state IN ('active','revoked')`, id, project)
 	if err != nil {
 		return err
 	}
@@ -168,7 +176,8 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 	})
 	route("POST "+projectInvitations, true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
-			Email string `json:"email"`
+			Email   string `json:"email"`
+			CoOwner bool   `json:"coOwner"`
 		}
 		if !decode(w, r, &body) {
 			return
@@ -191,7 +200,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 		var id string
 		err = h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			var err error
-			id, err = h.service.invite(r.Context(), a, project, email)
+			id, err = h.service.invite(r.Context(), a, project, email, body.CoOwner)
 			return err
 		})
 		if err != nil {

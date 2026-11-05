@@ -6,6 +6,7 @@ import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
 import type { createAccountAccess } from '../createAccountAccess';
 import { ProjectInvitations } from '../invitations/ProjectInvitations';
+import { projectSnapshot } from '../../../platform/projects/shared-project';
 import { ProjectDetail } from './ProjectDetail';
 import { projectCopy } from './project-copy';
 import { NameForm } from './forms';
@@ -178,7 +179,8 @@ export function ProjectWorkspace(props: {
                   {(id) => (
                     <ProjectInvitations
                       projectId={id}
-                      project={current()!}
+                      project={projectSnapshot(current()!)}
+                      canHost
                       model={props.model}
                       vault={props.vault}
                     />

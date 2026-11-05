@@ -130,13 +130,57 @@ test('verified recipient opens an encrypted project snapshot until the owner rev
     await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
     await expect(inbox.getByText('No invitations to show.')).toBeVisible();
 
+    const owners = '/api/v1/hosted-projects/' + list.invitations[0].projectId + '/owners';
+    const ownerAuth = await (await owner.request.get('/api/v1/auth/me')).json();
+    const removeHost = owners + '/' + ownerAuth.account.id + '/remove';
+    const mutation = {
+      headers: { Origin: baseURL!, 'X-CSRF-Token': ownerAuth.csrfToken },
+      data: {},
+    };
+    const lastOwner = await owner.request.post(removeHost, mutation);
+    expect(lastOwner.status()).toBe(409);
+    expect(await lastOwner.json()).toEqual({ error: 'last_project_owner' });
+
     await project.getByLabel('Recipient email').fill('recipient@example.test');
+    await project.getByRole('checkbox', { name: /Invite as co-owner/ }).check();
     await project.getByRole('button', { name: 'Send invitation' }).click();
     await expect(project.getByText('Awaiting acceptance')).toBeVisible();
     const renewed = await (await recipient.request.get('/api/v1/invitations')).json();
     expect(renewed.invitations).toHaveLength(1);
     expect(renewed.invitations[0].id).not.toBe(list.invitations[0].id);
     expect((await recipient.request.get(content)).status()).toBe(404);
+    await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
+    await inbox.getByRole('button', { name: 'Accept invitation' }).click();
+    await expect(inbox.getByText('Awaiting secure activation')).toBeVisible();
+    expect((await recipient.request.get(owners)).status()).toBe(404);
+    await project.getByRole('button', { name: 'Refresh invitations' }).click();
+    await project.getByLabel('Verified recipient fingerprint').fill(recipientCode);
+    await project.getByRole('button', { name: 'Share project snapshot' }).click();
+    const ownerList = project.getByRole('region', { name: 'Project owners' });
+    await expect(ownerList.getByText('recipient@example.test')).toBeVisible();
+    const host = await owner.request.post(removeHost, mutation);
+    expect(host.status()).toBe(409);
+    expect(await host.json()).toEqual({ error: 'owner_is_project_host' });
+
+    await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
+    await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
+    await inbox.getByRole('button', { name: 'Open shared content' }).click();
+    await inbox.getByText('Project invitations', { exact: true }).click();
+    await expect(
+      inbox.getByRole('region', { name: 'Project owners' }).getByText('owner@example.test'),
+    ).toBeVisible();
+
+    project.once('dialog', (dialog) => dialog.accept());
+    await ownerList.getByRole('button', { name: 'Remove co-owner' }).click();
+    await expect(project.getByText('Access revoked')).toBeVisible();
+    expect((await recipient.request.get(owners)).status()).toBe(404);
+    expect(
+      (
+        await recipient.request.get('/api/v1/invitations/' + renewed.invitations[0].id + '/content')
+      ).status(),
+    ).toBe(404);
+    const stillLastOwner = await owner.request.post(removeHost, mutation);
+    expect(await stillLastOwner.json()).toEqual({ error: 'last_project_owner' });
   } finally {
     await owner.close();
     await recipient.close();

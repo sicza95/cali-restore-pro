@@ -72,13 +72,27 @@ return 404, and refreshing the inbox removes the revoked invitation. Reissuing
 an invitation creates a fresh ID and requires acceptance and activation
 again. A recipient who already fetched content may retain a copy.
 
+Owners can invite a verified account as a co-owner. Migration `0011` stores
+the intended role. Acceptance alone leaves ownership unchanged. Secure
+activation records the new owner and encrypted project snapshot in the same
+transaction. After opening the snapshot, a co-owner can manage invitations
+and co-owners from their inbox. They can share the saved revision they
+received. Hosted file access and billing still belong to the current host.
+
+Removing a co-owner also revokes their snapshot grant and deletes its
+envelope. The server serializes ownership changes with other owner actions
+for the same project. It rejects removal of the last owner or the current
+host. Removing the hosting owner requires a hosting transfer, which remains
+separate work.
+
 The live Chromium test uses two isolated browser contexts and synthetic
 active accounts against the Go API and disposable PostgreSQL. It exercises
 issuance, acceptance, fingerprint mismatch, recipient-only retrieval,
 rejection of altered ciphertext, and reopening the project snapshot after
 vault lock. It also checks that non-owners cannot revoke, that the recipient
 loses fetch access after owner revocation, and that reissue leaves the old
-link unavailable. To run it
+link unavailable. The same test exercises co-owner activation, management
+access, removal, and rejection of last-owner and hosting-owner removal. To run it
 against a disposable app, set `SMOKE_ORIGIN`, `M06_OWNER_SESSION` and
 `M06_RECIPIENT_SESSION` for seeded synthetic sessions. The owner needs
 hosting entitlement and quota. The recipient address is

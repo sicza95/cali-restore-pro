@@ -34,8 +34,12 @@ func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipie
  FROM accounts r JOIN sharing_identities k ON k.account_id=r.id
  WHERE i.id=$1 AND i.project_id=$2 AND i.state='accepted' AND r.id=i.recipient_id
  AND r.email=i.recipient_email AND r.state='active' AND k.public_key=$3
+ AND (NOT i.co_owner OR $7='project-v1')
  AND EXISTS (SELECT 1 FROM sharing_identities WHERE account_id=$4)
- RETURNING i.id
+ RETURNING i.id,i.recipient_id,i.co_owner
+ ), owners AS (
+ INSERT INTO project_owners(project_id,account_id)
+ SELECT $2,recipient_id FROM activated WHERE co_owner
  )
  INSERT INTO invitation_grants(invitation_id,sender_id,encapsulation,ciphertext,format)
  SELECT id,$4,$5,$6,$7 FROM activated`, id, project, recipientKey, a.account, grant.Encapsulation, grant.Ciphertext, grant.Format)
