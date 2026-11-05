@@ -22,7 +22,7 @@ The recommended stack is **SolidJS/TypeScript + Go + PostgreSQL**, with encrypte
 
 ## Milestone order
 
-One completed milestone means one reviewable PR. M-12 through M-16 form the final image/drawing phase; they are deliberately separate PRs rather than one engine rewrite.
+Deliver each milestone in coherent signed commits on `main`. M-12 through M-16 remain separate milestones in the final image/drawing phase.
 
 | Order  | Milestone                                        | Depends on             | Reviewable result / exit gate                                                                                                                                                                                                      |
 | ------ | ------------------------------------------------ | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -47,9 +47,9 @@ One completed milestone means one reviewable PR. M-12 through M-16 form the fina
 
 Each milestone also updates its requirement rows and verification evidence. A mock, schema, happy-path demo or successful build alone never closes a behavior requirement.
 
-M-01 has two named sub-milestones, each with its own PR. **M-01a** delivers database account states, password/session APIs, the platform policy service, explicit operator bootstrap and final-superuser protection. **M-01b depends on M-01a** and completes registration/verification, password and email changes/reset, durable localized mail with retry, and all auth screens/session controls. M-02 depends on both. M-01b builds on merged [M-01a PR #4](https://github.com/sicza95/cali-restore-pro/pull/4) on `feat/storybook-foundations`. Retarget after that history reaches `main`.
+M-01 was delivered in two named sub-milestones. **M-01a** delivers database account states, password/session APIs, the platform policy service, explicit operator bootstrap and final-superuser protection. **M-01b depends on M-01a** and completes registration/verification, password and email changes/reset, durable localized mail with retry, and all auth screens/session controls. M-02 depends on both. M-01b builds on merged [M-01a PR #4](https://github.com/sicza95/cali-restore-pro/pull/4) on `feat/storybook-foundations`.
 
-## Implementation slices within the early PRs
+## Implementation slices within the early milestones
 
 **M-00:** add Go module and HTTP composition; PostgreSQL migrations and configuration; multi-stage image serving the built frontend; Compose app/worker/migrate/db services with development mail sink and optional tunnel profiles; clean-install CI and backup/restore skeleton. Keep the existing `src/ui`, Storybook and verification commands working. No folder migration is required to start.
 
@@ -69,12 +69,12 @@ M-11 is the platform completion checkpoint. A user can register, unlock, manage 
 
 M-12 starts complex image work. M-13/M-14 build the actual measurement/drawing system against existing versioned contracts. M-16 replaces fixture providers in the production path, reruns the earlier workflow/access/export checks on real content and qualifies release. Final measurement claims remain unavailable until their source revision, calibration and engine results are valid.
 
-## Commit and PR discipline
+## Commit and push discipline
 
 - Use conventional commits frequently at coherent boundaries: schema/domain, API/service, UI, failure handling and evidence are useful separate commits. Do not wait for a complete subsystem to make the first commit.
-- Use branches such as `feat/m01-identity-and-mail`. Give every milestone its own PR; a milestone that grows beyond coherent review becomes named sub-milestones with separate PRs and updated dependencies.
-- Base work on merged predecessors where possible. If stacking is necessary, name the prerequisite PR, target its branch and retarget after it merges. Do not include predecessor changes as unrelated work or auto-merge without instruction.
-- Each PR states the user-visible behavior, requirement IDs, migrations/configuration, failure cases, checks actually run and remaining mocks/qualification limits. Include screenshots for UI changes and deployment/restore evidence when relevant.
+- Until further notice, push directly to `main` after running the relevant checks. Sign every commit and verify its GitHub signature after pushing.
+- Build on the latest `main`. Split large milestones into named sub-milestones and record their dependencies.
+- Record the user-visible behavior, requirement IDs, migrations/configuration, failure cases, checks actually run and remaining mocks/qualification limits in the milestone evidence. Include screenshots for UI changes and deployment/restore evidence when relevant.
 - Update this plan and coverage when implementation changes a contract. Keep fixture/demo data out of real projects, privileged credentials and test image content out of commits.
 
 ## Validation and decisions still to resolve during implementation
