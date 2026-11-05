@@ -1,0 +1,87 @@
+.admin-section {
+  border-top: 1px solid var(--cr-rule);
+  padding: 24px 0;
+}
+.admin-search {
+  grid-template-columns: minmax(0, 26rem) auto;
+  justify-content: start;
+  align-items: end;
+  margin: 12px 0;
+}
+.admin-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+.admin-list > li {
+  border-bottom: 1px solid var(--cr-rule);
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+.admin-list summary span {
+  display: inline-block;
+  margin-inline-start: 12px;
+  color: var(--cr-muted);
+}
+.admin-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 24px;
+  padding: 12px 0;
+  align-items: start;
+}
+.admin-controls > * {
+  padding: 16px;
+  background: var(--cr-surface);
+  margin: 0;
+}
+.admin-controls p {
+  margin: 0;
+}
+.admin-metrics,
+.admin-actions {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.admin-metrics dd {
+  margin: 0;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.report-logo {
+  max-width: 100%;
+  max-height: 96px;
+  object-fit: contain;
+  object-position: left;
+}
+input[type='color'] {
+  height: var(--cr-touch);
+}
+@media (max-width: 480px) {
+  .admin-search {
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+}
+
+.account-nav a[aria-current='page'] {
+  background: var(--cr-selected);
+}
+.product-name svg {
+  color: var(--cr-accent);
+}
+
+.preferences-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+.preferences-actions p {
+  margin: 0;
+}
+input[type='checkbox'] {
+  accent-color: var(--cr-accent);
+}
