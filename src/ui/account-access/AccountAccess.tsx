@@ -10,6 +10,7 @@ import { createAccountAccess } from './createAccountAccess';
 import type { Language } from './types';
 import { VaultSection } from './account-security/VaultSection';
 import { ProjectWorkspace } from './projects/ProjectWorkspace';
+import { InvitationInbox } from './invitations/InvitationInbox';
 
 export function AccountAccess() {
   const model = createAccountAccess();
@@ -62,6 +63,9 @@ export function AccountAccess() {
           >
             <a href="/projects" aria-current={view === 'projects' ? 'page' : undefined}>
               {t('projects')}
+            </a>
+            <a href="/invitations" aria-current={view === 'invitations' ? 'page' : undefined}>
+              {t('invitations')}
             </a>
             <a href="/settings/account" aria-current={view === 'profile' ? 'page' : undefined}>
               {c().profile}
@@ -124,6 +128,7 @@ export function AccountAccess() {
               view === 'preferences' ||
               view === 'admin' ||
               view === 'projects' ||
+              view === 'invitations' ||
               view === 'security'
             }
           >
@@ -132,7 +137,10 @@ export function AccountAccess() {
                 when={account()}
                 fallback={
                   <p>
-                    {t('signedOut')} <a href="/login">{t('login')}</a>
+                    {t('signedOut')}{' '}
+                    <a href={view === 'invitations' ? '/login?next=invitations' : '/login'}>
+                      {t('login')}
+                    </a>
                   </p>
                 }
               >
@@ -149,12 +157,25 @@ export function AccountAccess() {
                   <Match when={view === 'security'}>
                     <AccountSecurity model={model} />
                   </Match>
+                  <Match when={view === 'invitations'}>
+                    <Show when={account()} keyed>
+                      {(current) => (
+                        <VaultSection
+                          account={current.id}
+                          language={lang()}
+                          workspace={(vault) => <InvitationInbox model={model} vault={vault} />}
+                        />
+                      )}
+                    </Show>
+                  </Match>
                   <Match when={view === 'projects' && account()}>
                     {(current) => (
                       <VaultSection
                         account={current().id}
                         language={lang()}
-                        workspace={(vault) => <ProjectWorkspace vault={vault} language={lang()} />}
+                        workspace={(vault) => (
+                          <ProjectWorkspace vault={vault} language={lang()} model={model} />
+                        )}
                       />
                     )}
                   </Match>

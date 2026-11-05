@@ -4,7 +4,7 @@ const encode = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
 
 export type Envelope = { version: 1; salt: string; ciphertext: string };
-type Purpose = 'snapshot' | 'transfer' | `project:${string}`;
+type Purpose = 'snapshot' | 'transfer' | 'sharing-identity' | `project:${string}`;
 
 export const newCode = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>

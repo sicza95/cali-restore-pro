@@ -2701,6 +2701,70 @@
             }
           }
         }
+      },
+      "get": {
+        "operationId": "listOwnedProjectInvitations",
+        "summary": "List up to 100 invitations for a project owner",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List up to 100 invitations for a project owner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["invitations"],
+                  "properties": {
+                    "invitations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["id", "email", "state", "recipientId"],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "state": {
+                            "type": "string",
+                            "enum": ["pending", "accepted", "active"]
+                          },
+                          "recipientId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "recipientKey": {
+                            "type": "string",
+                            "minLength": 88,
+                            "maxLength": 88
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/hosted-projects/{project}/invitations/{invitation}/cancel": {
@@ -2780,7 +2844,7 @@
     "/api/v1/invitations": {
       "get": {
         "operationId": "listProjectInvitations",
-        "summary": "List up to 100 pending invitations for the signed-in recipient",
+        "summary": "List up to 100 invitations for the signed-in recipient",
         "security": [
           {
             "sessionCookie": []
@@ -2788,7 +2852,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Pending invitations",
+            "description": "List up to 100 invitations for the signed-in recipient",
             "content": {
               "application/json": {
                 "schema": {
@@ -2799,7 +2863,7 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id", "projectId", "expiresAt"],
+                        "required": ["id", "projectId", "expiresAt", "state"],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -2812,6 +2876,10 @@
                           "expiresAt": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "state": {
+                            "type": "string",
+                            "enum": ["pending", "accepted", "active"]
                           }
                         }
                       }
@@ -2885,6 +2953,228 @@
         "responses": {
           "204": {
             "description": "Accepted and awaiting secure activation"
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sharing-identity": {
+      "post": {
+        "operationId": "registerSharingIdentity",
+        "summary": "Register the account’s immutable sharing public key",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["publicKey"],
+                "properties": {
+                  "publicKey": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Saved"
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/invitations/{invitation}/activate": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "activateInvitationFixture",
+        "summary": "Publish an encrypted synthetic assessment for an accepted invitation",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["recipientKey", "encapsulation", "ciphertext"],
+                "properties": {
+                  "recipientKey": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  },
+                  "encapsulation": {
+                    "type": "string",
+                    "minLength": 88,
+                    "maxLength": 88
+                  },
+                  "ciphertext": {
+                    "type": "string",
+                    "minLength": 24,
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Saved"
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/{invitation}/fixture": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getInvitationFixture",
+        "summary": "Fetch the authenticated recipient’s encrypted assessment sample",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetch the authenticated recipient’s encrypted assessment sample",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["encapsulation", "ciphertext", "senderId", "senderKey"],
+                  "properties": {
+                    "encapsulation": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    },
+                    "ciphertext": {
+                      "type": "string",
+                      "minLength": 24,
+                      "maxLength": 512
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "senderKey": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    }
+                  }
+                }
+              }
+            }
           },
           "default": {
             "description": "Transfer, authentication or policy error",

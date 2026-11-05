@@ -1,6 +1,11 @@
 import type { Envelope } from './crypto';
 
-export type VaultRow = { envelope: Envelope; remembered?: CryptoKey; stamp: string };
+export type VaultRow = {
+  envelope: Envelope;
+  remembered?: CryptoKey;
+  stamp: string;
+  sharingIdentity?: Envelope;
+};
 export const vaultTable = 'accounts';
 export const fileTable = 'encrypted-files';
 export const projectTable = 'encrypted-projects';
