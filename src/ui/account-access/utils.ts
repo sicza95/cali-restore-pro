@@ -3,6 +3,9 @@ import type { Language, Message, Route } from './types';
 
 export function accountRoute(path: string): Route {
   if (path === '/settings/security') return 'security';
+  if (path === '/settings/account') return 'profile';
+  if (path === '/settings/preferences') return 'preferences';
+  if (path === '/admin') return 'admin';
   return publicRoutes.find((route) => route === path.slice(1)) ?? 'login';
 }
 
