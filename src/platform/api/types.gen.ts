@@ -211,6 +211,14 @@ export type ProjectRevisionHead = {
   ciphertext: string;
 };
 
+export type ProjectRevisionKeyTransfer = {
+  recipient: string;
+  epoch: string;
+  syncEpoch: string;
+  salt: string;
+  ciphertext: string;
+};
+
 export type ProjectRevisionState = {
   epoch: string;
   head: ProjectRevisionHead | null;
@@ -2445,6 +2453,126 @@ export type UpdateInvitationScopesResponses = {
 
 export type UpdateInvitationScopesResponse =
   UpdateInvitationScopesResponses[keyof UpdateInvitationScopesResponses];
+
+export type GetProjectRevisionKeyTransferData = {
+  body?: never;
+  headers: {
+    'X-Sync-Account': string;
+  };
+  path: {
+    project: string;
+    transfer: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/revision-key/{transfer}';
+};
+
+export type GetProjectRevisionKeyTransferErrors = {
+  /**
+   * Invalid request
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Session required
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Access unavailable
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Project or transfer unavailable to this owner
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Request failed
+   */
+  500: {
+    error: string;
+  };
+};
+
+export type GetProjectRevisionKeyTransferError =
+  GetProjectRevisionKeyTransferErrors[keyof GetProjectRevisionKeyTransferErrors];
+
+export type GetProjectRevisionKeyTransferResponses = {
+  /**
+   * Encrypted epoch key
+   */
+  200: ProjectRevisionKeyTransfer;
+};
+
+export type GetProjectRevisionKeyTransferResponse =
+  GetProjectRevisionKeyTransferResponses[keyof GetProjectRevisionKeyTransferResponses];
+
+export type PutProjectRevisionKeyTransferData = {
+  body: ProjectRevisionKeyTransfer;
+  headers: {
+    'X-Sync-Account': string;
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    transfer: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/revision-key/{transfer}';
+};
+
+export type PutProjectRevisionKeyTransferErrors = {
+  /**
+   * Invalid request
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Session required
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Access unavailable
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Project or transfer unavailable to this owner
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Request failed
+   */
+  500: {
+    error: string;
+  };
+};
+
+export type PutProjectRevisionKeyTransferError =
+  PutProjectRevisionKeyTransferErrors[keyof PutProjectRevisionKeyTransferErrors];
+
+export type PutProjectRevisionKeyTransferResponses = {
+  /**
+   * Transfer stored
+   */
+  204: void;
+};
+
+export type PutProjectRevisionKeyTransferResponse =
+  PutProjectRevisionKeyTransferResponses[keyof PutProjectRevisionKeyTransferResponses];
 
 export type GetProjectRevisionData = {
   body?: never;

@@ -1,9 +1,11 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
+import { revisionKeyTransfer } from '../../../platform/projects/revision-key-transfer';
 import { editorSync } from '../../../platform/projects/editor-sync';
 import type { LocalVault } from '../../../platform/vault/vault';
 
 export function useEditorSync(vault: LocalVault, csrf: () => string) {
   const sync = editorSync(vault);
+  const transfer = revisionKeyTransfer(vault, csrf);
   const [state, setState] = createSignal<Awaited<ReturnType<typeof sync.status>>>();
   const [errors, setErrors] = createSignal<string[]>([]);
   const [unavailable, setUnavailable] = createSignal(false);
@@ -43,5 +45,5 @@ export function useEditorSync(vault: LocalVault, csrf: () => string) {
       stop();
     });
   });
-  return { sync, refresh, state, errors, unavailable };
+  return { sync, transfer, refresh, state, errors, unavailable };
 }

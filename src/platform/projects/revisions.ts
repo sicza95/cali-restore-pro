@@ -81,3 +81,15 @@ export function revisionRemote(account: string, signal: AbortSignal) {
   }
   return { read: (project: string) => request(project), write: request };
 }
+
+export type RevisionBlock = 'conflict' | 'epoch' | 'access' | 'rejected';
+
+export function revisionBlockFor(error: unknown): RevisionBlock | undefined {
+  if (!(error instanceof RevisionError)) return;
+  if (error.code === 'revision_conflict') return 'conflict';
+  if (error.code === 'revision_epoch_changed') return 'epoch';
+  if ([401, 403, 404].includes(error.status)) return 'access';
+  if (error.code === 'original_rotation_pending' || error.status === 429 || error.status >= 500)
+    return;
+  return 'rejected';
+}

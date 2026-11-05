@@ -31,6 +31,7 @@ func TestPostgresProjectRevisions(t *testing.T) {
 	}
 	alice, aliceToken := account("alice@example.test")
 	bob, bobToken := account("bob@example.test")
+	charlie, charlieToken := account("charlie@example.test")
 	const project = "c0ffee00-0000-4000-8000-000000000007"
 	const path = "/api/v1/hosted-projects/" + project
 	const origin = "https://test.example"
@@ -98,9 +99,33 @@ func TestPostgresProjectRevisions(t *testing.T) {
 	}
 	second := write(1, empty.Epoch, 3)
 	call("PUT", revision, alice, aliceToken, second, 200)
+	const grant = "/revision-key/c0ffee00-0000-4000-8000-000000000009"
+	key := revisionKeyTransfer{Epoch: empty.Epoch, SyncEpoch: empty.Epoch, Recipient: bob,
+		revisionCiphertext: revisionCiphertext{Salt: bytes.Repeat([]byte{1}, 32), Ciphertext: bytes.Repeat([]byte{2}, 82)}}
+	call("PUT", grant, charlie, charlieToken, key, 404)
+	call("PUT", grant, alice, aliceToken, key, 204)
+	call("GET", grant, bob, charlieToken, nil, 403)
+	call("GET", grant, alice, aliceToken, nil, 404)
+	var received revisionKeyTransfer
+	if err := json.Unmarshal(call("GET", grant, bob, bobToken, nil, 200).Body.Bytes(), &received); err != nil ||
+		received.Recipient != bob || !bytes.Equal(received.Ciphertext, key.Ciphertext) {
+		t.Fatalf("wrong transfer: %+v (%v)", received, err)
+	}
+	if _, err := admin.Exec(ctx, `UPDATE project_revision_key_transfers SET expires_at=now() WHERE project_id=$1`, project); err != nil {
+		t.Fatal(err)
+	}
+	call("GET", grant, bob, bobToken, nil, 404)
+	call("PUT", grant, alice, aliceToken, key, 204)
+	key.Recipient = alice
+	call("PUT", grant, bob, bobToken, key, 204)
+	call("GET", grant, alice, aliceToken, nil, 200)
 	call("POST", "/owners/"+bob+"/remove", alice, aliceToken, struct{}{}, 204)
 	call("GET", revision, bob, bobToken, nil, 404)
 	call("PUT", revision, bob, bobToken, second, 404)
+	call("GET", grant, bob, bobToken, nil, 404)
+	call("GET", grant, alice, aliceToken, nil, 404) // old authorization epoch and removed sender
+	key.Recipient = bob
+	call("PUT", grant, alice, aliceToken, key, 404)
 	conflict(call("PUT", revision, alice, aliceToken, second, 409), "revision_epoch_changed")
 	rotated := read()
 	if rotated.Epoch == empty.Epoch || rotated.Head.Revision != 2 || rotated.Head.Epoch != empty.Epoch {

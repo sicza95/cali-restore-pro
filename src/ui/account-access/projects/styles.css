@@ -107,3 +107,18 @@
   overflow-wrap: anywhere;
   border-block-start: 1px solid var(--cr-rule);
 }
+.project-key-code {
+  min-height: var(--cr-touch);
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+  font: inherit;
+  resize: vertical;
+}
+.project-key-code:focus-visible {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 3px;
+}
