@@ -10,7 +10,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | ----------- | -------- | ------------------------------------------------------------------- | ----- | ---------- | ------- |
 | PROJ-01     | Must     | Durable project identity, name, and revision                        | M-05  | M-05       | Planned |
 | PROJ-02     | Must     | New/Open/Recent/Import are coherent                                 | M-05  | M-08       | Planned |
-| PROJ-03     | Must     | Local recovery plus authorized optional remote sync                 | M-03  | M-16       | Planned |
+| PROJ-03     | Must     | Local recovery plus authorized optional remote sync                 | M-03  | M-16       | Partial |
 | PROJ-04     | Must     | Self-contained encrypted portable backup                            | M-07  | M-16       | Planned |
 | PROJ-05     | Must     | Revision-conflict protection                                        | M-07  | M-16       | Planned |
 | PROJ-06     | Must     | Restoration projects contain one or more objects                    | M-05  | M-05       | Planned |
@@ -72,13 +72,13 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | OUT-10      | Must     | Snapshot and editable-estimate XLSX modes                           | M-09  | M-16       | Planned |
 | OUT-11      | Must     | Labelled drafts and valid final measurement claims                  | M-09  | M-16       | Planned |
 | OUT-12      | Must     | Inherited output units with an individual-output override           | M-05  | M-16       | Planned |
-| PRIV-01     | Must     | Client-side content encryption                                      | M-03  | M-16       | Planned |
-| PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Planned |
+| PRIV-01     | Must     | Client-side content encryption                                      | M-03  | M-16       | Partial |
+| PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Partial |
 | PRIV-03     | Should   | Optional passkey sign-in and compatible content unlock              | M-03  | M-16       | Planned |
-| PRIV-04     | Must     | Explicit opt-in remembered trust and session-only shared devices    | M-03  | M-16       | Planned |
+| PRIV-04     | Must     | Explicit opt-in remembered trust and session-only shared devices    | M-03  | M-16       | Partial |
 | PRIV-05     | Must     | No routine automatic logout; manual-only local locking              | M-01  | M-16       | Partial |
 | PRIV-06     | Must     | Minimum server-readable metadata allowlist                          | M-00  | M-16       | Partial |
-| PRIV-07     | Must     | Explicit sign-out/forget protects recoverable work                  | M-03  | M-16       | Planned |
+| PRIV-07     | Must     | Explicit sign-out/forget protects recoverable work                  | M-03  | M-16       | Partial |
 | PRIV-08     | Must     | Explicit opt-in for optional crash/performance reporting            | M-02  | M-16       | Partial |
 | SHARE-01    | Later    | Recipient-aware encrypted sharing                                   | M-03  | M-16       | Planned |
 | SHARE-02    | Later    | Independent editing with read-only defaults                         | M-01  | M-16       | Planned |
@@ -131,6 +131,8 @@ M-01a adds [identity-core contracts and executed evidence](../m01a-identity.md):
 M-01b adds [account lifecycle and verification evidence](../m01b-account-lifecycle.md). ADMIN-01 gains public registration, verification, recovery and security controls. PRIV-05 gains explicit session controls and revocation on credential changes. PRIV-06 gains a mail metadata boundary and encrypted queue payloads. UX-01, UX-02 and UI-01 gain touch, bilingual and shared-token evidence for the auth surfaces. Full administration, physical device checks, independent report language and release qualification remain in their planned milestones.
 
 M-02 adds [account settings, administration and verification](../m02-account-administration.md). Personal branding defaults and diagnostics consent stay in the browser; reporting remains inactive. Feature grants and quotas are explicit. Account deletion preflight blocks deletion until continuity can be established. Project accounting, withdrawal, and recovery are still open.
+
+M-03 adds [the vault format, threat model and verification](../m03-client-vault.md). PROJ-03 and PRIV-01/02/04/07 have synthetic encrypted local save, recovery, trust, lock and forget evidence. Remote sync, real project data, physical devices, production deployment and cryptographic review remain open. The future scope/history design is documented, but no collaborative grant, editor draft/history or passkey path is implemented.
 
 PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verification.md). The complete privacy acceptance remains M-16; the bootstrap schema does not close encryption or project-content requirements.
 
