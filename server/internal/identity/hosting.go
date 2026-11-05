@@ -47,7 +47,8 @@ func (a fileAccess) acceptHostingTransfer(ctx context.Context, project, id strin
 	var from string
 	var charge int64
 	err := a.tx.QueryRow(ctx, `SELECT t.from_id,
- (SELECT coalesce(sum(f.charged_bytes),0)::bigint FROM encrypted_files f WHERE f.project_id=p.id)
+ (SELECT coalesce(sum(f.charged_bytes),0)::bigint FROM encrypted_files f WHERE f.project_id=p.id) +
+ coalesce((SELECT octet_length(r.salt)+octet_length(r.ciphertext) FROM project_revision_heads r WHERE r.project_id=p.id),0)
  FROM hosting_transfers t JOIN hosted_projects p ON p.id=t.project_id
  WHERE p.id=$1 AND t.id=$2 AND t.to_id=$3 AND p.host_id=t.from_id`, project, id, a.account).
 		Scan(&from, &charge)

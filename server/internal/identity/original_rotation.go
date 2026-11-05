@@ -20,6 +20,10 @@ func versionedOriginalID(project, epoch, source string) string {
 }
 
 func (a fileAccess) dropInvitationGrant(ctx context.Context, project, invitation string) error {
+	if _, err := a.tx.Exec(ctx, `UPDATE hosted_projects SET sync_epoch=gen_random_uuid()
+ WHERE id=$1 AND EXISTS (SELECT 1 FROM invitation_grants WHERE invitation_id=$2)`, project, invitation); err != nil {
+		return err
+	}
 	// Owner operations hold the exclusive project lock. Invalidate uploads
 	// staged before the new epoch before allowing file requests to resume.
 	if _, err := a.tx.Exec(ctx, `WITH advanced AS (

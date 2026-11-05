@@ -62,7 +62,8 @@ func (a fileAccess) removeProjectOwner(ctx context.Context, project, owner strin
 	err = a.tx.QueryRow(ctx, `UPDATE project_invitations SET state='revoked'
  WHERE project_id=$1 AND recipient_id=$2 AND co_owner AND state='active' RETURNING id`, project, owner).Scan(&invitation)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil
+		_, err = a.tx.Exec(ctx, `UPDATE hosted_projects SET sync_epoch=gen_random_uuid() WHERE id=$1`, project)
+		return err
 	}
 	if err != nil {
 		return err

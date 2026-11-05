@@ -4558,6 +4558,293 @@
           }
         }
       }
+    },
+    "/api/v1/hosted-projects/{project}/revision": {
+      "get": {
+        "operationId": "getProjectRevision",
+        "summary": "Read the ciphertext head and current key epoch as a project owner",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Sync-Account",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current epoch and optional ciphertext head",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRevisionState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "putProjectRevision",
+        "summary": "Publish a ciphertext revision conditional on the base revision and key epoch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Sync-Account",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectRevisionWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed ciphertext head or acknowledgement of an identical replay",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRevisionState"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Revision or epoch changed, rotation is pending, or hosting quota was exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5161,6 +5448,83 @@
           "state": {
             "type": "string",
             "enum": ["staged", "committed"]
+          }
+        }
+      },
+      "ProjectRevisionHead": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["revision", "epoch", "salt", "ciphertext"],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "epoch": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "salt": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "minLength": 44,
+            "maxLength": 44
+          },
+          "ciphertext": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "minLength": 24,
+            "maxLength": 87404
+          }
+        }
+      },
+      "ProjectRevisionState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["epoch", "head"],
+        "properties": {
+          "epoch": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "head": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectRevisionHead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ProjectRevisionWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["expected", "epoch", "salt", "ciphertext"],
+        "properties": {
+          "expected": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483646
+          },
+          "epoch": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "salt": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "minLength": 44,
+            "maxLength": 44
+          },
+          "ciphertext": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "minLength": 24,
+            "maxLength": 87404
           }
         }
       }
