@@ -97,7 +97,7 @@ function InvitationControls(props: {
               <li>
                 <strong>{item.email}</strong>
                 <span>{c()[item.state]}</span>
-                <Show when={item.state !== 'active'}>
+                <Show when={item.state === 'pending' || item.state === 'accepted'}>
                   <button
                     class="secondary"
                     disabled={sent.busy()}
@@ -108,6 +108,20 @@ function InvitationControls(props: {
                     }
                   >
                     {c().cancel}
+                  </button>
+                </Show>
+                <Show when={item.state === 'active'}>
+                  <button
+                    class="secondary"
+                    disabled={sent.busy()}
+                    onClick={() => {
+                      if (window.confirm(c().revokeConfirm))
+                        void sent.run(() =>
+                          props.model.request(props.path + '/' + item.id + '/revoke', {}),
+                        );
+                    }}
+                  >
+                    {c().revoke}
                   </button>
                 </Show>
                 <Show when={item.recipientKey}>

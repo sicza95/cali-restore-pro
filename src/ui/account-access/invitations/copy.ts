@@ -8,6 +8,9 @@ export const invitationCopy = {
     pending: 'Awaiting acceptance',
     accepted: 'Awaiting secure activation',
     active: 'Shared content available',
+    revoked: 'Access revoked',
+    revoke: 'Revoke access',
+    revokeConfirm: 'Stop this recipient from fetching the shared snapshot?',
     identity: 'Show my sharing fingerprint',
     identityHelp:
       'Compare fingerprints through a trusted channel before granting or opening access.',
@@ -39,6 +42,9 @@ export const invitationCopy = {
     pending: 'Elfogadásra vár',
     accepted: 'Biztonságos aktiválásra vár',
     active: 'A megosztott tartalom elérhető',
+    revoked: 'Hozzáférés visszavonva',
+    revoke: 'Hozzáférés visszavonása',
+    revokeConfirm: 'Megszünteted a címzett hozzáférését a megosztott pillanatképhez?',
     identity: 'Saját megosztási ujjlenyomat megjelenítése',
     identityHelp:
       'A hozzáférés megadása vagy megnyitása előtt ellenőrizd az ujjlenyomatot megbízható csatornán.',

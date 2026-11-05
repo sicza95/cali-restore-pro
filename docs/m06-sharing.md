@@ -61,15 +61,24 @@ The grant is a single saved revision, capped at 64 KiB of plaintext. Original
 files, attachment references, and financial settings stay outside the
 snapshot. Migration `0009` preserves existing assessment sample grants
 and labels new snapshots with their own format. Live updates, other
-content scopes, sharing identity recovery and rotation, and revocation
+content scopes, sharing identity recovery and rotation
 remain separate work. The independent cryptographic review gate continues
 to apply to collaborative production use.
+
+Project owners can revoke an active snapshot from the invitation list.
+Migration `0010` adds a revoked state. Revocation records that state and
+removes the stored envelope in one transaction. Subsequent recipient fetches
+return 404, and refreshing the inbox removes the revoked invitation. Reissuing
+an invitation creates a fresh ID and requires acceptance and activation
+again. A recipient who already fetched content may retain a copy.
 
 The live Chromium test uses two isolated browser contexts and synthetic
 active accounts against the Go API and disposable PostgreSQL. It exercises
 issuance, acceptance, fingerprint mismatch, recipient-only retrieval,
 rejection of altered ciphertext, and reopening the project snapshot after
-vault lock. To run it
+vault lock. It also checks that non-owners cannot revoke, that the recipient
+loses fetch access after owner revocation, and that reissue leaves the old
+link unavailable. To run it
 against a disposable app, set `SMOKE_ORIGIN`, `M06_OWNER_SESSION` and
 `M06_RECIPIENT_SESSION` for seeded synthetic sessions. The owner needs
 hosting entitlement and quota. The recipient address is

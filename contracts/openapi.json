@@ -2735,7 +2735,7 @@
                           },
                           "state": {
                             "type": "string",
-                            "enum": ["pending", "accepted", "active"]
+                            "enum": ["pending", "accepted", "active", "revoked"]
                           },
                           "recipientId": {
                             "type": "string",
@@ -3249,6 +3249,80 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/invitations/{invitation}/revoke": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "operationId": "revokeProjectInvitation",
+        "summary": "Revoke an active grant and remove the stored recipient envelope",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Access revoked"
           },
           "default": {
             "description": "Transfer, authentication or policy error",
