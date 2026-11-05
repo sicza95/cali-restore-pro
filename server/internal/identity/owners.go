@@ -75,16 +75,21 @@ func (h *HTTP) ownerRoutes(route func(string, bool, http.HandlerFunc)) {
 			return
 		}
 		var owners []projectOwner
+		var transfer *hostingTransfer
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			var err error
 			owners, err = a.projectOwners(r.Context(), project)
+			if err != nil {
+				return err
+			}
+			transfer, err = a.pendingHostingTransfer(r.Context(), project)
 			return err
 		})
 		if err != nil {
 			fileFailure(w, err)
 			return
 		}
-		respond(w, http.StatusOK, map[string]any{"owners": owners})
+		respond(w, http.StatusOK, map[string]any{"owners": owners, "hostingTransfer": transfer})
 	})
 	route("POST "+path+"/{owner}/remove", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct{}

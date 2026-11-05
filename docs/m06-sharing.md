@@ -10,11 +10,10 @@ PostgreSQL requires the designated host to be an owner at commit. Deletion
 preflight checks ownership, so it can detect a continuity dependency even
 when the account does not pay for storage.
 
-File access and quota accounting still use the designated host. The remaining
-M-06 work includes verified invitations, recipient identity and key grants,
-scope-aware file authorization, equal-owner actions, accepted hosting transfer
-and revocation with epoch rotation. The access and encryption plan defines
-the acceptance cases and independent cryptographic review gate.
+Hosted file access and quota accounting use the designated host. The
+access and encryption plan defines the remaining content scopes,
+revocation with epoch rotation, and the independent cryptographic review
+gate.
 
 Go formatting, vet and race tests passed against disposable PostgreSQL.
 The tests cover upgrading a previously hosted project, creating a project
@@ -82,8 +81,7 @@ received. Hosted file access and billing still belong to the current host.
 Removing a co-owner also revokes their snapshot grant and deletes its
 envelope. The server serializes ownership changes with other owner actions
 for the same project. It rejects removal of the last owner or the current
-host. Removing the hosting owner requires a hosting transfer, which remains
-separate work.
+host. Removing the hosting owner requires an accepted hosting transfer.
 
 The live Chromium test uses two isolated browser contexts and synthetic
 active accounts against the Go API and disposable PostgreSQL. It exercises
@@ -92,8 +90,24 @@ rejection of altered ciphertext, and reopening the project snapshot after
 vault lock. It also checks that non-owners cannot revoke, that the recipient
 loses fetch access after owner revocation, and that reissue leaves the old
 link unavailable. The same test exercises co-owner activation, management
-access, removal, and rejection of last-owner and hosting-owner removal. To run it
+access, rejection of last-owner removal, and hosting transfer followed by
+former-host removal. To run it
 against a disposable app, set `SMOKE_ORIGIN`, `M06_OWNER_SESSION` and
-`M06_RECIPIENT_SESSION` for seeded synthetic sessions. The owner needs
-hosting entitlement and quota. The recipient address is
-`recipient@example.test`. Run `npm run test:app -- invitations.spec.ts`.
+`M06_RECIPIENT_SESSION` for seeded synthetic sessions. Both accounts need
+hosting entitlement and a 1 MiB quota for the reservation assertions. The
+recipient address is `recipient@example.test`. Run
+`npm run test:app -- invitations.spec.ts`.
+
+## Hosting transfer
+
+The hosting owner offers the project to another active owner. The offer
+leaves hosting and quota attribution with the current host. Only the
+designated co-owner can accept the current offer. Acceptance checks hosting
+entitlement and available quota, including committed files and staged
+reservations, then changes the host and consumes the offer in one
+transaction. File operations hold a shared project lock through their
+transactions, so they authorize and charge the same host.
+
+Both accounts keep their ownership when hosting changes. The new host can
+then remove the former host. Transfer changes server-side storage
+responsibility. Sharing original file decryption keys is separate work.

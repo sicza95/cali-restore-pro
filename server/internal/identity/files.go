@@ -91,6 +91,10 @@ func (s *Service) withFiles(ctx context.Context, raw string, fn func(fileAccess)
 }
 
 func (a fileAccess) hosts(ctx context.Context, project string) error {
+	// Keep the host and quota attribution stable until this file operation commits.
+	if _, err := a.tx.Exec(ctx, `SELECT pg_advisory_xact_lock_shared(hashtextextended($1, 6011))`, project); err != nil {
+		return err
+	}
 	var found int
 	err := a.tx.QueryRow(ctx, `SELECT 1 FROM hosted_projects WHERE id=$1 AND host_id=$2`, project, a.account).Scan(&found)
 	if errors.Is(err, pgx.ErrNoRows) {
