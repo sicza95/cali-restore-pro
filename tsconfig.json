@@ -20,6 +20,8 @@
     ".storybook",
     "tests",
     "tests-platform",
+    "tests-sync",
+    "playwright.sync.config.ts",
     "playwright.platform.config.ts",
     "playwright.files.config.ts",
     "openapi-ts.config.ts",

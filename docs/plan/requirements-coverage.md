@@ -159,3 +159,5 @@ The pre-existing Storybook library is partial UI evidence, not acceptance of UI-
 SHARE-08 evidence: [M-06 selected grants](../m06-sharing.md#selected-checkpoints) cover synthetic checkpoints. Named checkpoint authoring and real dependency enforcement remain planned.
 
 SHARE-06 evidence: [M-06 revocation during transfers](../m06-sharing.md#revocation-during-transfers) covers hosted originals. Live updates to other scopes and offline recovery remain planned.
+
+PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts and encrypted draft recovery. Editor integration and offline original pins are still planned.

@@ -9,15 +9,17 @@ export type VaultRow = {
 export const vaultTable = 'accounts';
 export const fileTable = 'encrypted-files';
 export const projectTable = 'encrypted-projects';
+export const revisionQueueTable = 'revision-queue';
 export const accountRange = (account: string) => IDBKeyRange.bound([account], [account, []]);
 
 export async function connect() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('calirestore-vault', 3);
+    const request = indexedDB.open('calirestore-vault', 4);
     request.onupgradeneeded = (event) => {
       if (event.oldVersion < 1) request.result.createObjectStore(vaultTable);
       if (event.oldVersion < 2) request.result.createObjectStore(fileTable);
-      request.result.createObjectStore(projectTable);
+      if (event.oldVersion < 3) request.result.createObjectStore(projectTable);
+      request.result.createObjectStore(revisionQueueTable);
     };
     request.onblocked = () => reject(new Error('Close older vault tabs and retry'));
     request.onerror = () => reject(request.error);
@@ -49,9 +51,13 @@ export async function commitVault(
   const db = await connect();
   try {
     await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction([vaultTable, fileTable, projectTable], 'readwrite', {
-        durability: 'strict',
-      });
+      const tx = db.transaction(
+        [vaultTable, fileTable, projectTable, revisionQueueTable],
+        'readwrite',
+        {
+          durability: 'strict',
+        },
+      );
       tx.oncomplete = () => resolve();
       tx.onabort = () => reject(tx.error ?? new Error('Vault changed or transaction aborted'));
       const store = tx.objectStore(vaultTable);
@@ -65,6 +71,7 @@ export async function commitVault(
           store.delete(account);
           tx.objectStore(fileTable).delete(accountRange(account));
           tx.objectStore(projectTable).delete(accountRange(account));
+          tx.objectStore(revisionQueueTable).delete(accountRange(account));
         }
       };
     });
