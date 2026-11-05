@@ -7,6 +7,7 @@ import {
 } from '../../../platform/projects/fixture-sharing';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { SharedProject } from '../../../platform/projects/shared-project';
+import { publishOriginals } from '../../../platform/projects/shared-originals';
 import { invitationCopy } from './copy';
 import type { InvitationModel, SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
@@ -17,6 +18,7 @@ import './styles.css';
 export function ProjectInvitations(props: {
   projectId: string;
   project: SharedProject;
+  originalIds?: string[];
   canHost?: boolean;
   onLeave?: () => void;
   model: InvitationModel;
@@ -36,6 +38,7 @@ export function ProjectInvitations(props: {
           projectPath={projectPath}
           projectId={props.projectId}
           project={props.project}
+          originalIds={props.originalIds}
           vault={props.vault}
           canHost={props.canHost}
           onLeave={props.onLeave}
@@ -51,6 +54,7 @@ function InvitationControls(props: {
   projectPath: string;
   projectId: string;
   project: SharedProject;
+  originalIds?: string[];
   canHost?: boolean;
   onLeave?: () => void;
   vault: LocalVault;
@@ -156,9 +160,8 @@ function InvitationControls(props: {
                     <form
                       onSubmit={(event) => {
                         event.preventDefault();
-                        const code = String(
-                          new FormData(event.currentTarget).get('fingerprint') ?? '',
-                        )
+                        const fields = new FormData(event.currentTarget);
+                        const code = String(fields.get('fingerprint') ?? '')
                           .trim()
                           .toLowerCase();
                         void sent.run(async () => {
@@ -170,6 +173,15 @@ function InvitationControls(props: {
                             fingerprint,
                           });
                           const project = props.project;
+                          const originals = fields.has('originals')
+                            ? await publishOriginals(
+                                props.vault,
+                                props.projectId,
+                                props.originalIds ?? [],
+                                props.model.csrf(),
+                                key.signal,
+                              )
+                            : [];
                           const grant = await sealProjectSnapshot(
                             key.pair,
                             recipientKey(),
@@ -180,6 +192,7 @@ function InvitationControls(props: {
                               recipient: item.recipientId,
                             },
                             project,
+                            originals,
                           );
                           key.signal.throwIfAborted();
                           await props.model.request('/sharing-identity', {
@@ -189,6 +202,7 @@ function InvitationControls(props: {
                           await props.model.request(props.path + '/' + item.id + '/activate', {
                             ...grant,
                             recipientKey: recipientKey(),
+                            fileIds: originals.map((original) => original.id),
                           });
                         });
                       }}
@@ -203,6 +217,12 @@ function InvitationControls(props: {
                           spellcheck={false}
                         />
                       </label>
+                      <Show when={props.originalIds?.length}>
+                        <label class="confirmation">
+                          <input type="checkbox" name="originals" disabled={sent.busy()} />
+                          {c().includeOriginals}
+                        </label>
+                      </Show>
                       <button disabled={sent.busy()}>{c().activate}</button>
                     </form>
                   )}

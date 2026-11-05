@@ -26,11 +26,14 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 	const projects = "/api/v1/hosted-projects/{project}"
 	const files = projects + "/files/{file}"
 	const parts = files + "/parts/{part}"
+	const shared = "/api/v1/invitations/{invitation}/files/{file}"
 	gate := make(chan struct{}, 4)
 	handle := func(pattern string, fn func(http.ResponseWriter, *http.Request, fileAccess, string, string) (func(), error)) {
 		route(pattern, true, func(w http.ResponseWriter, r *http.Request) {
 			project, id := r.PathValue("project"), r.PathValue("file")
-			if !uuid(project) || id != "" && !uuid(id) {
+			invitation := r.PathValue("invitation")
+			if invitation != "" && (!uuid(invitation) || !uuid(id)) ||
+				invitation == "" && (!uuid(project) || id != "" && !uuid(id)) {
 				failure(w, ErrInvalid)
 				return
 			}
@@ -43,7 +46,13 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 			}
 			var reply func()
 			err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
-				if pattern != "PUT "+projects {
+				if invitation != "" {
+					var err error
+					project, err = a.sharedFileProject(r.Context(), invitation, id)
+					if err != nil {
+						return err
+					}
+				} else if pattern != "PUT "+projects {
 					if err := a.hosts(r.Context(), project); err != nil {
 						return err
 					}
@@ -95,13 +104,15 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 		record, err := a.reserve(r.Context(), project, id, shape)
 		return func() { respond(w, 200, record) }, err
 	})
-	handle("GET "+files, func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
+	readFile := func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
 		f, err := a.record(r.Context(), project, id)
 		if err == nil && f.State != "committed" {
 			err = errFileMissing
 		}
 		return func() { respond(w, 200, f) }, err
-	})
+	}
+	handle("GET "+files, readFile)
+	handle("GET "+shared, readFile)
 	handle("DELETE "+files, func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
 		f, err := a.record(r.Context(), project, id)
 		if errors.Is(err, errFileMissing) {
@@ -160,7 +171,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 		}
 		return empty(w), a.putPart(r.Context(), objects, id, part, body)
 	})
-	handle("GET "+parts, func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
+	readPart := func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
 		f, part, size, err := requestedPart(r, a, project, id)
 		if err != nil {
 			return nil, err
@@ -178,7 +189,9 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 			w.Header().Set("X-Ciphertext-SHA256", hex.EncodeToString(digest))
 			_, _ = w.Write(body)
 		}, err
-	})
+	}
+	handle("GET "+parts, readPart)
+	handle("GET "+shared+"/parts/{part}", readPart)
 }
 
 func requestedPart(r *http.Request, a fileAccess, project, id string) (fileRecord, int, int, error) {

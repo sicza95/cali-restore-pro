@@ -31,10 +31,21 @@ export const partBytes = (shape: FileShape, part: number) =>
     : Math.min(chunkBytes, shape.sourceBytes - (part - 1) * chunkBytes) + 16;
 
 export async function fileCipher(root: CryptoKey, account: string, project: string, id: string) {
+  const key = await originalKey(root, account, project, id, false);
+  return fileCipherWithKey(key, account, project, id);
+}
+
+export async function originalKey(
+  root: CryptoKey,
+  account: string,
+  project: string,
+  id: string,
+  extractable: boolean,
+) {
   assertID(project);
   assertID(id);
   const context = ['calirestore-original', 1, account, project, id];
-  const key = await crypto.subtle.deriveKey(
+  return crypto.subtle.deriveKey(
     {
       name: 'HKDF',
       hash: 'SHA-256',
@@ -43,9 +54,13 @@ export async function fileCipher(root: CryptoKey, account: string, project: stri
     },
     root,
     { name: 'AES-GCM', length: 256 },
-    false,
+    extractable,
     ['encrypt', 'decrypt'],
   );
+}
+
+export function fileCipherWithKey(key: CryptoKey, account: string, project: string, id: string) {
+  const context = ['calirestore-original', 1, account, project, id];
   const params = (part: number) => {
     const iv = new Uint8Array(12);
     new DataView(iv.buffer).setUint32(8, part);

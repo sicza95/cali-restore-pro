@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
 const recipientSession = process.env.M06_RECIPIENT_SESSION;
@@ -40,6 +41,14 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await project.getByLabel('Add surface').fill('Upper plaster');
     await project.getByRole('button', { name: 'Add surface' }).click();
     await expect(project.getByText('Upper plaster · Metric')).toBeVisible();
+    const originalBytes = Buffer.from('Synthetic original bytes for an encrypted grant.');
+    await project.getByLabel('Original file', { exact: true }).setInputFiles({
+      name: 'shared-plaster.bin',
+      mimeType: 'application/octet-stream',
+      buffer: originalBytes,
+    });
+    await project.getByRole('button', { name: 'Attach original', exact: true }).click();
+    await expect(project.getByText('shared-plaster.bin')).toBeVisible();
     await project.getByText('Project invitations', { exact: true }).click();
     await project.getByRole('button', { name: 'Enable hosting' }).click();
     await project.getByLabel('Recipient email').fill('recipient@example.test');
@@ -64,12 +73,19 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await expect(project.locator('.invitation-panel [role=alert]')).toBeVisible();
     expect((await recipient.request.get(content)).status()).toBe(404);
     await project.getByLabel('Verified recipient fingerprint').fill(recipientCode);
+    await project.getByRole('checkbox', { name: 'Include all attached original files' }).check();
     const upload = project.waitForRequest(
       (request) => request.method() === 'POST' && request.url().endsWith('/activate'),
     );
     await project.getByRole('button', { name: 'Share project snapshot' }).click();
     await expect(project.getByText('Shared content available')).toBeVisible();
-    expect((await upload).postData()).not.toMatch(/Synthetic chapel|North wall|Upper plaster/);
+    const activation = (await upload).postDataJSON();
+    expect(JSON.stringify(activation)).not.toMatch(
+      /Synthetic chapel|North wall|Upper plaster|shared-plaster/,
+    );
+    expect(activation.fileIds).toHaveLength(1);
+    const original =
+      '/api/v1/invitations/' + list.invitations[0].id + '/files/' + activation.fileIds[0];
     expect((await owner.request.get(content)).status()).toBe(404);
     const sealed = await (await recipient.request.get(content)).json();
     expect(sealed.format).toBe('project-v1');
@@ -96,6 +112,16 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
 
     await expect(inbox.getByRole('heading', { name: 'North wall' })).toBeVisible();
     await expect(inbox.getByText('Upper plaster · Metric')).toBeVisible();
+    await expect(inbox.getByText('shared-plaster.bin')).toBeVisible();
+    expect((await owner.request.get(original + '/parts/1')).status()).toBe(404);
+    const encryptedPart = await recipient.request.get(original + '/parts/1');
+    expect(encryptedPart.status()).toBe(200);
+    expect(await encryptedPart.body()).not.toEqual(originalBytes);
+    const download = inbox.waitForEvent('download');
+    await inbox.getByRole('button', { name: 'Download original' }).click();
+    const openedFile = await download;
+    expect(openedFile.suggestedFilename()).toBe('shared-plaster.bin');
+    expect(await readFile(await openedFile.path())).toEqual(originalBytes);
     expect((await new AxeBuilder({ page: project }).analyze()).violations).toEqual([]);
     expect((await new AxeBuilder({ page: inbox }).analyze()).violations).toEqual([]);
     await project.screenshot({ path: info.outputPath('invitation-landscape.png'), fullPage: true });
@@ -124,6 +150,13 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await project.getByRole('button', { name: 'Revoke access' }).click();
     await expect(project.getByText('Access revoked')).toBeVisible();
     expect((await recipient.request.get(content)).status()).toBe(404);
+    for (const suffix of ['', '/parts/0', '/parts/1']) {
+      expect((await recipient.request.get(original + suffix)).status()).toBe(404);
+    }
+    await inbox.getByRole('button', { name: 'Download original' }).click();
+    await expect(
+      inbox.getByRole('region', { name: 'Shared originals' }).getByRole('alert'),
+    ).toBeVisible();
     await inbox.getByRole('button', { name: 'Open shared content' }).click();
     await expect(inbox.locator('.invitation-panel [role=alert]')).toBeVisible();
     await expect(inbox.getByText('Synthetic chapel')).toHaveCount(0);

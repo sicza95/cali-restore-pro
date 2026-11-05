@@ -25,7 +25,7 @@ type invitationGrant struct {
 	Format        string `json:"format,omitempty"`
 }
 
-func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipientKey string, grant invitationGrant) error {
+func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipientKey string, grant invitationGrant, files []string) error {
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return err
 	}
@@ -43,7 +43,23 @@ func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipie
  )
  INSERT INTO invitation_grants(invitation_id,sender_id,encapsulation,ciphertext,format)
  SELECT id,$4,$5,$6,$7 FROM activated`, id, project, recipientKey, a.account, grant.Encapsulation, grant.Ciphertext, grant.Format)
-	if err == nil && tag.RowsAffected() != 1 {
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrConflict
+	}
+	if len(files) == 0 {
+		return nil
+	}
+	if err := a.hosts(ctx, project); err != nil {
+		return err
+	}
+	tag, err = a.tx.Exec(ctx, `INSERT INTO invitation_originals(invitation_id,file_id)
+ SELECT $1,f.id FROM unnest($3::text[]) AS requested(id)
+ JOIN encrypted_files f ON f.id=requested.id::uuid
+ WHERE f.project_id=$2 AND f.state='committed' ON CONFLICT DO NOTHING`, id, project, files)
+	if err == nil && tag.RowsAffected() != int64(len(files)) {
 		return ErrConflict
 	}
 	return err
@@ -88,7 +104,8 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("POST /api/v1/hosted-projects/{project}/invitations/{invitation}/activate", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			invitationGrant
-			RecipientKey string `json:"recipientKey"`
+			RecipientKey string   `json:"recipientKey"`
+			FileIDs      []string `json:"fileIds"`
 		}
 		if !decodeBounded(w, r, &body, 90*1024) {
 			return
@@ -97,11 +114,25 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 		switch body.Format {
 		case "", "fixture-v1":
 			body.Format = "fixture-v1"
+			if len(body.FileIDs) > 0 {
+				failure(w, ErrInvalid)
+				return
+			}
 		case "project-v1":
 			maxBytes = 64*1024 + 16
 		default:
 			failure(w, ErrInvalid)
 			return
+		}
+		if len(body.FileIDs) > 64 {
+			failure(w, ErrInvalid)
+			return
+		}
+		for _, file := range body.FileIDs {
+			if !uuid(file) {
+				failure(w, ErrInvalid)
+				return
+			}
 		}
 		project, id := r.PathValue("project"), r.PathValue("invitation")
 		ciphertext, err := base64.StdEncoding.Strict().DecodeString(body.Ciphertext)
@@ -112,7 +143,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			return
 		}
 		err = h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
-			return a.activateInvitation(r.Context(), project, id, body.RecipientKey, body.invitationGrant)
+			return a.activateInvitation(r.Context(), project, id, body.RecipientKey, body.invitationGrant, body.FileIDs)
 		})
 		if err != nil {
 			fileFailure(w, err)
