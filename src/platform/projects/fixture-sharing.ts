@@ -4,6 +4,8 @@ import { parseSharedProject } from './shared-project';
 import type { SharedProject } from './shared-project';
 import { parseSharedOriginals } from './shared-originals';
 import type { SharedOriginal } from './shared-originals';
+import { parseScopeSample, scopeSamples } from './sharing-scopes';
+import type { OptionalScope } from './sharing-scopes';
 
 const suite = new CipherSuite({
   kem: new DhkemP256HkdfSha256(),
@@ -19,6 +21,7 @@ const hex = (value: ArrayBuffer) =>
   Array.from(new Uint8Array(value), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 type GrantContext = { project: string; invitation: string; sender: string; recipient: string };
+export type ScopeEnvelope = { scope: OptionalScope; encapsulation: string; ciphertext: string };
 export type SharingEnvelope = {
   encapsulation: string;
   ciphertext: string;
@@ -104,4 +107,53 @@ export async function openSharedContent(
   }
   if (text !== fixture) throw new Error('Invalid assessment fixture');
   return undefined;
+}
+
+const scopeBinding = (
+  { project, invitation, sender, recipient }: GrantContext,
+  scope: OptionalScope,
+) =>
+  encoder.encode(
+    JSON.stringify([
+      'calirestore',
+      'project-scope',
+      1,
+      project,
+      invitation,
+      sender,
+      recipient,
+      scope,
+    ]),
+  );
+
+export async function sealScope(
+  senderKey: CryptoKeyPair,
+  recipient: string,
+  context: GrantContext,
+  scope: OptionalScope,
+): Promise<ScopeEnvelope> {
+  const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
+  const { enc, ct } = await suite.seal(
+    { senderKey, recipientPublicKey },
+    encoder.encode(JSON.stringify(scopeSamples[scope])),
+    scopeBinding(context, scope),
+  );
+  return { scope, encapsulation: base64(enc), ciphertext: base64(ct) };
+}
+
+export async function openScope(
+  recipientKey: CryptoKeyPair,
+  sender: string,
+  envelope: ScopeEnvelope,
+  context: GrantContext,
+  scope: OptionalScope,
+) {
+  if (envelope.scope !== scope) throw new Error('Unexpected scope');
+  const senderPublicKey = await suite.kem.deserializePublicKey(bytes(sender));
+  const result = await suite.open(
+    { recipientKey, senderPublicKey, enc: bytes(envelope.encapsulation) },
+    bytes(envelope.ciphertext),
+    scopeBinding(context, scope),
+  );
+  return parseScopeSample(scope, new TextDecoder('utf-8', { fatal: true }).decode(result));
 }

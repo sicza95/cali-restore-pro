@@ -25,7 +25,7 @@ type invitationGrant struct {
 	Format        string `json:"format,omitempty"`
 }
 
-func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipientKey string, grant invitationGrant, files originalGrant) error {
+func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipientKey string, grant invitationGrant, files originalGrant, scopes []scopeEnvelope) error {
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return err
 	}
@@ -49,7 +49,10 @@ func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipie
 	if tag.RowsAffected() != 1 {
 		return ErrConflict
 	}
-	return a.linkOriginals(ctx, project, id, files)
+	if err := a.linkOriginals(ctx, project, id, files); err != nil {
+		return err
+	}
+	return a.linkScopes(ctx, id, scopes)
 }
 
 type receivedInvitation struct {
@@ -93,8 +96,9 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			invitationGrant
 			RecipientKey string `json:"recipientKey"`
 			originalGrant
+			Scopes []scopeEnvelope `json:"scopes"`
 		}
-		if !decodeBounded(w, r, &body, 96*1024) {
+		if !decodeBounded(w, r, &body, 104*1024) {
 			return
 		}
 		maxBytes := 384
@@ -111,7 +115,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			failure(w, ErrInvalid)
 			return
 		}
-		if len(body.FileIDs) > 64 {
+		if len(body.FileIDs) > 64 || !validScopeEnvelopes(body.Scopes) {
 			failure(w, ErrInvalid)
 			return
 		}
@@ -135,9 +139,12 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 		}
 		err = h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			if r.Pattern == "POST /api/v1/hosted-projects/{project}/invitations/{invitation}/rotate-originals" {
+				if len(body.Scopes) != 0 {
+					return ErrInvalid
+				}
 				return a.rotateOriginals(r.Context(), project, id, body.RecipientKey, body.invitationGrant, body.originalGrant)
 			}
-			return a.activateInvitation(r.Context(), project, id, body.RecipientKey, body.invitationGrant, body.originalGrant)
+			return a.activateInvitation(r.Context(), project, id, body.RecipientKey, body.invitationGrant, body.originalGrant, body.Scopes)
 		})
 		if err != nil {
 			fileFailure(w, err)

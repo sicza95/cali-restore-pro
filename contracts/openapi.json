@@ -2665,6 +2665,13 @@
                   "coOwner": {
                     "type": "boolean",
                     "default": false
+                  },
+                  "estimateScope": {
+                    "type": "string",
+                    "enum": ["none", "estimate-summary", "estimate-full"]
+                  },
+                  "shareHistory": {
+                    "type": "boolean"
                   }
                 },
                 "additionalProperties": false
@@ -2727,7 +2734,15 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id", "email", "state", "recipientId", "coOwner"],
+                        "required": [
+                          "id",
+                          "email",
+                          "state",
+                          "recipientId",
+                          "coOwner",
+                          "estimateScope",
+                          "shareHistory"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -2761,6 +2776,13 @@
                               "type": "string",
                               "format": "uuid"
                             }
+                          },
+                          "estimateScope": {
+                            "type": "string",
+                            "enum": ["none", "estimate-summary", "estimate-full"]
+                          },
+                          "shareHistory": {
+                            "type": "boolean"
                           }
                         }
                       }
@@ -2891,7 +2913,15 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["id", "projectId", "expiresAt", "state", "coOwner"],
+                        "required": [
+                          "id",
+                          "projectId",
+                          "expiresAt",
+                          "state",
+                          "coOwner",
+                          "estimateScope",
+                          "shareHistory"
+                        ],
                         "properties": {
                           "id": {
                             "type": "string",
@@ -2910,6 +2940,13 @@
                             "enum": ["pending", "accepted", "active"]
                           },
                           "coOwner": {
+                            "type": "boolean"
+                          },
+                          "estimateScope": {
+                            "type": "string",
+                            "enum": ["none", "estimate-summary", "estimate-full"]
+                          },
+                          "shareHistory": {
                             "type": "boolean"
                           }
                         }
@@ -3164,6 +3201,31 @@
                         "const": ""
                       }
                     ]
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                      "type": "object",
+                      "required": ["scope", "encapsulation", "ciphertext"],
+                      "properties": {
+                        "scope": {
+                          "type": "string",
+                          "enum": ["estimate-summary", "estimate-full", "history"]
+                        },
+                        "encapsulation": {
+                          "type": "string",
+                          "minLength": 88,
+                          "maxLength": 88
+                        },
+                        "ciphertext": {
+                          "type": "string",
+                          "minLength": 24,
+                          "maxLength": 2048
+                        }
+                      },
+                      "additionalProperties": false
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -3957,6 +4019,85 @@
         "responses": {
           "204": {
             "description": "Original-file grant rotated"
+          },
+          "default": {
+            "description": "Transfer, authentication or policy error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/invitations/{invitation}/scopes/{scope}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "invitation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "scope",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": ["estimate-summary", "estimate-full", "history"]
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getInvitationScope",
+        "summary": "Fetch one encrypted estimate or history scope granted to the signed-in recipient",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated recipient envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["scope", "encapsulation", "ciphertext", "senderId", "senderKey"],
+                  "properties": {
+                    "scope": {
+                      "type": "string",
+                      "enum": ["estimate-summary", "estimate-full", "history"]
+                    },
+                    "encapsulation": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    },
+                    "ciphertext": {
+                      "type": "string",
+                      "minLength": 24,
+                      "maxLength": 2048
+                    },
+                    "senderId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "senderKey": {
+                      "type": "string",
+                      "minLength": 88,
+                      "maxLength": 88
+                    }
+                  }
+                }
+              }
+            }
           },
           "default": {
             "description": "Transfer, authentication or policy error",

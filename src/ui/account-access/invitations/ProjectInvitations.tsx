@@ -3,11 +3,13 @@ import { createSignal, For, Show } from 'solid-js';
 import {
   localSharingKey,
   sealProjectSnapshot,
+  sealScope,
   sharingFingerprint,
 } from '../../../platform/projects/fixture-sharing';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { SharedProject } from '../../../platform/projects/shared-project';
 import { publishOriginals } from '../../../platform/projects/shared-originals';
+import { optionalScopes } from '../../../platform/projects/sharing-scopes';
 import { invitationCopy } from './copy';
 import type { InvitationModel, SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
@@ -100,10 +102,15 @@ function InvitationControls(props: {
           onSubmit={(event) => {
             event.preventDefault();
             const form = event.currentTarget;
-            const email = String(new FormData(form).get('email') ?? '');
-            const coOwner = new FormData(form).has('coOwner');
+            const fields = new FormData(form);
+            const email = String(fields.get('email') ?? '');
+            const coOwner = fields.has('coOwner');
+            const estimateScope = fields.get('estimateScope');
+            const shareHistory = fields.has('shareHistory');
             void sent
-              .run(() => props.model.request(props.path, { email, coOwner }))
+              .run(() =>
+                props.model.request(props.path, { email, coOwner, estimateScope, shareHistory }),
+              )
               .then((ok) => {
                 if (ok) form.reset();
               });
@@ -112,6 +119,18 @@ function InvitationControls(props: {
           <label>
             {c().recipient}
             <input type="email" name="email" required maxLength={254} disabled={sent.busy()} />
+          </label>
+          <label>
+            {c().estimateScope}
+            <select name="estimateScope" disabled={sent.busy()}>
+              <option value="none">{c().noEstimate}</option>
+              <option value="estimate-summary">{c()['estimate-summary']}</option>
+              <option value="estimate-full">{c()['estimate-full']}</option>
+            </select>
+          </label>
+          <label class="confirmation">
+            <input type="checkbox" name="shareHistory" disabled={sent.busy()} />
+            {c().includeHistory}
           </label>
           <label class="confirmation">
             <input type="checkbox" name="coOwner" disabled={sent.busy()} />
@@ -128,6 +147,9 @@ function InvitationControls(props: {
                   {item.coOwner ? ' · ' + c().coOwner : ''}
                 </strong>
                 <span>{c()[item.state]}</span>
+                <p>
+                  {[c().assessment, ...optionalScopes(item).map((scope) => c()[scope])].join(' · ')}
+                </p>
                 <Show when={item.state === 'pending' || item.state === 'accepted'}>
                   <button
                     class="secondary"
@@ -196,18 +218,26 @@ function InvitationControls(props: {
                                 key.signal,
                               )
                             : [];
+                          const context = {
+                            project: props.projectId,
+                            invitation: item.id,
+                            sender,
+                            recipient: item.recipientId,
+                          };
                           const grant = await sealProjectSnapshot(
                             key.pair,
                             recipientKey(),
-                            {
-                              project: props.projectId,
-                              invitation: item.id,
-                              sender,
-                              recipient: item.recipientId,
-                            },
+                            context,
                             project,
                             originals,
                           );
+                          const scopes = item.sourceIds?.length
+                            ? []
+                            : await Promise.all(
+                                optionalScopes(item).map((scope) =>
+                                  sealScope(key.pair, recipientKey(), context, scope),
+                                ),
+                              );
                           key.signal.throwIfAborted();
                           await props.model.request('/sharing-identity', {
                             publicKey: key.publicKey,
@@ -220,6 +250,7 @@ function InvitationControls(props: {
                             fileIds: originals.map((original) => original.id),
                             sourceIds,
                             originalEpoch,
+                            scopes,
                           });
                         });
                       }}
