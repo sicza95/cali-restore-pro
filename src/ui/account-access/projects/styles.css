@@ -1,0 +1,101 @@
+.project-workspace {
+  min-width: 0;
+}
+.project-fields,
+.project-heading,
+.project-register li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.project-fields > label {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.project-heading {
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0;
+}
+.project-heading h2,
+.project-pane h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.project-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 16px;
+}
+.project-pane {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--cr-rule);
+  background: var(--cr-surface);
+  min-width: 0;
+}
+.project-originals {
+  margin-top: 16px;
+}
+.project-register {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.project-register li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--cr-rule);
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.project-register li > :first-child {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.project-register a,
+.project-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cr-touch);
+}
+.project-register small {
+  display: block;
+  color: var(--cr-muted);
+}
+.project-register time {
+  color: var(--cr-muted);
+  font-variant-numeric: tabular-nums;
+}
+.project-workspace input,
+.project-workspace select {
+  min-width: 0;
+  max-width: 100%;
+}
+.project-workspace {
+  grid-column: 1 / -1;
+}
+.project-vault-open {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding-top: 8px;
+}
+.project-vault-open > :first-child {
+  display: none;
+}
+.project-vault-open > .vault-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: transparent;
+  padding: 0;
+}
+.project-pane > form:not(.project-fields) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.project-pane > form > :is(p, button):last-child {
+  grid-column: 1 / -1;
+}

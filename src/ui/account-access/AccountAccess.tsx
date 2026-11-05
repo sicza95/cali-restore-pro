@@ -8,6 +8,8 @@ import { AccessForm } from './access-form/AccessForm';
 import { AccountSecurity } from './account-security/AccountSecurity';
 import { createAccountAccess } from './createAccountAccess';
 import type { Language } from './types';
+import { VaultSection } from './account-security/VaultSection';
+import { ProjectWorkspace } from './projects/ProjectWorkspace';
 
 export function AccountAccess() {
   const model = createAccountAccess();
@@ -58,6 +60,9 @@ export function AccountAccess() {
               </>
             }
           >
+            <a href="/projects" aria-current={view === 'projects' ? 'page' : undefined}>
+              {t('projects')}
+            </a>
             <a href="/settings/account" aria-current={view === 'profile' ? 'page' : undefined}>
               {c().profile}
             </a>
@@ -118,6 +123,7 @@ export function AccountAccess() {
               view === 'profile' ||
               view === 'preferences' ||
               view === 'admin' ||
+              view === 'projects' ||
               view === 'security'
             }
           >
@@ -142,6 +148,15 @@ export function AccountAccess() {
                   </Match>
                   <Match when={view === 'security'}>
                     <AccountSecurity model={model} />
+                  </Match>
+                  <Match when={view === 'projects' && account()}>
+                    {(current) => (
+                      <VaultSection
+                        account={current().id}
+                        language={lang()}
+                        workspace={(vault) => <ProjectWorkspace vault={vault} language={lang()} />}
+                      />
+                    )}
                   </Match>
                 </Switch>
               </Show>

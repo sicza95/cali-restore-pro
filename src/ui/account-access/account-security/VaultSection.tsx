@@ -20,7 +20,11 @@ async function readFile(event: SubmitEvent) {
   return file.text();
 }
 
-export function VaultSection(props: { account: string; language: Language }) {
+export function VaultSection(props: {
+  account: string;
+  language: Language;
+  workspace?: (vault: LocalVault) => import('solid-js').JSX.Element;
+}) {
   const c = () => vaultCopy[props.language];
   const [status, setStatus] = createSignal<{ exists: boolean; remembered: boolean }>();
   const [text, setText] = createSignal<string>();
@@ -129,10 +133,14 @@ export function VaultSection(props: { account: string; language: Language }) {
     setRecovery(newCode());
   };
   return (
-    <section class="account-section" aria-label={c().heading}>
+    <section
+      class="account-section"
+      classList={{ 'project-vault-open': !!props.workspace && text() !== undefined }}
+      aria-label={c().heading}
+    >
       <div>
         <h2>{c().heading}</h2>
-        <p>{c().help}</p>
+        <p>{props.workspace ? c().projectHelp : c().help}</p>
       </div>
       <div
         class="account-panel vault-panel"
@@ -270,7 +278,12 @@ export function VaultSection(props: { account: string; language: Language }) {
             <button disabled={busy()}>{c().unlock}</button>
           </form>
         </Show>
-        <Show when={text() !== undefined}>
+        <Show when={text() !== undefined && props.workspace}>
+          <button class="secondary" onClick={lock}>
+            {c().lock}
+          </button>
+        </Show>
+        <Show when={text() !== undefined && !props.workspace}>
           <label>
             {c().text}
             <textarea
@@ -334,7 +347,7 @@ export function VaultSection(props: { account: string; language: Language }) {
             </form>
           </details>
         </Show>
-        <Show when={status()?.exists}>
+        <Show when={status()?.exists && !props.workspace}>
           <details>
             <summary>{c().forget}</summary>
             <label class="confirmation">
@@ -364,6 +377,9 @@ export function VaultSection(props: { account: string; language: Language }) {
           </details>
         </Show>
       </div>
+      <Show when={text() !== undefined && props.workspace}>
+        {(workspace) => workspace()(vault)}
+      </Show>
     </section>
   );
 }

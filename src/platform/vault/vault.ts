@@ -3,6 +3,7 @@ import type { Envelope } from './crypto';
 import { commitVault, readVault } from './store';
 import type { VaultRow } from './store';
 import { encryptedFiles } from './files';
+import { projectDocuments } from './project-store';
 
 export class LocalVault {
   #root?: CryptoKey;
@@ -121,6 +122,11 @@ export class LocalVault {
   files() {
     const { root, row } = this.#unlocked();
     return encryptedFiles(root, this.account, row.stamp, this.#fileAccess.signal);
+  }
+
+  projects() {
+    const { root, row } = this.#unlocked();
+    return projectDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
   async save(text: string) {

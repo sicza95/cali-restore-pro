@@ -1,10 +1,11 @@
+import type { DeletionPreflight } from '../../../../platform/api/types.gen';
 import { createSignal, Show } from 'solid-js';
 import { settingsCopy } from '../constants';
 import type { SettingsProps } from '../types';
 
 export function Profile(props: SettingsProps) {
   const c = () => settingsCopy[props.model.lang()];
-  const [blocked, setBlocked] = createSignal(false);
+  const [blocked, setBlocked] = createSignal<DeletionPreflight['reason']>();
   return (
     <>
       <section class="account-section">
@@ -29,16 +30,18 @@ export function Profile(props: SettingsProps) {
             class="secondary"
             disabled={props.model.busy()}
             onClick={async () => {
-              const result = await props.model.read<{ eligible: boolean }>(
+              const result = await props.model.read<DeletionPreflight>(
                 '/account/deletion-preflight',
               );
-              setBlocked(result?.eligible === false);
+              setBlocked(result?.reason);
             }}
           >
             {c().preflight}
           </button>
           <Show when={blocked()}>
-            <p role="status">{c().blocked}</p>
+            <p role="status">
+              {blocked() === 'hosted_projects_require_continuity' ? c().blockedHosted : c().blocked}
+            </p>
           </Show>
         </div>
       </section>

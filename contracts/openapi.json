@@ -3175,7 +3175,7 @@
             "const": false
           },
           "reason": {
-            "const": "project_continuity_unavailable"
+            "enum": ["project_continuity_unavailable", "hosted_projects_require_continuity"]
           }
         }
       },

@@ -6,6 +6,7 @@ export const settingsCopy = {
     identity: 'Sign-in identity',
     deletion: 'Account deletion',
     preflight: 'Check deletion eligibility',
+    blockedHosted: 'Deletion is unavailable while this account hosts projects.',
     blocked:
       'Deletion is unavailable until project ownership, hosting, and pending work can be checked.',
     appearance: 'Appearance',
@@ -92,6 +93,7 @@ export const settingsCopy = {
     admin: 'Adminisztráció',
     identity: 'Bejelentkezési adatok',
     deletion: 'Fiók törlése',
+    blockedHosted: 'A törlés nem érhető el, amíg a fiók projekteket tárol a szerveren.',
     preflight: 'Törölhetőség ellenőrzése',
     blocked:
       'A fiók nem törölhető, amíg a projekttulajdon, a tárhely és a függőben lévő munka nem ellenőrizhető.',
