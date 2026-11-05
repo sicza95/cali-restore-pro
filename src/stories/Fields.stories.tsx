@@ -1,6 +1,6 @@
 import { createEffect, createSignal } from 'solid-js';
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { Field, RangeControl, Switch } from '../ui/controls';
+import { Field, RangeControl, Switch } from '../ui';
 
 const meta = {
   title: 'Controls/Fields',

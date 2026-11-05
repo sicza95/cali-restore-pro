@@ -1,0 +1,29 @@
+.cr-tool-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 58px;
+  padding: 6px;
+}
+
+.cr-tool {
+  display: grid;
+  place-items: center;
+  width: var(--cr-touch);
+  height: var(--cr-touch);
+  flex: none;
+  padding: 0;
+  color: var(--cr-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+}
+
+.cr-tool:hover {
+  background: var(--cr-hover);
+}
+
+.cr-tool[aria-pressed='true'] {
+  background: var(--cr-accent);
+  color: var(--cr-accent-ink);
+}

@@ -1,7 +1,7 @@
 import { For } from 'solid-js';
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { SaveStatus } from '../ui/controls';
-import type { SaveState } from '../ui/controls';
+import { SaveStatus } from '../ui';
+import type { SaveState } from '../ui';
 
 const meta = { title: 'Editor/Save status', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;

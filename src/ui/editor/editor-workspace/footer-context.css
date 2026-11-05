@@ -1,0 +1,35 @@
+.cr-footer-context {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex: 1;
+}
+
+.cr-commit-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cr-muted);
+  font-size: 11px;
+}
+
+.cr-zoom {
+  margin-left: auto;
+  font-size: 16px;
+  text-align: right;
+}
+
+.cr-zoom small {
+  display: block;
+  color: var(--cr-muted);
+  font-size: 11px;
+}
+
+.cr-editor--focus {
+  grid-template-rows: 68px minmax(0, 1fr) 12px;
+}
+
+.cr-editor--focus .cr-editor-workspace {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}

@@ -1,0 +1,48 @@
+.cr-field {
+  min-width: 0;
+}
+
+.cr-field > label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.cr-field-input {
+  position: relative;
+}
+
+.cr-field-input input {
+  min-height: var(--cr-touch);
+  width: 100%;
+  padding: 8px 44px 8px 12px;
+  color: var(--cr-ink);
+  background: var(--cr-ground);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+}
+
+.cr-field-input input[aria-invalid='true'] {
+  border-color: var(--cr-negative);
+}
+
+.cr-field-input > span {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: var(--cr-muted);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.cr-field > small {
+  display: block;
+  margin-top: 8px;
+  color: var(--cr-muted);
+  font-size: 12px;
+}
+
+.cr-field > small.cr-field-error {
+  color: var(--cr-negative);
+}

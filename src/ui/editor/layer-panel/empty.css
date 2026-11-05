@@ -1,0 +1,12 @@
+.cr-inspector-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 8px;
+  color: var(--cr-muted);
+}
+
+.cr-inspector-empty h2 {
+  font-size: 14px;
+}

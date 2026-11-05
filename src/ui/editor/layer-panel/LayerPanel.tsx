@@ -1,33 +1,14 @@
 import { For, Show, createSignal, createUniqueId } from 'solid-js';
-import { Button, IconButton, moveFocus } from './controls';
-import { Icon } from './Icon';
+import { Button } from '../../controls/button/Button';
+import { IconButton } from '../../controls/icon-button/IconButton';
+import { moveFocus } from '../../shared/moveFocus';
+import { Icon } from '../../icon/Icon';
+import { Area } from '../area/Area';
+import { sampleAssessment } from './constants';
+import { sampleLayers } from '../constants';
+import type { LayerPanelProps } from './types';
 
-export const sampleLayers = [
-  { id: 'flaking', name: 'Flaking', area: 0.42, kind: 'damage' },
-  { id: 'lacunae', name: 'Lacunae', area: 0.36, kind: 'damage' },
-  { id: 'cracks', name: 'Cracks', area: 0.14, kind: 'damage' },
-  { id: 'cleaning', name: 'Cleaning', area: 0.9, kind: 'phase' },
-] as const;
-
-export type LayerId = (typeof sampleLayers)[number]['id'];
-export const sampleAssessment = { surface: 6, uniquePaintLoss: 0.78 } as const;
-
-export function Area(props: { value: number }) {
-  return (
-    <span class="cr-number">
-      {props.value.toFixed(2)} <span class="cr-unit">m²</span>
-    </span>
-  );
-}
-
-export function LayerPanel(props: {
-  empty?: boolean;
-  active: LayerId;
-  onSelect: (layer: LayerId) => void;
-  visible: ReadonlySet<LayerId>;
-  onToggleVisible: (layer: LayerId) => void;
-  onCalibrate: () => void;
-}) {
+export function LayerPanel(props: LayerPanelProps) {
   const [tab, setTab] = createSignal<'layers' | 'measurements'>('layers');
   const [expanded, setExpanded] = createSignal(true);
   const id = createUniqueId();

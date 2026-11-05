@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { EditorWorkspace } from '../ui/EditorWorkspace';
-import { Icon } from '../ui/Icon';
+import { EditorWorkspace, Icon } from '../ui';
 
 const meta = { title: 'Start here/Direction', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;

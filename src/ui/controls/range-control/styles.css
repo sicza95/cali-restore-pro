@@ -1,0 +1,33 @@
+.cr-range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cr-range label {
+  white-space: nowrap;
+  color: var(--cr-muted);
+  font-size: 12px;
+}
+
+.cr-range input {
+  width: 112px;
+  min-width: 64px;
+  height: var(--cr-touch);
+  margin: 0;
+  accent-color: var(--cr-accent);
+}
+
+.cr-range output {
+  min-width: 48px;
+  text-align: right;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.cr-range output span,
+.cr-unit {
+  color: var(--cr-muted);
+  font-weight: 400;
+}

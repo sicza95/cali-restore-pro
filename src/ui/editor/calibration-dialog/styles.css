@@ -1,0 +1,40 @@
+.cr-dialog {
+  width: min(500px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 24px;
+  overflow-y: auto;
+  color: var(--cr-ink);
+  background: var(--cr-surface);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-panel-radius);
+  box-shadow: var(--cr-shadow-floating);
+}
+
+.cr-dialog::backdrop {
+  background: rgb(10 15 18 / 55%);
+}
+
+.cr-dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.cr-dialog h2 {
+  margin-top: 4px;
+  font-size: 20px;
+}
+
+.cr-dialog form > p {
+  color: var(--cr-muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.cr-field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}

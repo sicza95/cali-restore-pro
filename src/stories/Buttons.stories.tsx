@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { Button, IconButton } from '../ui/controls';
+import { Button, IconButton } from '../ui';
 
 const meta = {
   title: 'Controls/Buttons',

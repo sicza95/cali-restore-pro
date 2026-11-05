@@ -1,7 +1,6 @@
 import { Show, createSignal } from 'solid-js';
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { Button } from '../ui/controls';
-import { CalibrationDialog } from '../ui/CalibrationDialog';
+import { Button, CalibrationDialog } from '../ui';
 
 const meta = {
   title: 'Patterns/Calibration form',

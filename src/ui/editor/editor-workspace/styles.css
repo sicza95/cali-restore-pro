@@ -1,0 +1,76 @@
+.cr-editor {
+  /* Landscape: 12px outer gutters + flexible canvas + 12px gap + 288px inspector. */
+  position: relative;
+  display: grid;
+  grid-template-rows: 68px minmax(0, 1fr) 94px;
+  width: 100%;
+  height: 100dvh;
+  min-height: 580px;
+  overflow: hidden;
+  background: var(--cr-ground);
+}
+
+.cr-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 20px;
+}
+
+.cr-editor-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.cr-editor-identity {
+  margin-right: auto;
+  padding-left: 24px;
+  border-left: 1px solid var(--cr-border);
+}
+
+.cr-editor-identity > span {
+  font-size: 11px;
+  color: var(--cr-muted);
+}
+
+.cr-crumb-slash {
+  margin: 0 5px;
+}
+
+.cr-editor-identity h1 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 18px;
+}
+
+.cr-editor-identity h1 svg {
+  transform: rotate(90deg);
+  color: var(--cr-muted);
+}
+
+.cr-header-tools {
+  display: flex;
+  gap: 4px;
+}
+
+.cr-editor-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: 12px;
+  min-height: 0;
+  padding: 0 12px;
+}
+
+.cr-canvas-region {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--cr-panel-radius);
+  background: var(--cr-canvas);
+}
