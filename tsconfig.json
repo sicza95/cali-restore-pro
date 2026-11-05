@@ -21,6 +21,7 @@
     "tests",
     "tests-platform",
     "playwright.platform.config.ts",
+    "playwright.files.config.ts",
     "openapi-ts.config.ts",
     "playwright.config.ts",
     "vite.config.ts",
