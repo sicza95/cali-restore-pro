@@ -30,6 +30,12 @@ compose(['run', '--rm', 'migrate']);
 // Service code runs non-root, without a shell, with its root filesystem read-only.
 const info = compose(['ps', '-q', 'app'], { encoding: 'utf8', stdio: 'pipe' }).stdout.trim();
 const { spawnSync } = await import('node:child_process');
+function assertStartupRejected(result, message) {
+  assert.equal(result.status, 1, result.stderr);
+  const { time, ...event } = JSON.parse(result.stdout);
+  assert.ok(Number.isFinite(Date.parse(time)));
+  assert.deepEqual(event, { level: 'ERROR', msg: message });
+}
 const unsafe = spawnSync(
   'docker',
   [
@@ -46,15 +52,13 @@ const unsafe = spawnSync(
   ],
   { encoding: 'utf8' },
 );
-assert.notEqual(unsafe.status, 0, 'unsafe production origin was accepted');
-assert.match(unsafe.stdout, /production APP_ORIGIN requires HTTPS/);
+assertStartupRejected(unsafe, 'production APP_ORIGIN requires HTTPS');
 const missingSecret = spawnSync(
   'docker',
   ['compose', 'run', '--rm', '--no-deps', '-T', '-e', 'DB_PASSWORD_FILE=/missing-secret', 'app'],
   { encoding: 'utf8' },
 );
-assert.notEqual(missingSecret.status, 0, 'missing secret was accepted');
-assert.match(missingSecret.stdout, /cannot read DB_PASSWORD_FILE/);
+assertStartupRejected(missingSecret, 'cannot read DB_PASSWORD_FILE');
 const inspect = spawnSync('docker', ['inspect', info], { encoding: 'utf8' });
 assert.equal(inspect.status, 0);
 const [container] = JSON.parse(inspect.stdout);

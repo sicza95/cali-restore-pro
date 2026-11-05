@@ -16,6 +16,11 @@ type Config struct {
 	ShutdownTimeout                                            time.Duration
 }
 
+var (
+	ErrInsecureProductionOrigin = errors.New("production APP_ORIGIN requires HTTPS")
+	ErrUnreadablePasswordFile   = errors.New("cannot read DB_PASSWORD_FILE")
+)
+
 func Load() (Config, error) { return load(os.Getenv, os.ReadFile) }
 
 func load(env func(string) string, read func(string) ([]byte, error)) (Config, error) {
@@ -34,7 +39,7 @@ func load(env func(string) string, read func(string) ([]byte, error)) (Config, e
 		return c, errors.New("APP_ORIGIN must be an HTTP(S) origin")
 	}
 	if c.Mode == "production" && u.Scheme != "https" {
-		return c, errors.New("production APP_ORIGIN requires HTTPS")
+		return c, ErrInsecureProductionOrigin
 	}
 	if _, _, err := net.SplitHostPort(c.Address); err != nil {
 		return c, errors.New("HTTP_ADDR must be host:port")
@@ -51,7 +56,7 @@ func load(env func(string) string, read func(string) ([]byte, error)) (Config, e
 	if passwordFile != "" {
 		b, err := read(passwordFile)
 		if err != nil {
-			return c, errors.New("cannot read DB_PASSWORD_FILE")
+			return c, ErrUnreadablePasswordFile
 		}
 		password = strings.TrimRight(string(b), "\r\n")
 	}
