@@ -10,6 +10,7 @@ import { projectSnapshot } from '../../../platform/projects/shared-project';
 import { ProjectDetail } from './ProjectDetail';
 import { projectCopy } from './project-copy';
 import { NameForm } from './forms';
+import { ReceiveProjectKey } from './ProjectKeyTransfer';
 import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
 import './styles.css';
@@ -117,6 +118,17 @@ export function ProjectWorkspace(props: {
                     navigate(project.id);
                   })
                 }
+              />
+              <ReceiveProjectKey
+                language={props.language}
+                busy={busy()}
+                model={sync.transfer}
+                run={run}
+                onReceived={(received) => {
+                  if (received.created) update(received.document);
+                  navigate(received.project);
+                  void sync.refresh();
+                }}
               />
               <div class="project-fields">
                 <label>

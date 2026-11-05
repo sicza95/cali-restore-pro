@@ -38,12 +38,36 @@ the editor compares the latest local copy with the decrypted cloud copy. An owne
 can publish the local copy or adopt the cloud copy; either selection is staged
 against the reviewed revision. If the server has advanced to another epoch, the
 editor reads the old head with its old key and provisions a fresh key for the
-new epoch. It stops if an existing head cannot be decrypted. Revision key
-distribution to other owner vaults and recovery on a new browser are not yet
-supported. Offline original pins, portable project backups and lifecycle and
+new epoch. It stops if an existing head cannot be decrypted. Offline original pins, portable project backups and lifecycle and
 retention enforcement remain separate M-07 work.
 
+An owner with a readable cloud head can share its epoch key from **Cloud sync**.
+Enter the receiving owner's account ID (shown under **Open a synced project
+on this device**) and pass the transfer code privately to that device. The
+code contains a random 256-bit secret that stays off the server. The existing
+vault envelope uses HKDF-SHA-256 and AES-GCM, with the recipient account,
+project, transfer ID, head epoch and current authorization epoch bound into
+the authenticated context. The receiver verifies the key by opening the cloud
+head before saving it in the unlocked vault. A new local copy and its sync
+checkpoint are saved together; receiving a key for an existing copy leaves
+its local edits and checkpoint intact.
+
+The server holds one encrypted transfer per recipient and project. A new code
+replaces the old one; a code can be retried for 15 minutes by its intended
+authenticated owner. Both parties must still be active project owners and a
+change to either epoch invalidates pending transfers. Only an owner who can
+decrypt the published head can create a usable transfer; if two owners race to
+publish a new epoch, the losing owner can receive the winning key and review
+their draft again. Anyone with the intended owner's session and the private
+code can redeem it, so the code must be shared over a trusted channel. Revoking
+a session blocks requests from that session; removing a project owner also
+rotates the project epoch. Neither can recall keys or content already obtained.
+A paired device needs a new code when it does not have the new epoch key.
+Expired records are inaccessible and can be replaced; physical expiry and
+restore-safe revocation remain lifecycle work.
+
 Verify the browser queue and editor recovery with `npm run test:sync`. The
-editor test drives the app against a simulated revision endpoint. The Go integration
-test exercises real PostgreSQL authorization, conditional writes, replay, quota
-accounting paths and owner revocation with TEST_DATABASE_URL set.
+editor test uses two isolated browser vaults with simulated revision and key
+transfer endpoints. The Go integration test exercises real PostgreSQL access
+checks, transfer expiry and epoch invalidation, conditional writes, replay,
+quota accounting and owner revocation with TEST_DATABASE_URL set.

@@ -9,9 +9,11 @@ import {
   vaultTable,
 } from './store';
 import type { VaultRow } from './store';
-import { RevisionError, revisionRemote, sealRevision } from '../projects/revisions';
+import { revisionBlockFor, revisionRemote, sealRevision } from '../projects/revisions';
 import type {
   RevisionBase,
+  RevisionBlock,
+  RevisionHead,
   RevisionKey,
   RevisionState,
   RevisionWrite,
@@ -28,13 +30,12 @@ export type SyncCheckpoint = {
 };
 type EditorWrite = { checkpoint: SyncCheckpoint; localRevision: number };
 type ReviewLocal = { expected: number; next?: ProjectRow };
-type Block = 'conflict' | 'epoch' | 'access' | 'rejected';
 type Draft = {
   id: string;
   project: string;
   write: RevisionWrite;
   local: Envelope;
-  blocked?: Block;
+  blocked?: RevisionBlock;
   editor?: EditorWrite;
 };
 
@@ -197,7 +198,7 @@ export function revisionQueue(
         await replace(draft.project, draft.id, undefined, false, ack);
       } catch (error) {
         signal.throwIfAborted();
-        const blocked = blockFor(error);
+        const blocked = revisionBlockFor(error);
         if (blocked) await replace(draft.project, draft.id, { ...draft, blocked });
         else retry = true;
         continue;
@@ -254,7 +255,7 @@ export function revisionQueue(
     };
   }
 
-  async function projectKey(project: string, epoch: string, provision = false) {
+  async function projectCode(project: string, epoch: string, provision = false) {
     assertID(project);
     assertID(epoch);
     const purpose = `sync:key:${project}:${epoch}` as const;
@@ -271,14 +272,42 @@ export function revisionQueue(
       },
     );
     if (!envelope) throw new Error('Project key unavailable on this device');
-    const key = await importCode(await open(root, account, purpose, envelope));
+    const code = await open(root, account, purpose, envelope);
     signal.throwIfAborted();
-    return { epoch, key };
+    return code;
   }
 
   return {
     start,
-    projectKey,
+    account,
+    signal,
+    projectCode,
+    projectKey: async (project: string, epoch: string, provision = false) => ({
+      epoch,
+      key: await importCode(await projectCode(project, epoch, provision)),
+    }),
+    async acceptKey(project: string, head: RevisionHead, code: string, text: string) {
+      const key = [account, project];
+      const [epochKey, envelope] = await Promise.all([
+        seal(root, account, `sync:key:${project}:${head.epoch}`, code),
+        seal(root, account, `project:${project}:1`, text),
+      ]);
+      return transaction<boolean>('readwrite', (store, result, sync) => {
+        const projects = store.transaction.objectStore(projectTable);
+        const document = projects.getKey(key);
+        document.onsuccess = () => {
+          if (!document.result) {
+            projects.add({ id: project, revision: 1, envelope } satisfies ProjectRow, key);
+            sync.add(
+              { project, epoch: head.epoch, revision: head.revision, localRevision: 1 },
+              key,
+            );
+          }
+          sync.put(epochKey, [...key, head.epoch]);
+          result(!document.result);
+        };
+      });
+    },
     checkpoints: () =>
       transaction<SyncCheckpoint[]>('readonly', (_store, result, sync) => {
         const request = sync.getAll(accountRange(account));
@@ -365,14 +394,4 @@ export function revisionQueue(
     discard: (project: string, reviewed: string) => replace(project, reviewed, undefined, true),
     retry,
   };
-}
-
-function blockFor(error: unknown): Block | undefined {
-  if (!(error instanceof RevisionError)) return;
-  if (error.code === 'revision_conflict') return 'conflict';
-  if (error.code === 'revision_epoch_changed') return 'epoch';
-  if ([401, 403, 404].includes(error.status)) return 'access';
-  if (error.code === 'original_rotation_pending' || error.status === 429 || error.status >= 500)
-    return;
-  return 'rejected';
 }

@@ -160,4 +160,4 @@ SHARE-08 evidence: [M-06 selected grants](../m06-sharing.md#selected-checkpoints
 
 SHARE-06 evidence: [M-06 revocation during transfers](../m06-sharing.md#revocation-during-transfers) covers hosted originals. Live updates to other scopes and offline recovery remain planned.
 
-PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using locally provisioned epoch keys. Cross-device revision key distribution and offline original pins are still planned.
+PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using epoch keys paired between owner devices. Offline original pins are still planned.
