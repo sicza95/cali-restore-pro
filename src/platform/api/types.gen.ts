@@ -1592,7 +1592,9 @@ export type ListOwnedProjectInvitationsResponses = {
       recipientId: string;
       recipientKey?: string;
       coOwner: boolean;
+      sourceIds?: Array<string>;
     }>;
+    originalEpoch: string | '';
   };
 };
 
@@ -1780,6 +1782,8 @@ export type ActivateInvitationContentData = {
     ciphertext: string;
     format?: 'fixture-v1' | 'project-v1';
     fileIds?: Array<string>;
+    sourceIds?: Array<string>;
+    originalEpoch?: string | '';
   };
   headers: {
     Origin: string;
@@ -2120,3 +2124,45 @@ export type GetSharedOriginalPartResponses = {
 
 export type GetSharedOriginalPartResponse =
   GetSharedOriginalPartResponses[keyof GetSharedOriginalPartResponses];
+
+export type RotateInvitationOriginalsData = {
+  body: {
+    recipientKey: string;
+    encapsulation: string;
+    ciphertext: string;
+    format?: 'fixture-v1' | 'project-v1';
+    fileIds: Array<string>;
+    sourceIds: Array<string>;
+    originalEpoch: string;
+  };
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/rotate-originals';
+};
+
+export type RotateInvitationOriginalsErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type RotateInvitationOriginalsError =
+  RotateInvitationOriginalsErrors[keyof RotateInvitationOriginalsErrors];
+
+export type RotateInvitationOriginalsResponses = {
+  /**
+   * Original-file grant rotated
+   */
+  204: void;
+};
+
+export type RotateInvitationOriginalsResponse =
+  RotateInvitationOriginalsResponses[keyof RotateInvitationOriginalsResponses];

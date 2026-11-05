@@ -155,7 +155,16 @@ function InvitationControls(props: {
                     {c().revoke}
                   </button>
                 </Show>
-                <Show when={item.recipientKey}>
+                <Show when={item.sourceIds?.length}>
+                  <p>{c().rotationNeeded}</p>
+                </Show>
+                <Show
+                  when={
+                    item.recipientKey &&
+                    (!item.sourceIds?.length || props.canHost) &&
+                    item.recipientKey
+                  }
+                >
                   {(recipientKey) => (
                     <form
                       onSubmit={(event) => {
@@ -173,11 +182,16 @@ function InvitationControls(props: {
                             fingerprint,
                           });
                           const project = props.project;
-                          const originals = fields.has('originals')
+                          const sourceIds =
+                            item.sourceIds ??
+                            (fields.has('originals') ? (props.originalIds ?? []) : []);
+                          const originalEpoch = sent.originalEpoch();
+                          const originals = sourceIds.length
                             ? await publishOriginals(
                                 props.vault,
                                 props.projectId,
-                                props.originalIds ?? [],
+                                sourceIds,
+                                originalEpoch,
                                 props.model.csrf(),
                                 key.signal,
                               )
@@ -199,10 +213,13 @@ function InvitationControls(props: {
                             publicKey: key.publicKey,
                           });
                           key.signal.throwIfAborted();
-                          await props.model.request(props.path + '/' + item.id + '/activate', {
+                          const action = item.sourceIds?.length ? '/rotate-originals' : '/activate';
+                          await props.model.request(props.path + '/' + item.id + action, {
                             ...grant,
                             recipientKey: recipientKey(),
                             fileIds: originals.map((original) => original.id),
+                            sourceIds,
+                            originalEpoch,
                           });
                         });
                       }}
@@ -217,13 +234,15 @@ function InvitationControls(props: {
                           spellcheck={false}
                         />
                       </label>
-                      <Show when={props.originalIds?.length}>
+                      <Show when={!item.sourceIds?.length && props.originalIds?.length}>
                         <label class="confirmation">
                           <input type="checkbox" name="originals" disabled={sent.busy()} />
                           {c().includeOriginals}
                         </label>
                       </Show>
-                      <button disabled={sent.busy()}>{c().activate}</button>
+                      <button disabled={sent.busy()}>
+                        {item.sourceIds?.length ? c().rotate : c().activate}
+                      </button>
                     </form>
                   )}
                 </Show>

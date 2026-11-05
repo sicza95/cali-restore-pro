@@ -11,8 +11,8 @@ preflight checks ownership, so it can detect a continuity dependency even
 when the account does not pay for storage.
 
 Hosted file access and quota accounting use the designated host. The
-access and encryption plan defines the remaining content scopes,
-revocation with epoch rotation, and the independent cryptographic review
+access and encryption plan defines the remaining content scopes
+and the independent cryptographic review
 gate.
 
 Go formatting, vet and race tests passed against disposable PostgreSQL.
@@ -83,7 +83,7 @@ envelope. The server serializes ownership changes with other owner actions
 for the same project. It rejects removal of the last owner or the current
 host. Removing the hosting owner requires an accepted hosting transfer.
 
-The live Chromium test uses two isolated browser contexts and synthetic
+The live Chromium test uses three isolated browser contexts and synthetic
 active accounts against the Go API and disposable PostgreSQL. It exercises
 issuance, acceptance, fingerprint mismatch, recipient-only retrieval,
 rejection of altered ciphertext, and reopening the project snapshot after
@@ -92,10 +92,11 @@ loses fetch access after owner revocation, and that reissue leaves the old
 link unavailable. The same test exercises co-owner activation, management
 access, rejection of last-owner removal, and hosting transfer followed by
 former-host removal. To run it
-against a disposable app, set `SMOKE_ORIGIN`, `M06_OWNER_SESSION` and
-`M06_RECIPIENT_SESSION` for seeded synthetic sessions. Both accounts need
-hosting entitlement and a 1 MiB quota for the reservation assertions. The
-recipient address is `recipient@example.test`. Run
+against a disposable app, set `SMOKE_ORIGIN`, `M06_OWNER_SESSION`,
+`M06_RECIPIENT_SESSION` and `M06_REMAINING_SESSION` for seeded synthetic
+sessions. The owner and transfer recipient need hosting entitlement and a
+1 MiB quota for the reservation assertions. Recipient addresses are
+`recipient@example.test` and `remaining@example.test`. Run
 `npm run test:app -- invitations.spec.ts`.
 
 ## Hosting transfer
@@ -126,9 +127,30 @@ The recipient decrypts in the browser, verifies the encrypted manifest and
 each chunk, and saves the original. The server checks the recipient and
 active grant for metadata and every chunk. Revocation removes those links
 with the grant and denies new requests. Already delivered bytes cannot be
-recalled. Hosted ciphertext remains under the host's storage quota and can
-be reused for another authorized grant.
+recalled. Hosted ciphertext remains under the host's storage quota.
 
 The live browser test downloads and compares the exact original bytes. It
 also checks that the transport carries ciphertext and that recipient
 metadata, manifest and data requests return 404 after revocation.
+
+## Original-file key rotation
+
+Revoking a file grant or removing its co-owner retires the file versions
+they could fetch and advances the project's original-file epoch. New
+grants cannot link retired versions. The host can publish new versions
+from the encrypted local originals and rotate each affected surviving grant
+after verifying its recipient fingerprint again. The browser derives fresh
+per-file keys from the new version IDs and encrypts each part before upload.
+The server swaps the recipient envelope and file links in one transaction.
+Remaining recipients can open their previous grant while rotation is
+pending. After rotation, refreshing the inbox opens the replacement grant.
+
+Rotation requires the original sender to still host the project and have
+the source files in their unlocked vault. The new ciphertext uses storage
+quota alongside historical ciphertext. If the source is unavailable or
+quota is exhausted, the replacement does not commit. Already downloaded
+originals remain with their recipients.
+
+The live test uses three browser sessions. It checks that the surviving
+recipient can download the rotated original and that the revoked
+recipient's actual previous file key fails authentication on the new bytes.

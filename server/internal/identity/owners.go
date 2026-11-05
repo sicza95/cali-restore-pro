@@ -58,12 +58,16 @@ func (a fileAccess) removeProjectOwner(ctx context.Context, project, owner strin
 	if _, err := a.tx.Exec(ctx, `DELETE FROM project_owners WHERE project_id=$1 AND account_id=$2`, project, owner); err != nil {
 		return err
 	}
-	_, err = a.tx.Exec(ctx, `WITH revoked AS (
- UPDATE project_invitations SET state='revoked'
- WHERE project_id=$1 AND recipient_id=$2 AND co_owner AND state='active' RETURNING id
- )
- DELETE FROM invitation_grants g USING revoked WHERE g.invitation_id=revoked.id`, project, owner)
-	return err
+	var invitation string
+	err = a.tx.QueryRow(ctx, `UPDATE project_invitations SET state='revoked'
+ WHERE project_id=$1 AND recipient_id=$2 AND co_owner AND state='active' RETURNING id`, project, owner).Scan(&invitation)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return a.dropInvitationGrant(ctx, project, invitation)
 }
 
 func (h *HTTP) ownerRoutes(route func(string, bool, http.HandlerFunc)) {
