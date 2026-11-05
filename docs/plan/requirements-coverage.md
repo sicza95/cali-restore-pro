@@ -1,6 +1,6 @@
 # Requirements coverage and acceptance tracking
 
-All catalogue requirements are planned; none is marked complete by this documentation PR. The [preserved acceptance catalogue](requirements-baseline.md) contains the original IDs, priorities and full acceptance text so review does not depend on untracked workspace documents. The [plan](README.md) changes delivery order, not required behavior.
+The status column records implementation and evidence as milestones land. The [preserved acceptance catalogue](requirements-baseline.md) contains the original IDs, priorities and full acceptance text so review does not depend on untracked workspace documents. The [plan](README.md) changes delivery order, not required behavior.
 
 **First** means schema, contract, platform implementation or explicit UI work begins there. **Acceptance** is the earliest planned milestone with the complete real behavior/evidence, not a completion claim. Priority labels are preserved from the earlier delivery baseline; the milestone columns define the new order. Engine-dependent workflows are retested together in M-16 even when a bounded feature can pass earlier. PRIV-03 remains the baseline optional passkey extension with compatibility qualification; its row does not make passkeys a prerequisite for core authentication/recovery.
 
@@ -8,20 +8,20 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 
 | Requirement | Priority | Behavior                                                            | First | Acceptance | Status  |
 | ----------- | -------- | ------------------------------------------------------------------- | ----- | ---------- | ------- |
-| PROJ-01     | Must     | Durable project identity, name, and revision                        | M-05  | M-05       | Planned |
-| PROJ-02     | Must     | New/Open/Recent/Import are coherent                                 | M-05  | M-08       | Planned |
+| PROJ-01     | Must     | Durable project identity, name, and revision                        | M-05  | M-05       | Partial |
+| PROJ-02     | Must     | New/Open/Recent/Import are coherent                                 | M-05  | M-08       | Partial |
 | PROJ-03     | Must     | Local recovery plus authorized optional remote sync                 | M-03  | M-16       | Partial |
 | PROJ-04     | Must     | Self-contained encrypted portable backup                            | M-07  | M-16       | Planned |
-| PROJ-05     | Must     | Revision-conflict protection                                        | M-07  | M-16       | Planned |
-| PROJ-06     | Must     | Restoration projects contain one or more objects                    | M-05  | M-05       | Planned |
+| PROJ-05     | Must     | Revision-conflict protection                                        | M-07  | M-16       | Partial |
+| PROJ-06     | Must     | Restoration projects contain one or more objects                    | M-05  | M-05       | Passed  |
 | PROJ-07     | Must     | Explicit offline selections and protected local work                | M-07  | M-16       | Planned |
-| PROJ-08     | Must     | Uncapped initial counts with one active surface                     | M-05  | M-16       | Planned |
+| PROJ-08     | Must     | Uncapped initial counts with one active surface                     | M-05  | M-16       | Partial |
 | CHECK-01    | Must     | Optional user-named assessment checkpoints                          | M-05  | M-15       | Planned |
 | CHECK-02    | Must     | Linked checkpoint comparison with coverage/area changes             | M-08  | M-15       | Planned |
 | CHECK-03    | Must     | Recoverable checkpoint restoration                                  | M-08  | M-15       | Planned |
-| SURF-01     | Must     | Objects contain named, separately assessed surfaces                 | M-05  | M-13       | Planned |
+| SURF-01     | Must     | Objects contain named, separately assessed surfaces                 | M-05  | M-13       | Partial |
 | SURF-02     | Must     | Shared surface mapping from aligned images                          | M-08  | M-14       | Planned |
-| IMG-04      | Must     | Mapping and reference-only image roles                              | M-05  | M-13       | Planned |
+| IMG-04      | Must     | Mapping and reference-only image roles                              | M-05  | M-13       | Partial |
 | ALIGN-01    | Must     | Automatic-first alignment with user verification                    | M-08  | M-13       | Planned |
 | ALIGN-02    | Must     | Detail-photo realignment preserves global drawing                   | M-08  | M-13       | Planned |
 | ALIGN-03    | Must     | Accepted partial mapped areas with reference-only fallback          | M-08  | M-13       | Planned |
@@ -59,7 +59,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | MEAS-04     | Must     | Unique overall damage area with full category breakdowns            | M-08  | M-13       | Planned |
 | MEAS-05     | Must     | Actual geometry coverage with visual-only opacity                   | M-08  | M-13       | Planned |
 | MEAS-06     | Must     | Preserve work and inputs through empty/incomplete assessment        | M-05  | M-16       | Planned |
-| MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Planned |
+| MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Partial |
 | OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Planned |
 | OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Planned |
 | OUT-03      | Must     | Printable PDF map and standard client report                        | M-10  | M-16       | Planned |
