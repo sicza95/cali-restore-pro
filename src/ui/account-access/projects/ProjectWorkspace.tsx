@@ -10,6 +10,8 @@ import { projectSnapshot } from '../../../platform/projects/shared-project';
 import { ProjectDetail } from './ProjectDetail';
 import { projectCopy } from './project-copy';
 import { NameForm } from './forms';
+import { ProjectSync } from './ProjectSync';
+import { useEditorSync } from './useEditorSync';
 import './styles.css';
 
 export function ProjectWorkspace(props: {
@@ -19,6 +21,10 @@ export function ProjectWorkspace(props: {
 }) {
   const c = () => projectCopy[props.language];
   const local = localProjects(untrack(() => props.vault));
+  const sync = useEditorSync(
+    untrack(() => props.vault),
+    () => props.model.csrf(),
+  );
   const [projects, { mutate, refetch }] = createResource<{
     rows: SavedProject[];
     failed?: boolean;
@@ -65,9 +71,12 @@ export function ProjectWorkspace(props: {
       setBusy(false);
     }
   }
-  async function save(project: SavedProject) {
-    const next = await local.save(project);
+  function update(next: SavedProject) {
     mutate((data) => ({ rows: [...(data?.rows ?? []).filter((p) => p.id !== next.id), next] }));
+  }
+  async function save(project: SavedProject) {
+    update(await local.save(project));
+    void sync.refresh();
   }
   return (
     <section class="project-workspace" aria-label={c().hierarchy}>
@@ -197,6 +206,19 @@ export function ProjectWorkspace(props: {
                 </Show>
               }
             />
+            <Show when={current()!.id} keyed>
+              {(id: string) => (
+                <ProjectSync
+                  projectId={id}
+                  project={current()!}
+                  language={props.language}
+                  model={sync}
+                  busy={busy()}
+                  run={run}
+                  onResolved={update}
+                />
+              )}
+            </Show>
           </Show>
         </Show>
       </Show>

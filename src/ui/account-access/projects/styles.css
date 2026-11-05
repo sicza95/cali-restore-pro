@@ -99,3 +99,11 @@
 .project-pane > form > :is(p, button):last-child {
   grid-column: 1 / -1;
 }
+.project-sync {
+  margin-block-start: 1rem;
+}
+.project-sync-copy {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  border-block-start: 1px solid var(--cr-rule);
+}

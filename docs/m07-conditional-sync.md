@@ -22,11 +22,28 @@ alongside the local draft, and stage the chosen result against the reviewed
 revision. A new epoch requires a fresh project key; the API cannot inspect
 ciphertext or verify client key distribution.
 
-This foundation takes an independently provisioned project key for each epoch.
-The existing editor continues saving locally until key provisioning and sync
-controls are wired into it. Offline original pins, portable project backups and
-lifecycle and retention enforcement remain separate M-07 work.
+The project editor saves locally first. On a hosted project with no cloud head,
+the owner can enable editor sync while connected. The unlocked project workspace
+queues changed documents against the last acknowledged cloud revision. Edits made
+while a candidate is pending remain in the encrypted local project and are
+staged after acknowledgement. The queue and checkpoint update together, so a
+reload does not silently rebase an offline edit onto a newer head. Reopening the
+workspace and unlocking the vault resumes pending work once the app can establish
+the account session.
 
-Verify the browser queue and recovery with npm run test:sync. The Go integration
+The vault generates an independent random key for each project and epoch and
+seals it under the account's local vault key. It retains earlier epoch keys for
+review and removes them when the vault is forgotten. During conflict recovery
+the editor compares the latest local copy with the decrypted cloud copy. An owner
+can publish the local copy or adopt the cloud copy; either selection is staged
+against the reviewed revision. If the server has advanced to another epoch, the
+editor reads the old head with its old key and provisions a fresh key for the
+new epoch. It stops if an existing head cannot be decrypted. Revision key
+distribution to other owner vaults and recovery on a new browser are not yet
+supported. Offline original pins, portable project backups and lifecycle and
+retention enforcement remain separate M-07 work.
+
+Verify the browser queue and editor recovery with `npm run test:sync`. The
+editor test drives the app against a simulated revision endpoint. The Go integration
 test exercises real PostgreSQL authorization, conditional writes, replay, quota
 accounting paths and owner revocation with TEST_DATABASE_URL set.
