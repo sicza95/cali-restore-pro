@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type originalGrant struct {
@@ -18,8 +20,15 @@ func versionedOriginalID(project, epoch, source string) string {
 }
 
 func (a fileAccess) dropInvitationGrant(ctx context.Context, project, invitation string) error {
-	if _, err := a.tx.Exec(ctx, `UPDATE hosted_projects SET original_epoch=gen_random_uuid()
- WHERE id=$1 AND EXISTS (SELECT 1 FROM invitation_originals WHERE invitation_id=$2)`, project, invitation); err != nil {
+	// Owner operations hold the exclusive project lock. Invalidate uploads
+	// staged before the new epoch before allowing file requests to resume.
+	if _, err := a.tx.Exec(ctx, `WITH advanced AS (
+ UPDATE hosted_projects SET original_epoch=gen_random_uuid()
+ WHERE id=$1 AND EXISTS (SELECT 1 FROM invitation_originals WHERE invitation_id=$2)
+ RETURNING id
+ )
+ UPDATE encrypted_files SET state='cancelled',expires_at=clock_timestamp()
+ WHERE project_id IN (SELECT id FROM advanced) AND state='staged'`, project, invitation); err != nil {
 		return err
 	}
 	if _, err := a.tx.Exec(ctx, `INSERT INTO retired_originals(file_id)
@@ -28,6 +37,43 @@ func (a fileAccess) dropInvitationGrant(ctx context.Context, project, invitation
 	}
 	_, err := a.tx.Exec(ctx, `DELETE FROM invitation_grants WHERE invitation_id=$1`, invitation)
 	return err
+}
+
+// pendingOriginalSources is called with the project lock held, so checking the
+// gate and publishing ciphertext or a grant happen in the same epoch.
+func (a fileAccess) pendingOriginalSources(ctx context.Context, project string) ([]string, error) {
+	rows, err := a.tx.Query(ctx, `SELECT DISTINCT replacement.source_id::text
+ FROM project_invitations i
+ JOIN invitation_originals replacement ON replacement.invitation_id=i.id
+ WHERE i.project_id=$1 AND i.state='active' AND EXISTS (
+  SELECT 1 FROM invitation_originals o JOIN retired_originals x ON x.file_id=o.file_id
+  WHERE o.invitation_id=i.id
+ )`, project)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowTo[string])
+}
+
+func (a fileAccess) checkOriginalPublication(ctx context.Context, project, file string) error {
+	sources, err := a.pendingOriginalSources(ctx, project)
+	if err != nil || len(sources) == 0 {
+		return err
+	}
+	// Only replacement ciphertext may be committed until every affected
+	// recipient has its new envelope. New grants remain blocked separately.
+	if file != "" {
+		var epoch string
+		if err := a.tx.QueryRow(ctx, `SELECT original_epoch::text FROM hosted_projects WHERE id=$1`, project).Scan(&epoch); err != nil {
+			return err
+		}
+		for _, source := range sources {
+			if file == versionedOriginalID(project, epoch, source) {
+				return nil
+			}
+		}
+	}
+	return errOriginalRotationPending
 }
 
 func (a fileAccess) linkOriginals(ctx context.Context, project, id string, grant originalGrant) error {

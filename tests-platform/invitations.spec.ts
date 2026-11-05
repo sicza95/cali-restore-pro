@@ -6,6 +6,11 @@ import { createDecipheriv } from 'node:crypto';
 import { captureOriginalKey } from './invitation-crypto';
 import { verifyCheckpointGrants } from './invitation-checkpoints';
 import { verifyHostingTransfer } from './invitation-hosting';
+import {
+  pauseOriginalDownload,
+  stageOriginalUpload,
+  verifyPublicationPaused,
+} from './invitation-revocation';
 import { verifyScopeEdits } from './invitation-scopes';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
@@ -255,6 +260,10 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     expect(unauthorized.status()).toBe(404);
     expect((await recipient.request.get(content)).status()).toBe(200);
 
+    const projectId = list.invitations[0].projectId;
+    const stale = await stageOriginalUpload(owner.request, projectId, baseURL!);
+    expect((await stale.finishParts()).status()).toBe(204);
+    const finishDownload = await pauseOriginalDownload(inbox, original);
     project.once('dialog', (dialog) => dialog.accept());
     await project
       .getByRole('listitem')
@@ -262,6 +271,8 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
       .getByRole('button', { name: 'Revoke access' })
       .click();
     await expect(project.getByText('Access revoked')).toBeVisible();
+    await finishDownload();
+    const verifyResumed = await verifyPublicationPaused(owner.request, projectId, baseURL!, stale);
     expect((await recipient.request.get(content)).status()).toBe(404);
     expect((await recipient.request.get(scopes + 'estimate-summary')).status()).toBe(404);
     expect((await recipient.request.get(checkpoints.revokedWithInvitation)).status()).toBe(404);
@@ -295,6 +306,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     expect((await remaining.request.get(checkpoints.preservedDuringRotation)).status()).toBe(200);
     const rotatedPart = await remaining.request.get(remainingOriginals + newId + '/parts/1');
     expect(rotatedPart.status()).toBe(200);
+    await verifyResumed();
     const newCiphertext = await rotatedPart.body();
     const ownerAccount = await (await owner.request.get('/api/v1/auth/me')).json();
     const iv = Buffer.alloc(12);

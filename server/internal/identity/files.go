@@ -15,9 +15,10 @@ const fileChunkSize = 1 << 20
 const maxSourceBytes = 256 * fileChunkSize
 
 var (
-	errFileMissing = errors.New("file missing")
-	errFileQuota   = errors.New("storage quota exceeded")
-	errFileState   = errors.New("file state conflict")
+	errFileMissing             = errors.New("file missing")
+	errFileQuota               = errors.New("storage quota exceeded")
+	errFileState               = errors.New("file state conflict")
+	errOriginalRotationPending = errors.New("original key rotation pending")
 )
 
 type fileShape struct {
@@ -105,10 +106,17 @@ func (a fileAccess) hosts(ctx context.Context, project string) error {
 
 func (a fileAccess) sharedFileProject(ctx context.Context, invitation, file string) (string, error) {
 	var project string
-	err := a.tx.QueryRow(ctx, `SELECT i.project_id FROM invitation_originals o
+	const authorized = `SELECT i.project_id FROM invitation_originals o
  JOIN project_invitations i ON i.id=o.invitation_id
  JOIN accounts r ON r.id=i.recipient_id
- WHERE i.id=$1 AND o.file_id=$2 AND i.recipient_id=$3 AND i.state='active' AND r.email=i.recipient_email`, invitation, file, a.account).Scan(&project)
+ WHERE i.id=$1 AND o.file_id=$2 AND i.recipient_id=$3 AND i.state='active' AND r.email=i.recipient_email`
+	err := a.tx.QueryRow(ctx, authorized, invitation, file, a.account).Scan(&project)
+	if err == nil {
+		if _, err = a.tx.Exec(ctx, `SELECT pg_advisory_xact_lock_shared(hashtextextended($1, 6011))`, project); err == nil {
+			// A revoke or rotation may have committed while we waited.
+			err = a.tx.QueryRow(ctx, authorized, invitation, file, a.account).Scan(&project)
+		}
+	}
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", errFileMissing
 	}

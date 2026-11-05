@@ -29,6 +29,11 @@ func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipie
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return err
 	}
+	if len(files.FileIDs) != 0 {
+		if err := a.checkOriginalPublication(ctx, project, ""); err != nil {
+			return err
+		}
+	}
 	tag, err := a.tx.Exec(ctx, `WITH activated AS (
  UPDATE project_invitations i SET state='active'
  FROM accounts r JOIN sharing_identities k ON k.account_id=r.id
