@@ -155,6 +155,28 @@ The live test uses three browser sessions. It checks that the surviving
 recipient can download the rotated original and that the revoked
 recipient's actual previous file key fails authentication on the new bytes.
 
+### Revocation during transfers
+
+Revocation takes the exclusive project lock. A download checks access for
+each part under a shared project lock, so requests authorized after
+revocation cannot read another part. A part already authorized may finish;
+previously delivered bytes cannot be recalled.
+
+When revocation advances the original-file epoch, it cancels uploads still
+staged in that project and makes them eligible for cleanup. While any
+surviving invitation still links retired originals, the server rejects
+new original-file grants and ordinary file commits with
+`409 original_rotation_pending`. The host may stage ciphertext and
+commit the specific new versions needed to rotate those grants. The gate
+opens after the last affected grant is rotated or removed. Independent
+assessment, estimate and checkpoint envelopes retain their existing rules.
+
+The browser test pauses a download after the manifest and revokes access
+before forwarding the next part. It also stages an upload before
+revocation and checks that it cannot finish. A separate upload staged
+after revocation stays unpublished until the surviving grant receives its
+new keys.
+
 ## Assessment, estimate and history scopes
 
 Assessment is the default grant. Owners can add either an estimate summary

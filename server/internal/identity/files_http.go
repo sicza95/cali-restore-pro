@@ -17,6 +17,8 @@ func fileFailure(w http.ResponseWriter, err error) {
 		respond(w, 409, map[string]string{"error": "storage_quota_exceeded"})
 	case errors.Is(err, errFileState):
 		respond(w, 409, map[string]string{"error": "file_conflict"})
+	case errors.Is(err, errOriginalRotationPending):
+		respond(w, 409, map[string]string{"error": "original_rotation_pending"})
 	default:
 		failure(w, err)
 	}
@@ -141,6 +143,9 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 		}
 		if f.State != "staged" || f.expired {
 			return nil, errFileState
+		}
+		if err := a.checkOriginalPublication(r.Context(), project, id); err != nil {
+			return nil, err
 		}
 		if err := a.checkGrowth(r.Context()); err != nil {
 			return nil, err
