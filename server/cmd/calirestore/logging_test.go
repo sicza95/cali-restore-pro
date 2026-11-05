@@ -20,4 +20,3 @@ func TestHTTPDiagnosticAllowlist(t *testing.T) {
 		t.Fatalf("unexpected diagnostic: %v", event)
 	}
 }
-

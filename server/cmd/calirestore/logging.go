@@ -12,4 +12,3 @@ func (d httpDiagnostic) Write(p []byte) (int, error) {
 	d.logger.Error("HTTP diagnostic")
 	return len(p), nil
 }
-
