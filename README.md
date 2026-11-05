@@ -66,7 +66,7 @@ Open the [app](http://localhost:8080). Docker builds the product frontend and Go
 ### Sign in to the local app
 
 1. If you need an account, open [Create account](http://localhost:8080/register) and register with a test address such as `restorer@example.test` and a password of at least 15 characters.
-2. Open [Mailpit](http://localhost:8025), find the verification email for that address, and follow the link to confirm the account. If you changed the ports in `.env`, use your configured `APP_ORIGIN` for the app and `MAIL_PORT` for Mailpit.
+2. Run `docker compose port mail-sink 8025` and open the reported address in your browser. Mailpit defaults to [port 8025](http://localhost:8025), and `MAIL_PORT` in `.env` can change the published port. Find the verification email for your address and follow the link to confirm the account.
 3. Open [Sign in](http://localhost:8080/login) and use the email and password you registered. If you already have a verified account in this local database, start here.
 4. To work on projects, select **Projects** after signing in and set up or unlock the browser vault.
 
