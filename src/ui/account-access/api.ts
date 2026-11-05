@@ -1,7 +1,7 @@
 import type { AuthResponse } from './types';
 
-export async function requestAuth(action: string, csrf: string, body?: object) {
-  const response = await fetch(`/api/v1/auth/${action}`, {
+export async function requestAuth<T = AuthResponse>(action: string, csrf: string, body?: object) {
+  const response = await fetch('/api/v1' + (action.startsWith('/') ? action : '/auth/' + action), {
     method: body ? 'POST' : 'GET',
     cache: 'no-store',
     credentials: 'same-origin',
@@ -9,7 +9,7 @@ export async function requestAuth(action: string, csrf: string, body?: object) {
     headers: body ? { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf } : {},
     body: body ? JSON.stringify(body) : undefined,
   });
-  const result = (await response.json()) as AuthResponse;
+  const result = (await response.json()) as T & { error?: string };
   if (!response.ok) throw new Error(result.error ?? 'unavailable');
   return result;
 }

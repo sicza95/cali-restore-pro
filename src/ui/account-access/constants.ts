@@ -34,6 +34,7 @@ export const copy = {
     upcoming: 'Project storage and restoration tools are coming in later releases.',
     neutral:
       'If this address is eligible, an email is queued. Check your inbox and spam folder. Delivery may take a few minutes.',
+    adminSaved: 'Account change saved.',
     success: 'Done. You can sign in with your current credentials.',
     confirmed: 'Password confirmed. You can now make a security change.',
     invalid: 'This link is invalid, expired or already used. Request a new email.',
@@ -88,6 +89,7 @@ export const copy = {
     upcoming: 'A projekttárolás és a restaurálási eszközök későbbi kiadásokban érkeznek.',
     neutral:
       'Ha a cím jogosult, a levél küldési sorba került. Nézd meg a beérkezett és a levélszemét mappát. A kézbesítés néhány percig tarthat.',
+    adminSaved: 'A fiókmódosítás mentve.',
     success: 'Kész. Bejelentkezhetsz az aktuális adataiddal.',
     confirmed: 'Jelszó megerősítve. Most elvégezheted a biztonsági módosítást.',
     invalid: 'A hivatkozás érvénytelen, lejárt vagy már felhasználták. Kérj új levelet.',

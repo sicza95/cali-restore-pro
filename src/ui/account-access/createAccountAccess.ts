@@ -1,4 +1,9 @@
-import { createSignal, onMount } from 'solid-js';
+import {
+  applyPreferences,
+  loadPreferences,
+  preferenceDefaults,
+} from './settings/preferences/utils';
+import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
 import { copy, sessionEndingActions } from './constants';
 import { accountRoute, authErrorMessage, authFormBody } from './utils';
@@ -12,6 +17,9 @@ export function createAccountAccess() {
   const linkToken = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? '';
   if (window.location.hash) history.replaceState(null, '', window.location.pathname);
   const [account, setAccount] = createSignal<Account>();
+  const [capabilities, setCapabilities] = createSignal<string[]>([]);
+  const [loaded, setLoaded] = createSignal(false);
+  const can = (capability: string) => capabilities().includes(capability);
   const [csrf, setCsrf] = createSignal('');
   const [sessions, setSessions] = createSignal<Session[]>([]);
   const [busy, setBusy] = createSignal(false);
@@ -36,6 +44,7 @@ export function createAccountAccess() {
   };
   const clearSession = () => {
     setAccount(undefined);
+    setCapabilities([]);
     setCsrf('');
     setSessions([]);
   };
@@ -68,6 +77,13 @@ export function createAccountAccess() {
       }
       if (action === 'confirm') setConfirmed(true);
       setMessage(success);
+      if (action.startsWith('/admin/')) {
+        try {
+          await refreshAccount();
+        } catch {
+          clearSession();
+        }
+      }
       return true;
     } catch (error) {
       setFailed(true);
@@ -88,12 +104,34 @@ export function createAccountAccess() {
     const body = authFormBody(form, action, lang(), linkToken);
     void run(action, body, success).finally(() => form.reset());
   };
+  const read = async <T>(path: string) => {
+    try {
+      return await requestAuth<T>(path, csrf());
+    } catch (error) {
+      const code = error instanceof Error ? error.message : '';
+      if (code === 'authentication_required') clearSession();
+      setMessage(authErrorMessage(code));
+      setFailed(true);
+      return undefined;
+    }
+  };
+  const refreshAccount = async () => {
+    const result = await api('me');
+    setCapabilities(result.capabilities ?? []);
+    setAccount(result.account);
+  };
+  const applyAccountPreferences = () => {
+    const id = account()?.id;
+    applyPreferences(id ? loadPreferences(id) : preferenceDefaults);
+  };
+  createEffect(applyAccountPreferences);
+  const deviceTheme = window.matchMedia('(prefers-color-scheme: dark)');
   onMount(() => {
+    deviceTheme.addEventListener('change', applyAccountPreferences);
     document.documentElement.lang = lang();
     void refreshConnection();
-    void api('me')
-      .then((result) => {
-        setAccount(result.account);
+    void refreshAccount()
+      .then(() => {
         if (view === 'security') void refreshSessions();
       })
       .catch((error: unknown) => {
@@ -101,9 +139,10 @@ export function createAccountAccess() {
           setMessage('unavailable');
           setFailed(true);
         }
-      });
+      })
+      .finally(() => setLoaded(true));
   });
-
+  onCleanup(() => deviceTheme.removeEventListener('change', applyAccountPreferences));
   const revokeSession = async (session: Session) => {
     if (!(await run('sessions/revoke', { sessionId: session.id, confirm: true }, 'success')))
       return;
@@ -116,6 +155,10 @@ export function createAccountAccess() {
 
   return {
     account,
+    can,
+    loaded,
+    read,
+    run,
     busy,
     confirmed,
     connection,

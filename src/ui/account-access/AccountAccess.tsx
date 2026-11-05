@@ -1,4 +1,9 @@
-import { Show } from 'solid-js';
+import { Admin } from './settings/admin/Admin';
+import { Preferences } from './settings/preferences/Preferences';
+import { Profile } from './settings/profile/Profile';
+import { settingsCopy } from './settings/constants';
+import './settings/styles.css';
+import { Match, Show, Switch } from 'solid-js';
 import { AccessForm } from './access-form/AccessForm';
 import { AccountSecurity } from './account-security/AccountSecurity';
 import { createAccountAccess } from './createAccountAccess';
@@ -21,6 +26,8 @@ export function AccountAccess() {
     t,
     view,
   } = model;
+  const c = () => settingsCopy[lang()];
+  const admin = () => model.can('accounts.view') || model.can('operations.view');
   return (
     <div class="account-shell">
       <aside class="account-nav">
@@ -51,6 +58,20 @@ export function AccountAccess() {
               </>
             }
           >
+            <a href="/settings/account" aria-current={view === 'profile' ? 'page' : undefined}>
+              {c().profile}
+            </a>
+            <a
+              href="/settings/preferences"
+              aria-current={view === 'preferences' ? 'page' : undefined}
+            >
+              {c().preferences}
+            </a>
+            <Show when={admin()}>
+              <a href="/admin" aria-current={view === 'admin' ? 'page' : undefined}>
+                {c().admin}
+              </a>
+            </Show>
             <a href="/settings/security" aria-current={view === 'security' ? 'page' : undefined}>
               {t('security')}
             </a>
@@ -71,7 +92,9 @@ export function AccountAccess() {
         </label>
       </aside>
       <main class="account-content">
-        <h1>{t(view)}</h1>
+        <h1>
+          {view === 'profile' || view === 'preferences' || view === 'admin' ? c()[view] : t(view)}
+        </h1>
         <Show when={message()}>
           {(key) => (
             <p class="account-message" role={failed() ? 'alert' : 'status'} data-error={failed()}>
@@ -79,14 +102,52 @@ export function AccountAccess() {
             </p>
           )}
         </Show>
-        <Show
-          when={view === 'security'}
+        <Switch
           fallback={
-            <AccessForm view={view} linkToken={linkToken} submit={submit} t={t} busy={busy} />
+            <AccessForm
+              view={view as Parameters<typeof AccessForm>[0]['view']}
+              linkToken={linkToken}
+              submit={submit}
+              t={t}
+              busy={busy}
+            />
           }
         >
-          <AccountSecurity model={model} />
-        </Show>
+          <Match
+            when={
+              view === 'profile' ||
+              view === 'preferences' ||
+              view === 'admin' ||
+              view === 'security'
+            }
+          >
+            <Show when={model.loaded()} fallback={<p role="status">{t('working')}</p>}>
+              <Show
+                when={account()}
+                fallback={
+                  <p>
+                    {t('signedOut')} <a href="/login">{t('login')}</a>
+                  </p>
+                }
+              >
+                <Switch>
+                  <Match when={view === 'profile'}>
+                    <Profile model={model} />
+                  </Match>
+                  <Match when={view === 'preferences'}>
+                    <Preferences model={model} />
+                  </Match>
+                  <Match when={view === 'admin'}>
+                    <Admin model={model} />
+                  </Match>
+                  <Match when={view === 'security'}>
+                    <AccountSecurity model={model} />
+                  </Match>
+                </Switch>
+              </Show>
+            </Show>
+          </Match>
+        </Switch>
         <footer>
           <p>{t('upcoming')}</p>
           <section aria-label={t('platform')}>
