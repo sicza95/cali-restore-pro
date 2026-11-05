@@ -2178,6 +2178,171 @@ export type RotateInvitationOriginalsResponses = {
 export type RotateInvitationOriginalsResponse =
   RotateInvitationOriginalsResponses[keyof RotateInvitationOriginalsResponses];
 
+export type ListOwnerCheckpointGrantsData = {
+  body?: never;
+  path: {
+    project: string;
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/checkpoints';
+};
+
+export type ListOwnerCheckpointGrantsErrors = {
+  /**
+   * Authentication, access or validation error
+   */
+  default: IdentityError;
+};
+
+export type ListOwnerCheckpointGrantsError =
+  ListOwnerCheckpointGrantsErrors[keyof ListOwnerCheckpointGrantsErrors];
+
+export type ListOwnerCheckpointGrantsResponses = {
+  /**
+   * OK
+   */
+  200: {
+    checkpointIds: Array<string>;
+  };
+};
+
+export type ListOwnerCheckpointGrantsResponse =
+  ListOwnerCheckpointGrantsResponses[keyof ListOwnerCheckpointGrantsResponses];
+
+export type RevokeInvitationCheckpointData = {
+  body?: never;
+  path: {
+    project: string;
+    invitation: string;
+    checkpoint: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/checkpoints/{checkpoint}';
+};
+
+export type RevokeInvitationCheckpointErrors = {
+  /**
+   * Authentication, access or validation error
+   */
+  default: IdentityError;
+};
+
+export type RevokeInvitationCheckpointError =
+  RevokeInvitationCheckpointErrors[keyof RevokeInvitationCheckpointErrors];
+
+export type RevokeInvitationCheckpointResponses = {
+  /**
+   * Checkpoint grant updated
+   */
+  204: void;
+};
+
+export type RevokeInvitationCheckpointResponse =
+  RevokeInvitationCheckpointResponses[keyof RevokeInvitationCheckpointResponses];
+
+export type GrantInvitationCheckpointData = {
+  body: {
+    recipientKey: string;
+    encapsulation: string;
+    ciphertext: string;
+  };
+  path: {
+    project: string;
+    invitation: string;
+    checkpoint: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/checkpoints/{checkpoint}';
+};
+
+export type GrantInvitationCheckpointErrors = {
+  /**
+   * Authentication, access or validation error
+   */
+  default: IdentityError;
+};
+
+export type GrantInvitationCheckpointError =
+  GrantInvitationCheckpointErrors[keyof GrantInvitationCheckpointErrors];
+
+export type GrantInvitationCheckpointResponses = {
+  /**
+   * Checkpoint grant updated
+   */
+  204: void;
+};
+
+export type GrantInvitationCheckpointResponse =
+  GrantInvitationCheckpointResponses[keyof GrantInvitationCheckpointResponses];
+
+export type ListRecipientCheckpointGrantsData = {
+  body?: never;
+  path: {
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/checkpoints';
+};
+
+export type ListRecipientCheckpointGrantsErrors = {
+  /**
+   * Authentication, access or validation error
+   */
+  default: IdentityError;
+};
+
+export type ListRecipientCheckpointGrantsError =
+  ListRecipientCheckpointGrantsErrors[keyof ListRecipientCheckpointGrantsErrors];
+
+export type ListRecipientCheckpointGrantsResponses = {
+  /**
+   * OK
+   */
+  200: {
+    checkpointIds: Array<string>;
+  };
+};
+
+export type ListRecipientCheckpointGrantsResponse =
+  ListRecipientCheckpointGrantsResponses[keyof ListRecipientCheckpointGrantsResponses];
+
+export type GetInvitationCheckpointData = {
+  body?: never;
+  path: {
+    invitation: string;
+    checkpoint: string;
+  };
+  query?: never;
+  url: '/api/v1/invitations/{invitation}/checkpoints/{checkpoint}';
+};
+
+export type GetInvitationCheckpointErrors = {
+  /**
+   * Authentication, access or validation error
+   */
+  default: IdentityError;
+};
+
+export type GetInvitationCheckpointError =
+  GetInvitationCheckpointErrors[keyof GetInvitationCheckpointErrors];
+
+export type GetInvitationCheckpointResponses = {
+  /**
+   * OK
+   */
+  200: {
+    checkpointId: string;
+    encapsulation: string;
+    ciphertext: string;
+    senderId: string;
+    senderKey: string;
+  };
+};
+
+export type GetInvitationCheckpointResponse =
+  GetInvitationCheckpointResponses[keyof GetInvitationCheckpointResponses];
+
 export type GetInvitationScopeData = {
   body?: never;
   path: {

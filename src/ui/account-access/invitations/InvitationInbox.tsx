@@ -17,6 +17,7 @@ import type { InboxInvitation, InvitationModel } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
 import { ProjectInvitations } from './ProjectInvitations';
+import { Checkpoints } from './Checkpoints';
 import { SharedOriginals } from './SharedOriginals';
 import './styles.css';
 
@@ -82,6 +83,12 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                 </button>
               </Show>
               <Show when={item.state === 'active'}>
+                <Checkpoints
+                  project={item.projectId}
+                  invitation={item.id}
+                  model={props.model}
+                  vault={props.vault}
+                />
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();

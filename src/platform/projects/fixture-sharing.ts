@@ -1,3 +1,4 @@
+import type { Checkpoint } from './checkpoint-samples';
 import { Aes128Gcm, CipherSuite, DhkemP256HkdfSha256, HkdfSha256 } from '@hpke/core';
 import type { LocalVault } from '../vault/vault';
 import { parseSharedProject } from './shared-project';
@@ -156,4 +157,63 @@ export async function openScope(
     scopeBinding(context, scope),
   );
   return parseScopeSample(scope, new TextDecoder('utf-8', { fatal: true }).decode(result));
+}
+
+export type CheckpointEnvelope = {
+  checkpointId: string;
+  encapsulation: string;
+  ciphertext: string;
+};
+
+const checkpointBinding = (context: GrantContext, id: string) =>
+  encoder.encode(
+    JSON.stringify([
+      'calirestore',
+      'project-checkpoint',
+      1,
+      context.project,
+      context.invitation,
+      context.sender,
+      context.recipient,
+      id,
+    ]),
+  );
+
+export async function sealCheckpoint(
+  senderKey: CryptoKeyPair,
+  recipient: string,
+  context: GrantContext,
+  checkpoint: Checkpoint,
+) {
+  const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
+  const { enc, ct } = await suite.seal(
+    { senderKey, recipientPublicKey },
+    encoder.encode(JSON.stringify([checkpoint.title, checkpoint.description])),
+    checkpointBinding(context, checkpoint.id),
+  );
+  return { encapsulation: base64(enc), ciphertext: base64(ct) };
+}
+
+export async function openCheckpoint(
+  recipientKey: CryptoKeyPair,
+  sender: string,
+  envelope: CheckpointEnvelope,
+  context: GrantContext,
+  id: string,
+): Promise<Checkpoint> {
+  if (envelope.checkpointId !== id) throw new Error('Unexpected checkpoint');
+  const senderPublicKey = await suite.kem.deserializePublicKey(bytes(sender));
+  const result = await suite.open(
+    { recipientKey, senderPublicKey, enc: bytes(envelope.encapsulation) },
+    bytes(envelope.ciphertext),
+    checkpointBinding(context, id),
+  );
+  const rows: unknown = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(result));
+  if (
+    !Array.isArray(rows) ||
+    rows.length !== 2 ||
+    rows.some((row) => typeof row !== 'string' || !row.trim() || row.length > 400)
+  )
+    throw new Error('Invalid checkpoint');
+  return { id, title: rows[0], description: rows[1] };
 }
