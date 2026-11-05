@@ -52,6 +52,8 @@ func respond(w http.ResponseWriter, code int, value any) {
 func failure(w http.ResponseWriter, err error) {
 	status, code := 503, "unavailable"
 	switch {
+	case errors.Is(err, ErrInvalid):
+		status, code = 400, "invalid_request"
 	case errors.Is(err, ErrCredentials):
 		status, code = 401, "invalid_credentials"
 	case errors.Is(err, ErrLink):
@@ -151,6 +153,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		})
 	}
 	h.lifecycleRoutes(route)
+	h.adminRoutes(route)
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			Email    string `json:"email"`
@@ -276,7 +279,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			failure(w, ErrForbidden)
 			return
 		}
-		if err := h.service.Revoke(r.Context(), h.raw(r), r.PathValue("id"), ""); err != nil {
+		if err := h.service.revoke(r.Context(), h.raw(r), r.PathValue("id"), "", true); err != nil {
 			failure(w, err)
 			return
 		}
