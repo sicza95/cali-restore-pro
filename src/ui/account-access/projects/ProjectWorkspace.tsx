@@ -180,6 +180,15 @@ export function ProjectWorkspace(props: {
                     <ProjectInvitations
                       projectId={id}
                       project={projectSnapshot(current()!)}
+                      originalIds={[
+                        ...new Set(
+                          current()!.objects.flatMap((object) =>
+                            object.surfaces.flatMap((surface) =>
+                              surface.images.map((image) => image.id),
+                            ),
+                          ),
+                        ),
+                      ]}
                       canHost
                       model={props.model}
                       vault={props.vault}

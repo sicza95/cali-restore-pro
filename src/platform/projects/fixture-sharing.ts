@@ -2,6 +2,8 @@ import { Aes128Gcm, CipherSuite, DhkemP256HkdfSha256, HkdfSha256 } from '@hpke/c
 import type { LocalVault } from '../vault/vault';
 import { parseSharedProject } from './shared-project';
 import type { SharedProject } from './shared-project';
+import { parseSharedOriginals } from './shared-originals';
+import type { SharedOriginal } from './shared-originals';
 
 const suite = new CipherSuite({
   kem: new DhkemP256HkdfSha256(),
@@ -64,9 +66,12 @@ export async function sealProjectSnapshot(
   recipient: string,
   context: GrantContext,
   project: SharedProject,
+  originals: SharedOriginal[] = [],
 ) {
   const format = 'project-v1';
-  const plaintext = encoder.encode(JSON.stringify(project));
+  const plaintext = encoder.encode(
+    JSON.stringify(originals.length ? { ...project, originals } : project),
+  );
   if (plaintext.byteLength > 64 * 1024) throw new Error('Project snapshot exceeds 64 KiB');
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
   const result = await suite.seal(
@@ -92,7 +97,11 @@ export async function openSharedContent(
     binding(context, envelope.format),
   );
   const text = new TextDecoder('utf-8', { fatal: true }).decode(result);
-  if (envelope.format === 'project-v1') return parseSharedProject(text);
+  if (envelope.format === 'project-v1') {
+    const project = parseSharedProject(text);
+    const originals = parseSharedOriginals((JSON.parse(text) as { originals?: unknown }).originals);
+    return { project, originals };
+  }
   if (text !== fixture) throw new Error('Invalid assessment fixture');
   return undefined;
 }

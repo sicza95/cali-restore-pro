@@ -184,6 +184,7 @@ export function createAccountAccess() {
     can,
     loaded,
     read,
+    csrf,
     request: <T>(path: string, body?: object, method?: string) =>
       requestAuth<T>(path, csrf(), body, method),
     run,

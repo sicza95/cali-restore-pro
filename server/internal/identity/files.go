@@ -103,6 +103,18 @@ func (a fileAccess) hosts(ctx context.Context, project string) error {
 	return err
 }
 
+func (a fileAccess) sharedFileProject(ctx context.Context, invitation, file string) (string, error) {
+	var project string
+	err := a.tx.QueryRow(ctx, `SELECT i.project_id FROM invitation_originals o
+ JOIN project_invitations i ON i.id=o.invitation_id
+ JOIN accounts r ON r.id=i.recipient_id
+ WHERE i.id=$1 AND o.file_id=$2 AND i.recipient_id=$3 AND i.state='active' AND r.email=i.recipient_email`, invitation, file, a.account).Scan(&project)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", errFileMissing
+	}
+	return project, err
+}
+
 func (a fileAccess) record(ctx context.Context, project, id string) (fileRecord, error) {
 	var f fileRecord
 	err := a.tx.QueryRow(ctx, `SELECT source_bytes,manifest_bytes,state,expires_at<=clock_timestamp()
