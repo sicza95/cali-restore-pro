@@ -176,3 +176,15 @@ browser test checks assessment plus summary access for one recipient and
 assessment plus full estimate and history access for another. It also
 checks unauthorized requests, a ciphertext swap between scopes, and
 revocation of the summary grant.
+
+Owners can also change optional scopes on an active invitation. Removing
+a scope deletes only its envelope. Adding a scope requires fresh
+recipient-encrypted content and fingerprint verification. The server
+checks the previous selection so a stale edit cannot overwrite a newer
+one. Migration `0016` records the sender for each optional scope so a
+co-owner can issue a new envelope under their own verified identity.
+
+The browser test removes full estimate access and verifies that both
+estimate endpoints deny access while the same assessment and history
+envelopes remain available and open in the recipient's browser. It then
+adds summary access and checks that full estimate access stays unavailable.
