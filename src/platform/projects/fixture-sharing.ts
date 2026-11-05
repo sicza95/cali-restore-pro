@@ -1,5 +1,7 @@
 import { Aes128Gcm, CipherSuite, DhkemP256HkdfSha256, HkdfSha256 } from '@hpke/core';
 import type { LocalVault } from '../vault/vault';
+import { parseSharedProject, projectSnapshot } from './shared-project';
+import type { SavedProject } from './types';
 
 const suite = new CipherSuite({
   kem: new DhkemP256HkdfSha256(),
@@ -9,17 +11,25 @@ const suite = new CipherSuite({
 const encoder = new TextEncoder();
 const fixture = 'Synthetic assessment: surface condition recorded.';
 const bytes = (value: string) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
-const base64 = (value: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(value)));
+const base64 = (value: ArrayBuffer) =>
+  btoa(Array.from(new Uint8Array(value), (byte) => String.fromCharCode(byte)).join(''));
 const hex = (value: ArrayBuffer) =>
   Array.from(new Uint8Array(value), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 type GrantContext = { project: string; invitation: string; sender: string; recipient: string };
-export type FixtureEnvelope = { encapsulation: string; ciphertext: string };
-const binding = ({ project, invitation, sender, recipient }: GrantContext) =>
+export type SharingEnvelope = {
+  encapsulation: string;
+  ciphertext: string;
+  format: 'fixture-v1' | 'project-v1';
+};
+const binding = (
+  { project, invitation, sender, recipient }: GrantContext,
+  format: SharingEnvelope['format'],
+) =>
   encoder.encode(
     JSON.stringify([
       'calirestore',
-      'assessment-fixture',
+      format === 'project-v1' ? 'project-assessment' : 'assessment-fixture',
       1,
       1,
       project,
@@ -49,31 +59,40 @@ export async function localSharingKey(
   }
 }
 
-export async function sealFixture(
+export async function sealProjectSnapshot(
   senderKey: CryptoKeyPair,
   recipient: string,
   context: GrantContext,
+  project: SavedProject,
 ) {
+  const format = 'project-v1';
+  const plaintext = encoder.encode(JSON.stringify(projectSnapshot(project)));
+  if (plaintext.byteLength > 64 * 1024) throw new Error('Project snapshot exceeds 64 KiB');
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
   const result = await suite.seal(
     { senderKey, recipientPublicKey },
-    encoder.encode(fixture),
-    binding(context),
+    plaintext,
+    binding(context, format),
   );
-  return { encapsulation: base64(result.enc), ciphertext: base64(result.ct) };
+  return { format, encapsulation: base64(result.enc), ciphertext: base64(result.ct) };
 }
 
-export async function openFixture(
+export async function openSharedContent(
   recipientKey: CryptoKeyPair,
   sender: string,
-  envelope: FixtureEnvelope,
+  envelope: SharingEnvelope,
   context: GrantContext,
 ) {
+  if (envelope.format !== 'fixture-v1' && envelope.format !== 'project-v1')
+    throw new Error('Unknown sharing format');
   const senderPublicKey = await suite.kem.deserializePublicKey(bytes(sender));
   const result = await suite.open(
     { recipientKey, senderPublicKey, enc: bytes(envelope.encapsulation) },
     bytes(envelope.ciphertext),
-    binding(context),
+    binding(context, envelope.format),
   );
-  if (new TextDecoder().decode(result) !== fixture) throw new Error('Invalid assessment fixture');
+  const text = new TextDecoder('utf-8', { fatal: true }).decode(result);
+  if (envelope.format === 'project-v1') return parseSharedProject(text);
+  if (text !== fixture) throw new Error('Invalid assessment fixture');
+  return undefined;
 }
