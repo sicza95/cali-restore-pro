@@ -2,71 +2,237 @@ body {
   margin: 0;
   background: var(--cr-ground);
   color: var(--cr-ink);
-  font-family: var(--cr-font);
-  font-size: 16px;
-  line-height: 1.5;
+  font: 16px/1.5 var(--cr-font);
 }
-
-.platform-shell {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 48px 24px;
+* {
+  box-sizing: border-box;
 }
-
-.platform-shell h1 {
-  font-size: 24px;
+/* Landscape: 232px navigation + fluid content. Each content row has two
+   columns with a 24px gutter; portrait moves navigation above the content. */
+.account-shell {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.account-nav {
+  padding: 32px 24px;
+  border-right: 1px solid var(--cr-rule);
+}
+.product-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 650;
-  margin: 0 0 32px;
+  font-size: 20px;
+  text-decoration: none;
 }
-
-.platform-shell section {
-  background: var(--cr-surface);
+.account-nav p,
+.field-help,
+footer,
+.account-section > div > p {
+  color: var(--cr-muted);
+  font-size: 14px;
+}
+.account-nav nav {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0 40px;
+}
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+.account-nav nav a {
+  min-height: var(--cr-touch);
+  padding: 10px 12px;
+  text-decoration: none;
+  border-radius: var(--cr-radius);
+}
+.account-nav a[aria-current='page'] {
+  background: var(--cr-hover);
+}
+.account-content {
+  padding: 40px 32px;
+  max-width: 1200px;
+  width: 100%;
+}
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0 0 24px;
+}
+h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+p {
+  margin: 0 0 16px;
+}
+.account-email {
+  overflow-wrap: anywhere;
+}
+.account-section {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.8fr) minmax(320px, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 24px 0;
+  border-top: 1px solid var(--cr-rule);
+}
+.account-panel {
   padding: 24px;
+  background: var(--cr-surface);
   border-radius: var(--cr-panel-radius);
 }
-
-.platform-shell h2 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
+form,
+.account-panel {
+  display: grid;
+  gap: 16px;
 }
-
-.platform-state {
-  font-size: 24px;
-  margin: 12px 0 24px;
+.account-panel form {
+  padding: 0;
 }
-
-.platform-state[data-status='ready'] {
-  color: var(--cr-positive);
+label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
 }
-
-.platform-state[data-status='unavailable'] {
-  color: var(--cr-negative);
-}
-
-.platform-shell button {
+input,
+select {
   min-height: var(--cr-touch);
-  padding: 8px 16px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  font: inherit;
+}
+button {
+  min-height: var(--cr-touch);
+  padding: 10px 16px;
   font: inherit;
   font-weight: 600;
+  color: var(--cr-primary-ink);
+  background: var(--cr-primary);
   border: 0;
   border-radius: var(--cr-radius);
-  background: var(--cr-primary);
-  color: var(--cr-primary-ink);
   cursor: pointer;
 }
-
-.platform-shell button:hover {
+button.secondary {
+  color: var(--cr-ink);
+  background: var(--cr-raised);
+}
+button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+button:hover:enabled {
   background: var(--cr-hover);
   color: var(--cr-ink);
 }
-
-.platform-shell button:focus-visible {
+:is(button, a, input, select, summary):focus-visible {
   outline: var(--cr-focus-width) solid var(--cr-accent);
   outline-offset: 3px;
 }
-
-.platform-shell button:disabled {
-  opacity: 0.6;
-  cursor: wait;
+.confirmation {
+  display: flex;
+  align-items: center;
+  min-height: var(--cr-touch);
+  gap: 12px;
+}
+.confirmation input {
+  width: 22px;
+  min-height: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.account-message {
+  padding: 16px;
+  border-left: 3px solid var(--cr-positive);
+  background: var(--cr-surface);
+}
+.account-message[data-error='true'] {
+  border-color: var(--cr-negative);
+}
+.session-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.session-list li {
+  display: grid;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--cr-rule);
+  font-size: 14px;
+}
+summary {
+  cursor: pointer;
+  min-height: var(--cr-touch);
+  padding: 10px 0;
+}
+details form {
+  margin-top: 16px;
+}
+footer {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--cr-rule);
+}
+footer section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+@media (max-width: 1100px) {
+  .account-shell {
+    grid-template-columns: 1fr;
+  }
+  .account-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+    border-right: 0;
+    border-bottom: 1px solid var(--cr-rule);
+    padding: 16px 24px;
+  }
+  .account-nav > p {
+    display: none;
+  }
+  .account-nav nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+  }
+  .account-nav .language {
+    margin-left: auto;
+  }
+  .account-content {
+    padding: 32px 24px;
+  }
+}
+@media (max-width: 700px) {
+  .account-section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .account-content {
+    padding: 24px 16px;
+  }
+  .account-nav {
+    padding: 16px;
+  }
+  .account-panel {
+    padding: 20px;
+  }
+  .account-nav .language {
+    width: 100%;
+    margin: 0;
+  }
 }

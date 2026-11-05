@@ -33,6 +33,9 @@ jobs:
       - run: npm run test:platform
       - run: npx playwright install --with-deps chromium
       - run: npm run test:app
+        env:
+          IDENTITY_SMOKE_DISPOSABLE: '1'
+          SMOKE_ORIGIN: http://localhost:8080
       - name: Quiesced backup and isolated restore
         run: node scripts/backup-smoke.mjs deploy/backups/ci calirestore-restore-ci
       - name: Diagnostics
