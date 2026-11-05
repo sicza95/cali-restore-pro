@@ -12,7 +12,7 @@ async function setupVault(page: Page) {
   await page.getByRole('button', { name: 'Set up vault' }).click();
 }
 
-test('verified recipient opens an encrypted project snapshot', async ({
+test('verified recipient opens an encrypted project snapshot until the owner revokes access', async ({
   browser,
   baseURL,
 }, info) => {
@@ -93,6 +93,7 @@ test('verified recipient opens an encrypted project snapshot', async ({
     await expect(inbox.getByText('Synthetic chapel')).toHaveCount(0);
     await inbox.getByRole('button', { name: 'Open shared content' }).click();
     await expect(inbox.getByText('Synthetic chapel')).toBeVisible();
+
     await expect(inbox.getByRole('heading', { name: 'North wall' })).toBeVisible();
     await expect(inbox.getByText('Upper plaster · Metric')).toBeVisible();
     expect((await new AxeBuilder({ page: project }).analyze()).violations).toEqual([]);
@@ -105,6 +106,37 @@ test('verified recipient opens an encrypted project snapshot', async ({
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
     await inbox.getByRole('button', { name: 'Open shared content' }).click();
     await expect(inbox.getByText('Synthetic chapel')).toBeVisible();
+    const revoke =
+      '/api/v1/hosted-projects/' +
+      list.invitations[0].projectId +
+      '/invitations/' +
+      list.invitations[0].id +
+      '/revoke';
+    const session = await (await recipient.request.get('/api/v1/auth/me')).json();
+    const unauthorized = await recipient.request.post(revoke, {
+      headers: { Origin: baseURL!, 'X-CSRF-Token': session.csrfToken },
+      data: {},
+    });
+    expect(unauthorized.status()).toBe(404);
+    expect((await recipient.request.get(content)).status()).toBe(200);
+
+    project.once('dialog', (dialog) => dialog.accept());
+    await project.getByRole('button', { name: 'Revoke access' }).click();
+    await expect(project.getByText('Access revoked')).toBeVisible();
+    expect((await recipient.request.get(content)).status()).toBe(404);
+    await inbox.getByRole('button', { name: 'Open shared content' }).click();
+    await expect(inbox.locator('.invitation-panel [role=alert]')).toBeVisible();
+    await expect(inbox.getByText('Synthetic chapel')).toHaveCount(0);
+    await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
+    await expect(inbox.getByText('No invitations to show.')).toBeVisible();
+
+    await project.getByLabel('Recipient email').fill('recipient@example.test');
+    await project.getByRole('button', { name: 'Send invitation' }).click();
+    await expect(project.getByText('Awaiting acceptance')).toBeVisible();
+    const renewed = await (await recipient.request.get('/api/v1/invitations')).json();
+    expect(renewed.invitations).toHaveLength(1);
+    expect(renewed.invitations[0].id).not.toBe(list.invitations[0].id);
+    expect((await recipient.request.get(content)).status()).toBe(404);
   } finally {
     await owner.close();
     await recipient.close();

@@ -1588,7 +1588,7 @@ export type ListOwnedProjectInvitationsResponses = {
     invitations: Array<{
       id: string;
       email: string;
-      state: 'pending' | 'accepted' | 'active';
+      state: 'pending' | 'accepted' | 'active' | 'revoked';
       recipientId: string;
       recipientKey?: string;
     }>;
@@ -1877,3 +1877,37 @@ export type GetInvitationContentResponses = {
 
 export type GetInvitationContentResponse =
   GetInvitationContentResponses[keyof GetInvitationContentResponses];
+
+export type RevokeProjectInvitationData = {
+  body: EmptyRequest;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/invitations/{invitation}/revoke';
+};
+
+export type RevokeProjectInvitationErrors = {
+  /**
+   * Transfer, authentication or policy error
+   */
+  default: IdentityError;
+};
+
+export type RevokeProjectInvitationError =
+  RevokeProjectInvitationErrors[keyof RevokeProjectInvitationErrors];
+
+export type RevokeProjectInvitationResponses = {
+  /**
+   * Access revoked
+   */
+  204: void;
+};
+
+export type RevokeProjectInvitationResponse =
+  RevokeProjectInvitationResponses[keyof RevokeProjectInvitationResponses];

@@ -1,7 +1,7 @@
 import { createResource, createSignal } from 'solid-js';
-import type { Invitation, InvitationModel } from './types';
+import type { InvitationModel } from './types';
 
-export function useInvitations<T extends Invitation>(model: InvitationModel, path: string) {
+export function useInvitations<T>(model: InvitationModel, path: string) {
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
   const [result, { refetch }] = createResource<{ invitations?: T[]; error?: string }>(async () => {

@@ -32,7 +32,7 @@ func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]own
  CASE WHEN i.state='accepted' AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
  LEFT JOIN sharing_identities k ON k.account_id=i.recipient_id
- WHERE project_id=$1 AND (i.state IN ('accepted','active') OR (i.state='pending' AND expires_at>clock_timestamp()))
+ WHERE project_id=$1 AND (i.state IN ('accepted','active','revoked') OR (i.state='pending' AND expires_at>clock_timestamp()))
  ORDER BY i.expires_at DESC,i.id LIMIT 100`, project)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (s *Service) invite(ctx context.Context, a fileAccess, project, email strin
  )
  ON CONFLICT (project_id,recipient_id) DO UPDATE
  SET id=excluded.id, recipient_email=excluded.recipient_email, expires_at=excluded.expires_at, state='pending'
- WHERE project_invitations.state='cancelled' OR (
+ WHERE project_invitations.state IN ('cancelled','revoked') OR (
    project_invitations.state='pending' AND project_invitations.expires_at<=clock_timestamp()
  )
  RETURNING id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email).Scan(&id, &expires, &lang)
@@ -114,6 +114,22 @@ func (a fileAccess) cancelInvitation(ctx context.Context, project, id string) er
 	if err == nil && result.RowsAffected() == 0 {
 		return errFileMissing
 	}
+	return err
+}
+
+func (a fileAccess) revokeInvitation(ctx context.Context, project, id string) error {
+	if err := a.requireProjectOwner(ctx, project); err != nil {
+		return err
+	}
+	tag, err := a.tx.Exec(ctx, `UPDATE project_invitations SET state='revoked'
+ WHERE id=$1 AND project_id=$2 AND state IN ('active','revoked')`, id, project)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return errFileMissing
+	}
+	_, err = a.tx.Exec(ctx, `DELETE FROM invitation_grants WHERE invitation_id=$1`, id)
 	return err
 }
 
@@ -189,15 +205,20 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			return a.acceptInvitation(r.Context(), id)
 		})
 	})
-	route("POST "+projectInvitations+"/{invitation}/cancel", true, func(w http.ResponseWriter, r *http.Request) {
-		h.changeInvitation(w, r, func(a fileAccess, id string) error {
-			project := r.PathValue("project")
-			if !uuid(project) {
-				return ErrInvalid
-			}
-			return a.cancelInvitation(r.Context(), project, id)
+	for action, change := range map[string]func(fileAccess, context.Context, string, string) error{
+		"cancel": fileAccess.cancelInvitation,
+		"revoke": fileAccess.revokeInvitation,
+	} {
+		route("POST "+projectInvitations+"/{invitation}/"+action, true, func(w http.ResponseWriter, r *http.Request) {
+			h.changeInvitation(w, r, func(a fileAccess, id string) error {
+				project := r.PathValue("project")
+				if !uuid(project) {
+					return ErrInvalid
+				}
+				return change(a, r.Context(), project, id)
+			})
 		})
-	})
+	}
 }
 
 func (h *HTTP) changeInvitation(w http.ResponseWriter, r *http.Request, change func(fileAccess, string) error) {
