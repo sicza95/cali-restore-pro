@@ -1,6 +1,6 @@
 # M-02 account settings and administration
 
-M-02 builds on rebased and merged [PR #6](https://github.com/sicza95/cali-restore-pro/pull/6) at `7767f39` on `feat/storybook-foundations`.
+M-02 builds on rebased and merged [PR #6](https://github.com/sicza95/cali-restore-pro/pull/6) at `7767f39` on `feat/storybook-foundations`. Review: [M-02 PR #7](https://github.com/sicza95/cali-restore-pro/pull/7).
 
 ## Settings and administrative controls
 
