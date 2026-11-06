@@ -1,0 +1,165 @@
+.surface-heading {
+  margin-block: 0 12px;
+}
+.surface-heading p {
+  margin: 0;
+  color: var(--cr-muted);
+}
+.surface-navigation,
+.surface-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+.surface-navigation {
+  margin-block-end: 12px;
+}
+.surface-navigation label {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.surface-review {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) minmax(220px, 27%);
+  grid-template-areas: 'rail canvas inspector';
+  align-items: start;
+  gap: 8px;
+}
+.surface-rail {
+  grid-area: rail;
+  display: grid;
+  gap: 4px;
+}
+.surface-review button {
+  min-inline-size: var(--cr-touch);
+}
+.surface-rail button[aria-pressed='true'] {
+  background: var(--cr-raised);
+  border-color: var(--cr-accent);
+}
+.surface-rail button[aria-disabled='true'] {
+  color: var(--cr-muted);
+  cursor: default;
+}
+.surface-stage {
+  grid-area: canvas;
+  min-width: 0;
+}
+.surface-canvas {
+  display: grid;
+  position: relative;
+  place-items: center;
+  min-block-size: clamp(240px, 42vh, 560px);
+  overflow: hidden;
+  background: var(--cr-canvas);
+  border: 1px solid var(--cr-rule);
+}
+.surface-canvas p {
+  padding: 12px;
+  text-align: center;
+}
+.surface-canvas img {
+  display: block;
+  max-inline-size: 100%;
+  max-block-size: clamp(240px, 52vh, 680px);
+  object-fit: contain;
+}
+.surface-canvas .surface-photo-loading {
+  visibility: hidden;
+}
+.surface-compare {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.surface-guides {
+  position: absolute;
+  inset: 20%;
+  pointer-events: none;
+}
+.surface-guides span {
+  position: absolute;
+  border: 1px solid var(--cr-accent);
+}
+.surface-guides span:first-child {
+  inset: 50% 0 auto;
+}
+.surface-guides span:last-child {
+  inset: 0 auto 0 50%;
+}
+.surface-stage .surface-actions {
+  margin-block-start: 8px;
+}
+.surface-inspector {
+  grid-area: inspector;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: var(--cr-surface);
+  border: 1px solid var(--cr-rule);
+}
+.surface-inspector :is(h3, p) {
+  margin: 0;
+}
+.surface-transient {
+  color: var(--cr-muted);
+}
+.surface-reason {
+  font-size: 0.875rem;
+}
+.surface-fields {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 95px), 1fr));
+}
+.surface-fields small {
+  display: block;
+  color: var(--cr-muted);
+}
+.surface-review :is(label, button) {
+  overflow-wrap: anywhere;
+}
+.surface-review label:has(input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--cr-touch);
+}
+.surface-review input[type='range'] {
+  min-height: var(--cr-touch);
+}
+.surface-focus {
+  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-areas: 'rail canvas' 'inspector inspector';
+}
+.surface-focus .surface-canvas {
+  min-block-size: 58vh;
+}
+@media (max-width: 950px) {
+  .surface-review {
+    grid-template-columns: minmax(72px, max-content) minmax(0, 1fr);
+    grid-template-areas: 'rail canvas' 'inspector inspector';
+  }
+}
+@media (max-width: 500px) {
+  .surface-review {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+  }
+  .surface-rail button {
+    padding-inline: 4px;
+  }
+}
+.surface-review input[type='checkbox'] {
+  flex: 0 0 var(--cr-touch);
+  inline-size: var(--cr-touch);
+  margin: 0;
+}
+.surface-review input[type='range'],
+.surface-review input[type='checkbox'] {
+  accent-color: var(--cr-accent);
+}
+.surface-usable {
+  position: absolute;
+  border: 2px dashed var(--cr-accent);
+  pointer-events: none;
+}

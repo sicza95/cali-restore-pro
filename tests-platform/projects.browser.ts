@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { projectControls } from '../src/ui/account-access/projects/project-controls';
 
+import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
+
 test('project hierarchy and encrypted originals reopen from the local vault', async ({
   page,
 }, info) => {
@@ -72,14 +74,128 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(page.getByRole('heading', { name: 'Upper plaster' })).toBeVisible();
   await expect(controls('surface.project')).toHaveText('East Chapel');
   await expect(controls('project.collaboration')).toHaveCount(0);
-  await page.getByLabel('Original file', { exact: true }).setInputFiles({
+  const review = (id: string) => {
+    const key = 'surface.' + id;
+    expect(surfaceControls.some((control) => control.id === key)).toBe(true);
+    return page.locator('[data-control-id="' + key + '"]');
+  };
+  await expect(review('view.photo')).toBeDisabled();
+  await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'true');
+  const attach = page.getByLabel('Original file', { exact: true });
+  const png = Buffer.from(
+    await page.evaluate(() => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const context = canvas.getContext('2d')!;
+      context.fillStyle = '#b4afa2';
+      context.fillRect(0, 0, 640, 480);
+      context.strokeStyle = '#756e60';
+      context.lineWidth = 3;
+      for (let row = 0; row < 8; row++) {
+        context.strokeRect(row % 2 ? -64 : 0, row * 60, 128, 60);
+        for (let col = 1; col < 6; col++) {
+          context.strokeRect(col * 128 - (row % 2 ? 64 : 0), row * 60, 128, 60);
+        }
+      }
+      return canvas.toDataURL('image/png').split(',')[1]!;
+    }),
+    'base64',
+  );
+  const revisions = () =>
+    page.evaluate(async () => {
+      const modulePath = '/src/platform/vault/store.ts';
+      const { connect, projectTable } = (await import(
+        modulePath
+      )) as typeof import('../src/platform/vault/store');
+      const db = await connect();
+      try {
+        return await new Promise<unknown[]>((resolve, reject) => {
+          const request = db.transaction(projectTable).objectStore(projectTable).getAll();
+          request.onsuccess = () => resolve(request.result.map(({ revision }) => revision));
+          request.onerror = () => reject(request.error);
+        });
+      } finally {
+        db.close();
+      }
+    });
+  await attach.setInputFiles({ name: 'wall.png', mimeType: 'image/png', buffer: png });
+  await controls('originals.attach').click();
+  await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
+  const beforeReview = await revisions();
+  expect(beforeReview).toEqual([expect.any(Number)]);
+  await review('review.prepare').focus();
+  await page.keyboard.press('Enter');
+  await review('review.cropWidth').fill('101');
+  await expect(review('review.apply')).toBeDisabled();
+  await review('review.cropWidth').fill('80');
+  await review('review.apply').click();
+  await expect(page.getByText('Applied for this review session.')).toBeVisible();
+  await review('review.prepare').click();
+  await expect(review('review.cropWidth')).toHaveValue('80');
+  await review('review.cropWidth').fill('50');
+  await review('review.cancel').click();
+  await review('review.prepare').click();
+  await expect(review('review.cropWidth')).toHaveValue('80');
+  for (const viewport of [
+    { width: 1194, height: 834 },
+    { width: 834, height: 1194 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const rail = (await page.locator('.surface-rail').boundingBox())!;
+    const canvas = (await page.locator('.surface-stage').boundingBox())!;
+    const inspector = (await page.locator('.surface-inspector').boundingBox())!;
+    expect(rail.x).toBeLessThan(canvas.x);
+    if (viewport.width === 834) expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
+    else expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
+    for (const control of ['review.prepare', 'review.apply', 'review.cancel', 'view.next']) {
+      const box = (await review(control).boundingBox())!;
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(44);
+    }
+    await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
+    await page.screenshot({
+      path: info.outputPath('surface-' + viewport.width + '.png'),
+      fullPage: true,
+    });
+  }
+  await review('review.calibrate').click();
+  await expect(review('review.unit')).toHaveValue('in');
+  await expect(review('review.apply')).toBeDisabled();
+  await review('review.width').fill('10');
+  await review('review.height').fill('12');
+  await review('review.apply').click();
+  expect(await revisions()).toEqual(beforeReview);
+  await page.setViewportSize({ width: 1194, height: 834 });
+  await attach.setInputFiles({ name: 'wall-detail.png', mimeType: 'image/png', buffer: png });
+  await controls('originals.attach').click();
+  await expect(review('view.next')).toBeEnabled();
+  await review('view.next').click();
+  await expect(review('review.align')).toHaveAttribute('aria-disabled', 'false');
+  await review('review.align').click();
+  await expect(review('review.auto')).toBeDisabled();
+  await review('review.compare').check();
+  await expect(page.locator('.surface-canvas img')).toHaveCount(2);
+  await review('review.offsetX').fill('10');
+  await review('review.apply').click();
+  await review('view.previous').click();
+  await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
+  await review('review.prepare').click();
+  await expect(review('review.cropWidth')).toHaveValue('100');
+  await attach.setInputFiles({
     name: 'plaster-detail.dng',
     mimeType: 'image/x-adobe-dng',
     buffer: Buffer.from([1, 2, 3]),
   });
-  await page.getByRole('combobox', { name: 'Image role', exact: true }).selectOption('reference');
+  await page
+    .locator('.project-originals form')
+    .getByRole('combobox', { name: 'Image role', exact: true })
+    .selectOption('reference');
   await controls('originals.attach').click();
-  await expect(page.getByText('plaster-detail.dng')).toBeVisible();
+  await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
+  await review('view.photo').selectOption({ label: '3 · plaster-detail.dng' });
+  await expect(page.getByText(/^Preview unavailable for this original/)).toBeVisible();
+  await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'true');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('projects-landscape.png'), fullPage: true });
   await page.goBack();
@@ -89,7 +205,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(page.getByRole('heading', { name: 'Upper plaster' })).toHaveCount(0);
   await expect(page.getByText('East Chapel')).toHaveCount(0);
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
-  await expect(page.getByText('plaster-detail.dng')).toBeVisible();
+  await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
   await page.screenshot({ path: info.outputPath('surface-reopened.png') });
   await controls('surface.project').click();
   await page
@@ -98,10 +214,13 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await page
     .getByRole('combobox', { name: 'Surface', exact: true })
     .selectOption({ label: 'Upper plaster' });
-  await expect(page.getByText('plaster-detail.dng')).toBeVisible();
+  await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
   await expect(page.getByLabel('Currency code')).toHaveValue('USD');
   await expect(
-    page.getByRole('listitem').getByRole('combobox', { name: 'Image role' }),
+    page
+      .getByRole('listitem')
+      .filter({ hasText: 'plaster-detail.dng' })
+      .getByRole('combobox', { name: 'Image role' }),
   ).toHaveValue('reference');
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
