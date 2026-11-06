@@ -1,3 +1,4 @@
+import type { DeletionStatus } from '../../platform/api/types.gen';
 import type { copy, publicRoutes } from './constants';
 
 export type Language = keyof typeof copy;
@@ -15,14 +16,12 @@ export type Route =
   | 'invitations'
   | (typeof publicRoutes)[number];
 export type Submit = (event: SubmitEvent, action: string, success: Message) => void;
-export type AuthResponse = {
+export type AuthResponse = Partial<DeletionStatus> & {
   error?: string;
   csrfToken?: string;
   account?: Account;
   sessions?: Session[];
   capabilities?: string[];
-  recoverUntil?: string;
-  backupExpiresAt?: string;
 };
 
 export type TranslatedFieldProps = { t: Translate };

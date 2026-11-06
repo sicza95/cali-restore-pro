@@ -13,11 +13,17 @@ func (s *Service) recoverAccount(ctx context.Context, email, password string) er
 	if err != nil {
 		return err
 	}
-	tx, err := beginMutation(ctx, s.pool)
+	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback(context.Background())
+	if _, err := tx.Exec(ctx, lifecycleWriteLock); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", mutationLock); err != nil {
+		return err
+	}
 	var hash string
 	err = tx.QueryRow(ctx, `SELECT password_hash FROM accounts WHERE id=$1 AND state='pending_deletion' FOR UPDATE`, account.ID).Scan(&hash)
 	if errors.Is(err, pgx.ErrNoRows) || err == nil && hash != verifier {
@@ -33,6 +39,9 @@ func (s *Service) recoverAccount(ctx context.Context, email, password string) er
 		return ErrCredentials
 	}
 	if err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM project_deletions WHERE forced_account_id=$1 AND purged_at IS NULL`, account.ID); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `UPDATE accounts SET state=$2 WHERE id=$1`, account.ID, state); err != nil {
@@ -85,12 +94,13 @@ func (h *HTTP) changeAccountDeletion(w http.ResponseWriter, r *http.Request) {
 		Confirm             bool `json:"confirm"`
 		PendingWorkResolved bool `json:"pendingWorkResolved"`
 		Purge               bool `json:"purge"`
+		Force               bool `json:"force"`
 	}
 	if !decode(w, r, &body) {
 		return
 	}
 	id := r.PathValue("id")
-	if !body.Confirm || !body.PendingWorkResolved || id != "" && !uuid(id) {
+	if !body.Confirm || !body.Force && !body.PendingWorkResolved || body.Force && id == "" || id != "" && !uuid(id) {
 		failure(w, ErrInvalid)
 		return
 	}
@@ -109,7 +119,10 @@ func (h *HTTP) changeAccountDeletion(w http.ResponseWriter, r *http.Request) {
 		} else if !actor.Account.Allows(ManageRoles) || id != a.account && actor.Account.Role != "superuser" {
 			return ErrForbidden
 		}
-		result, err = a.deleteAccount(ctx, id, body.Purge)
+		if body.Force && (id == a.account || actor.Account.Role != "superuser") {
+			return ErrForbidden
+		}
+		result, err = a.deleteAccount(ctx, id, body.Purge, body.Force)
 		return err
 	})
 	if err != nil {

@@ -28,6 +28,9 @@ func (a fileAccess) proposeHostingTransfer(ctx context.Context, project, to stri
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return err
 	}
+	if to == a.account {
+		return a.claimHosting(ctx, project)
+	}
 	tag, err := a.tx.Exec(ctx, `INSERT INTO hosting_transfers(project_id,from_id,to_id)
  SELECT p.id,p.host_id,o.account_id FROM hosted_projects p
  JOIN project_owners o ON o.project_id=p.id
@@ -45,21 +48,54 @@ func (a fileAccess) acceptHostingTransfer(ctx context.Context, project, id strin
 		return err
 	}
 	var from string
-	var charge int64
-	err := a.tx.QueryRow(ctx, `SELECT t.from_id,
- (SELECT coalesce(sum(f.charged_bytes),0)::bigint FROM encrypted_files f WHERE f.project_id=p.id) +
- coalesce((SELECT octet_length(r.salt)+octet_length(r.ciphertext) FROM project_revision_heads r WHERE r.project_id=p.id),0)
- FROM hosting_transfers t JOIN hosted_projects p ON p.id=t.project_id
- WHERE p.id=$1 AND t.id=$2 AND t.to_id=$3 AND p.host_id=t.from_id`, project, id, a.account).
-		Scan(&from, &charge)
+	err := a.tx.QueryRow(ctx, `SELECT t.from_id FROM hosting_transfers t JOIN hosted_projects p ON p.id=t.project_id
+ WHERE p.id=$1 AND t.id=$2 AND t.to_id=$3 AND p.host_id=t.from_id`, project, id, a.account).Scan(&from)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return errFileMissing
 	}
 	if err != nil {
 		return err
 	}
+	if err := a.checkHostingCapacity(ctx, project); err != nil {
+		return err
+	}
+	if _, err := a.tx.Exec(ctx, `UPDATE hosted_projects SET host_id=$2 WHERE id=$1 AND host_id=$3`, project, a.account, from); err != nil {
+		return err
+	}
+	_, err = a.tx.Exec(ctx, `DELETE FROM hosting_transfers WHERE project_id=$1 AND id=$2`, project, id)
+	return err
+}
+
+// Claiming is an explicit opt-in by an existing owner after the previous
+// host's forced deletion. requireProjectOwner already holds the project lock.
+func (a fileAccess) claimHosting(ctx context.Context, project string) error {
+	var host *string
+	if err := a.tx.QueryRow(ctx, `SELECT host_id FROM hosted_projects WHERE id=$1`, project).Scan(&host); err != nil {
+		return err
+	}
+	if host != nil {
+		if *host == a.account {
+			return nil
+		}
+		return ErrConflict
+	}
+	if err := a.checkHostingCapacity(ctx, project); err != nil {
+		return err
+	}
+	_, err := a.tx.Exec(ctx, `UPDATE hosted_projects SET host_id=$2 WHERE id=$1 AND host_id IS NULL`, project, a.account)
+	return err
+}
+
+func (a fileAccess) checkHostingCapacity(ctx context.Context, project string) error {
 	if !a.hosting || a.quota == 0 {
 		return ErrForbidden
+	}
+	var charge int64
+	if err := a.tx.QueryRow(ctx, `SELECT
+ (SELECT coalesce(sum(charged_bytes),0)::bigint FROM encrypted_files WHERE project_id=$1) +
+ coalesce((SELECT octet_length(salt)+octet_length(ciphertext) FROM project_revision_heads WHERE project_id=$1),0)`,
+		project).Scan(&charge); err != nil {
+		return err
 	}
 	used, err := a.usage(ctx)
 	if err != nil {
@@ -68,11 +104,7 @@ func (a fileAccess) acceptHostingTransfer(ctx context.Context, project, id strin
 	if used+charge > a.quota {
 		return errFileQuota
 	}
-	if _, err := a.tx.Exec(ctx, `UPDATE hosted_projects SET host_id=$2 WHERE id=$1 AND host_id=$3`, project, a.account, from); err != nil {
-		return err
-	}
-	_, err = a.tx.Exec(ctx, `DELETE FROM hosting_transfers WHERE project_id=$1 AND id=$2`, project, id)
-	return err
+	return nil
 }
 
 func (h *HTTP) hostingRoutes(route func(string, bool, http.HandlerFunc)) {

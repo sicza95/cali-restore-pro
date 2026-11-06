@@ -10,16 +10,9 @@ export function AccountDeletion(props: {
   onChange?: () => void;
 }) {
   const [check, setCheck] = createSignal<DeletionPreflight>();
-  const [deadlines, setDeadlines] = createSignal<{
-    recoverUntil: string;
-    backupExpiresAt: string;
-  }>();
+  const force = () => check()?.forceEligible === true;
   const hu = () => props.model.lang() === 'hu';
   const c = () => settingsCopy[props.model.lang()];
-  const date = (value: string) =>
-    new Intl.DateTimeFormat(props.model.lang(), { dateStyle: 'long', timeStyle: 'short' }).format(
-      new Date(value),
-    );
   return (
     <div class="account-panel">
       <Show when={!props.pending}>
@@ -33,38 +26,43 @@ export function AccountDeletion(props: {
           {c().preflight}
         </button>
       </Show>
-      <Show when={check() && !check()?.eligible}>
+      <Show when={check() && !check()?.eligible && !force()}>
         <p role="status">
           {check()?.reason === 'hosted_projects_require_continuity'
             ? c().blockedHosted
             : c().blocked}
         </p>
       </Show>
-      <Show when={!deadlines() && (check()?.eligible || props.pending)}>
+      <Show when={check()?.eligible || force() || props.pending}>
         <form
           onSubmit={async (event) => {
             event.preventDefault();
             const purge = props.pending || new FormData(event.currentTarget).has('purge');
             const result = await props.model.run(
               props.path + '/deletion',
-              { confirm: true, pendingWorkResolved: true, purge },
+              force()
+                ? { confirm: true, force: true, purge }
+                : { confirm: true, pendingWorkResolved: true, purge },
               'success',
             );
-            if (result && result.recoverUntil && result.backupExpiresAt) {
-              setDeadlines({
-                recoverUntil: result.recoverUntil,
-                backupExpiresAt: result.backupExpiresAt,
-              });
-              props.onChange?.();
-            }
+            if (result && result.recoverUntil && result.backupExpiresAt) props.onChange?.();
           }}
         >
-          <p>
-            {hu()
-              ? 'Mentse a helyi és függő munkát titkosított projektmentésbe. A fiók 30 napig állítható helyre. A szervermentések legkésőbb a törléstől számított 90. napon járnak le.'
-              : 'Export an encrypted project backup for local and pending work. Account recovery lasts 30 days. Operational backups expire within 90 days of deletion.'}{' '}
-            <a href="/projects">{props.model.t('projects')}</a>
-          </p>
+          <Show when={force()}>
+            <p>
+              {hu()
+                ? 'A kizárólagos tulajdonú projektek befagyasztva maradnak a helyreállítási határidőig. A meglévő együttműködők addig csak a már megosztott tartalmat érhetik el. A társtulajdonosok megtartják projektjeiket, és átvehetik a szerveres tárolást.'
+                : 'Sole-owner projects are frozen until the recovery deadline. Existing collaborators can retrieve their already shared content during that window. Co-owners keep their projects and can take over hosting.'}
+            </p>
+          </Show>
+          <Show when={!force()}>
+            <p>
+              {hu()
+                ? 'Mentse a helyi és függő munkát titkosított projektmentésbe. A fiók 30 napig állítható helyre. A szervermentések legkésőbb a törléstől számított 90. napon járnak le.'
+                : 'Export an encrypted project backup for local and pending work. Account recovery lasts 30 days. Operational backups expire within 90 days of deletion.'}{' '}
+              <a href="/projects">{props.model.t('projects')}</a>
+            </p>
+          </Show>
           <p>
             {hu()
               ? 'A törléshez friss jelszó-megerősítés szükséges.'
@@ -73,9 +71,13 @@ export function AccountDeletion(props: {
           </p>
           <label class="confirmation">
             <input type="checkbox" required />
-            {hu()
-              ? 'A függő munkát rendeztem, és megerősítem a törlést.'
-              : 'I resolved pending work and confirm deletion.'}
+            {force()
+              ? hu()
+                ? 'Megerősítem a kényszerített törlést.'
+                : 'I confirm forced deletion.'
+              : hu()
+                ? 'A függő munkát rendeztem, és megerősítem a törlést.'
+                : 'I resolved pending work and confirm deletion.'}
           </label>
           <Show when={!props.pending}>
             <label class="confirmation">
@@ -88,21 +90,15 @@ export function AccountDeletion(props: {
               ? hu()
                 ? 'Végleges törlés indítása'
                 : 'Queue live purge'
-              : hu()
-                ? 'Fiók törlése'
-                : 'Delete account'}
+              : force()
+                ? hu()
+                  ? 'Fiók kényszerített törlése'
+                  : 'Force account deletion'
+                : hu()
+                  ? 'Fiók törlése'
+                  : 'Delete account'}
           </button>
         </form>
-      </Show>
-      <Show when={deadlines()}>
-        {(value) => (
-          <p role="status">
-            {hu() ? 'Helyreállítási határidő' : 'Live recovery deadline'}{' '}
-            {date(value().recoverUntil)}.{' '}
-            {hu() ? 'Szervermentések lejárata legkésőbb' : 'Operational backups expire by'}{' '}
-            {date(value().backupExpiresAt)}.
-          </p>
-        )}
       </Show>
     </div>
   );

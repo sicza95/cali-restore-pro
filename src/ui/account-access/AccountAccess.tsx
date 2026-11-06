@@ -127,7 +127,9 @@ export function AccountAccess() {
                   ? 'Szervermentések lejárata legkésőbb'
                   : 'Operational backups expire by'}{' '}
                 {date(receipt().backupExpiresAt)}.{' '}
-                <a href="/recover-deleted-account">{t('recover-deleted-account')}</a>
+                <Show when={view !== 'admin'}>
+                  <a href="/recover-deleted-account">{t('recover-deleted-account')}</a>
+                </Show>
               </p>
             );
           }}

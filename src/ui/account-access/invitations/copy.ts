@@ -28,6 +28,7 @@ export const invitationCopy = {
     removeOwnerConfirm: 'Remove this co-owner’s management and snapshot access?',
     offerHosting: 'Offer hosting transfer',
     transferPending: 'Awaiting hosting acceptance from',
+    claimHosting: 'Take over hosting',
     acceptHosting: 'Accept hosting transfer',
     acceptHostingConfirm: 'Take responsibility for this project’s hosted storage and quota usage?',
     hostingQuota: 'Your remaining storage quota is too small for this project.',
@@ -99,6 +100,7 @@ export const invitationCopy = {
     removeOwnerConfirm: 'Megszünteted a társtulajdonos kezelési és megtekintési jogát?',
     offerHosting: 'Szerveres tárolás átadásának felajánlása',
     transferPending: 'A szerveres tárolás átvételére vár',
+    claimHosting: 'Szerveres tárolás vállalása',
     acceptHosting: 'Szerveres tárolás átvétele',
     acceptHostingConfirm:
       'Átveszed a projekt szerveres tárolását és a kvóta felhasználásával járó felelősséget?',

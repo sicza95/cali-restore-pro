@@ -23,10 +23,10 @@ func (a fileAccess) projectOwners(ctx context.Context, project string) ([]projec
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return nil, err
 	}
-	rows, err := a.tx.Query(ctx, `SELECT a.id,a.email,p.host_id=a.id
+	rows, err := a.tx.Query(ctx, `SELECT a.id,a.email,coalesce(p.host_id=a.id,false)
  FROM project_owners o JOIN hosted_projects p ON p.id=o.project_id
  JOIN accounts a ON a.id=o.account_id WHERE o.project_id=$1
- ORDER BY (p.host_id=a.id) DESC,a.email`, project)
+ ORDER BY (coalesce(p.host_id=a.id,false)) DESC,a.email`, project)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (a fileAccess) removeProjectOwner(ctx context.Context, project, owner strin
 func (a fileAccess) departProject(ctx context.Context, project, owner string) error {
 	var host bool
 	var count int
-	err := a.tx.QueryRow(ctx, `SELECT p.host_id=$2,
+	err := a.tx.QueryRow(ctx, `SELECT coalesce(p.host_id=$2,false),
  (SELECT count(*) FROM project_owners WHERE project_id=$1)
  FROM hosted_projects p JOIN project_owners o ON o.project_id=p.id
  WHERE p.id=$1 AND o.account_id=$2`, project, owner).Scan(&host, &count)

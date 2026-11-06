@@ -80,6 +80,17 @@ export function ProjectOwners(props: {
           </button>
         )}
       </Show>
+      <Show when={data() && currentId() && !data()?.owners.some((owner) => owner.host)}>
+        <button
+          disabled={busy()}
+          onClick={() => {
+            if (window.confirm(c().acceptHostingConfirm))
+              void change('/hosting-transfer', { toId: currentId() });
+          }}
+        >
+          {c().claimHosting}
+        </button>
+      </Show>
       <ul class="session-list">
         <For each={data()?.owners}>
           {(owner) => (
