@@ -94,7 +94,7 @@ func TestAdminHTTP(t *testing.T) {
 		t.Fatal(ops)
 	}
 	result := call("GET", "account/deletion-preflight", member, "", 200)
-	if !strings.Contains(result, `"eligible":false`) {
+	if !strings.Contains(result, `"eligible":true`) {
 		t.Fatal(result)
 	}
 	call("GET", path(member, "deletion-preflight"), member, "", 403)

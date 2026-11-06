@@ -48,7 +48,7 @@ func (s *Service) hash(ctx context.Context, password string) (string, error) {
 
 type mailPayload struct{ To, Language, Purpose, Token string }
 
-func (s *Service) enqueue(ctx context.Context, tx pgx.Tx, to, lang, purpose, raw string, expiry time.Time) error {
+func (s *Service) enqueue(ctx context.Context, tx pgx.Tx, account, to, lang, purpose, raw string, expiry time.Time) error {
 	if s.mailCipher == nil {
 		return errors.New("mail not configured")
 	}
@@ -59,7 +59,7 @@ func (s *Service) enqueue(ctx context.Context, tx pgx.Tx, to, lang, purpose, raw
 	nonce := make([]byte, s.mailCipher.NonceSize())
 	_, _ = rand.Read(nonce)
 	sealed := s.mailCipher.Seal(nonce, nonce, plain, []byte("calirestore-mail-v1"))
-	_, err = tx.Exec(ctx, `INSERT INTO mail_outbox(payload,expires_at) VALUES($1,$2)`, sealed, expiry)
+	_, err = tx.Exec(ctx, `INSERT INTO mail_outbox(payload,expires_at,account_id) VALUES($1,$2,$3)`, sealed, expiry, account)
 	return err
 }
 
@@ -75,7 +75,7 @@ func (s *Service) issue(ctx context.Context, tx pgx.Tx, id, to, lang, purpose st
 	if err != nil {
 		return err
 	}
-	return s.enqueue(ctx, tx, to, lang, purpose, raw, expiry)
+	return s.enqueue(ctx, tx, id, to, lang, purpose, raw, expiry)
 }
 
 func (s *Service) RegisterAccount(ctx context.Context, email, password, lang string) error {
@@ -206,11 +206,11 @@ func (s *Service) ConsumeLink(ctx context.Context, raw, purpose, password string
 		return err
 	}
 	if purpose != "verify" {
-		if err = s.enqueue(ctx, tx, oldEmail, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
+		if err = s.enqueue(ctx, tx, id, oldEmail, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
 			return err
 		}
 		if purpose == "email" {
-			if err = s.enqueue(ctx, tx, to, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
+			if err = s.enqueue(ctx, tx, id, to, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
 				return err
 			}
 		}
@@ -289,7 +289,7 @@ func (s *Service) ChangeCredential(ctx context.Context, raw, password, email str
 			return err
 		}
 	}
-	if err = s.enqueue(ctx, tx, actor.Account.Email, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
+	if err = s.enqueue(ctx, tx, actor.Account.ID, actor.Account.Email, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
 		return err
 	}
 	action := "password_changed"

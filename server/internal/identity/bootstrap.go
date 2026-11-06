@@ -34,7 +34,7 @@ func Bootstrap(ctx context.Context, pool *pgxpool.Pool, email, password string) 
 	}
 	defer tx.Rollback(context.Background())
 	var previous string
-	err = tx.QueryRow(ctx, `SELECT COALESCE(a.email,'') FROM identity_guard g LEFT JOIN accounts a ON a.id=g.bootstrap_account WHERE g.singleton FOR UPDATE OF g`).Scan(&previous)
+	err = tx.QueryRow(ctx, `SELECT CASE WHEN g.bootstrap_account IS NULL THEN '' ELSE coalesce(a.email,'[purged]') END FROM identity_guard g LEFT JOIN accounts a ON a.id=g.bootstrap_account WHERE g.singleton FOR UPDATE OF g`).Scan(&previous)
 	if err != nil {
 		return errors.New("bootstrap unavailable; use the migration role and current schema")
 	}

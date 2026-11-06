@@ -11,4 +11,11 @@ export function requireEmptyHosting(run) {
   ) {
     throw new Error('Substrate backup/restore is unavailable for hosted projects');
   }
+  if (
+    query('SELECT EXISTS (SELECT 1 FROM public.accounts)') !== 'f' ||
+    (query("SELECT to_regclass('public.account_deletions') IS NOT NULL") === 't' &&
+      query('SELECT EXISTS (SELECT 1 FROM public.account_deletions)') !== 'f')
+  ) {
+    throw new Error('Substrate backup/restore requires an empty identity database');
+  }
 }

@@ -12,7 +12,9 @@ export function AccessForm(props: AccessFormProps) {
   return (
     <section class="account-section">
       <div>
-        <h2>{props.t(linkView() ? props.view : 'account')}</h2>
+        <h2>
+          {props.t(linkView() || props.view === 'recover-deleted-account' ? props.view : 'account')}
+        </h2>
         <p>{props.t('accessHelp')}</p>
       </div>
       <div class="account-panel">
@@ -35,12 +37,17 @@ export function AccessForm(props: AccessFormProps) {
               when={
                 props.view === 'login' ||
                 props.view === 'register' ||
+                props.view === 'recover-deleted-account' ||
                 props.view === 'reset-password'
               }
             >
               <PasswordField
                 t={props.t}
-                kind={props.view === 'login' ? 'password' : 'newPassword'}
+                kind={
+                  props.view === 'login' || props.view === 'recover-deleted-account'
+                    ? 'password'
+                    : 'newPassword'
+                }
               />
             </Show>
             <Show when={props.view === 'register' || props.view === 'reset-password'}>
@@ -60,6 +67,10 @@ export function AccessForm(props: AccessFormProps) {
         </Show>
         <Show when={props.view === 'login'}>
           <a href="/verify-email">{props.t('resend')}</a>
+          <a href="/recover-deleted-account">{props.t('recover-deleted-account')}</a>
+        </Show>
+        <Show when={props.view === 'recover-deleted-account'}>
+          <a href="/login">{props.t('login')}</a>
         </Show>
         <Show when={props.view === 'verify-email'}>
           <details>

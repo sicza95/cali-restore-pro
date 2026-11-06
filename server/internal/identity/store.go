@@ -133,6 +133,10 @@ func (s *Service) rate(ctx context.Context, email string) error {
 }
 
 func (s *Service) checkPassword(ctx context.Context, email, password string) (Account, string, error) {
+	return s.checkPasswordState(ctx, email, password, "active")
+}
+
+func (s *Service) checkPasswordState(ctx context.Context, email, password, state string) (Account, string, error) {
 	var a Account
 	email, valid := normalizeEmail(email)
 	if !valid {
@@ -153,7 +157,7 @@ func (s *Service) checkPassword(ctx context.Context, email, password string) (Ac
 		return a, "", err
 	}
 	matches := VerifyPassword(verifier, password)
-	if !matches || err != nil || !valid || a.State != "active" {
+	if !matches || err != nil || !valid || a.State != state {
 		return Account{}, "", ErrCredentials
 	}
 	return a, verifier, nil

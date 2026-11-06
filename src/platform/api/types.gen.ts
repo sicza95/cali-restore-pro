@@ -189,8 +189,8 @@ export type AdminControls =
     };
 
 export type DeletionPreflight = {
-  eligible: false;
-  reason: 'project_continuity_unavailable' | 'hosted_projects_require_continuity';
+  eligible: boolean;
+  reason: '' | 'hosted_projects_require_continuity' | 'account_state_blocks_deletion';
 };
 
 export type EncryptedFileShape = {
@@ -229,6 +229,12 @@ export type ProjectRevisionWrite = {
   epoch: string;
   salt: string;
   ciphertext: string;
+};
+
+export type DeletionStatus = {
+  id: string;
+  recoverUntil: string;
+  backupExpiresAt: string;
 };
 
 export type PlatformStatusData = {
@@ -2695,3 +2701,232 @@ export type PutProjectRevisionResponses = {
 
 export type PutProjectRevisionResponse =
   PutProjectRevisionResponses[keyof PutProjectRevisionResponses];
+
+export type DeleteOwnAccountData = {
+  body: {
+    confirm: true;
+    pendingWorkResolved: true;
+    purge?: boolean;
+  };
+  headers: {
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/account/deletion';
+};
+
+export type DeleteOwnAccountErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type DeleteOwnAccountError = DeleteOwnAccountErrors[keyof DeleteOwnAccountErrors];
+
+export type DeleteOwnAccountResponses = {
+  /**
+   * Deletion lifecycle result
+   */
+  200: DeletionStatus;
+};
+
+export type DeleteOwnAccountResponse = DeleteOwnAccountResponses[keyof DeleteOwnAccountResponses];
+
+export type AdminDeleteAccountData = {
+  body: {
+    confirm: true;
+    pendingWorkResolved: true;
+    purge?: boolean;
+  };
+  headers: {
+    'X-CSRF-Token': string;
+  };
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/api/v1/admin/accounts/{id}/deletion';
+};
+
+export type AdminDeleteAccountErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type AdminDeleteAccountError = AdminDeleteAccountErrors[keyof AdminDeleteAccountErrors];
+
+export type AdminDeleteAccountResponses = {
+  /**
+   * Deletion lifecycle result
+   */
+  200: DeletionStatus;
+};
+
+export type AdminDeleteAccountResponse =
+  AdminDeleteAccountResponses[keyof AdminDeleteAccountResponses];
+
+export type ChangeProjectDeletionData = {
+  body: {
+    confirm: true;
+    action: 'delete' | 'recover' | 'purge';
+  };
+  headers: {
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/deletion';
+};
+
+export type ChangeProjectDeletionErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Hosted project unavailable
+   */
+  404: unknown;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type ChangeProjectDeletionError =
+  ChangeProjectDeletionErrors[keyof ChangeProjectDeletionErrors];
+
+export type ChangeProjectDeletionResponses = {
+  /**
+   * Deletion lifecycle result
+   */
+  200: DeletionStatus;
+  /**
+   * Project recovered
+   */
+  204: void;
+};
+
+export type ChangeProjectDeletionResponse =
+  ChangeProjectDeletionResponses[keyof ChangeProjectDeletionResponses];
+
+export type ListProjectTrashData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/hosted-project-trash';
+};
+
+export type ListProjectTrashErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type ListProjectTrashError = ListProjectTrashErrors[keyof ListProjectTrashErrors];
+
+export type ListProjectTrashResponses = {
+  /**
+   * Deletion lifecycle result
+   */
+  200: Array<DeletionStatus>;
+};
+
+export type ListProjectTrashResponse = ListProjectTrashResponses[keyof ListProjectTrashResponses];
+
+export type RecoverDeletedAccountData = {
+  body: {
+    email: string;
+    password: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/recover-deleted-account';
+};
+
+export type RecoverDeletedAccountErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Rate limit exceeded
+   */
+  429: unknown;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type RecoverDeletedAccountError =
+  RecoverDeletedAccountErrors[keyof RecoverDeletedAccountErrors];
+
+export type RecoverDeletedAccountResponses = {
+  /**
+   * Account recovered
+   */
+  204: void;
+};
+
+export type RecoverDeletedAccountResponse =
+  RecoverDeletedAccountResponses[keyof RecoverDeletedAccountResponses];

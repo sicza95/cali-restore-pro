@@ -94,7 +94,7 @@ services:
       SMTP_ADDRESS: ${SMTP_ADDRESS:-mail-sink:1025}
       SMTP_FROM: ${SMTP_FROM:-accounts@calirestore.invalid}
     secrets: [app_db_password, mail_key]
-    volumes: [objects:/data/objects]
+    volumes: [objects:/data/objects, operational-backups:/data/operational-backups]
     depends_on:
       db: { condition: service_healthy }
       migrate: { condition: service_completed_successfully }
@@ -125,6 +125,16 @@ services:
     security_opt: [no-new-privileges:true]
     volumes: [objects:/data/objects]
 
+  archive-tool:
+    image: postgres:18.6-bookworm@sha256:5c4783a8cc3f0074912164f94dfa1be4e043438f0f707cf968d7af9a0d31a2c8
+    profiles: [ops]
+    user: '65532:65532'
+    entrypoint: [sh]
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    volumes: [operational-backups:/data/operational-backups]
+
   cloudflared:
     image: cloudflare/cloudflared:2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07
     profiles: [tunnel]
@@ -146,6 +156,7 @@ networks:
 volumes:
   postgres:
   objects:
+  operational-backups:
 
 secrets:
   mail_key:

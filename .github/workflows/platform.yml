@@ -27,6 +27,8 @@ jobs:
       - run: docker compose -f compose.yaml -f deploy/compose.test.yaml run --build --rm test
       - run: docker run --rm calirestore-test:local go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - run: docker compose --profile dev up --build -d --wait
+      - name: Quiesced backup and isolated restore
+        run: node scripts/backup-smoke.mjs deploy/backups/ci calirestore-restore-ci
       - run: node scripts/identity-smoke.mjs
         env:
           IDENTITY_SMOKE_DISPOSABLE: '1'
@@ -38,18 +40,27 @@ jobs:
         env:
           IDENTITY_SMOKE_DISPOSABLE: '1'
           SMOKE_ORIGIN: http://localhost:8080
-      - name: Quiesced backup and isolated restore
-        run: node scripts/backup-smoke.mjs deploy/backups/ci calirestore-restore-ci
       - name: Encrypted file transfer and restart
         run: node scripts/encrypted-files-smoke.mjs
         env:
           IDENTITY_SMOKE_DISPOSABLE: '1'
           SMOKE_ORIGIN: http://localhost:8080
+      - name: Restore a pre-revocation and pre-deletion operational archive
+        env:
+          COMPOSE_PROJECT_NAME: m07-test-source
+          APP_PORT: '18097'
+          MAIL_PORT: '18098'
+        run: |
+          docker compose --profile dev up -d --wait
+          node scripts/operational-backup-smoke.mjs m07-test-target
       - name: Diagnostics
         if: failure()
         run: docker compose logs --no-color
       - name: Cleanup disposable CI projects
         if: always()
         run: |
+          docker compose -p m07-test-source --profile dev down -v
+          docker compose -p m07-test-target down -v
+          docker compose -p m07-test-target-interrupted down -v
           docker compose -p calirestore-restore-ci down -v
           docker compose -f compose.yaml -f deploy/compose.test.yaml --profile dev down -v

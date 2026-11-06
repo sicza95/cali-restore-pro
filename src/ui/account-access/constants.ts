@@ -2,6 +2,7 @@ export const copy = {
   en: {
     account: 'Your account',
     login: 'Sign in',
+    'recover-deleted-account': 'Recover a deleted account',
     register: 'Create account',
     'forgot-password': 'Reset access',
     'reset-password': 'Choose a new password',
@@ -59,6 +60,7 @@ export const copy = {
   hu: {
     account: 'A fiókod',
     login: 'Bejelentkezés',
+    'recover-deleted-account': 'Törölt fiók helyreállítása',
     register: 'Fiók létrehozása',
     'forgot-password': 'Hozzáférés visszaállítása',
     'reset-password': 'Új jelszó megadása',
@@ -118,6 +120,7 @@ export const copy = {
 };
 
 export const publicRoutes = [
+  'recover-deleted-account',
   'register',
   'forgot-password',
   'reset-password',
@@ -135,6 +138,7 @@ export const authErrorMessages = {
 } as const;
 
 export const sessionEndingActions = [
+  '/account/deletion',
   'logout',
   'change-password',
   'reset-password',

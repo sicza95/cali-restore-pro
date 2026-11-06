@@ -73,18 +73,12 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 			if id == "" {
 				id = actor.Account.ID
 			}
-			var hosted bool
-			err = h.service.pool.QueryRow(r.Context(),
-				`SELECT EXISTS (SELECT 1 FROM project_owners WHERE account_id=$1)`, id).Scan(&hosted)
+			reason, err := accountDeletionPreflight(r.Context(), h.service.pool, id)
 			if err != nil {
 				failure(w, err)
 				return
 			}
-			reason := "project_continuity_unavailable"
-			if hosted {
-				reason = "hosted_projects_require_continuity"
-			}
-			respond(w, 200, map[string]any{"eligible": false, "reason": reason})
+			respond(w, 200, map[string]any{"eligible": reason == "", "reason": reason})
 		})
 	}
 }

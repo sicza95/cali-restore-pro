@@ -19,7 +19,8 @@ const checkpointRecipient = ` FROM project_invitations i
  JOIN invitation_grants g ON g.invitation_id=i.id
  JOIN accounts r ON r.id=i.recipient_id
  JOIN sharing_identities k ON k.account_id=r.id
- WHERE i.id=$1 AND i.state='active' AND r.state='active' AND r.email=i.recipient_email`
+ WHERE i.id=$1 AND i.state='active' AND r.state='active' AND r.email=i.recipient_email
+ AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)`
 
 func checkpointFailure(w http.ResponseWriter, err error) {
 	if errors.Is(err, pgx.ErrNoRows) {

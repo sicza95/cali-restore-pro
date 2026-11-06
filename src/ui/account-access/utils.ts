@@ -25,7 +25,7 @@ export function authFormBody(
   const email = String(fields.get('email') ?? '');
   const password = String(fields.get('password') ?? '');
   const confirm = fields.get('confirm') === 'on';
-  return action === 'login'
+  return action === 'login' || action === 'recover-deleted-account'
     ? { email, password }
     : action === 'confirm'
       ? { password }

@@ -36,7 +36,7 @@ func main() {
 
 func run(ctx context.Context, args []string) error {
 	if len(args) != 1 {
-		return errors.New("usage: calirestore serve|worker|migrate|bootstrap-superuser|healthcheck|worker-healthcheck")
+		return errors.New("usage: calirestore serve|worker|migrate|verify-restored-objects|bootstrap-superuser|healthcheck|worker-healthcheck")
 	}
 	if args[0] == "healthcheck" {
 		return healthcheck()
@@ -52,7 +52,7 @@ func run(ctx context.Context, args []string) error {
 		}
 		return nil
 	}
-	if args[0] != "serve" && args[0] != "worker" && args[0] != "migrate" && args[0] != "bootstrap-superuser" {
+	if args[0] != "serve" && args[0] != "worker" && args[0] != "migrate" && args[0] != "verify-restored-objects" && args[0] != "bootstrap-superuser" {
 		return errors.New("unknown command")
 	}
 	c, err := config.Load()
@@ -81,7 +81,24 @@ func run(ctx context.Context, args []string) error {
 		slog.Info("migrations applied")
 		return nil
 	}
-	ready := func(ctx context.Context) error { return migrations.Check(ctx, pool) }
+	ready := func(ctx context.Context) error {
+		if err := migrations.Check(ctx, pool); err != nil {
+			return err
+		}
+		var pending, retired bool
+		err := pool.QueryRow(ctx, `SELECT coalesce(current_setting('calirestore.restore_pending',true),'')='on',
+ coalesce(current_setting('calirestore.authority_retired',true),'')='on'`).Scan(&pending, &retired)
+		if err == nil && retired && args[0] != "worker" {
+			return errors.New("database authority retired")
+		}
+		if err == nil && pending && args[0] != "verify-restored-objects" {
+			return errors.New("restore verification pending")
+		}
+		if err == nil && !pending && args[0] == "verify-restored-objects" {
+			return errors.New("restore verification requires a gated database")
+		}
+		return err
+	}
 	start, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := ready(start); err != nil {
@@ -94,6 +111,16 @@ func run(ctx context.Context, args []string) error {
 	if err != nil {
 		return errors.New("identity initialization failed")
 	}
+	objectRoot := filepath.Join(c.ObjectDir, "encrypted-v1")
+	if err := os.MkdirAll(objectRoot, 0700); err != nil {
+		return errors.New("cannot initialize encrypted object storage")
+	}
+	if args[0] == "verify-restored-objects" {
+		if err := identities.VerifyRestoredObjects(ctx, objectRoot); err != nil {
+			return errRestoreVerification
+		}
+		return nil
+	}
 	keyPath := os.Getenv("MAIL_KEY_FILE")
 	if !filepath.IsAbs(keyPath) {
 		return errors.New("MAIL_KEY_FILE must be an absolute mounted secret path")
@@ -105,10 +132,6 @@ func run(ctx context.Context, args []string) error {
 	key, err := hex.DecodeString(strings.TrimSpace(string(keyText)))
 	if err != nil || identities.ConfigureMail(key, c.Origin) != nil {
 		return errors.New("invalid mail key")
-	}
-	objectRoot := filepath.Join(c.ObjectDir, "encrypted-v1")
-	if err := os.MkdirAll(objectRoot, 0700); err != nil {
-		return errors.New("cannot initialize encrypted object storage")
 	}
 	if args[0] == "worker" {
 		address, from := os.Getenv("SMTP_ADDRESS"), os.Getenv("SMTP_FROM")
@@ -125,7 +148,18 @@ func run(ctx context.Context, args []string) error {
 		}
 		send := identity.SMTPTransport(address, from, os.Getenv("SMTP_USERNAME"), password, c.Mode == "production")
 		return worker(ctx, c, ready, func(ctx context.Context) error {
-			return errors.Join(identities.CleanExpiredFiles(ctx, objectRoot), identities.DeliverMail(ctx, send))
+			archives := identities.ExpireOperationalArchives(ctx, "/data/operational-backups")
+			var retired bool
+			err := pool.QueryRow(ctx, "SELECT coalesce(current_setting('calirestore.authority_retired',true),'')='on'").Scan(&retired)
+			if err != nil || retired {
+				return errors.Join(archives, err)
+			}
+			return errors.Join(
+				archives,
+				identities.PurgeDeleted(ctx, objectRoot),
+				identities.CleanExpiredFiles(ctx, objectRoot),
+				identities.DeliverMail(ctx, send),
+			)
 		})
 	}
 	if _, err := os.Stat(filepath.Join(c.StaticDir, "index.html")); err != nil {

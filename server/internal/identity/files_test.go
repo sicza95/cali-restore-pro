@@ -95,7 +95,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	if got := want("GET", preflight, alice, nil, false, 200).Body.String(); !bytes.Contains([]byte(got), []byte("hosted_projects_require_continuity")) {
 		t.Fatalf("hosted owner preflight: %s", got)
 	}
-	if got := want("GET", preflight, bob, nil, false, 200).Body.String(); !bytes.Contains([]byte(got), []byte("project_continuity_unavailable")) {
+	if got := want("GET", preflight, bob, nil, false, 200).Body.String(); !bytes.Contains([]byte(got), []byte(`"eligible":true`)) {
 		t.Fatalf("unhosted account preflight: %s", got)
 	}
 	want("PUT", file(1), bob, shape, false, 404)

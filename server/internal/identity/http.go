@@ -161,6 +161,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 	}
 	h.lifecycleRoutes(route)
 	h.adminRoutes(route)
+	h.deletionRoutes(route)
 	if h.objects != nil {
 		h.fileRoutes(route, *h.objects)
 		h.invitationRoutes(route)

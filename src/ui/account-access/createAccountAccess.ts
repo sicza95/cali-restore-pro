@@ -8,6 +8,7 @@ import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
 import { copy, sessionEndingActions } from './constants';
 import { accountRoute, authErrorMessage, authFormBody } from './utils';
+import type { DeletionStatus } from '../../platform/api/types.gen';
 import type { Account, Language, Message, Session } from './types';
 
 export function createAccountAccess() {
@@ -17,6 +18,7 @@ export function createAccountAccess() {
   const view = accountRoute(window.location.pathname);
   const linkToken = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? '';
   if (window.location.hash) history.replaceState(null, '', window.location.pathname);
+  const [deletionReceipt, setDeletionReceipt] = createSignal<DeletionStatus>();
   const [account, setAccount] = createSignal<Account>();
   const [capabilities, setCapabilities] = createSignal<string[]>([]);
   const [loaded, setLoaded] = createSignal(false);
@@ -80,7 +82,7 @@ export function createAccountAccess() {
     setMessage(undefined);
     setFailed(false);
     try {
-      await api(action, body);
+      const result = await api(action, body);
       if (action === 'login') {
         rememberOfflineAccount();
         sessionChanges?.postMessage(null);
@@ -90,6 +92,13 @@ export function createAccountAccess() {
             : '/settings/security',
         );
         return;
+      }
+      if (action === '/account/deletion' && result.recoverUntil && result.backupExpiresAt) {
+        setDeletionReceipt({
+          id: account()?.id ?? '',
+          recoverUntil: result.recoverUntil,
+          backupExpiresAt: result.backupExpiresAt,
+        });
       }
       if (sessionEndingActions.includes(action)) {
         clearSession();
@@ -104,7 +113,7 @@ export function createAccountAccess() {
           clearSession();
         }
       }
-      return true;
+      return result;
     } catch (error) {
       setFailed(true);
       const code = error instanceof Error ? error.message : '';
@@ -188,6 +197,7 @@ export function createAccountAccess() {
 
   return {
     account,
+    deletionReceipt,
     can,
     loaded,
     read,

@@ -63,7 +63,8 @@ func (h *HTTP) scopeRoutes(route func(string, bool, http.HandlerFunc)) {
  FROM invitation_scope_grants s JOIN invitation_grants g ON g.invitation_id=s.invitation_id
  JOIN project_invitations i ON i.id=g.invitation_id JOIN accounts r ON r.id=i.recipient_id
  JOIN sharing_identities k ON k.account_id=s.sender_id
- WHERE i.id=$1 AND i.recipient_id=$2 AND i.state='active' AND r.email=i.recipient_email AND s.scope=$3`,
+ WHERE i.id=$1 AND i.recipient_id=$2 AND i.state='active' AND r.email=i.recipient_email
+ AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id) AND s.scope=$3`,
 				id, a.account, scope).Scan(&grant.Encapsulation, &grant.Ciphertext, &grant.SenderID, &grant.SenderKey)
 		})
 		if errors.Is(err, pgx.ErrNoRows) {

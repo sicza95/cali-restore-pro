@@ -1,5 +1,5 @@
-import type { DeletionPreflight } from '../../../../platform/api/types.gen';
-import { createSignal, For, Show } from 'solid-js';
+import { AccountDeletion } from '../profile/AccountDeletion';
+import { For, Show } from 'solid-js';
 import { ConfirmField } from '../../confirm-field/ConfirmField';
 import { settingsCopy } from '../constants';
 import type { AdminAccount, SettingsProps } from '../types';
@@ -7,7 +7,6 @@ import type { AdminAccount, SettingsProps } from '../types';
 export function AccountRow(props: SettingsProps & { account: AdminAccount; refresh: () => void }) {
   const a = () => props.account;
   const c = () => settingsCopy[props.model.lang()];
-  const [blocked, setBlocked] = createSignal<DeletionPreflight['reason']>();
   const ready = () => a().state === 'active' || a().state === 'suspended';
   const disabled = () => props.model.busy() || !props.model.confirmed();
   const apply = (action: string, body: object) =>
@@ -143,28 +142,17 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
               </button>
             </form>
           </Show>
-          <Show when={props.model.can('roles.manage')}>
-            <div>
-              <button
-                class="secondary"
-                disabled={props.model.busy()}
-                onClick={async () => {
-                  const result = await props.model.read<DeletionPreflight>(
-                    '/admin/accounts/' + a().id + '/deletion-preflight',
-                  );
-                  setBlocked(result?.reason);
-                }}
-              >
-                {c().preflight}
-              </button>
-              <Show when={blocked()}>
-                <p role="status">
-                  {blocked() === 'hosted_projects_require_continuity'
-                    ? c().blockedHosted
-                    : c().blocked}
-                </p>
-              </Show>
-            </div>
+          <Show
+            when={
+              props.model.account()?.role === 'superuser' && a().id !== props.model.account()?.id
+            }
+          >
+            <AccountDeletion
+              model={props.model}
+              path={'/admin/accounts/' + a().id}
+              pending={a().state === 'pending_deletion'}
+              onChange={props.refresh}
+            />
           </Show>
         </div>
       </details>
