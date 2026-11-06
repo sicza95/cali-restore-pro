@@ -1,32 +1,22 @@
 import { createSignal, onCleanup, onMount, Show, untrack } from 'solid-js';
-import { maxFile, newCode } from '../../../platform/vault/crypto';
+import { newCode } from '../../../platform/vault/crypto';
 import { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
+import { vaultEntryControls } from './entry-controls';
 import { vaultCopy } from './vault-copy';
+import { download, readFile } from './vault-files';
 import './vault.css';
-
-function download(file: string, name: string) {
-  const url = URL.createObjectURL(new Blob([file], { type: 'application/json' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = name;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-async function readFile(event: SubmitEvent) {
-  const file = new FormData(event.currentTarget as HTMLFormElement).get('file');
-  if (!(file instanceof File) || !file.size || file.size > maxFile) throw new Error('Invalid file');
-  return file.text();
-}
 
 export function VaultSection(props: {
   account: string;
   language: Language;
   unlockOnly?: string;
+  entry?: 'unlock' | 'approve';
+  setupLink?: { href: string; text: string };
   workspace?: (vault: LocalVault) => import('solid-js').JSX.Element;
 }) {
   const c = () => vaultCopy[props.language];
+  const manage = () => !props.workspace && !props.entry;
   const [status, setStatus] = createSignal<{ exists: boolean; remembered: boolean }>();
   const [text, setText] = createSignal<string>();
   const [saved, setSaved] = createSignal('');
@@ -160,13 +150,20 @@ export function VaultSection(props: {
                   : c().empty
               : ''}
         </p>
+        <Show when={status() && !status()?.exists && props.setupLink}>
+          {(link) => (
+            <a class="vault-setup-link" href={link().href}>
+              {link().text}
+            </a>
+          )}
+        </Show>
         <Show when={failure()}>
           <p role="alert">{c().failed}</p>
         </Show>
         <Show when={forgot()}>
           <p role="status">{c().forgetDone}</p>
         </Show>
-        <Show when={!props.unlockOnly && status() && !status()?.exists}>
+        <Show when={!props.unlockOnly && !props.entry && status() && !status()?.exists}>
           <label class="confirmation">
             <input
               type="checkbox"
@@ -270,21 +267,27 @@ export function VaultSection(props: {
         </Show>
         <Show when={status()?.exists && text() === undefined}>
           <Show when={status()?.remembered}>
-            <button disabled={busy()} onClick={() => void run(() => vault.unlock(), loadText)}>
+            <button
+              data-control-id={vaultEntryControls.remembered.id}
+              disabled={busy()}
+              onClick={() => void run(() => vault.unlock(), loadText)}
+            >
               {c().remembered}
             </button>
           </Show>
           <form onSubmit={formAction((e) => vault.unlock(secret(e)), loadText)}>
             {keyField(c().key)}
-            <button disabled={busy()}>{c().unlock}</button>
+            <button data-control-id={vaultEntryControls.recovery.id} disabled={busy()}>
+              {c().unlock}
+            </button>
           </form>
         </Show>
-        <Show when={text() !== undefined && props.workspace}>
-          <button class="secondary" onClick={lock}>
+        <Show when={text() !== undefined && (props.workspace || props.entry)}>
+          <button class="secondary" data-control-id={vaultEntryControls.lock.id} onClick={lock}>
             {c().lock}
           </button>
         </Show>
-        <Show when={text() !== undefined && !props.workspace}>
+        <Show when={text() !== undefined && manage()}>
           <label>
             {c().text}
             <textarea
@@ -307,7 +310,12 @@ export function VaultSection(props: {
           >
             {c().save}
           </button>
-          <button class="secondary" disabled={busy()} onClick={lock}>
+          <button
+            class="secondary"
+            data-control-id={vaultEntryControls.lock.id}
+            disabled={busy()}
+            onClick={lock}
+          >
             {c().lock}
           </button>
           <label class="confirmation">
@@ -335,6 +343,8 @@ export function VaultSection(props: {
           >
             {c().backup}
           </button>
+        </Show>
+        <Show when={text() !== undefined && (manage() || props.entry === 'approve')}>
           <details>
             <summary>{c().approve}</summary>
             <form
@@ -344,11 +354,13 @@ export function VaultSection(props: {
               )}
             >
               {keyField(c().pairing)}
-              <button disabled={busy()}>{c().approve}</button>
+              <button data-control-id={vaultEntryControls.approve.id} disabled={busy()}>
+                {c().approve}
+              </button>
             </form>
           </details>
         </Show>
-        <Show when={status()?.exists && !props.workspace}>
+        <Show when={status()?.exists && manage()}>
           <details>
             <summary>{c().forget}</summary>
             <label class="confirmation">

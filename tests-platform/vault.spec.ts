@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Download, Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
+import { vaultEntryControls } from '../src/ui/account-access/account-security/entry-controls';
 import AxeBuilder from '@axe-core/playwright';
 
 const first = '10000000-0000-4000-8000-000000000001';
@@ -145,12 +146,40 @@ test('trusted-device approval copies committed work and forget requires delibera
     .getByLabel('Recovery key', { exact: true })
     .first()
     .inputValue();
+  await page.goto('/devices/approve');
+  await expect(vault(page).getByText('Vault locked')).toBeVisible();
+  await expect(
+    vault(page).locator('summary').filter({ hasText: 'Download device approval file' }),
+  ).toHaveCount(0);
+  await expect(button(page, 'Unlock with recovery key')).toHaveAttribute(
+    'data-control-id',
+    vaultEntryControls.recovery.id,
+  );
+  const remembered = button(page, 'Unlock on this remembered browser');
+  await expect(remembered).toHaveAttribute('data-control-id', vaultEntryControls.remembered.id);
+  await remembered.click();
+  await expect(button(page, 'Lock vault')).toHaveAttribute(
+    'data-control-id',
+    vaultEntryControls.lock.id,
+  );
+  await expect(vault(page).getByLabel('Sample text')).toHaveCount(0);
   const approval = vault(page)
     .locator('details')
     .filter({ hasText: 'Download device approval file' });
   await approval.locator('summary').click();
   await approval.getByLabel('Pairing code').fill(code);
-  const file = await downloaded(page, () => button(page, 'Download device approval file').click());
+  const approve = button(page, 'Download device approval file');
+  await expect(approve).toHaveAttribute('data-control-id', vaultEntryControls.approve.id);
+  const file = await downloaded(page, () => approve.click());
+  await page.goto('/unlock');
+  await expect(vault(page).getByText('Vault locked')).toBeVisible();
+  await button(page, 'Unlock on this remembered browser').click();
+  await expect(vault(page).getByText('Vault unlocked')).toBeVisible();
+  await button(page, 'Lock vault').click();
+  await expect(vault(page).getByText('Vault locked')).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/devices\/approve$/);
+  await expect(vault(page).getByText('Vault locked')).toBeVisible();
   const receive = vault(target).locator('details').filter({ hasText: 'Open device approval file' });
   await receive.getByLabel('Encrypted file').setInputFiles({
     name: 'approval.json',
@@ -165,6 +194,7 @@ test('trusted-device approval copies committed work and forget requires delibera
   await vault(target).getByLabel('Recovery key').fill(newRecovery);
   await button(target, 'Unlock with recovery key').click();
   await expect(vault(target).getByLabel('Sample text')).toHaveValue(sample);
+  await page.goto('/settings/security');
   await vault(page).locator('summary').filter({ hasText: 'Forget this browser' }).click();
   await expect(button(page, 'Forget this browser')).toBeDisabled();
   await vault(page).getByLabel('I agree to discard').check();

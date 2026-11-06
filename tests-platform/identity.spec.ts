@@ -109,6 +109,12 @@ test('real registration, mail, verification, sessions and credential recovery', 
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
   await signIn(password);
+  await page.goto('/admin');
+  await expect(page.getByText('This account has no administration permissions.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Administration' })).toHaveCount(0);
+  expect((await page.request.get('/api/v1/admin/accounts')).status()).toBe(403);
+  await page.goBack();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Account security');
   await page.reload();
   await expect(page.getByText(email, { exact: true })).toBeVisible();
   const other = await browser.newContext({ baseURL: origin });
@@ -132,7 +138,7 @@ test('real registration, mail, verification, sessions and credential recovery', 
     await change.getByLabel('New password', { exact: true }).fill(replacement);
     await change.getByRole('checkbox').check();
     await change.getByRole('button', { name: 'Change password', exact: true }).click();
-    await expect(page.getByText('Sign in to manage your account security.')).toBeVisible();
+    await expect(page.getByText('Sign in to open this page.')).toBeVisible();
     expect((await other.request.get('/api/v1/auth/me')).status()).toBe(401);
   } finally {
     await other.close();
@@ -166,10 +172,10 @@ test('real registration, mail, verification, sessions and credential recovery', 
     .filter({ has: page.getByRole('heading', { name: 'Signed-in sessions', exact: true }) });
   await sessionPanel.getByRole('checkbox').check();
   await page.getByRole('button', { name: 'Sign out all sessions', exact: true }).click();
-  await expect(page.getByText('Sign in to manage your account security.')).toBeVisible();
+  await expect(page.getByText('Sign in to open this page.')).toBeVisible();
   await signIn(password, newEmail);
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.getByText('Sign in to manage your account security.')).toBeVisible();
+  await expect(page.getByText('Sign in to open this page.')).toBeVisible();
   // Public error assertions never log bearer tokens or mail body content.
   const checkUnauthorized = async (client: APIRequestContext) =>
     expect((await client.get('/api/v1/auth/me')).status()).toBe(401);
