@@ -11,7 +11,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | PROJ-01     | Must     | Durable project identity, name, and revision                        | M-05  | M-05       | Partial |
 | PROJ-02     | Must     | New/Open/Recent/Import are coherent                                 | M-05  | M-08       | Partial |
 | PROJ-03     | Must     | Local recovery plus authorized optional remote sync                 | M-03  | M-16       | Partial |
-| PROJ-04     | Must     | Self-contained encrypted portable backup                            | M-07  | M-16       | Planned |
+| PROJ-04     | Must     | Self-contained encrypted portable backup                            | M-07  | M-16       | Partial |
 | PROJ-05     | Must     | Revision-conflict protection                                        | M-07  | M-16       | Partial |
 | PROJ-06     | Must     | Restoration projects contain one or more objects                    | M-05  | M-05       | Passed  |
 | PROJ-07     | Must     | Explicit offline selections and protected local work                | M-07  | M-16       | Partial |
@@ -63,7 +63,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Planned |
 | OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Planned |
 | OUT-03      | Must     | Printable PDF map and standard client report                        | M-10  | M-16       | Planned |
-| OUT-04      | Must     | Separate normal outputs, backups, and diagnostics                   | M-07  | M-16       | Planned |
+| OUT-04      | Must     | Separate normal outputs, backups, and diagnostics                   | M-07  | M-16       | Partial |
 | OUT-05      | Must     | Explicit assessment versions per report surface                     | M-10  | M-16       | Planned |
 | OUT-06      | Must     | Five initial export formats                                         | M-10  | M-16       | Planned |
 | OUT-07      | Must     | Optional report branding with defaults/overrides                    | M-02  | M-16       | Partial |
@@ -161,3 +161,5 @@ SHARE-08 evidence: [M-06 selected grants](../m06-sharing.md#selected-checkpoints
 SHARE-06 evidence: [M-06 revocation during transfers](../m06-sharing.md#revocation-during-transfers) covers hosted originals. Live updates to other scopes and offline recovery remain planned.
 
 PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using epoch keys paired between owner devices. [Offline original pins](../m07-offline-originals.md) cover cold offline startup from the cached production app shell, explicit vault unlock, byte-for-byte export and persistent pin removal after a simulated reconnect denial.
+
+PROJ-04 and OUT-04 evidence is in [M-07 portable project backups](../m07-portable-backups.md). The project controls create a dedicated encrypted archive and restore the saved document and referenced originals as a new local copy. Release qualification and future editor and estimate data coverage remain open.
