@@ -118,7 +118,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | ADMIN-04    | Must     | Account quotas with single shared-project accounting                | M-02  | M-07       | Partial |
 | ADMIN-05    | Must     | Hosting withdrawal preserves data and project rights                | M-02  | M-07       | Partial |
 | ADMIN-06    | Must     | Voluntary deletion resolves project continuity and pending work     | M-02  | M-07       | Partial |
-| ADMIN-07    | Must     | Bounded deletion recovery and encrypted-backup expiry               | M-02  | M-07       | Planned |
+| ADMIN-07    | Must     | Bounded deletion recovery and encrypted-backup expiry               | M-02  | M-07       | Partial |
 | ADMIN-08    | Must     | Reversible suspension and explicit forced deletion                  | M-01  | M-07       | Partial |
 | UX-01       | Must     | iPad-first core interactions                                        | M-01  | M-16       | Partial |
 | UX-02       | Must     | English/Hungarian interface and independent report language         | M-01  | M-16       | Partial |
@@ -163,3 +163,5 @@ SHARE-06 evidence: [M-06 revocation during transfers](../m06-sharing.md#revocati
 PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using epoch keys paired between owner devices. [Offline original pins](../m07-offline-originals.md) cover cold offline startup from the cached production app shell, explicit vault unlock, byte-for-byte export and persistent pin removal after a simulated reconnect denial.
 
 PROJ-04 and OUT-04 evidence is in [M-07 portable project backups](../m07-portable-backups.md). The project controls create a dedicated encrypted archive and restore the saved document and referenced originals as a new local copy. Release qualification and future editor and estimate data coverage remain open.
+
+ADMIN-06, ADMIN-07 and ADMIN-08 evidence is in [M-07 deletion and retention](../m07-deletion-retention.md). It covers current ownership and hosting preflight, recoverable trash, early live purge, and a restore drill against pre-revocation and pre-deletion ciphertext. Production infrastructure qualification is separate.

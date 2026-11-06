@@ -87,7 +87,11 @@ The test overlay creates an independent disposable PostgreSQL database. Its Go s
 
 `contracts/openapi.json` owns the operational API types. The pinned generator writes `src/platform/api`; CI rejects generated drift. Frontend and backend scans run in CI, alongside the retained UI workflow. Container tags and immutable digests live in `Dockerfile` and Compose; update them in reviewed commits with boot/restore evidence. See [versions and licenses](versions.md).
 
-## Backup and isolated restore skeleton
+## Backup and isolated restore
+
+Use the [M-07 operational archive and restore procedure](../docs/m07-deletion-retention.md)
+for deployments with accounts or hosted projects. The M-00 commands below are for
+an empty identity database with synthetic object bytes.
 
 ```sh
 node scripts/backup.mjs deploy/backups/local-check
@@ -100,6 +104,6 @@ Backup requires a running app/worker, stops both writers, creates a custom Postg
 
 Restore verifies the manifest and both hashes before creating anything, refuses existing destination volumes, initializes a fresh database/application role using the supplied secret files, seeds objects-volume ownership from the runtime image without starting it, restores both volumes, compares schema history and checks migration compatibility. It leaves app/worker/tunnel stopped for review. Use only trusted backups. It never overwrites a live deployment. Inspect the isolated copy, then choose a separate local app port/origin before intentionally starting its app/worker.
 
-This qualifies only the M-00 schema and synthetic object bytes. M-04 verifies parts at commit and retrieval and blocks substrate backup/restore when hosted projects exist. M-07 must add committed-object backup manifests/watermarks, an independently current revocation/deletion ledger, infrastructure-key recovery, and actual 30-day/90-day lifecycle enforcement before production project recovery is safe. A successful substrate restore does not qualify those workflows.
+The substrate drill covers schema and synthetic object bytes only. Use the separate M-07 drill to verify current authority, deletion records, retention and the serving gate.
 
 `docker compose down` preserves both named data volumes. Remove volumes only for an explicitly disposable project; never use `down -v` as a normal upgrade or restart command.
