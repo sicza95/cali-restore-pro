@@ -7,7 +7,6 @@ import { AccountRow } from '../account-row/AccountRow';
 export function Admin(props: SettingsProps) {
   const c = () => settingsCopy[props.model.lang()];
   const [query, setQuery] = createSignal({ prefix: '', history: [''] });
-  const allowed = () => props.model.can('accounts.view') || props.model.can('operations.view');
   const [page, { refetch: reload }] = createResource(
     () => props.model.can('accounts.view') && query(),
     (q) =>
@@ -24,7 +23,7 @@ export function Admin(props: SettingsProps) {
     void refreshOps();
   };
   return (
-    <Show when={allowed()} fallback={<p>{c().noAccess}</p>}>
+    <Show when={props.model.canAdmin()} fallback={<p>{c().noAccess}</p>}>
       <Show when={props.model.can('accounts.view')}>
         <section class="admin-section">
           <h2>{c().accounts}</h2>

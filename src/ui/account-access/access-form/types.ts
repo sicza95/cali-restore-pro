@@ -1,8 +1,9 @@
+import type { publicRoutes } from '../constants';
 import type { Accessor } from 'solid-js';
-import type { Route, Submit, Translate } from '../types';
+import type { Submit, Translate } from '../types';
 
 export type AccessFormProps = {
-  view: Exclude<Route, 'profile' | 'preferences' | 'admin' | 'security' | 'projects'>;
+  view: 'login' | (typeof publicRoutes)[number];
   linkToken: string;
   submit: Submit;
   t: Translate;

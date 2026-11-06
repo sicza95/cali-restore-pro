@@ -26,12 +26,14 @@ body {
   font-size: 20px;
   text-decoration: none;
 }
-.account-nav p,
 .field-help,
 footer,
 .account-section > div > p {
   color: var(--cr-muted);
   font-size: 14px;
+}
+.account-nav-toggle {
+  display: none;
 }
 .account-nav nav {
   display: grid;
@@ -191,7 +193,8 @@ footer section {
 }
 @media (max-width: 1100px) {
   .account-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
   }
   .account-nav {
     display: flex;
@@ -202,13 +205,11 @@ footer section {
     border-bottom: 1px solid var(--cr-rule);
     padding: 16px 24px;
   }
-  .account-nav > p {
-    display: none;
-  }
   .account-nav nav {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    width: 100%;
     margin: 0;
   }
   .account-nav .language {
@@ -227,6 +228,13 @@ footer section {
   }
   .account-nav {
     padding: 16px;
+    justify-content: space-between;
+  }
+  .account-nav .account-nav-toggle {
+    display: block;
+  }
+  .account-nav nav[data-expanded='false'] {
+    display: none;
   }
   .account-panel {
     padding: 20px;
@@ -235,4 +243,18 @@ footer section {
     width: 100%;
     margin: 0;
   }
+}
+
+.account-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.vault-setup-link {
+  display: flex;
+  align-items: center;
+  min-height: var(--cr-touch);
 }

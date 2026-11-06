@@ -140,6 +140,8 @@ PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verifi
 
 When a PR implements part of a row, change its status to Partial and link the PR plus relevant test/evidence record. Mark Accepted only after the full preserved acceptance condition passes, including appropriate failure, permission and device checks. Record any changed behavior as a decision rather than silently rewriting the baseline.
 
+[M-08 application entry evidence](m08-delivery.md#m-08-2-of-8--application-entry-points) extends UX-01, UX-02 and UI-01 with registered navigation, bilingual route states, both tablet orientations, and persisted device/account presentation preferences. PRIV-05 and PRIV-07 gain browser evidence for the separation of signed-in state from vault lock and for restricted direct entry. Full acceptance remains open.
+
 The pre-existing Storybook library is partial UI evidence, not acceptance of UI-01 across the full app. M-08 mocks are control/workflow evidence only. M-09 fixture calculations and M-11 fixture encoders do not establish valid real-image measurements or physical-device capability.
 
 ## Additional requirements from the current instruction

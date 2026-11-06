@@ -1,15 +1,5 @@
-import { authErrorMessages, publicRoutes } from './constants';
-import type { Language, Message, Route } from './types';
-
-export function accountRoute(path: string): Route {
-  if (path === '/settings/security') return 'security';
-  if (path === '/projects' || path.startsWith('/projects/')) return 'projects';
-  if (path === '/settings/account') return 'profile';
-  if (path === '/settings/preferences') return 'preferences';
-  if (path === '/admin') return 'admin';
-  if (path === '/invitations') return 'invitations';
-  return publicRoutes.find((route) => route === path.slice(1)) ?? 'login';
-}
+import { authErrorMessages } from './constants';
+import type { Language, Message } from './types';
 
 export function authErrorMessage(code: string): Message {
   return (authErrorMessages as Partial<Record<string, Message>>)[code] ?? 'unavailable';

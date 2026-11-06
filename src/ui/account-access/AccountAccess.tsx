@@ -1,111 +1,29 @@
-import { Admin } from './settings/admin/Admin';
-import { Preferences } from './settings/preferences/Preferences';
-import { Profile } from './settings/profile/Profile';
-import { settingsCopy } from './settings/constants';
-import './settings/styles.css';
 import { Match, Show, Switch } from 'solid-js';
 import { AccessForm } from './access-form/AccessForm';
 import { AccountSecurity } from './account-security/AccountSecurity';
-import { createAccountAccess } from './createAccountAccess';
-import type { Language } from './types';
 import { VaultSection } from './account-security/VaultSection';
-import { ProjectWorkspace } from './projects/ProjectWorkspace';
-import { pinCopy } from './invitations/OfflineOriginals';
+import { AccountNavigation } from './AccountNavigation';
+import { createAccountAccess } from './createAccountAccess';
 import { InvitationInbox } from './invitations/InvitationInbox';
+import { navigationText } from './navigation-copy';
+import { ProjectWorkspace } from './projects/ProjectWorkspace';
+import { accountDestinations, isAccountDestination, signInLink } from './routes';
+import { Admin } from './settings/admin/Admin';
+import { Preferences } from './settings/preferences/Preferences';
+import { Profile } from './settings/profile/Profile';
+import './settings/styles.css';
 
 export function AccountAccess() {
   const model = createAccountAccess();
-  const {
-    account,
-    busy,
-    connection,
-    failed,
-    lang,
-    linkToken,
-    message,
-    refreshConnection,
-    selectLanguage,
-    signOut,
-    submit,
-    t,
-    view,
-  } = model;
-  const c = () => settingsCopy[lang()];
-  const admin = () => model.can('accounts.view') || model.can('operations.view');
+  const { account, busy, connection, failed, lang, linkToken, message, submit, t, view } = model;
+  const c = () => navigationText(lang());
+  const protectedView = isAccountDestination(view) ? view : undefined;
+  const publicView = !isAccountDestination(view) && view !== 'notFound' ? view : undefined;
   return (
     <div class="account-shell">
-      <aside class="account-nav">
-        <a class="product-name" href="/">
-          <svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
-            <path
-              d="M25 8a11 11 0 1 0 0 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="4"
-              stroke-linecap="round"
-            />
-          </svg>
-          CaliRestore Pro
-        </a>
-        <p>{t('account')}</p>
-        <nav aria-label={t('account')}>
-          <Show
-            when={account()}
-            fallback={
-              <>
-                <a href="/login" aria-current={view === 'login' ? 'page' : undefined}>
-                  {t('login')}
-                </a>
-                <a href="/register" aria-current={view === 'register' ? 'page' : undefined}>
-                  {t('register')}
-                </a>
-              </>
-            }
-          >
-            <a href="/projects" aria-current={view === 'projects' ? 'page' : undefined}>
-              {t('projects')}
-            </a>
-            <a href="/invitations" aria-current={view === 'invitations' ? 'page' : undefined}>
-              {t('invitations')}
-            </a>
-            <a href="/offline-originals">{pinCopy[lang()].heading}</a>
-            <a href="/settings/account" aria-current={view === 'profile' ? 'page' : undefined}>
-              {c().profile}
-            </a>
-            <a
-              href="/settings/preferences"
-              aria-current={view === 'preferences' ? 'page' : undefined}
-            >
-              {c().preferences}
-            </a>
-            <Show when={admin()}>
-              <a href="/admin" aria-current={view === 'admin' ? 'page' : undefined}>
-                {c().admin}
-              </a>
-            </Show>
-            <a href="/settings/security" aria-current={view === 'security' ? 'page' : undefined}>
-              {t('security')}
-            </a>
-            <button class="secondary" disabled={busy()} onClick={signOut}>
-              {t('logout')}
-            </button>
-          </Show>
-        </nav>
-        <label class="language">
-          Language / Nyelv
-          <select
-            value={lang()}
-            onChange={(e) => selectLanguage(e.currentTarget.value as Language)}
-          >
-            <option value="en">English</option>
-            <option value="hu">Magyar</option>
-          </select>
-        </label>
-      </aside>
+      <AccountNavigation model={model} />
       <main class="account-content">
-        <h1>
-          {view === 'profile' || view === 'preferences' || view === 'admin' ? c()[view] : t(view)}
-        </h1>
+        <h1>{c()[view]}</h1>
         <Show when={message()}>
           {(key) => (
             <p class="account-message" role={failed() ? 'alert' : 'status'} data-error={failed()}>
@@ -134,77 +52,82 @@ export function AccountAccess() {
             );
           }}
         </Show>
-        <Switch
-          fallback={
-            <AccessForm
-              view={view as Parameters<typeof AccessForm>[0]['view']}
-              linkToken={linkToken}
-              submit={submit}
-              t={t}
-              busy={busy}
-            />
-          }
-        >
-          <Match
-            when={
-              view === 'profile' ||
-              view === 'preferences' ||
-              view === 'admin' ||
-              view === 'projects' ||
-              view === 'invitations' ||
-              view === 'security'
-            }
-          >
-            <Show when={model.loaded()} fallback={<p role="status">{t('working')}</p>}>
-              <Show
-                when={account()}
-                fallback={
-                  <p>
-                    {t('signedOut')}{' '}
-                    <a href={view === 'invitations' ? '/login?next=invitations' : '/login'}>
-                      {t('login')}
-                    </a>
-                  </p>
-                }
-              >
-                <Switch>
-                  <Match when={view === 'profile'}>
-                    <Profile model={model} />
-                  </Match>
-                  <Match when={view === 'preferences'}>
-                    <Preferences model={model} />
-                  </Match>
-                  <Match when={view === 'admin'}>
-                    <Admin model={model} />
-                  </Match>
-                  <Match when={view === 'security'}>
-                    <AccountSecurity model={model} />
-                  </Match>
-                  <Match when={view === 'invitations'}>
-                    <Show when={account()} keyed>
-                      {(current) => (
+        <Switch>
+          <Match when={publicView}>
+            {(form) => (
+              <AccessForm view={form()} linkToken={linkToken} submit={submit} t={t} busy={busy} />
+            )}
+          </Match>
+          <Match when={view === 'notFound'}>
+            <a href={account() ? accountDestinations.projects : '/login'}>
+              {account() ? c().backToProjects : t('login')}
+            </a>
+          </Match>
+          <Match when={protectedView}>
+            {(destination) => (
+              <Show when={model.loaded()} fallback={<p role="status">{t('working')}</p>}>
+                <Show
+                  when={account()?.id}
+                  keyed
+                  fallback={
+                    <Show
+                      when={!model.sessionUnavailable()}
+                      fallback={
+                        <button class="secondary" onClick={() => location.reload()}>
+                          {c().retryAccess}
+                        </button>
+                      }
+                    >
+                      <p>
+                        {t('signedOut')} <a href={signInLink(destination())}>{t('login')}</a>
+                      </p>
+                    </Show>
+                  }
+                >
+                  {(id) => (
+                    <Switch>
+                      <Match when={view === 'profile'}>
+                        <Profile model={model} />
+                      </Match>
+                      <Match when={view === 'preferences'}>
+                        <Preferences model={model} />
+                      </Match>
+                      <Match when={view === 'admin'}>
+                        <Admin model={model} />
+                      </Match>
+                      <Match when={view === 'security'}>
+                        <AccountSecurity model={model} />
+                      </Match>
+                      <Match when={view === 'unlock' || view === 'devices/approve'}>
                         <VaultSection
-                          account={current.id}
+                          account={id}
+                          language={lang()}
+                          entry={view === 'unlock' ? 'unlock' : 'approve'}
+                          unlockOnly={view === 'unlock' ? c().unlockHelp : c().approvalHelp}
+                          setupLink={{ href: accountDestinations.security, text: c().vaultSetup }}
+                        />
+                      </Match>
+                      <Match when={view === 'invitations'}>
+                        <VaultSection
+                          account={id}
                           language={lang()}
                           workspace={(vault) => <InvitationInbox model={model} vault={vault} />}
                         />
-                      )}
-                    </Show>
-                  </Match>
-                  <Match when={view === 'projects' && account()}>
-                    {(current) => (
-                      <VaultSection
-                        account={current().id}
-                        language={lang()}
-                        workspace={(vault) => (
-                          <ProjectWorkspace vault={vault} language={lang()} model={model} />
-                        )}
-                      />
-                    )}
-                  </Match>
-                </Switch>
+                      </Match>
+                      <Match when={view === 'projects'}>
+                        <VaultSection
+                          account={id}
+                          language={lang()}
+                          workspace={(vault) => (
+                            <ProjectWorkspace vault={vault} language={lang()} model={model} />
+                          )}
+                        />
+                      </Match>
+                    </Switch>
+                  )}
+                </Show>
               </Show>
-            </Show>
+            )}
           </Match>
         </Switch>
         <footer>
@@ -214,7 +137,7 @@ export function AccountAccess() {
             <button
               class="secondary"
               disabled={connection() === 'checking'}
-              onClick={() => void refreshConnection()}
+              onClick={() => void model.refreshConnection()}
             >
               {t('check')}
             </button>

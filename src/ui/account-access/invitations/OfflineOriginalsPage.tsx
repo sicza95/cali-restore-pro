@@ -2,6 +2,12 @@ import { createSignal, onCleanup, onMount, Show, untrack } from 'solid-js';
 import { offlineAccountKey } from '../../../platform/vault/offline-account';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { VaultSection } from '../account-security/VaultSection';
+import { applyLanguage, storedLanguage } from '../presentation';
+import {
+  applyPreferences,
+  loadPreferences,
+  preferenceDefaults,
+} from '../settings/preferences/utils';
 import type { Language } from '../types';
 import { OfflineOriginals, pinCopy, useOfflineOriginals } from './OfflineOriginals';
 import './styles.css';
@@ -30,14 +36,24 @@ function Shelf(props: { vault: LocalVault; language: Language }) {
 }
 
 export function OfflineOriginalsPage() {
-  const language = localStorage.getItem('cr-language') === 'hu' ? 'hu' : 'en';
+  const language = storedLanguage();
   const c = copy[language];
   const [account, setAccount] = createSignal(localStorage.getItem(offlineAccountKey));
   const syncAccount = () => {
-    if (localStorage.getItem(offlineAccountKey) !== account()) setAccount(null);
+    if (localStorage.getItem(offlineAccountKey) !== account()) {
+      setAccount(null);
+      applyPreferences(preferenceDefaults);
+    }
   };
   onMount(() => {
-    document.documentElement.lang = language;
+    applyLanguage(language);
+    const id = account();
+    const preferences = id ? loadPreferences(id) : preferenceDefaults;
+    const theme = window.matchMedia('(prefers-color-scheme: dark)');
+    const apply = () => applyPreferences(account() ? preferences : preferenceDefaults);
+    apply();
+    theme.addEventListener('change', apply);
+    onCleanup(() => theme.removeEventListener('change', apply));
     window.addEventListener('storage', syncAccount);
     window.addEventListener('pageshow', syncAccount);
   });

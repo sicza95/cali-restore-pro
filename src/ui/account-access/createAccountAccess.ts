@@ -7,22 +7,28 @@ import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
 import { copy, sessionEndingActions } from './constants';
-import { accountRoute, authErrorMessage, authFormBody } from './utils';
+import { authErrorMessage, authFormBody } from './utils';
+import { accountRoute, signInDestination } from './routes';
+import { applyLanguage, storedLanguage } from './presentation';
 import type { DeletionStatus } from '../../platform/api/types.gen';
 import type { Account, Language, Message, Session } from './types';
 
 export function createAccountAccess() {
-  const initialLanguage = localStorage.getItem('cr-language') === 'hu' ? 'hu' : 'en';
-  const [lang, setLang] = createSignal<Language>(initialLanguage);
+  const [lang, setLang] = createSignal<Language>(storedLanguage());
   const t = (key: Message) => copy[lang()][key];
   const view = accountRoute(window.location.pathname);
   const linkToken = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? '';
-  if (window.location.hash) history.replaceState(null, '', window.location.pathname);
+  if (linkToken) {
+    document.getElementById('app')?.setAttribute('data-auth-link', '');
+    history.replaceState(null, '', location.pathname + location.search);
+  }
   const [deletionReceipt, setDeletionReceipt] = createSignal<DeletionStatus>();
   const [account, setAccount] = createSignal<Account>();
   const [capabilities, setCapabilities] = createSignal<string[]>([]);
   const [loaded, setLoaded] = createSignal(false);
   const can = (capability: string) => capabilities().includes(capability);
+  const canAdmin = () => can('accounts.view') || can('operations.view');
+  const [sessionUnavailable, setSessionUnavailable] = createSignal(false);
   const [csrf, setCsrf] = createSignal('');
   const [sessions, setSessions] = createSignal<Session[]>([]);
   const [busy, setBusy] = createSignal(false);
@@ -36,8 +42,12 @@ export function createAccountAccess() {
   const [sessionError, setSessionError] = createSignal(false);
   const selectLanguage = (value: Language) => {
     setLang(value);
-    localStorage.setItem('cr-language', value);
-    document.documentElement.lang = value;
+    applyLanguage(value);
+    try {
+      localStorage.setItem('cr-language', value);
+    } catch {
+      // The current page can still use the selected language.
+    }
   };
 
   const api = async (action: string, body?: object) => {
@@ -86,11 +96,7 @@ export function createAccountAccess() {
       if (action === 'login') {
         rememberOfflineAccount();
         sessionChanges?.postMessage(null);
-        window.location.assign(
-          new URLSearchParams(location.search).get('next') === 'invitations'
-            ? '/invitations'
-            : '/settings/security',
-        );
+        window.location.assign(signInDestination(new URLSearchParams(location.search).get('next')));
         return;
       }
       if (
@@ -171,7 +177,7 @@ export function createAccountAccess() {
       };
     }
     deviceTheme.addEventListener('change', applyAccountPreferences);
-    document.documentElement.lang = lang();
+    applyLanguage(lang());
     void refreshConnection();
     void refreshAccount()
       .then(() => {
@@ -181,6 +187,7 @@ export function createAccountAccess() {
         if (error instanceof Error && error.message === 'authentication_required') {
           rememberOfflineAccount();
         } else {
+          setSessionUnavailable(true);
           setMessage('unavailable');
           setFailed(true);
         }
@@ -205,6 +212,8 @@ export function createAccountAccess() {
     account,
     deletionReceipt,
     can,
+    canAdmin,
+    sessionUnavailable,
     loaded,
     read,
     csrf,

@@ -10,6 +10,12 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   void navigator.serviceWorker.register('/offline-worker.js').catch(() => undefined);
 }
 
+// History restores can otherwise reuse a frozen session and its capability snapshot.
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted && !document.getElementById('app')?.hasAttribute('data-auth-link'))
+    location.reload();
+});
+
 render(
   () => (location.pathname === '/offline-originals' ? <OfflineOriginalsPage /> : <AccountAccess />),
   document.getElementById('app')!,
