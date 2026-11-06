@@ -15,6 +15,7 @@ This delivery order follows the owner's latest direction. It replaces the earlie
 | [Architecture](architecture.md)                     | Recommended backend, Docker topology, module ownership, storage and operations           |
 | [Access and encryption](access-and-encryption.md)   | Users, superuser, project rights, encrypted grants, invitations, revocation and deletion |
 | [Workflows and controls](workflows-and-controls.md) | Complete app routes, user journeys, editor control inventory and mock boundaries         |
+| [M-08 delivery sessions](m08-delivery.md)           | Session scope, verification gates and next-session prompt                                |
 | [Estimation and outputs](estimation-and-outputs.md) | Restoration pricing, versioned calculations and late report/export delivery              |
 | [Requirements coverage](requirements-coverage.md)   | Every existing catalogue requirement mapped to initial work and final acceptance         |
 
