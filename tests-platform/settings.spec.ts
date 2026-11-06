@@ -20,7 +20,7 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
     route.fulfill({ json: { account, capabilities: [], csrfToken: 'fixture' } }),
   );
   await page.route('**/api/v1/account/deletion-preflight', (route) =>
-    route.fulfill({ json: { eligible: false, reason: 'project_continuity_unavailable' } }),
+    route.fulfill({ json: { eligible: false, reason: 'hosted_projects_require_continuity' } }),
   );
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.goto('/settings/preferences');
@@ -39,7 +39,7 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   await page.screenshot({ path: info.outputPath('preferences-portrait-dark.png'), fullPage: true });
   await page.getByRole('link', { name: 'Account profile' }).click();
   await page.getByRole('button', { name: 'Check deletion eligibility' }).click();
-  await expect(page.getByText(/Deletion is unavailable/)).toBeVisible();
+  await expect(page.getByText(/Transfer hosting and resolve last-owner projects/)).toBeVisible();
   account = operator;
   await page.goto('/settings/preferences');
   await expect(page.getByLabel('Theme')).toHaveValue('system');

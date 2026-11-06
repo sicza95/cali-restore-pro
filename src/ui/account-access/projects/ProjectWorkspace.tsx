@@ -8,6 +8,7 @@ import type { createAccountAccess } from '../createAccountAccess';
 import { ProjectInvitations } from '../invitations/ProjectInvitations';
 import { projectSnapshot } from '../../../platform/projects/shared-project';
 import { ProjectDetail } from './ProjectDetail';
+import { ProjectLifecycle } from './ProjectLifecycle';
 import { ProjectBackup } from './ProjectBackup';
 import { projectCopy } from './project-copy';
 import { NameForm } from './forms';
@@ -141,6 +142,7 @@ export function ProjectWorkspace(props: {
                   navigate(project.id);
                 }}
               />
+              <ProjectLifecycle model={props.model} />
               <div class="project-fields">
                 <label>
                   {c().search}
@@ -229,6 +231,7 @@ export function ProjectWorkspace(props: {
                 </Show>
               }
             />
+            <ProjectLifecycle model={props.model} project={current()!.id} />
             <Show when={current()!.id} keyed>
               {(id) => (
                 <ProjectBackup

@@ -174,4 +174,25 @@ test('real registration, mail, verification, sessions and credential recovery', 
   const checkUnauthorized = async (client: APIRequestContext) =>
     expect((await client.get('/api/v1/auth/me')).status()).toBe(401);
   await checkUnauthorized(page.request);
+  await signIn(password, newEmail);
+  await confirmPassword(password);
+  await page.goto('/settings/account');
+  await page.getByRole('button', { name: 'Check deletion eligibility' }).click();
+  await page.getByLabel('I resolved pending work and confirm deletion.').check();
+  for (const viewport of [
+    { width: 1194, height: 834 },
+    { width: 834, height: 1194 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.screenshot({ path: info.outputPath(`deletion-${viewport.width}.png`) });
+  }
+  await page.getByRole('button', { name: 'Delete account', exact: true }).click();
+  await expect(page.getByText(/Live recovery deadline/)).toBeVisible();
+  await checkUnauthorized(page.request);
+  await page.getByRole('link', { name: 'Recover a deleted account' }).click();
+  await page.getByLabel('Email address', { exact: true }).fill(newEmail);
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
+  await signIn(password, newEmail);
 });

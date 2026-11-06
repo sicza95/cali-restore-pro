@@ -113,6 +113,25 @@ export function AccountAccess() {
             </p>
           )}
         </Show>
+        <Show when={model.deletionReceipt()}>
+          {(receipt) => {
+            const date = (iso: string) =>
+              new Intl.DateTimeFormat(lang(), { dateStyle: 'long', timeStyle: 'short' }).format(
+                new Date(iso),
+              );
+            return (
+              <p role="status">
+                {lang() === 'hu' ? 'Helyreállítási határidő' : 'Live recovery deadline'}{' '}
+                {date(receipt().recoverUntil)}.{' '}
+                {lang() === 'hu'
+                  ? 'Szervermentések lejárata legkésőbb'
+                  : 'Operational backups expire by'}{' '}
+                {date(receipt().backupExpiresAt)}.{' '}
+                <a href="/recover-deleted-account">{t('recover-deleted-account')}</a>
+              </p>
+            );
+          }}
+        </Show>
         <Switch
           fallback={
             <AccessForm

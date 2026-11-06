@@ -18,12 +18,13 @@ CMD ["sh", "-c", "test -z \"$(gofmt -l .)\" && go vet ./... && go test -race -co
 
 FROM backend AS compile
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/calirestore ./cmd/calirestore \
-    && mkdir -p /out/objects && chown 65532:65532 /out/objects
+    && mkdir -p /out/objects /out/operational-backups && chown 65532:65532 /out/objects /out/operational-backups
 
 FROM gcr.io/distroless/static-debian13:nonroot@sha256:25ac8f0c3b2334a9eb05452266bd4697864a8c8ef0ef71e5e6480d7f92868329 AS runtime
 WORKDIR /app
 COPY --from=compile /out/calirestore /app/calirestore
 COPY --from=compile --chown=65532:65532 /out/objects /data/objects
+COPY --from=compile --chown=65532:65532 /out/operational-backups /data/operational-backups
 COPY --from=frontend /src/dist /app/web
 USER 65532:65532
 EXPOSE 8080

@@ -37,6 +37,10 @@ func (a fileAccess) removeProjectOwner(ctx context.Context, project, owner strin
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return err
 	}
+	return a.departProject(ctx, project, owner)
+}
+
+func (a fileAccess) departProject(ctx context.Context, project, owner string) error {
 	var host bool
 	var count int
 	err := a.tx.QueryRow(ctx, `SELECT p.host_id=$2,

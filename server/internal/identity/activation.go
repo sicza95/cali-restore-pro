@@ -38,7 +38,8 @@ func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipie
  UPDATE project_invitations i SET state='active'
  FROM accounts r JOIN sharing_identities k ON k.account_id=r.id
  WHERE i.id=$1 AND i.project_id=$2 AND i.state='accepted' AND r.id=i.recipient_id
- AND r.email=i.recipient_email AND r.state='active' AND k.public_key=$3
+ AND r.email=i.recipient_email
+ AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id) AND r.state='active' AND k.public_key=$3
  AND (NOT i.co_owner OR $7='project-v1')
  AND EXISTS (SELECT 1 FROM sharing_identities WHERE account_id=$4)
  RETURNING i.id,i.recipient_id,i.co_owner
@@ -172,6 +173,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
  FROM invitation_grants g JOIN project_invitations i ON i.id=g.invitation_id
  JOIN sharing_identities k ON k.account_id=g.sender_id JOIN accounts r ON r.id=i.recipient_id
  WHERE i.id=$1 AND i.recipient_id=$2 AND i.state='active' AND r.email=i.recipient_email
+ AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)
  AND (NOT $3 OR g.format='fixture-v1')`, id, a.account, r.Pattern == "GET /api/v1/invitations/{invitation}/fixture").
 				Scan(&grant.Encapsulation, &grant.Ciphertext, &grant.SenderID, &grant.SenderKey, &grant.Format)
 		})

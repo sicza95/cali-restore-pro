@@ -21,6 +21,8 @@ export type AuthResponse = {
   account?: Account;
   sessions?: Session[];
   capabilities?: string[];
+  recoverUntil?: string;
+  backupExpiresAt?: string;
 };
 
 export type TranslatedFieldProps = { t: Translate };

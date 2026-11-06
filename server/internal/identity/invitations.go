@@ -61,6 +61,7 @@ func (a fileAccess) pendingInvitations(ctx context.Context) ([]pendingInvitation
 	rows, err := a.tx.Query(ctx, `SELECT i.id,i.project_id,i.expires_at,i.state,i.co_owner,i.estimate_scope,i.share_history
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
  WHERE i.recipient_id=$1 AND r.email=i.recipient_email
+ AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)
  AND (i.state IN ('accepted','active') OR (i.state='pending' AND i.expires_at>clock_timestamp()))
  ORDER BY i.state DESC,i.expires_at,i.id LIMIT 100`, a.account)
 	if err != nil {
@@ -79,7 +80,7 @@ func (a fileAccess) requireProjectOwner(ctx context.Context, project string) err
 		return err
 	}
 	var exists bool
-	err := a.tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM project_owners WHERE project_id=$1 AND account_id=$2)`, project, a.account).Scan(&exists)
+	err := a.tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM project_owners WHERE project_id=$1 AND account_id=$2 AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=$1))`, project, a.account).Scan(&exists)
 	if err == nil && !exists {
 		return errFileMissing
 	}
@@ -99,7 +100,7 @@ func (s *Service) invite(ctx context.Context, a fileAccess, project, email strin
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return "", err
 	}
-	var id, lang string
+	var id, recipient, lang string
 	var expires time.Time
 	err := a.tx.QueryRow(ctx, `INSERT INTO project_invitations (project_id,recipient_id,recipient_email,co_owner,estimate_scope,share_history)
  SELECT $1,r.id,r.email,$3,$4,$5 FROM accounts r
@@ -112,20 +113,21 @@ func (s *Service) invite(ctx context.Context, a fileAccess, project, email strin
  WHERE project_invitations.state IN ('cancelled','revoked') OR (
    project_invitations.state='pending' AND project_invitations.expires_at<=clock_timestamp()
  )
- RETURNING id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email, coOwner, scope.EstimateScope, scope.ShareHistory).Scan(&id, &expires, &lang)
+ RETURNING id, recipient_id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email, coOwner, scope.EstimateScope, scope.ShareHistory).Scan(&id, &recipient, &expires, &lang)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrConflict
 	}
 	if err != nil {
 		return "", err
 	}
-	return id, s.enqueue(ctx, a.tx, email, lang, "project-invitation", "", expires)
+	return id, s.enqueue(ctx, a.tx, recipient, email, lang, "project-invitation", "", expires)
 }
 
 func (a fileAccess) acceptInvitation(ctx context.Context, id string) error {
 	result, err := a.tx.Exec(ctx, `UPDATE project_invitations i SET state='accepted'
  FROM accounts r WHERE i.id=$1 AND i.recipient_id=$2 AND r.id=i.recipient_id
- AND r.email=i.recipient_email AND i.state='pending' AND i.expires_at>clock_timestamp()`, id, a.account)
+ AND r.email=i.recipient_email AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)
+ AND i.state='pending' AND i.expires_at>clock_timestamp()`, id, a.account)
 	if err == nil && result.RowsAffected() == 0 {
 		return ErrLink
 	}

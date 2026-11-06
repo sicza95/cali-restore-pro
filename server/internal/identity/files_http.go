@@ -87,7 +87,8 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 			return nil, ErrForbidden
 		}
 		tag, err := a.tx.Exec(r.Context(), `WITH created AS (
- INSERT INTO hosted_projects(id,host_id) VALUES($1,$2) ON CONFLICT DO NOTHING RETURNING id,host_id
+ INSERT INTO hosted_projects(id,host_id) SELECT $1::uuid,$2::uuid WHERE NOT EXISTS (SELECT 1 FROM project_deletions WHERE id=$1)
+ ON CONFLICT DO NOTHING RETURNING id,host_id
  )
  INSERT INTO project_owners(project_id,account_id) SELECT id,host_id FROM created`, project, a.account)
 		if err == nil && tag.RowsAffected() == 0 {

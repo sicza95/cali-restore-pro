@@ -7,8 +7,12 @@ import (
 	"github.com/sicza95/cali-restore-pro/server/internal/config"
 )
 
+var errRestoreVerification = errors.New("restored objects failed verification")
+
 func logCommandFailure(logger *slog.Logger, err error) {
 	switch {
+	case errors.Is(err, errRestoreVerification):
+		logger.Error(errRestoreVerification.Error())
 	case errors.Is(err, config.ErrInsecureProductionOrigin):
 		logger.Error("production APP_ORIGIN requires HTTPS")
 	case errors.Is(err, config.ErrUnreadablePasswordFile):

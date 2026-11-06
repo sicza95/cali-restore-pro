@@ -55,6 +55,10 @@ type fileAccess struct {
 }
 
 func (s *Service) withFiles(ctx context.Context, raw string, fn func(fileAccess) error) error {
+	return s.withFileLock(ctx, raw, lifecycleReadLock, fn)
+}
+
+func (s *Service) withFileLock(ctx context.Context, raw, lock string, fn func(fileAccess) error) error {
 	if !validToken(raw) {
 		return ErrUnauthorized
 	}
@@ -63,6 +67,14 @@ func (s *Service) withFiles(ctx context.Context, raw string, fn func(fileAccess)
 		return err
 	}
 	defer tx.Rollback(context.Background())
+	if _, err := tx.Exec(ctx, lock); err != nil {
+		return err
+	}
+	if lock == lifecycleWriteLock {
+		if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", mutationLock); err != nil {
+			return err
+		}
+	}
 	var a fileAccess
 	a.tx = tx
 	var state string
@@ -97,7 +109,7 @@ func (a fileAccess) hosts(ctx context.Context, project string) error {
 		return err
 	}
 	var found int
-	err := a.tx.QueryRow(ctx, `SELECT 1 FROM hosted_projects WHERE id=$1 AND host_id=$2`, project, a.account).Scan(&found)
+	err := a.tx.QueryRow(ctx, `SELECT 1 FROM hosted_projects WHERE id=$1 AND host_id=$2 AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=$1)`, project, a.account).Scan(&found)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return errFileMissing
 	}
@@ -109,7 +121,8 @@ func (a fileAccess) sharedFileProject(ctx context.Context, invitation, file stri
 	const authorized = `SELECT i.project_id FROM invitation_originals o
  JOIN project_invitations i ON i.id=o.invitation_id
  JOIN accounts r ON r.id=i.recipient_id
- WHERE i.id=$1 AND o.file_id=$2 AND i.recipient_id=$3 AND i.state='active' AND r.email=i.recipient_email`
+ WHERE i.id=$1 AND o.file_id=$2 AND i.recipient_id=$3 AND i.state='active' AND r.email=i.recipient_email
+ AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)`
 	err := a.tx.QueryRow(ctx, authorized, invitation, file, a.account).Scan(&project)
 	if err == nil {
 		if _, err = a.tx.Exec(ctx, `SELECT pg_advisory_xact_lock_shared(hashtextextended($1, 6011))`, project); err == nil {
