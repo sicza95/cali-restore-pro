@@ -53,7 +53,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 	}
 	removeAccount := func(raw, id string, purge bool) error {
 		return s.withFileLock(ctx, raw, lifecycleWriteLock, func(a fileAccess) error {
-			_, err := a.deleteAccount(ctx, id, purge)
+			_, err := a.deleteAccount(ctx, id, purge, false)
 			return err
 		})
 	}

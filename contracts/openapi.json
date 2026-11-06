@@ -3724,6 +3724,7 @@
       ],
       "post": {
         "operationId": "proposeHostingTransfer",
+        "description": "Offer hosting to another owner, or pass your own account ID to claim an unhosted project as an eligible existing owner.",
         "summary": "Offer hosting responsibility to a co-owner",
         "security": [
           {
@@ -5298,13 +5299,21 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["confirm", "pendingWorkResolved"],
+                "required": ["confirm"],
+                "anyOf": [
+                  { "required": ["pendingWorkResolved"] },
+                  { "required": ["force"], "properties": { "force": { "const": true } } }
+                ],
                 "properties": {
                   "confirm": {
                     "const": true
                   },
                   "pendingWorkResolved": {
                     "const": true
+                  },
+                  "force": {
+                    "type": "boolean",
+                    "description": "Explicit superuser deletion of another account despite unresolved project dependencies."
                   },
                   "purge": {
                     "type": "boolean"
@@ -6111,9 +6120,12 @@
       "DeletionPreflight": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["eligible", "reason"],
+        "required": ["eligible", "reason", "forceEligible"],
         "properties": {
           "eligible": {
+            "type": "boolean"
+          },
+          "forceEligible": {
             "type": "boolean"
           },
           "reason": {

@@ -122,7 +122,7 @@ func (a fileAccess) sharedFileProject(ctx context.Context, invitation, file stri
  JOIN project_invitations i ON i.id=o.invitation_id
  JOIN accounts r ON r.id=i.recipient_id
  WHERE i.id=$1 AND o.file_id=$2 AND i.recipient_id=$3 AND i.state='active' AND r.email=i.recipient_email
- AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)`
+ AND` + grantReadGate
 	err := a.tx.QueryRow(ctx, authorized, invitation, file, a.account).Scan(&project)
 	if err == nil {
 		if _, err = a.tx.Exec(ctx, `SELECT pg_advisory_xact_lock_shared(hashtextextended($1, 6011))`, project); err == nil {

@@ -93,9 +93,15 @@ export function createAccountAccess() {
         );
         return;
       }
-      if (action === '/account/deletion' && result.recoverUntil && result.backupExpiresAt) {
+      if (
+        action.endsWith('/deletion') &&
+        result.id &&
+        result.recoverUntil &&
+        result.backupExpiresAt &&
+        (action === '/account/deletion' || action.startsWith('/admin/accounts/'))
+      ) {
         setDeletionReceipt({
-          id: account()?.id ?? '',
+          id: result.id,
           recoverUntil: result.recoverUntil,
           backupExpiresAt: result.backupExpiresAt,
         });

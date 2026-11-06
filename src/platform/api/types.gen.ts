@@ -190,6 +190,7 @@ export type AdminControls =
 
 export type DeletionPreflight = {
   eligible: boolean;
+  forceEligible: boolean;
   reason: '' | 'hosted_projects_require_continuity' | 'account_state_blocks_deletion';
 };
 
@@ -2747,9 +2748,18 @@ export type DeleteOwnAccountResponses = {
 export type DeleteOwnAccountResponse = DeleteOwnAccountResponses[keyof DeleteOwnAccountResponses];
 
 export type AdminDeleteAccountData = {
-  body: {
+  body: (
+    | unknown
+    | {
+        force: true;
+      }
+  ) & {
     confirm: true;
-    pendingWorkResolved: true;
+    pendingWorkResolved?: true;
+    /**
+     * Explicit superuser deletion of another account despite unresolved project dependencies.
+     */
+    force?: boolean;
     purge?: boolean;
   };
   headers: {

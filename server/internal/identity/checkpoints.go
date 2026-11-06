@@ -20,7 +20,7 @@ const checkpointRecipient = ` FROM project_invitations i
  JOIN accounts r ON r.id=i.recipient_id
  JOIN sharing_identities k ON k.account_id=r.id
  WHERE i.id=$1 AND i.state='active' AND r.state='active' AND r.email=i.recipient_email
- AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)`
+ AND` + grantReadGate
 
 func checkpointFailure(w http.ResponseWriter, err error) {
 	if errors.Is(err, pgx.ErrNoRows) {

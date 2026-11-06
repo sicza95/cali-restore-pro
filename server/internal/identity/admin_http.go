@@ -78,7 +78,9 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 				failure(w, err)
 				return
 			}
-			respond(w, 200, map[string]any{"eligible": reason == "", "reason": reason})
+			respond(w, 200, map[string]any{"eligible": reason == "", "reason": reason,
+				"forceEligible": reason == "hosted_projects_require_continuity" &&
+					id != actor.Account.ID && actor.Account.Role == "superuser"})
 		})
 	}
 }

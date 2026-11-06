@@ -41,7 +41,7 @@ func (a fileAccess) projectRevision(ctx context.Context, project string, next *r
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return state, err
 	}
-	var host string
+	var host *string
 	if err := a.tx.QueryRow(ctx, `SELECT sync_epoch::text,host_id::text FROM hosted_projects WHERE id=$1`, project).Scan(&state.Epoch, &host); err != nil {
 		return state, err
 	}
@@ -55,6 +55,9 @@ func (a fileAccess) projectRevision(ctx context.Context, project string, next *r
 	}
 	if next == nil {
 		return state, nil
+	}
+	if host == nil {
+		return state, ErrForbidden
 	}
 	if next.Epoch != state.Epoch {
 		return state, errRevisionEpoch
@@ -85,7 +88,7 @@ func (a fileAccess) projectRevision(ctx context.Context, project string, next *r
 		return state, errRevisionConflict
 	}
 	hostAccess := a
-	hostAccess.account = host
+	hostAccess.account = *host
 	used, err := hostAccess.usage(ctx)
 	if err != nil {
 		return state, err

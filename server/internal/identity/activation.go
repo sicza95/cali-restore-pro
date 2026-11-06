@@ -173,7 +173,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
  FROM invitation_grants g JOIN project_invitations i ON i.id=g.invitation_id
  JOIN sharing_identities k ON k.account_id=g.sender_id JOIN accounts r ON r.id=i.recipient_id
  WHERE i.id=$1 AND i.recipient_id=$2 AND i.state='active' AND r.email=i.recipient_email
- AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)
+ AND`+grantReadGate+`
  AND (NOT $3 OR g.format='fixture-v1')`, id, a.account, r.Pattern == "GET /api/v1/invitations/{invitation}/fixture").
 				Scan(&grant.Encapsulation, &grant.Ciphertext, &grant.SenderID, &grant.SenderKey, &grant.Format)
 		})

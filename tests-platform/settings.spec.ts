@@ -101,3 +101,59 @@ test('administration submits a confirmed grant and reloads the server values', a
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('admin-landscape-light.png'), fullPage: true });
 });
+
+test('a superuser explicitly confirms forced deletion after a blocked preflight', async ({
+  page,
+}, info) => {
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({
+      json: {
+        account: operator,
+        capabilities: ['accounts.view', 'roles.manage'],
+        csrfToken: 'fixture',
+      },
+    }),
+  );
+  await page.route('**/api/v1/admin/accounts?**', (route) =>
+    route.fulfill({
+      json: {
+        accounts: [{ ...member, quotaMiB: 0, serverFeatures: false, sessions: 1, permissions: 0 }],
+        next: '',
+      },
+    }),
+  );
+  await page.route('**/api/v1/admin/accounts/*/deletion-preflight', (route) =>
+    route.fulfill({
+      json: { eligible: false, reason: 'hosted_projects_require_continuity', forceEligible: true },
+    }),
+  );
+  await page.route('**/api/v1/admin/accounts/*/deletion', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ confirm: true, force: true, purge: false });
+    return route.fulfill({
+      json: {
+        id: member.id,
+        recoverUntil: '2026-12-06T18:00:00Z',
+        backupExpiresAt: '2027-02-04T18:00:00Z',
+      },
+    });
+  });
+  await page.goto('/admin');
+  await page.getByText(member.email).click();
+  await page.getByRole('button', { name: 'Check deletion eligibility' }).click();
+  await expect(page.getByText(/Sole-owner projects are frozen/)).toBeVisible();
+  for (const viewport of [
+    { width: 1194, height: 834 },
+    { width: 834, height: 1194 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.getByText(/Sole-owner projects are frozen/).scrollIntoViewIfNeeded();
+    await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
+    await page.screenshot({ path: info.outputPath(`forced-deletion-${viewport.width}.png`) });
+  }
+  const submit = page.getByRole('button', { name: 'Force account deletion' });
+  await submit.click();
+  await expect(page.getByText(/Live recovery deadline/)).toHaveCount(0);
+  await page.getByLabel('I confirm forced deletion.').check();
+  await submit.click();
+  await expect(page.getByText(/Live recovery deadline/)).toBeVisible();
+});

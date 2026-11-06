@@ -61,7 +61,8 @@ func (a fileAccess) pendingInvitations(ctx context.Context) ([]pendingInvitation
 	rows, err := a.tx.Query(ctx, `SELECT i.id,i.project_id,i.expires_at,i.state,i.co_owner,i.estimate_scope,i.share_history
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
  WHERE i.recipient_id=$1 AND r.email=i.recipient_email
- AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)
+ AND ((i.state='active' AND`+grantReadGate+`) OR
+      NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id))
  AND (i.state IN ('accepted','active') OR (i.state='pending' AND i.expires_at>clock_timestamp()))
  ORDER BY i.state DESC,i.expires_at,i.id LIMIT 100`, a.account)
 	if err != nil {

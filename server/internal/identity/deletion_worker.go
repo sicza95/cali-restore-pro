@@ -24,7 +24,8 @@ func (s *Service) PurgeDeleted(ctx context.Context, root string) error {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `WITH due AS (
- SELECT id FROM account_deletions WHERE purged_at IS NULL AND recover_until<=clock_timestamp()
+ SELECT d.id FROM account_deletions d WHERE purged_at IS NULL AND recover_until<=clock_timestamp()
+ AND NOT EXISTS (SELECT 1 FROM project_owners o WHERE o.account_id=d.id)
  ORDER BY recover_until,id LIMIT 1
  ), removed AS (
  DELETE FROM accounts WHERE id IN (SELECT id FROM due) AND state='pending_deletion' RETURNING id
