@@ -164,4 +164,4 @@ PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md
 
 PROJ-04 and OUT-04 evidence is in [M-07 portable project backups](../m07-portable-backups.md). The project controls create a dedicated encrypted archive and restore the saved document and referenced originals as a new local copy. Release qualification and future editor and estimate data coverage remain open.
 
-ADMIN-06, ADMIN-07 and ADMIN-08 evidence is in [M-07 deletion and retention](../m07-deletion-retention.md). It covers current ownership and hosting preflight, recoverable trash, early live purge, and a restore drill against pre-revocation and pre-deletion ciphertext. Production infrastructure qualification is separate.
+ADMIN-06, ADMIN-07 and ADMIN-08 evidence is in [M-07 deletion and retention](../m07-deletion-retention.md). It covers voluntary preflight, superuser forced deletion, scoped collaborator reads during the sole-owner recovery window, explicit hosting takeover, recoverable trash, early live purge, and a restore drill against pre-revocation and pre-deletion ciphertext. Production infrastructure qualification is separate.
