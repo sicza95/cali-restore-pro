@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { EditorWorkspace } from '../ui';
+import { EditorReviewAdapter } from './EditorReviewAdapter';
 
 const meta = {
   title: 'Editor/Workspace',
-  component: EditorWorkspace,
+  component: EditorReviewAdapter,
   parameters: {
     layout: 'fullscreen',
     docs: {
@@ -16,7 +16,7 @@ const meta = {
   argTypes: {
     saveState: { control: 'select', options: ['saved', 'saving', 'offline', 'draft', 'error'] },
   },
-} satisfies Meta<typeof EditorWorkspace>;
+} satisfies Meta<typeof EditorReviewAdapter>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

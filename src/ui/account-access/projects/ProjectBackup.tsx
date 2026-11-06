@@ -103,7 +103,9 @@ export function ProjectBackup(props: Props) {
         }
       }}
     >
-      <summary>{action()}</summary>
+      <summary data-control-id={props.project ? 'project.backup' : 'projects.restore'}>
+        {action()}
+      </summary>
       <Show
         when={props.project}
         fallback={

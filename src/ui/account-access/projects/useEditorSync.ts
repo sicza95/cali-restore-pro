@@ -1,6 +1,7 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
 import { revisionKeyTransfer } from '../../../platform/projects/revision-key-transfer';
 import { editorSync } from '../../../platform/projects/editor-sync';
+import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 
 export function useEditorSync(vault: LocalVault, csrf: () => string) {
@@ -45,5 +46,13 @@ export function useEditorSync(vault: LocalVault, csrf: () => string) {
       stop();
     });
   });
-  return { sync, transfer, refresh, state, errors, unavailable };
+  function statusKey(project: SavedProject) {
+    const base = state()?.checkpoints.find((row) => row.project === project.id);
+    if (!base) return 'disabled';
+    const draft = state()?.drafts.find((row) => row.project === project.id);
+    if (draft?.blocked) return 'conflict';
+    if (errors().includes(project.id)) return 'staging';
+    return draft || project.revision > base.localRevision ? 'pending' : 'saved';
+  }
+  return { sync, transfer, refresh, state, statusKey, unavailable };
 }

@@ -4,6 +4,7 @@ import type { projectCopy } from './project-copy';
 export type Copy = (typeof projectCopy)['en'];
 export function NameForm(props: {
   label: string;
+  controlId?: string;
   action: string;
   value?: string;
   disabled: boolean;
@@ -26,7 +27,9 @@ export function NameForm(props: {
         {props.label}
         <input name="name" required maxLength={120} value={props.value ?? ''} />
       </label>
-      <button disabled={props.disabled}>{props.action}</button>
+      <button data-control-id={props.controlId} disabled={props.disabled}>
+        {props.action}
+      </button>
     </form>
   );
 }

@@ -34,7 +34,7 @@ export function ProjectInvitations(props: {
   const [open, setOpen] = createSignal(false);
   return (
     <details class="invitation-panel" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>{c().heading}</summary>
+      <summary data-control-id="project.collaboration">{c().heading}</summary>
       <Show when={open()}>
         <InvitationControls
           model={props.model}
@@ -80,6 +80,7 @@ function InvitationControls(props: {
         <button
           class="secondary"
           disabled={sent.busy()}
+          data-control-id="project.host"
           onClick={() => void sent.run(() => props.model.request(props.projectPath, {}, 'PUT'))}
         >
           {c().enable}

@@ -13,6 +13,7 @@ import type { Language } from '../types';
 import { NameForm, UnitsField } from './forms';
 import { ProjectOriginals } from './ProjectOriginals';
 import { projectCopy } from './project-copy';
+import { followProjectLink, projectHref } from './project-route';
 
 export function ProjectDetail(props: {
   project: SavedProject;
@@ -22,10 +23,11 @@ export function ProjectDetail(props: {
   onRun: (task: () => Promise<void>) => Promise<boolean>;
   onSave: (project: SavedProject) => Promise<void>;
   sharing: JSX.Element;
+  onNavigate: (href: string) => void;
 }) {
   const c = () => projectCopy[props.language];
-  const [objectId, setObject] = createSignal('');
-  const [surfaceId, setSurface] = createSignal('');
+  const [objectId, setObject] = createSignal<string>(history.state?.projectObject ?? '');
+  const [surfaceId, setSurface] = createSignal<string>(history.state?.projectSurface ?? '');
   const object = () =>
     props.project.objects.find((o) => o.id === objectId()) ?? props.project.objects[0]!;
   const surface = () =>
@@ -47,6 +49,7 @@ export function ProjectDetail(props: {
         <button
           class="secondary"
           disabled={props.busy}
+          data-control-id="project.archive"
           onClick={() => void props.onRun(() => edit({ archived: !props.project.archived }))}
         >
           {props.project.archived ? c().restore : c().archive}
@@ -94,6 +97,22 @@ export function ProjectDetail(props: {
                 </select>
               </label>
             </div>
+            <a
+              class="project-back"
+              data-control-id="project.surface"
+              href={projectHref(props.project.id, surface().id)}
+              onClick={(event) =>
+                followProjectLink(event, (href) => {
+                  history.replaceState(
+                    { projectObject: object().id, projectSurface: surface().id },
+                    '',
+                  );
+                  props.onNavigate(href);
+                })
+              }
+            >
+              {c().openSurface}
+            </a>
             <NameForm
               label={c().object}
               value={object().name}
@@ -197,7 +216,9 @@ export function ProjectDetail(props: {
               <p>
                 {surface().name} · {c()[units()]}
               </p>
-              <button disabled={props.busy}>{c().save}</button>
+              <button data-control-id="project.settings" disabled={props.busy}>
+                {c().save}
+              </button>
             </form>
           </section>
         </div>

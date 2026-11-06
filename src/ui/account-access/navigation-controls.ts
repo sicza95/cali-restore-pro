@@ -40,7 +40,7 @@ export const accountNavigationControls = [
   navigationControl(
     'projects',
     'signed-in',
-    'Project library and its current descendant handler',
+    'Project library, project detail and surface routes',
     'M-05',
   ),
   navigationControl(
