@@ -51,7 +51,11 @@ export function originalPins(
   async function check(ref: PinRef, signal: AbortSignal) {
     const id = pinID(ref);
     try {
-      await requestOriginalShape(ref.invitation, ref.id, signal);
+      await requestOriginalShape(
+        ref.invitation,
+        ref.id,
+        AbortSignal.any([signal, AbortSignal.timeout(15000)]),
+      );
     } catch (error) {
       if (error instanceof OriginalAccessDenied) {
         denied.add(id);

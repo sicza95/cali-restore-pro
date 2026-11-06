@@ -160,4 +160,4 @@ SHARE-08 evidence: [M-06 selected grants](../m06-sharing.md#selected-checkpoints
 
 SHARE-06 evidence: [M-06 revocation during transfers](../m06-sharing.md#revocation-during-transfers) covers hosted originals. Live updates to other scopes and offline recovery remain planned.
 
-PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using epoch keys paired between owner devices. [Offline original pins](../m07-offline-originals.md) cover encrypted shared originals in an unlocked invitation workspace, including access checks on reconnect. Cold offline startup remains unqualified.
+PROJ-05 and PROJ-07 evidence: [M-07 conditional sync](../m07-conditional-sync.md) covers owner revision conflicts, encrypted offline editor saves and recovery using epoch keys paired between owner devices. [Offline original pins](../m07-offline-originals.md) cover cold offline startup from the cached production app shell, explicit vault unlock, byte-for-byte export and persistent pin removal after a simulated reconnect denial.

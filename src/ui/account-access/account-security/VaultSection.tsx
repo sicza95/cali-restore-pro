@@ -23,6 +23,7 @@ async function readFile(event: SubmitEvent) {
 export function VaultSection(props: {
   account: string;
   language: Language;
+  unlockOnly?: string;
   workspace?: (vault: LocalVault) => import('solid-js').JSX.Element;
 }) {
   const c = () => vaultCopy[props.language];
@@ -140,7 +141,7 @@ export function VaultSection(props: {
     >
       <div>
         <h2>{c().heading}</h2>
-        <p>{props.workspace ? c().projectHelp : c().help}</p>
+        <p>{props.unlockOnly ?? (props.workspace ? c().projectHelp : c().help)}</p>
       </div>
       <div
         class="account-panel vault-panel"
@@ -165,7 +166,7 @@ export function VaultSection(props: {
         <Show when={forgot()}>
           <p role="status">{c().forgetDone}</p>
         </Show>
-        <Show when={status() && !status()?.exists}>
+        <Show when={!props.unlockOnly && status() && !status()?.exists}>
           <label class="confirmation">
             <input
               type="checkbox"

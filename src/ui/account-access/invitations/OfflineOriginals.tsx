@@ -92,6 +92,7 @@ export function useOfflineOriginals(pins: Pins) {
 export function OfflineOriginals(props: {
   model: ReturnType<typeof useOfflineOriginals>;
   language: Language;
+  empty?: string;
 }) {
   const c = () => pinCopy[props.language];
   const [busy, setBusy] = createSignal(false);
@@ -122,7 +123,8 @@ export function OfflineOriginals(props: {
         props.model.checking() ||
         props.model.failed() ||
         props.model.revoked() ||
-        failed()
+        failed() ||
+        props.empty
       }
     >
       <section aria-label={c().heading}>
@@ -135,6 +137,9 @@ export function OfflineOriginals(props: {
         </Show>
         <Show when={props.model.failed() || failed()}>
           <p role="alert">{c().failed}</p>
+        </Show>
+        <Show when={!props.model.rows().length && !props.model.checking() && !props.model.failed()}>
+          <p>{props.empty}</p>
         </Show>
         <ul class="session-list">
           <For each={props.model.rows()}>
