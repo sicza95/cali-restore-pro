@@ -1,6 +1,6 @@
 import { For } from 'solid-js';
 import { Icon } from '../../icon/Icon';
-import { tools } from './constants';
+import { toolRailRegistry, tools } from './constants';
 import { moveFocus } from '../../shared/moveFocus';
 import type { ToolRailProps } from './types';
 
@@ -14,10 +14,11 @@ export function ToolRail(props: ToolRailProps) {
       onKeyDown={(event) => moveFocus(event, event.currentTarget, 'button')}
     >
       <For each={tools}>
-        {(tool) => (
+        {(tool, index) => (
           <button
             class="cr-tool"
             type="button"
+            data-control-id={toolRailRegistry[index()].id}
             aria-label={tool.label}
             aria-pressed={props.active === tool.id}
             aria-keyshortcuts={tool.shortcut}

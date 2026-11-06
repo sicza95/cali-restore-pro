@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
+import { toolRailRegistry } from '../src/ui/controls/tool-rail/constants';
 
 async function openStory(page: Page, id: string, globals = '') {
   await page.goto(`/iframe.html?id=${id}&viewMode=story${globals ? `&globals=${globals}` : ''}`);
@@ -10,8 +11,12 @@ async function openStory(page: Page, id: string, globals = '') {
 }
 
 test('left tool rail supports explicit keyboard selection', async ({ page }) => {
-  await openStory(page, 'editor-tool-rail--on-photograph');
+  await openStory(page, toolRailRegistry[0].composition);
   const rail = page.getByRole('toolbar', { name: 'Drawing tools' });
+  await expect(rail.getByRole('button')).toHaveCount(toolRailRegistry.length);
+  for (const { id } of toolRailRegistry) {
+    await expect(rail.locator(`button[data-control-id="${id}"]`)).toBeVisible();
+  }
   const brush = rail.getByRole('button', { name: 'Brush', exact: true });
   const eraser = rail.getByRole('button', { name: 'Eraser', exact: true });
   await brush.focus();
