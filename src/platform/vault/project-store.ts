@@ -1,10 +1,12 @@
 import { open, seal } from './crypto';
 import type { Envelope } from './crypto';
 import { assertID } from './file-format';
-import { accountRange, connect, projectTable, vaultTable } from './store';
+import { accountRange, connect, fileTable, projectTable, vaultTable } from './store';
 import type { VaultRow } from './store';
+import type { LocalFile } from './file-store';
 
 export type ProjectRow = { id: string; revision: number; envelope: Envelope };
+export type RestoredOriginal = { id: string; header: LocalFile; parts: ArrayBuffer[] };
 
 export function projectDocuments(
   root: CryptoKey,
@@ -15,24 +17,39 @@ export function projectDocuments(
   async function transact<T>(
     mode: IDBTransactionMode,
     work: (store: IDBObjectStore, finish: (result: T) => void, abort: () => void) => void,
+    withFiles = false,
   ) {
     signal.throwIfAborted();
     const db = await connect();
     try {
       signal.throwIfAborted();
       return await new Promise<T>((resolve, reject) => {
-        const tx = db.transaction([vaultTable, projectTable], mode, { durability: 'strict' });
+        const tables = [vaultTable, projectTable];
+        if (withFiles) tables.push(fileTable);
+        const tx = db.transaction(tables, mode, { durability: 'strict' });
         let result: T;
         const abort = () => tx.abort();
-        signal.addEventListener('abort', abort, { once: true });
+        const cancel = () => {
+          try {
+            abort();
+          } catch (error) {
+            // The commit may have completed before its completion event was delivered.
+            if (!(error instanceof DOMException) || error.name !== 'InvalidStateError') throw error;
+          }
+        };
+        signal.addEventListener('abort', cancel, { once: true });
         tx.oncomplete = () => {
-          signal.removeEventListener('abort', abort);
-          if (signal.aborted) reject(signal.reason);
+          signal.removeEventListener('abort', cancel);
+          if (signal.aborted && !withFiles) reject(signal.reason);
           else resolve(result);
         };
         tx.onabort = () => {
-          signal.removeEventListener('abort', abort);
-          reject(tx.error ?? new Error('The vault or project changed. Reopen it and try again.'));
+          signal.removeEventListener('abort', cancel);
+          reject(
+            signal.reason ??
+              tx.error ??
+              new Error('The vault or project changed. Reopen it and try again.'),
+          );
         };
         const vault = tx.objectStore(vaultTable).get(account);
         vault.onsuccess = () => {
@@ -46,6 +63,30 @@ export function projectDocuments(
   }
 
   return {
+    async restore(id: string, text: string, originals: RestoredOriginal[]) {
+      assertID(id);
+      signal.throwIfAborted();
+      const envelope = await seal(root, account, `project:${id}:1`, text);
+      await transact<void>(
+        'readwrite',
+        (store, finish, abort) => {
+          try {
+            store.add({ id, revision: 1, envelope } satisfies ProjectRow, [account, id]);
+            const files = store.transaction.objectStore(fileTable);
+            for (const original of originals) {
+              files.add(original.header, [account, original.id]);
+              original.parts.forEach((part, index) =>
+                files.add(part, [account, original.id, index]),
+              );
+            }
+            finish(undefined);
+          } catch {
+            abort();
+          }
+        },
+        true,
+      );
+    },
     async changed(id: string, after: number) {
       assertID(id);
       const row = await transact<ProjectRow | undefined>('readonly', (store, finish) => {

@@ -9,7 +9,7 @@ export type FileShape = { sourceBytes: number; manifestBytes: number };
 export type SourceMetadata = { name: string; type: string; size: number };
 
 export function assertID(id: string) {
-  if (!uuidPattern.test(id)) throw new Error('Invalid identifier');
+  if (typeof id !== 'string' || !uuidPattern.test(id)) throw new Error('Invalid identifier');
 }
 
 export function assertShape(shape: FileShape) {

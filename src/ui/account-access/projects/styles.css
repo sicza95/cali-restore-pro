@@ -122,3 +122,17 @@
   outline: var(--cr-focus-width) solid var(--cr-accent);
   outline-offset: 3px;
 }
+
+.project-backup summary,
+.project-backup-result a {
+  align-content: center;
+  min-height: var(--cr-touch);
+}
+.project-backup-result {
+  display: grid;
+  gap: 12px;
+  max-width: 32rem;
+}
+.project-backup-result a {
+  justify-self: start;
+}

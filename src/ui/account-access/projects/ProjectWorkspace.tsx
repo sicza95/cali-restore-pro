@@ -8,6 +8,7 @@ import type { createAccountAccess } from '../createAccountAccess';
 import { ProjectInvitations } from '../invitations/ProjectInvitations';
 import { projectSnapshot } from '../../../platform/projects/shared-project';
 import { ProjectDetail } from './ProjectDetail';
+import { ProjectBackup } from './ProjectBackup';
 import { projectCopy } from './project-copy';
 import { NameForm } from './forms';
 import { ReceiveProjectKey } from './ProjectKeyTransfer';
@@ -130,6 +131,16 @@ export function ProjectWorkspace(props: {
                   void sync.refresh();
                 }}
               />
+              <ProjectBackup
+                vault={props.vault}
+                language={props.language}
+                busy={busy()}
+                run={run}
+                onRestored={(project) => {
+                  update(project);
+                  navigate(project.id);
+                }}
+              />
               <div class="project-fields">
                 <label>
                   {c().search}
@@ -218,6 +229,17 @@ export function ProjectWorkspace(props: {
                 </Show>
               }
             />
+            <Show when={current()!.id} keyed>
+              {(id) => (
+                <ProjectBackup
+                  project={id}
+                  vault={props.vault}
+                  language={props.language}
+                  busy={busy()}
+                  run={run}
+                />
+              )}
+            </Show>
             <Show when={current()!.id} keyed>
               {(id: string) => (
                 <ProjectSync
