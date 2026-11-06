@@ -6,6 +6,7 @@ import { encryptedFiles } from './files';
 import { revisionQueue } from './revision-queue';
 import { projectDocuments } from './project-store';
 import { originalPins } from './original-pins';
+import { projectBackups } from './project-backups';
 
 export class LocalVault {
   #root?: CryptoKey;
@@ -134,6 +135,11 @@ export class LocalVault {
   projects() {
     const { root, row } = this.#unlocked();
     return projectDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
+  }
+
+  projectBackups() {
+    const { root, row } = this.#unlocked();
+    return projectBackups(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
   revisions() {

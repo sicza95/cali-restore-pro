@@ -4,7 +4,12 @@ const origin = 'http://127.0.0.1:4184';
 
 export default defineConfig({
   testDir: 'tests-platform',
-  testMatch: ['encrypted-files.browser.ts', 'original-pins.browser.ts', 'projects.browser.ts'],
+  testMatch: [
+    'encrypted-files.browser.ts',
+    'original-pins.browser.ts',
+    'project-backups.browser.ts',
+    'projects.browser.ts',
+  ],
   outputDir: 'test-results/encrypted-files',
   use: { baseURL: origin, channel: process.env.CI ? undefined : 'chrome' },
   webServer: [
