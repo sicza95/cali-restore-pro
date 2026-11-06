@@ -61,3 +61,37 @@ export async function verifyHostingTransfer(
     { id: session.account.id, email: 'recipient@example.test', host: true },
   ]);
 }
+
+export async function enableHostingAndSync(project: Page) {
+  const hosting = project.waitForResponse(
+    (response) =>
+      response.request().method() === 'PUT' &&
+      /\/hosted-projects\/[a-f0-9-]+$/.test(response.url()),
+  );
+  await project.getByRole('button', { name: 'Enable hosting' }).click();
+  expect((await hosting).ok()).toBe(true);
+  await project.route('**/hosted-projects/*/revision', async (route) => {
+    if (route.request().method() === 'PUT') await route.abort('internetdisconnected');
+    else await route.fallback();
+  });
+  const failed = project.waitForEvent(
+    'requestfailed',
+    (request) => request.method() === 'PUT' && request.url().endsWith('/revision'),
+  );
+  await project.getByRole('button', { name: 'Enable editor sync' }).click();
+  await failed;
+  const status = project.getByRole('region', { name: 'Cloud sync' }).getByRole('status');
+  await expect(status).toContainText('waiting to sync');
+  await project.unroute('**/hosted-projects/*/revision');
+  const ack = project.waitForResponse(
+    (response) => response.request().method() === 'PUT' && response.url().endsWith('/revision'),
+  );
+  await project.evaluate(() => window.dispatchEvent(new Event('online')));
+  const committed = await ack;
+  expect(committed.ok()).toBe(true);
+  expect(await committed.json()).toMatchObject({ head: { revision: 1 } });
+  expect(committed.request().postData()).not.toMatch(
+    /Synthetic chapel|North wall|Upper plaster|shared-plaster/,
+  );
+  await expect(status).toHaveText('Cloud copy saved');
+}

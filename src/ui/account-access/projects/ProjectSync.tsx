@@ -46,12 +46,7 @@ export function ProjectSync(props: {
       setReview(undefined);
     });
   }
-  const status = () => {
-    if (!base()) return c().disabled;
-    if (draft()?.blocked) return c().conflict;
-    if (props.model.errors().includes(props.project.id)) return c().staging;
-    return draft() || props.project.revision > base()!.localRevision ? c().pending : c().saved;
-  };
+  const status = () => c()[props.model.statusKey(props.project)];
   return (
     <section class="project-pane project-sync" aria-label={c().title}>
       <h3>{c().title}</h3>
@@ -63,6 +58,7 @@ export function ProjectSync(props: {
         <button
           class="secondary"
           disabled={props.busy}
+          data-control-id="project.sync.enable"
           onClick={() => run(() => props.model.sync.enable(props.project.id))}
         >
           {c().enable}
@@ -80,6 +76,7 @@ export function ProjectSync(props: {
       <Show when={draft()?.blocked}>
         <button
           class="secondary"
+          data-control-id="project.sync.review"
           disabled={props.busy}
           onClick={() =>
             run(async () => {
@@ -102,13 +99,18 @@ export function ProjectSync(props: {
               </Show>
             </div>
             <div class="project-fields">
-              <button disabled={props.busy} onClick={() => resolve(value, false)}>
+              <button
+                data-control-id="project.sync.keep-local"
+                disabled={props.busy}
+                onClick={() => resolve(value, false)}
+              >
                 {c().keepLocal}
               </button>
               <Show when={value.remote}>
                 <button
                   class="secondary"
                   disabled={props.busy}
+                  data-control-id="project.sync.keep-cloud"
                   onClick={() => resolve(value, true)}
                 >
                   {c().keepCloud}

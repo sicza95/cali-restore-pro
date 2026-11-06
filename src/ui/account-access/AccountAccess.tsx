@@ -79,7 +79,8 @@ export function AccountAccess() {
                       }
                     >
                       <p>
-                        {t('signedOut')} <a href={signInLink(destination())}>{t('login')}</a>
+                        {t('signedOut')}{' '}
+                        <a href={signInLink(destination(), location.pathname)}>{t('login')}</a>
                       </p>
                     </Show>
                   }

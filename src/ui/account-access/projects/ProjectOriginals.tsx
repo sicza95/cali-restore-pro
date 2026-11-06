@@ -63,12 +63,18 @@ export function ProjectOriginals(props: {
           {props.copy.role}
           <RoleField copy={props.copy} />
         </label>
-        <button disabled={props.busy}>{props.copy.attach}</button>
+        <button data-control-id="originals.attach" disabled={props.busy}>
+          {props.copy.attach}
+        </button>
       </form>
       <Show when={transfer()}>
         <div class="project-fields">
           <progress aria-label={props.copy.attach} max={1} value={progress()} />
-          <button class="secondary" onClick={() => transfer()?.abort()}>
+          <button
+            class="secondary"
+            data-control-id="originals.cancel"
+            onClick={() => transfer()?.abort()}
+          >
             {props.copy.cancel}
           </button>
         </div>

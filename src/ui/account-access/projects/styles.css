@@ -23,7 +23,15 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
+.project-workspace h2 {
+  font-size: 1.375rem;
+  overflow-wrap: anywhere;
+}
+.project-back + .project-back {
+  margin-inline-start: 16px;
+}
 .project-detail {
+  align-items: start;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   gap: 16px;

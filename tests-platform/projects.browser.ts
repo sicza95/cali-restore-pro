@@ -1,14 +1,18 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { projectControls } from '../src/ui/account-access/projects/project-controls';
 
 test('project hierarchy and encrypted originals reopen from the local vault', async ({
   page,
 }, info) => {
+  let account = '00000000-0000-4000-8000-000000000001';
+  const pageErrors: string[] = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({
       json: {
         account: {
-          id: '00000000-0000-4000-8000-000000000001',
+          id: account,
           email: 'restorer@example.test',
           state: 'active',
           role: 'member',
@@ -23,8 +27,16 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await page.getByRole('button', { name: 'Set up vault' }).click();
   await page.getByLabel('I saved the recovery key').check();
   await page.getByRole('button', { name: 'Set up vault' }).click();
+  const controls = (id: string) => {
+    expect(projectControls.some((control) => control.id === id)).toBe(true);
+    return page.locator(`[data-control-id="${id}"]`);
+  };
+  for (const id of ['projects.search', 'projects.sort', 'projects.restore', 'projects.offline']) {
+    await expect(controls(id)).toBeVisible();
+  }
+  await page.screenshot({ path: info.outputPath('project-library.png') });
   await page.getByLabel('Project name').fill('East Chapel');
-  await page.getByRole('button', { name: 'New project' }).click();
+  await controls('projects.create').click();
   await expect(page.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Surface', exact: true })).toHaveValue(
     /^[0-9a-f-]{36}$/,
@@ -45,19 +57,41 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
     .selectOption('imperial');
   await page.getByRole('button', { name: 'Save settings' }).click();
   await expect(page.getByText('Upper plaster · Imperial')).toBeVisible();
+  const projectPath = new URL(page.url()).pathname;
+  for (const id of [
+    'project.library',
+    'project.collaboration',
+    'project.backup',
+    'project.sync.enable',
+  ]) {
+    await expect(controls(id)).toBeVisible();
+  }
+  await controls('project.surface').click();
+  const surfacePath = new URL(page.url()).pathname;
+  expect(surfacePath).toMatch(/^\/projects\/[a-f0-9-]{36}\/surfaces\/[a-f0-9-]{36}$/);
+  await expect(page.getByRole('heading', { name: 'Upper plaster' })).toBeVisible();
+  await expect(controls('surface.project')).toHaveText('East Chapel');
+  await expect(controls('project.collaboration')).toHaveCount(0);
   await page.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'plaster-detail.dng',
     mimeType: 'image/x-adobe-dng',
     buffer: Buffer.from([1, 2, 3]),
   });
   await page.getByRole('combobox', { name: 'Image role', exact: true }).selectOption('reference');
-  await page.getByRole('button', { name: 'Attach original', exact: true }).click();
+  await controls('originals.attach').click();
   await expect(page.getByText('plaster-detail.dng')).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('projects-landscape.png'), fullPage: true });
-  await page.reload();
+  await page.goBack();
+  await expect(page).toHaveURL(projectPath);
+  await expect(page.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
+  await page.goto(surfacePath);
+  await expect(page.getByRole('heading', { name: 'Upper plaster' })).toHaveCount(0);
   await expect(page.getByText('East Chapel')).toHaveCount(0);
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
+  await expect(page.getByText('plaster-detail.dng')).toBeVisible();
+  await page.screenshot({ path: info.outputPath('surface-reopened.png') });
+  await controls('surface.project').click();
   await page
     .getByRole('combobox', { name: 'Object', exact: true })
     .selectOption({ label: 'North wall' });
@@ -70,13 +104,49 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
     page.getByRole('listitem').getByRole('combobox', { name: 'Image role' }),
   ).toHaveValue('reference');
   await page.setViewportSize({ width: 834, height: 1194 });
+  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
   await page.screenshot({ path: info.outputPath('projects-portrait.png'), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
+  await page.screenshot({ path: info.outputPath('projects-phone.png'), fullPage: true });
   await page.getByRole('button', { name: 'Archive', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Restore project' })).toBeVisible();
   await page.getByRole('link', { name: 'All projects' }).click();
   await expect(page.getByRole('link', { name: 'East Chapel' })).toHaveCount(0);
   await page.getByLabel('Show archived').check();
-  await expect(page.getByRole('link', { name: 'East Chapel' })).toBeVisible();
+  await expect(controls('projects.open')).toHaveText('East Chapel');
+  await page.getByRole('searchbox', { name: 'Search projects' }).fill('missing');
+  await expect(controls('projects.open')).toHaveCount(0);
+  await page.getByRole('searchbox', { name: 'Search projects' }).clear();
+
+  await controls('projects.open').click();
+  await page.getByRole('button', { name: 'Restore project' }).click();
+  await page.goto(projectPath + '/surfaces/00000000-0000-4000-8000-000000000099');
+  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
+  await expect(
+    page.getByText('This project or surface is unavailable on this device.'),
+  ).toBeVisible();
+  await expect(page.getByText('East Chapel')).toHaveCount(0);
+  await expect(controls('originals.attach')).toHaveCount(0);
+  account = '00000000-0000-4000-8000-000000000002';
+  await page.goto(surfacePath);
+  await page.getByRole('button', { name: 'Set up vault' }).click();
+  await page.getByLabel('I saved the recovery key').check();
+  await page.getByRole('button', { name: 'Set up vault' }).click();
+  await expect(
+    page.getByText('This project or surface is unavailable on this device.'),
+  ).toBeVisible();
+  await expect(page.getByText('plaster-detail.dng')).toHaveCount(0);
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
+  );
+  await page.goto(surfacePath);
+  await expect(page.getByRole('main').getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+    'href',
+    '/login?' + new URLSearchParams({ next: surfacePath }),
+  );
+  await expect(controls('originals.attach')).toHaveCount(0);
+  expect(pageErrors).toEqual([]);
 });
 
 test('project revisions reject stale edits and vault forget removes encrypted documents', async ({

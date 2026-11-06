@@ -11,10 +11,14 @@ import { ProjectDetail } from './ProjectDetail';
 import { ProjectLifecycle } from './ProjectLifecycle';
 import { ProjectBackup } from './ProjectBackup';
 import { projectCopy } from './project-copy';
+import { loadPreferences } from '../settings/preferences/utils';
 import { NameForm } from './forms';
 import { ReceiveProjectKey } from './ProjectKeyTransfer';
 import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
+import { SurfaceWorkspace } from './SurfaceWorkspace';
+import { followProjectLink, projectHref, projectRoute } from './project-route';
+import { syncCopy } from './sync-copy';
 import './styles.css';
 
 export function ProjectWorkspace(props: {
@@ -37,12 +41,21 @@ export function ProjectWorkspace(props: {
       () => ({ rows: [] as SavedProject[], failed: true }),
     ),
   );
-  const [selected, setSelected] = createSignal(location.pathname.split('/')[2] || '');
+  const [route, setRoute] = createSignal(projectRoute(location.pathname));
+  const [sort, setSort] = createSignal('recent');
   const [query, setQuery] = createSignal('');
   const [archived, setArchived] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [failure, setFailure] = createSignal(false);
-  const current = () => projects()?.rows.find((project) => project.id === selected());
+  const current = () => projects()?.rows.find((project) => project.id === route()?.project);
+  const activeSurface = () => {
+    const project = current();
+    if (!project || project.archived) return;
+    for (const object of project.objects) {
+      const surface = object.surfaces.find((entry) => entry.id === route()?.surface);
+      if (surface) return { object, surface };
+    }
+  };
   const visible = () =>
     (projects()?.rows ?? [])
       .filter(
@@ -52,12 +65,21 @@ export function ProjectWorkspace(props: {
             .toLocaleLowerCase(props.language)
             .includes(query().trim().toLocaleLowerCase(props.language)),
       )
-      .sort((a, b) => b.updatedAt - a.updatedAt || a.name.localeCompare(b.name, props.language));
-  function navigate(id: string) {
-    history.pushState(null, '', id ? '/projects/' + id : '/projects');
-    setSelected(id);
+      .sort(
+        (a, b) =>
+          (sort() === 'recent' ? b.updatedAt - a.updatedAt : 0) ||
+          a.name.localeCompare(b.name, props.language),
+      );
+  function rowSync(project: SavedProject) {
+    const status = sync.statusKey(project);
+    return status === 'disabled' ? c().local : syncCopy[props.language][status];
   }
-  const pop = () => setSelected(location.pathname.split('/')[2] || '');
+  function navigate(href: string) {
+    if (href === location.pathname) return;
+    history.pushState(null, '', href);
+    pop();
+  }
+  const pop = () => setRoute(projectRoute(location.pathname));
   window.addEventListener('popstate', pop);
   onCleanup(() => window.removeEventListener('popstate', pop));
   async function run(task: () => Promise<void>) {
@@ -83,8 +105,17 @@ export function ProjectWorkspace(props: {
   }
   return (
     <section class="project-workspace" aria-label={c().hierarchy}>
+      <a class="project-back" data-control-id="projects.offline" href="/offline-originals">
+        {c().offlineShelf}
+      </a>
       <p role="status">
-        {busy() ? c().saving : projects.loading ? c().loading : projects()?.failed ? '' : c().local}
+        {busy()
+          ? c().saving
+          : projects.loading
+            ? c().loading
+            : current() && (!route()?.surface || activeSurface())
+              ? c().local
+              : ''}
       </p>
       <Show when={failure() || projects()?.failed}>
         <p role="alert">{c().error}</p>
@@ -101,10 +132,11 @@ export function ProjectWorkspace(props: {
       </Show>
       <Show when={!projects.loading && !projects()?.failed}>
         <Show
-          when={selected()}
+          when={route()?.project}
           fallback={
             <>
               <NameForm
+                controlId="projects.create"
                 label={c().name}
                 action={c().add}
                 disabled={busy()}
@@ -114,47 +146,38 @@ export function ProjectWorkspace(props: {
                       name,
                       c().firstObject,
                       c().firstSurface,
-                      props.language === 'hu' ? 'HUF' : 'EUR',
+                      loadPreferences(props.model.account()!.id).currency,
                     );
                     await save(project);
-                    navigate(project.id);
+                    navigate(projectHref(project.id));
                   })
                 }
               />
-              <ReceiveProjectKey
-                language={props.language}
-                busy={busy()}
-                model={sync.transfer}
-                run={run}
-                onReceived={(received) => {
-                  if (received.created) update(received.document);
-                  navigate(received.project);
-                  void sync.refresh();
-                }}
-              />
-              <ProjectBackup
-                vault={props.vault}
-                language={props.language}
-                busy={busy()}
-                run={run}
-                onRestored={(project) => {
-                  update(project);
-                  navigate(project.id);
-                }}
-              />
-              <ProjectLifecycle model={props.model} />
               <div class="project-fields">
                 <label>
                   {c().search}
                   <input
                     type="search"
+                    data-control-id="projects.search"
                     value={query()}
                     onInput={(e) => setQuery(e.currentTarget.value)}
                   />
                 </label>
+                <label>
+                  {c().sort}
+                  <select
+                    data-control-id="projects.sort"
+                    value={sort()}
+                    onChange={(event) => setSort(event.currentTarget.value)}
+                  >
+                    <option value="recent">{c().recent}</option>
+                    <option value="name">{c().byName}</option>
+                  </select>
+                </label>
                 <label class="confirmation">
                   <input
                     type="checkbox"
+                    data-control-id="projects.archived"
                     checked={archived()}
                     onChange={(e) => setArchived(e.currentTarget.checked)}
                   />
@@ -166,16 +189,13 @@ export function ProjectWorkspace(props: {
                   {(project) => (
                     <li>
                       <a
-                        href={'/projects/' + project.id}
-                        onClick={(e) => {
-                          if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-                            e.preventDefault();
-                            navigate(project.id);
-                          }
-                        }}
+                        data-control-id="projects.open"
+                        href={projectHref(project.id)}
+                        onClick={(event) => followProjectLink(event, navigate)}
                       >
                         {project.name}
                       </a>
+                      <small>{rowSync(project)}</small>
                       <time dateTime={new Date(project.updatedAt).toISOString()}>
                         {new Intl.DateTimeFormat(props.language, { dateStyle: 'medium' }).format(
                           project.updatedAt,
@@ -185,75 +205,123 @@ export function ProjectWorkspace(props: {
                   )}
                 </For>
               </ul>
+              <ReceiveProjectKey
+                language={props.language}
+                busy={busy()}
+                model={sync.transfer}
+                run={run}
+                onReceived={(received) => {
+                  if (received.created) update(received.document);
+                  navigate(projectHref(received.project));
+                  void sync.refresh();
+                }}
+              />
+              <ProjectBackup
+                vault={props.vault}
+                language={props.language}
+                busy={busy()}
+                run={run}
+                onRestored={(project) => {
+                  update(project);
+                  navigate(projectHref(project.id));
+                }}
+              />
+              <ProjectLifecycle model={props.model} />
             </>
           }
         >
           <a
             class="project-back"
             href="/projects"
-            onClick={(e) => {
-              if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-                e.preventDefault();
-                navigate('');
-              }
-            }}
+            data-control-id="project.library"
+            onClick={(event) => followProjectLink(event, navigate)}
           >
             {c().back}
           </a>
-          <Show when={current()} fallback={<p>{c().missing}</p>}>
-            <ProjectDetail
-              project={current()!}
-              language={props.language}
-              vault={props.vault}
-              busy={busy()}
-              onRun={run}
-              onSave={save}
-              sharing={
-                <Show when={!current()!.archived && current()!.id} keyed>
-                  {(id) => (
-                    <ProjectInvitations
-                      projectId={id}
-                      project={projectSnapshot(current()!)}
-                      originalIds={[
-                        ...new Set(
-                          current()!.objects.flatMap((object) =>
-                            object.surfaces.flatMap((surface) =>
-                              surface.images.map((image) => image.id),
-                            ),
-                          ),
-                        ),
-                      ]}
-                      canHost
-                      model={props.model}
-                      vault={props.vault}
-                    />
-                  )}
-                </Show>
-              }
-            />
-            <ProjectLifecycle model={props.model} project={current()!.id} />
-            <Show when={current()!.id} keyed>
+          <Show
+            when={!route()?.surface}
+            fallback={
+              <Show
+                when={activeSurface()?.surface.id}
+                keyed
+                fallback={<p role="status">{c().missing}</p>}
+              >
+                {(id) => (
+                  <SurfaceWorkspace
+                    project={current()!}
+                    object={activeSurface()!.object}
+                    surface={activeSurface()!.object.surfaces.find((surface) => surface.id === id)!}
+                    vault={props.vault}
+                    language={props.language}
+                    busy={busy()}
+                    onRun={run}
+                    onSave={save}
+                    onNavigate={navigate}
+                  />
+                )}
+              </Show>
+            }
+          >
+            <Show when={current()?.id} keyed fallback={<p role="status">{c().missing}</p>}>
               {(id) => (
-                <ProjectBackup
-                  project={id}
-                  vault={props.vault}
-                  language={props.language}
-                  busy={busy()}
-                  run={run}
-                />
-              )}
-            </Show>
-            <Show when={current()!.id} keyed>
-              {(id: string) => (
-                <ProjectSync
-                  projectId={id}
-                  project={current()!}
-                  language={props.language}
-                  model={sync}
-                  busy={busy()}
-                  run={run}
-                  onResolved={update}
-                />
+                <>
+                  <ProjectDetail
+                    project={current()!}
+                    language={props.language}
+                    vault={props.vault}
+                    busy={busy()}
+                    onRun={run}
+                    onSave={save}
+                    onNavigate={navigate}
+                    sharing={
+                      <Show when={!current()!.archived && current()!.id} keyed>
+                        {(id) => (
+                          <ProjectInvitations
+                            projectId={id}
+                            project={projectSnapshot(current()!)}
+                            originalIds={[
+                              ...new Set(
+                                current()!.objects.flatMap((object) =>
+                                  object.surfaces.flatMap((surface) =>
+                                    surface.images.map((image) => image.id),
+                                  ),
+                                ),
+                              ),
+                            ]}
+                            canHost
+                            model={props.model}
+                            vault={props.vault}
+                          />
+                        )}
+                      </Show>
+                    }
+                  />
+                  <ProjectLifecycle model={props.model} project={id} />
+                  <Show when={current()!.id} keyed>
+                    {(id) => (
+                      <ProjectBackup
+                        project={id}
+                        vault={props.vault}
+                        language={props.language}
+                        busy={busy()}
+                        run={run}
+                      />
+                    )}
+                  </Show>
+                  <Show when={current()!.id} keyed>
+                    {(id: string) => (
+                      <ProjectSync
+                        projectId={id}
+                        project={current()!}
+                        language={props.language}
+                        model={sync}
+                        busy={busy()}
+                        run={run}
+                        onResolved={update}
+                      />
+                    )}
+                  </Show>
+                </>
               )}
             </Show>
           </Show>

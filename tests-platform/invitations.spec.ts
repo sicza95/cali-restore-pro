@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { createDecipheriv } from 'node:crypto';
 import { captureOriginalKey } from './invitation-crypto';
 import { verifyCheckpointGrants } from './invitation-checkpoints';
-import { verifyHostingTransfer } from './invitation-hosting';
+import { enableHostingAndSync, verifyHostingTransfer } from './invitation-hosting';
 import {
   pauseOriginalDownload,
   stageOriginalUpload,
@@ -66,7 +66,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await project.getByRole('button', { name: 'Attach original', exact: true }).click();
     await expect(project.getByText('shared-plaster.bin')).toBeVisible();
     await project.getByText('Project invitations', { exact: true }).click();
-    await project.getByRole('button', { name: 'Enable hosting' }).click();
+    await enableHostingAndSync(project);
     await project.getByLabel('Recipient email').fill('recipient@example.test');
     await project.getByLabel('Estimate access (sample data)').selectOption('estimate-summary');
     await project.getByRole('button', { name: 'Send invitation' }).click();
