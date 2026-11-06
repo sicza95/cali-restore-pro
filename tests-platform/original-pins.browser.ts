@@ -1,6 +1,7 @@
 import { createCipheriv, randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
+import { build } from 'vite';
 
 const recipient = 'a1000000-0000-4000-8000-000000000000';
 const sender = 'a2000000-0000-4000-8000-000000000000';
@@ -11,9 +12,10 @@ const name = 'synthetic-plaster.bin';
 const path = `/api/v1/invitations/${invitation}/files/${id}`;
 
 test('an interrupted pin can retry; a completed pin works offline until revocation is learned', async ({
-  page,
+  page: onlinePage,
   context,
 }, info) => {
+  let page = onlinePage;
   const source = randomBytes((1 << 20) + 31);
   const key = randomBytes(32);
   const manifest = Buffer.from(JSON.stringify({ v: 1, name, type: '', size: source.length }));
@@ -32,13 +34,13 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   let revoked = false;
   let interrupt = true;
   let requests = 0;
-  await page.route('**/api/v1/auth/me', (route) =>
+  await context.route('**/api/v1/auth/me', (route) =>
     route.fulfill({
       json: { account: { id: recipient, email: 'recipient@example.test' }, csrfToken: 'test' },
     }),
   );
-  await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
-  await page.route('**/api/v1/invitations', (route) =>
+  await context.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
+  await context.route('**/api/v1/invitations', (route) =>
     route.fulfill({
       json: {
         invitations: [
@@ -54,7 +56,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
       },
     }),
   );
-  await page.route('**' + path + '**', (route) => {
+  await context.route('**' + path + '**', (route) => {
     requests++;
     if (revoked) return route.fulfill({ status: 404 });
     const part = new URL(route.request().url()).pathname.slice(path.length);
@@ -65,44 +67,31 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
     if (interrupt && part === '/parts/2') return route.abort('internetdisconnected');
     return route.fulfill({ body: parts[Number(part.split('/').at(-1))] });
   });
-  await page.goto('/invitations');
+  const bundle = await build({
+    configFile: false,
+    logLevel: 'silent',
+    build: {
+      write: false,
+      lib: { entry: 'tests-platform/fixtures/offline-grant.ts', formats: ['es'] },
+    },
+  });
+  if (!Array.isArray(bundle)) throw new Error('Expected bundled grant fixture');
+  const script = bundle[0].output.find((file) => file.type === 'chunk');
+  if (!script) throw new Error('Missing grant fixture');
+  await context.route('**/__offline-grant.js', (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: script.code }),
+  );
+  const origin = 'http://127.0.0.1:4186';
+  await page.goto(origin + '/invitations');
   const grant = await page.evaluate(
-    async ({ recipient, sender, invitation, project, original }) => {
-      const vaultPath = '/src/platform/vault/vault.ts';
-      const sharingPath = '/src/platform/projects/fixture-sharing.ts';
-      const { LocalVault } = (await import(
-        vaultPath
-      )) as typeof import('../src/platform/vault/vault');
-      const { localSharingKey, sealProjectSnapshot, sharingFingerprint } = (await import(
-        sharingPath
-      )) as typeof import('../src/platform/projects/fixture-sharing');
-      const receiver = new LocalVault(recipient, () => undefined);
-      const owner = new LocalVault(sender, () => undefined);
-      await receiver.create('aa'.repeat(32), true);
-      await owner.create('bb'.repeat(32), false);
-      const from = await localSharingKey(owner);
-      const to = await localSharingKey(receiver);
-      const envelope = await sealProjectSnapshot(
-        from.pair,
-        to.publicKey,
-        { recipient, sender, invitation, project },
-        {
-          name: 'Chapel',
-          revision: 1,
-          objects: [{ name: 'Wall', surfaces: [{ name: 'Plaster', units: 'metric' }] }],
-        },
-        [original],
-      );
-      owner.close();
-      receiver.close();
-      return {
-        envelope: { ...envelope, senderId: sender, senderKey: from.publicKey },
-        fingerprint: await sharingFingerprint(from.publicKey),
-      };
+    async (input) => {
+      const fixture = '/__offline-grant.js';
+      const { createGrant } = (await import(fixture)) as typeof import('./fixtures/offline-grant');
+      return createGrant(input);
     },
     { recipient, sender, invitation, project, original: { id, name, key: key.toString('base64') } },
   );
-  await page.route('**/api/v1/invitations/' + invitation + '/content', (route) =>
+  await context.route('**/api/v1/invitations/' + invitation + '/content', (route) =>
     route.fulfill({ json: grant.envelope }),
   );
   const unlock = async () => {
@@ -113,28 +102,50 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await page.getByLabel('Verified owner fingerprint').fill(grant.fingerprint);
   await page.getByRole('button', { name: 'Open shared content' }).click();
   const pin = page.getByRole('button', { name: 'Make available offline' });
-  const shelf = page.getByRole('region', { name: 'Offline originals' });
+  const shelf = () => page.getByRole('region', { name: 'Offline originals' });
   await pin.click();
   await expect(
     page.getByRole('region', { name: 'Shared originals' }).getByRole('alert'),
   ).toBeVisible();
-  await expect(shelf.getByText(name)).toHaveCount(0);
+  await expect(shelf().getByText(name)).toHaveCount(0);
   interrupt = false;
   await pin.click();
-  await expect(shelf.getByText(name)).toBeVisible();
+  await expect(shelf().getByText(name)).toBeVisible();
   await expect(page.getByText('Available offline', { exact: true })).toBeVisible();
+
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  const offlinePath = '/offline-originals';
+  await expect(page.getByRole('link', { name: 'Offline originals' })).toHaveAttribute(
+    'href',
+    offlinePath,
+  );
+  await page.close();
+  await context.setOffline(true);
+  page = await context.newPage();
+  await page.goto(origin + offlinePath);
+  await page.setViewportSize({ width: 834, height: 1194 });
+  await expect(page.getByText('Vault locked', { exact: true })).toBeVisible();
+  await expect(page.getByText(name)).toHaveCount(0);
+  const recovery = page.getByLabel('Recovery key', { exact: true });
+  const unlockWithKey = page.getByRole('button', { name: 'Unlock with recovery key' });
+  await recovery.fill('ff'.repeat(32));
+  await unlockWithKey.click();
+  await expect(page.getByRole('alert')).toContainText('The vault action failed');
+  await expect(page.getByText(name)).toHaveCount(0);
+  await recovery.fill('aa'.repeat(32));
+  await unlockWithKey.click();
+  await expect(shelf().getByText(name)).toBeVisible();
+  await page.getByRole('button', { name: 'Lock vault', exact: true }).click();
+  await expect(page.getByText(name)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
+  await expect(shelf().getByText(name)).toBeVisible();
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.screenshot({ path: info.outputPath('pins-landscape.png'), fullPage: true });
-
-  // The shelf survives navigation and doesn't need the shared project to be opened again.
-  await unlock();
-  await expect(shelf.getByText(name)).toBeVisible();
   await page.setViewportSize({ width: 834, height: 1194 });
-  await context.setOffline(true);
   const before = requests;
   revoked = true;
   const download = page.waitForEvent('download');
-  await shelf.getByRole('button', { name: 'Save a copy' }).click();
+  await shelf().getByRole('button', { name: 'Save a copy' }).click();
   const file = await download;
   expect(file.suggestedFilename()).toBe(name);
   expect(await readFile(await file.path())).toEqual(source);
@@ -146,9 +157,12 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   );
   await context.setOffline(false);
   await denial;
-  await expect(shelf.getByText(name)).toHaveCount(0);
-  await unlock();
-  await expect(page.getByRole('button', { name: 'Show my sharing fingerprint' })).toBeVisible();
+  await expect(shelf().getByText(name)).toHaveCount(0);
+  await expect(shelf().getByRole('status')).toHaveText(
+    'Removed offline copies you can no longer access.',
+  );
   await context.setOffline(true);
-  await expect(shelf.getByRole('button', { name: 'Save a copy' })).toHaveCount(0);
+  await unlock();
+  await expect(shelf().getByText('No originals are pinned on this browser.')).toBeVisible();
+  await expect(shelf().getByRole('button', { name: 'Save a copy' })).toHaveCount(0);
 });

@@ -3,6 +3,7 @@ import {
   loadPreferences,
   preferenceDefaults,
 } from './settings/preferences/utils';
+import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/offline-account';
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
 import { copy, sessionEndingActions } from './constants';
@@ -55,6 +56,7 @@ export function createAccountAccess() {
   const clearSession = (notify = true) => {
     if (notify && account()) sessionChanges?.postMessage(account()?.id);
     window.dispatchEvent(new Event('calirestore-session-end'));
+    if (localStorage.getItem(offlineAccountKey) === account()?.id) rememberOfflineAccount();
     setAccount(undefined);
     setCapabilities([]);
     setCsrf('');
@@ -80,6 +82,7 @@ export function createAccountAccess() {
     try {
       await api(action, body);
       if (action === 'login') {
+        rememberOfflineAccount();
         sessionChanges?.postMessage(null);
         window.location.assign(
           new URLSearchParams(location.search).get('next') === 'invitations'
@@ -136,6 +139,8 @@ export function createAccountAccess() {
     const result = await api('me');
     setCapabilities(result.capabilities ?? []);
     setAccount(result.account);
+    if (view === 'invitations' || localStorage.getItem(offlineAccountKey) !== result.account?.id)
+      rememberOfflineAccount(view === 'invitations' ? result.account?.id : undefined);
   };
   const applyAccountPreferences = () => {
     const id = account()?.id;
@@ -158,7 +163,9 @@ export function createAccountAccess() {
         if (view === 'security') void refreshSessions();
       })
       .catch((error: unknown) => {
-        if (error instanceof Error && error.message !== 'authentication_required') {
+        if (error instanceof Error && error.message === 'authentication_required') {
+          rememberOfflineAccount();
+        } else {
           setMessage('unavailable');
           setFailed(true);
         }
@@ -205,6 +212,7 @@ export function createAccountAccess() {
     sessions,
     setRevokeConfirmed,
     signOut: () => {
+      rememberOfflineAccount();
       lockVault();
       void run('logout', {}, 'success');
     },

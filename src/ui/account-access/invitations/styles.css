@@ -45,3 +45,14 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.offline-originals-page {
+  margin-inline: auto;
+}
+
+.offline-originals-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cr-touch);
+  margin-bottom: 8px;
+}

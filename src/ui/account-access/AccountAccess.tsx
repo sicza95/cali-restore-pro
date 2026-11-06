@@ -10,6 +10,7 @@ import { createAccountAccess } from './createAccountAccess';
 import type { Language } from './types';
 import { VaultSection } from './account-security/VaultSection';
 import { ProjectWorkspace } from './projects/ProjectWorkspace';
+import { pinCopy } from './invitations/OfflineOriginals';
 import { InvitationInbox } from './invitations/InvitationInbox';
 
 export function AccountAccess() {
@@ -67,6 +68,7 @@ export function AccountAccess() {
             <a href="/invitations" aria-current={view === 'invitations' ? 'page' : undefined}>
               {t('invitations')}
             </a>
+            <a href="/offline-originals">{pinCopy[lang()].heading}</a>
             <a href="/settings/account" aria-current={view === 'profile' ? 'page' : undefined}>
               {c().profile}
             </a>
