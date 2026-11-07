@@ -8,6 +8,8 @@ type Purpose =
   | 'snapshot'
   | 'transfer'
   | 'sharing-identity'
+  | `encrypted-estimates:${string}`
+  | `encrypted-estimate-presets:${string}`
   | `project:${string}`
   | `sync:${string}`
   | `pin:${string}`;

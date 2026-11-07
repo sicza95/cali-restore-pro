@@ -13,7 +13,14 @@ export function projectDocuments(
   account: string,
   stamp: string,
   signal: AbortSignal,
+  table = projectTable,
 ) {
+  const purpose = (id: string, revision: number) =>
+    table === projectTable
+      ? (`project:${id}:${revision}` as const)
+      : table === 'encrypted-estimates'
+        ? (`encrypted-estimates:${id}:${revision}` as const)
+        : (`encrypted-estimate-presets:${id}:${revision}` as const);
   async function transact<T>(
     mode: IDBTransactionMode,
     work: (store: IDBObjectStore, finish: (result: T) => void, abort: () => void) => void,
@@ -24,7 +31,7 @@ export function projectDocuments(
     try {
       signal.throwIfAborted();
       return await new Promise<T>((resolve, reject) => {
-        const tables = [vaultTable, projectTable];
+        const tables = [vaultTable, table];
         if (withFiles) tables.push(fileTable);
         const tx = db.transaction(tables, mode, { durability: 'strict' });
         let result: T;
@@ -54,7 +61,7 @@ export function projectDocuments(
         const vault = tx.objectStore(vaultTable).get(account);
         vault.onsuccess = () => {
           if ((vault.result as VaultRow | undefined)?.stamp !== stamp) abort();
-          else work(tx.objectStore(projectTable), (value) => (result = value), abort);
+          else work(tx.objectStore(table), (value) => (result = value), abort);
         };
       });
     } finally {
@@ -66,7 +73,7 @@ export function projectDocuments(
     async restore(id: string, text: string, originals: RestoredOriginal[]) {
       assertID(id);
       signal.throwIfAborted();
-      const envelope = await seal(root, account, `project:${id}:1`, text);
+      const envelope = await seal(root, account, purpose(id, 1), text);
       await transact<void>(
         'readwrite',
         (store, finish, abort) => {
@@ -94,7 +101,7 @@ export function projectDocuments(
         request.onsuccess = () => finish(request.result as ProjectRow | undefined);
       });
       if (!row || row.revision <= after) return;
-      const text = await open(root, account, `project:${id}:${row.revision}`, row.envelope);
+      const text = await open(root, account, purpose(id, row.revision), row.envelope);
       signal.throwIfAborted();
       return { revision: row.revision, text };
     },
@@ -109,7 +116,7 @@ export function projectDocuments(
           return {
             id,
             revision,
-            text: await open(root, account, `project:${id}:${revision}`, envelope),
+            text: await open(root, account, purpose(id, revision), envelope),
           };
         }),
       );
@@ -119,7 +126,7 @@ export function projectDocuments(
     async save(id: string, expected: number, text: string) {
       assertID(id);
       const revision = expected + 1;
-      const envelope = await seal(root, account, `project:${id}:${revision}`, text);
+      const envelope = await seal(root, account, purpose(id, revision), text);
       await transact<void>('readwrite', (store, finish, abort) => {
         const key = [account, id];
         const request = store.get(key);
