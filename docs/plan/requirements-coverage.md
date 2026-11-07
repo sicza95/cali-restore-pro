@@ -36,21 +36,21 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | CAL-01      | Must     | Two first-class physical calibration methods                        | M-08  | M-13       | Planned |
 | CAL-02      | Must     | Calibration provenance and invalidation                             | M-08  | M-13       | Planned |
 | CAL-03      | Must     | Reference-format-independent calibration                            | M-08  | M-13       | Planned |
-| MASK-01     | Must     | Responsive brush and erase with selectable commit behaviour         | M-08  | M-16       | Planned |
-| MASK-02     | Must     | Precise pen and shape workflows                                     | M-08  | M-14       | Planned |
-| MASK-03     | Must     | Point and curve editing for every mask                              | M-08  | M-14       | Planned |
+| MASK-01     | Must     | Responsive brush and erase with selectable commit behaviour         | M-08  | M-16       | Partial |
+| MASK-02     | Must     | Precise pen and shape workflows                                     | M-08  | M-14       | Partial |
+| MASK-03     | Must     | Point and curve editing for every mask                              | M-08  | M-14       | Partial |
 | MASK-04     | Must     | Vector mask source of truth with derived display caches             | M-05  | M-13       | Planned |
 | MASK-05     | Must     | Source-dependent fine detail without a fixed physical minimum       | M-08  | M-16       | Planned |
 | MASK-06     | Must     | Lightweight encrypted recovery of layer-owned painting drafts       | M-03  | M-15       | Planned |
-| MASK-07     | Must     | Constant-width defaults with optional pressure-sensitive width      | M-08  | M-16       | Planned |
-| MASK-08     | Must     | Optional adjustable stroke stabilization                            | M-08  | M-16       | Planned |
-| MASK-09     | Must     | Surface-relative brush and eraser size                              | M-08  | M-16       | Planned |
-| LAYER-01    | Must     | Layer CRUD, rename, ordering, visibility, lock, opacity             | M-05  | M-14       | Planned |
+| MASK-07     | Must     | Constant-width defaults with optional pressure-sensitive width      | M-08  | M-16       | Partial |
+| MASK-08     | Must     | Optional adjustable stroke stabilization                            | M-08  | M-16       | Partial |
+| MASK-09     | Must     | Surface-relative brush and eraser size                              | M-08  | M-16       | Partial |
+| LAYER-01    | Must     | Layer CRUD, rename, ordering, visibility, lock, opacity             | M-05  | M-14       | Partial |
 | LAYER-02    | Must     | Preserve master/crop measurement with non-destructive drawing       | M-05  | M-13       | Planned |
-| LAYER-03    | Must     | Fill, colour, pattern and outline                                   | M-08  | M-15       | Planned |
-| LAYER-04    | Must     | Folder-like damage categories with per-layer and union totals       | M-05  | M-13       | Planned |
-| LAYER-05    | Must     | Optional nested folders with unique descendant totals               | M-05  | M-13       | Planned |
-| HIST-01     | Must     | Chronological, bounded surface-wide undo/redo                       | M-08  | M-15       | Planned |
+| LAYER-03    | Must     | Fill, colour, pattern and outline                                   | M-08  | M-15       | Partial |
+| LAYER-04    | Must     | Folder-like damage categories with per-layer and union totals       | M-05  | M-13       | Partial |
+| LAYER-05    | Must     | Optional nested folders with unique descendant totals               | M-05  | M-13       | Partial |
+| HIST-01     | Must     | Chronological, bounded surface-wide undo/redo                       | M-08  | M-15       | Partial |
 | HIST-02     | Must     | Multitouch Undo/Redo with a shared rapid-tap window                 | M-08  | M-16       | Planned |
 | HIST-03     | Must     | Bounded encrypted local history across reopening                    | M-03  | M-15       | Planned |
 | MEAS-01     | Must     | Trustworthy per-layer coverage and area                             | M-08  | M-13       | Planned |
@@ -169,3 +169,5 @@ PROJ-04 and OUT-04 evidence is in [M-07 portable project backups](../m07-portabl
 ADMIN-06, ADMIN-07 and ADMIN-08 evidence is in [M-07 deletion and retention](../m07-deletion-retention.md). It covers voluntary preflight, superuser forced deletion, scoped collaborator reads during the sole-owner recovery window, explicit hosting takeover, recoverable trash, early live purge, and a restore drill against pre-revocation and pre-deletion ciphertext. Production infrastructure qualification is separate.
 
 [M-08 project route evidence](m08-delivery.md#m-08-3-of-8--project-routes-and-workflows) extends UX-01, UX-02, PRIV-05 and PRIV-07 with vault-gated opaque project and surface entry, Back and account isolation. PROJ-01 through PROJ-05 and PROJ-07 gain browser evidence for the wired library, originals, backup, sync and recovery paths. Editor computation and physical-device qualification remain open.
+
+[M-08 drawing review evidence](m08-delivery.md#m-08-5-of-8--drawing-review) covers the transient control and state portions of MASK-01/02/03/07/08/09, LAYER-01/03/04/05 and HIST-01. Geometry accuracy, measured totals, durable recovery and physical input qualification remain open.
