@@ -1,3 +1,4 @@
+import { checkpointCopy } from '../editor/checkpoint-review/copy';
 import { pinCopy } from './invitations/OfflineOriginals';
 import { settingsCopy } from './settings/constants';
 import { copy } from './constants';
@@ -39,5 +40,6 @@ export function navigationText(language: Language) {
     ...settingsCopy[language],
     ...navigationCopy[language],
     offline: pinCopy[language].heading,
+    libraries: checkpointCopy[language].libraries,
   };
 }

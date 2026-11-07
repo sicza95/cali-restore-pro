@@ -7,6 +7,8 @@ import type {
 } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
+import { CheckpointReview } from '../../editor/checkpoint-review/CheckpointReview';
+import { checkpointCopy } from '../../editor/checkpoint-review/copy';
 import { DrawingReviewAdapter } from '../../editor/drawing-review/DrawingReviewAdapter';
 import { control as drawingControl } from '../../editor/drawing-review/constants';
 import { drawingCopy } from '../../editor/drawing-review/copy';
@@ -33,7 +35,11 @@ export function SurfaceWorkspace(props: {
   const view = () => surfaceCopy[props.language];
   const draw = createMemo(() => drawingCopy(props.language));
   const [selected, setSelected] = createSignal<string>();
-  const [drawing, setDrawing] = createSignal(false);
+  const [mode, setMode] = createSignal<'photo' | 'drawing' | 'checkpoint'>('photo');
+  const [checkpointStarted, setCheckpointStarted] = createSignal(false);
+  const drawing = () => mode() === 'drawing';
+  const imperial = () =>
+    (props.surface.units ?? props.object.units ?? props.project.settings.units) === 'imperial';
   const [drawingStarted, setDrawingStarted] = createSignal(false);
   const images = () => props.surface.images;
   const index = () =>
@@ -85,8 +91,8 @@ export function SurfaceWorkspace(props: {
           class="secondary"
           type="button"
           data-control-id={drawingControl('mode.photo')}
-          aria-pressed={!drawing()}
-          onClick={() => setDrawing(false)}
+          aria-pressed={mode() === 'photo'}
+          onClick={() => setMode('photo')}
         >
           {draw().photoMode}
         </button>
@@ -97,10 +103,22 @@ export function SurfaceWorkspace(props: {
           aria-pressed={drawing()}
           onClick={() => {
             setDrawingStarted(true);
-            setDrawing(true);
+            setMode('drawing');
           }}
         >
           {draw().drawingMode}
+        </button>
+        <button
+          class="secondary"
+          type="button"
+          data-control-id="checkpoint.review.mode"
+          aria-pressed={mode() === 'checkpoint'}
+          onClick={() => {
+            setCheckpointStarted(true);
+            setMode('checkpoint');
+          }}
+        >
+          {checkpointCopy[props.language].mode}
         </button>
       </div>
       <div class="surface-navigation">
@@ -123,7 +141,7 @@ export function SurfaceWorkspace(props: {
             </For>
           </select>
         </label>
-        <Show when={!drawing()}>
+        <Show when={mode() === 'photo'}>
           <label>
             {view().photo}
             <select
@@ -172,7 +190,7 @@ export function SurfaceWorkspace(props: {
           </button>
         </Show>
       </div>
-      <div hidden={drawing()}>
+      <div hidden={mode() !== 'photo'}>
         <Show when={photo()}>
           <p>
             {index() + 1} / {images().length} · {view()[role()]}
@@ -187,12 +205,7 @@ export function SurfaceWorkspace(props: {
               role={role()}
               reference={reference()?.id}
               copy={view()}
-              unit={
-                (props.surface.units ?? props.object.units ?? props.project.settings.units) ===
-                'imperial'
-                  ? 'in'
-                  : 'cm'
-              }
+              unit={imperial() ? 'in' : 'cm'}
             />
           )}
         </Show>
@@ -219,6 +232,11 @@ export function SurfaceWorkspace(props: {
             />
           )}
         </Show>
+      </Show>
+      <Show when={checkpointStarted()}>
+        <div hidden={mode() !== 'checkpoint'}>
+          <CheckpointReview language={props.language} imperial={imperial()} />
+        </div>
       </Show>
       <ProjectOriginals
         project={props.project.id}
