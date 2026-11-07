@@ -1,6 +1,7 @@
 export const projectCopy = {
   en: {
     local: 'Saved on this device',
+    surfaceLocal: 'Project data saved on this device',
     name: 'Project name',
     add: 'New project',
     search: 'Search projects',
@@ -48,6 +49,7 @@ export const projectCopy = {
   },
   hu: {
     local: 'Mentve ezen az eszközön',
+    surfaceLocal: 'A projektadatok mentve ezen az eszközön',
     name: 'Projekt neve',
     add: 'Új projekt',
     search: 'Projektek keresése',

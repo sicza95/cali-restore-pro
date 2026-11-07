@@ -6,6 +6,7 @@ export const paths = {
   select: 'm5 3 14 10-7 1-3 7-4-18Z',
   pen: 'm16 3 5 5-11 11-7 2 2-7L16 3Zm-11 11 5 5M14 5l5 5',
   nodes: 'M6 6h12v12H6V6Zm-2-2h4v4H4V4Zm12 0h4v4h-4V4ZM4 16h4v4H4v-4Zm12 0h4v4h-4v-4Z',
+  shape: 'M3 4h13v13H3zM16 8a6 6 0 1 1-8 9',
   frame: 'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5M8 8h8v8H8V8Z',
   hand: 'M8 12V6a2 2 0 0 1 4 0v6-8a2 2 0 0 1 4 0v8-6a2 2 0 0 1 4 0v10c0 5-3 6-7 6-3 0-5-3-7-6l-3-4a2 2 0 0 1 3-2l2 2Z',
   undo: 'M8 5 3 10l5 5M3 10h11a6 6 0 0 1 0 12',

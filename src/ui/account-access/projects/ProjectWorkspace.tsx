@@ -114,7 +114,9 @@ export function ProjectWorkspace(props: {
           : projects.loading
             ? c().loading
             : current() && (!route()?.surface || activeSurface())
-              ? c().local
+              ? route()?.surface
+                ? c().surfaceLocal
+                : c().local
               : ''}
       </p>
       <Show when={failure() || projects()?.failed}>

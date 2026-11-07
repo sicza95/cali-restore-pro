@@ -3,6 +3,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { projectControls } from '../src/ui/account-access/projects/project-controls';
 
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
+import { drawingControl, verifyDrawingReview } from './drawing-review';
+import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
 
 test('project hierarchy and encrypted originals reopen from the local vault', async ({
   page,
@@ -81,6 +83,10 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   };
   await expect(review('view.photo')).toBeDisabled();
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'true');
+  await drawingControl(page, 'mode.drawing').click();
+  await expect(drawingControl(page, 'tool.brush')).toBeDisabled();
+  await expect(drawingControl(page, 'layer.select')).toHaveCount(0);
+  await drawingControl(page, 'mode.photo').click();
   const attach = page.getByLabel('Original file', { exact: true });
   const png = Buffer.from(
     await page.evaluate(() => {
@@ -103,27 +109,38 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
     'base64',
   );
   const revisions = () =>
-    page.evaluate(async () => {
-      const modulePath = '/src/platform/vault/store.ts';
-      const { connect, projectTable } = (await import(
-        modulePath
-      )) as typeof import('../src/platform/vault/store');
-      const db = await connect();
-      try {
-        return await new Promise<unknown[]>((resolve, reject) => {
-          const request = db.transaction(projectTable).objectStore(projectTable).getAll();
-          request.onsuccess = () => resolve(request.result.map(({ revision }) => revision));
+    page.evaluate(
+      async (tables) => {
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const request = indexedDB.open('calirestore-vault');
+          request.onsuccess = () => resolve(request.result);
           request.onerror = () => reject(request.error);
         });
-      } finally {
-        db.close();
-      }
-    });
+        try {
+          const tx = db.transaction(tables);
+          return await Promise.all(
+            tables.map(
+              (table) =>
+                new Promise<unknown[]>((resolve, reject) => {
+                  const request = tx.objectStore(table).getAll();
+                  request.onsuccess = () => resolve(request.result);
+                  request.onerror = () => reject(request.error);
+                }),
+            ),
+          );
+        } finally {
+          db.close();
+        }
+      },
+      [projectTable, revisionQueueTable],
+    );
   await attach.setInputFiles({ name: 'wall.png', mimeType: 'image/png', buffer: png });
   await controls('originals.attach').click();
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
   const beforeReview = await revisions();
-  expect(beforeReview).toEqual([expect.any(Number)]);
+  expect(beforeReview[0]).toEqual([expect.objectContaining({ revision: expect.any(Number) })]);
+  await verifyDrawingReview(page, info);
+  expect(await revisions()).toEqual(beforeReview);
   await review('review.prepare').focus();
   await page.keyboard.press('Enter');
   await review('review.cropWidth').fill('101');
@@ -203,9 +220,14 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(page.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
   await page.goto(surfacePath);
   await expect(page.getByRole('heading', { name: 'Upper plaster' })).toHaveCount(0);
+  await expect(drawingControl(page, 'mode.drawing')).toHaveCount(0);
   await expect(page.getByText('East Chapel')).toHaveCount(0);
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
+  await drawingControl(page, 'mode.drawing').click();
+  await expect(drawingControl(page, 'layer.select')).toHaveCount(1);
+  await expect(drawingControl(page, 'layer.select')).toContainText('0 · Mark');
+  await drawingControl(page, 'mode.photo').click();
   await page.screenshot({ path: info.outputPath('surface-reopened.png') });
   await controls('surface.project').click();
   await page

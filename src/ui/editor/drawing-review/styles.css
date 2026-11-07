@@ -1,0 +1,248 @@
+.surface-mode,
+.drawing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+.surface-mode {
+  margin-block-end: 12px;
+}
+.surface-mode button,
+.drawing-rail button,
+.drawing-layer-select {
+  border: 1px solid transparent;
+}
+.surface-mode button[aria-pressed='true'],
+.drawing-rail button[aria-pressed='true'],
+.drawing-layer-select[aria-pressed='true'] {
+  background: var(--cr-selected);
+  border-color: var(--cr-accent);
+}
+.drawing-review {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) minmax(235px, 31%);
+  grid-template-areas: 'label label label' 'rail canvas inspector';
+  align-items: start;
+  gap: 8px;
+}
+.drawing-transient {
+  grid-area: label;
+  margin: 0;
+  padding-block: 2px 6px;
+  color: var(--cr-muted);
+}
+.drawing-rail {
+  grid-area: rail;
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  background: var(--cr-surface);
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-radius);
+}
+.drawing-review :is(button, input, select, summary) {
+  min-inline-size: var(--cr-touch);
+  min-block-size: var(--cr-touch);
+}
+.drawing-review .drawing-icon {
+  display: grid;
+  place-items: center;
+  inline-size: var(--cr-touch);
+  padding: 0;
+}
+.drawing-rail button[aria-disabled='true'] {
+  color: var(--cr-muted);
+  cursor: default;
+}
+.drawing-stage {
+  grid-area: canvas;
+  min-width: 0;
+}
+.drawing-viewport {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(250px, 45vh, 520px);
+  overflow: hidden;
+  background: var(--cr-canvas);
+  border: 1px solid var(--cr-rule);
+}
+.drawing-viewport p {
+  padding: 12px;
+  text-align: center;
+}
+.drawing-viewport .surface-photo-loading {
+  visibility: hidden;
+}
+.drawing-photo {
+  position: relative;
+  max-width: 100%;
+  user-select: none;
+}
+.drawing-photo img {
+  display: block;
+  max-width: 100%;
+  max-height: clamp(250px, 52vh, 620px);
+  pointer-events: none;
+}
+.drawing-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.drawing-markable {
+  cursor: crosshair;
+}
+.drawing-pannable {
+  cursor: grab;
+}
+.drawing-pannable:active {
+  cursor: grabbing;
+}
+.drawing-pending-mark,
+.drawing-live-stroke,
+.drawing-cursor {
+  fill: none;
+  stroke: var(--cr-mask);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.drawing-pending-mark {
+  stroke-width: 0.6;
+  stroke-dasharray: 1.5 0.8;
+}
+.drawing-point {
+  fill: var(--cr-ground);
+  stroke: var(--cr-mask);
+  stroke-width: 0.4;
+}
+.drawing-point-selected {
+  fill: var(--cr-mask);
+}
+.drawing-cursor {
+  stroke-width: 0.4;
+}
+.drawing-view {
+  margin-top: 8px;
+}
+.drawing-view label:has(input[type='number']) {
+  max-width: 10rem;
+}
+.drawing-help,
+.drawing-feedback {
+  font-size: 0.875rem;
+}
+.drawing-help {
+  color: var(--cr-muted);
+}
+.drawing-feedback {
+  color: var(--cr-accent);
+}
+.drawing-inspector {
+  grid-area: inspector;
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.drawing-panel,
+.drawing-management,
+.drawing-properties {
+  display: grid;
+  gap: 8px;
+}
+.drawing-management {
+  min-width: 0;
+}
+.drawing-panel {
+  padding: 12px;
+  border: 1px solid var(--cr-rule);
+  background: var(--cr-surface);
+}
+.drawing-panel :is(h3, p) {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.drawing-panel h3 {
+  font-size: 1rem;
+}
+.drawing-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 106px), 1fr));
+  gap: 8px;
+  align-items: end;
+}
+.drawing-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.drawing-toggle input[type='checkbox'] {
+  flex: 0 0 var(--cr-touch);
+  inline-size: var(--cr-touch);
+  margin: 0;
+  accent-color: var(--cr-accent);
+}
+.drawing-layers {
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+.drawing-layers li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--cr-touch);
+  align-items: center;
+  gap: 4px;
+  padding-inline-start: min(calc(var(--drawing-depth) * 12px), 28%);
+}
+.drawing-layer-select {
+  display: grid;
+  gap: 2px;
+  text-align: start;
+  padding: 5px 8px;
+  overflow-wrap: anywhere;
+}
+.drawing-layer-select small {
+  font-weight: 500;
+  color: var(--cr-muted);
+}
+.drawing-panel summary {
+  line-height: var(--cr-touch);
+  cursor: pointer;
+}
+.drawing-dialog {
+  max-width: min(30rem, calc(100vw - 32px));
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+}
+.drawing-dialog::backdrop {
+  background: rgb(0 0 0 / 48%);
+}
+@media (min-width: 951px) and (min-height: 720px) {
+  .drawing-stage,
+  .drawing-rail {
+    position: sticky;
+    top: 12px;
+  }
+}
+@media (max-width: 950px) {
+  .drawing-review {
+    grid-template-columns: 54px minmax(0, 1fr);
+    grid-template-areas: 'label label' 'rail canvas' 'inspector inspector';
+  }
+  .drawing-inspector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+@media (max-width: 540px) {
+  .drawing-inspector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

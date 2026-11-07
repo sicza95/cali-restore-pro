@@ -7,7 +7,11 @@ import type {
 } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
+import { DrawingReviewAdapter } from '../../editor/drawing-review/DrawingReviewAdapter';
+import { control as drawingControl } from '../../editor/drawing-review/constants';
+import { drawingCopy } from '../../editor/drawing-review/copy';
 import { SurfaceReviewAdapter } from './SurfaceReviewAdapter';
+import { SurfacePhoto } from './SurfacePhoto';
 import { surfaceCopy } from './surface-copy';
 import './surface-styles.css';
 import { ProjectOriginals } from './ProjectOriginals';
@@ -27,7 +31,10 @@ export function SurfaceWorkspace(props: {
 }) {
   const c = () => projectCopy[props.language];
   const view = () => surfaceCopy[props.language];
+  const draw = createMemo(() => drawingCopy(props.language));
   const [selected, setSelected] = createSignal<string>();
+  const [drawing, setDrawing] = createSignal(false);
+  const [drawingStarted, setDrawingStarted] = createSignal(false);
   const images = () => props.surface.images;
   const index = () =>
     Math.max(
@@ -73,6 +80,29 @@ export function SurfaceWorkspace(props: {
         <p>{props.object.name}</p>
         <h2>{props.surface.name}</h2>
       </header>
+      <div class="surface-mode" role="group" aria-label={draw().mode}>
+        <button
+          class="secondary"
+          type="button"
+          data-control-id={drawingControl('mode.photo')}
+          aria-pressed={!drawing()}
+          onClick={() => setDrawing(false)}
+        >
+          {draw().photoMode}
+        </button>
+        <button
+          class="secondary"
+          type="button"
+          data-control-id={drawingControl('mode.drawing')}
+          aria-pressed={drawing()}
+          onClick={() => {
+            setDrawingStarted(true);
+            setDrawing(true);
+          }}
+        >
+          {draw().drawingMode}
+        </button>
+      </div>
       <div class="surface-navigation">
         <label>
           {view().surface}
@@ -93,75 +123,102 @@ export function SurfaceWorkspace(props: {
             </For>
           </select>
         </label>
-        <label>
-          {view().photo}
-          <select
-            data-control-id="surface.view.photo"
-            value={photo()?.id ?? ''}
-            disabled={!photo()}
-            onChange={(e) => setSelected(e.currentTarget.value)}
+        <Show when={!drawing()}>
+          <label>
+            {view().photo}
+            <select
+              data-control-id="surface.view.photo"
+              value={photo()?.id ?? ''}
+              disabled={!photo()}
+              onChange={(e) => setSelected(e.currentTarget.value)}
+            >
+              <Show when={!photo()}>
+                <option value="">—</option>
+              </Show>
+              <For each={images()}>
+                {(image, i) => {
+                  const [meta] = createResource(() =>
+                    props.vault
+                      .files()
+                      .metadata({ project: props.project.id, id: image.id })
+                      .catch(() => undefined),
+                  );
+                  return (
+                    <option value={image.id}>
+                      {i() + 1} · {meta()?.name ?? '—'}
+                    </option>
+                  );
+                }}
+              </For>
+            </select>
+          </label>
+          <button
+            type="button"
+            class="secondary"
+            data-control-id="surface.view.previous"
+            disabled={index() === 0}
+            onClick={() => move(-1)}
           >
-            <Show when={!photo()}>
-              <option value="">—</option>
-            </Show>
-            <For each={images()}>
-              {(image, i) => {
-                const [meta] = createResource(() =>
-                  props.vault
-                    .files()
-                    .metadata({ project: props.project.id, id: image.id })
-                    .catch(() => undefined),
-                );
-                return (
-                  <option value={image.id}>
-                    {i() + 1} · {meta()?.name ?? '—'}
-                  </option>
-                );
-              }}
-            </For>
-          </select>
-        </label>
-        <button
-          type="button"
-          class="secondary"
-          data-control-id="surface.view.previous"
-          disabled={index() === 0}
-          onClick={() => move(-1)}
-        >
-          {view().previous}
-        </button>
-        <button
-          type="button"
-          class="secondary"
-          data-control-id="surface.view.next"
-          disabled={index() + 1 >= images().length}
-          onClick={() => move(1)}
-        >
-          {view().next}
-        </button>
+            {view().previous}
+          </button>
+          <button
+            type="button"
+            class="secondary"
+            data-control-id="surface.view.next"
+            disabled={index() + 1 >= images().length}
+            onClick={() => move(1)}
+          >
+            {view().next}
+          </button>
+        </Show>
       </div>
-      <Show when={photo()}>
-        <p>
-          {index() + 1} / {images().length} · {view()[role()]}
-        </p>
-      </Show>
-      <Show when={reviewKey()} keyed>
-        {(key) => (
-          <SurfaceReviewAdapter
-            vault={props.vault}
-            project={props.project.id}
-            photo={key.split('/')[0] || undefined}
-            role={role()}
-            reference={reference()?.id}
-            copy={view()}
-            unit={
-              (props.surface.units ?? props.object.units ?? props.project.settings.units) ===
-              'imperial'
-                ? 'in'
-                : 'cm'
-            }
-          />
-        )}
+      <div hidden={drawing()}>
+        <Show when={photo()}>
+          <p>
+            {index() + 1} / {images().length} · {view()[role()]}
+          </p>
+        </Show>
+        <Show when={reviewKey()} keyed>
+          {(key) => (
+            <SurfaceReviewAdapter
+              vault={props.vault}
+              project={props.project.id}
+              photo={key.split('/')[0] || undefined}
+              role={role()}
+              reference={reference()?.id}
+              copy={view()}
+              unit={
+                (props.surface.units ?? props.object.units ?? props.project.settings.units) ===
+                'imperial'
+                  ? 'in'
+                  : 'cm'
+              }
+            />
+          )}
+        </Show>
+      </div>
+      <Show when={drawingStarted()}>
+        <Show when={reference()?.id ?? 'empty'} keyed>
+          {(key) => (
+            <DrawingReviewAdapter
+              active={drawing()}
+              copy={draw()}
+              photo={
+                key === 'empty'
+                  ? undefined
+                  : (ready) => (
+                      <SurfacePhoto
+                        vault={props.vault}
+                        project={props.project.id}
+                        id={key}
+                        copy={{ ...view(), photo: draw().reference }}
+                        onReady={ready}
+                      />
+                    )
+              }
+            />
+          )}
+        </Show>
       </Show>
       <ProjectOriginals
         project={props.project.id}
