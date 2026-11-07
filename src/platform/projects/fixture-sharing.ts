@@ -7,6 +7,7 @@ import { parseSharedOriginals } from './shared-originals';
 import type { SharedOriginal } from './shared-originals';
 import { parseScopeSample, scopeSamples } from './sharing-scopes';
 import type { OptionalScope } from './sharing-scopes';
+import { parseEstimateScope } from '../estimates/scopes';
 
 const suite = new CipherSuite({
   kem: new DhkemP256HkdfSha256(),
@@ -132,11 +133,12 @@ export async function sealScope(
   recipient: string,
   context: GrantContext,
   scope: OptionalScope,
+  content?: unknown,
 ): Promise<ScopeEnvelope> {
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
   const { enc, ct } = await suite.seal(
     { senderKey, recipientPublicKey },
-    encoder.encode(JSON.stringify(scopeSamples[scope])),
+    encoder.encode(JSON.stringify(content ?? scopeSamples[scope])),
     scopeBinding(context, scope),
   );
   return { scope, encapsulation: base64(enc), ciphertext: base64(ct) };
@@ -156,7 +158,8 @@ export async function openScope(
     bytes(envelope.ciphertext),
     scopeBinding(context, scope),
   );
-  return parseScopeSample(scope, new TextDecoder('utf-8', { fatal: true }).decode(result));
+  const text = new TextDecoder('utf-8', { fatal: true }).decode(result);
+  return parseEstimateScope(scope, text) ?? parseScopeSample(scope, text);
 }
 
 export type CheckpointEnvelope = {

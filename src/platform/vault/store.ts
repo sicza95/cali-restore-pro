@@ -9,19 +9,25 @@ export type VaultRow = {
 export const vaultTable = 'accounts';
 export const fileTable = 'encrypted-files';
 export const projectTable = 'encrypted-projects';
+export const estimateTable = 'encrypted-estimates';
+export const presetTable = 'encrypted-estimate-presets';
 export const revisionSyncTable = 'revision-sync';
 export const revisionQueueTable = 'revision-queue';
 export const accountRange = (account: string) => IDBKeyRange.bound([account], [account, []]);
 
 export async function connect() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('calirestore-vault', 5);
+    const request = indexedDB.open('calirestore-vault', 6);
     request.onupgradeneeded = (event) => {
       if (event.oldVersion < 1) request.result.createObjectStore(vaultTable);
       if (event.oldVersion < 2) request.result.createObjectStore(fileTable);
       if (event.oldVersion < 3) request.result.createObjectStore(projectTable);
       if (event.oldVersion < 4) request.result.createObjectStore(revisionQueueTable);
-      request.result.createObjectStore(revisionSyncTable);
+      if (event.oldVersion < 5) request.result.createObjectStore(revisionSyncTable);
+      if (event.oldVersion < 6) {
+        request.result.createObjectStore(estimateTable);
+        request.result.createObjectStore(presetTable);
+      }
     };
     request.onblocked = () => reject(new Error('Close older vault tabs and retry'));
     request.onerror = () => reject(request.error);
@@ -54,7 +60,15 @@ export async function commitVault(
   try {
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(
-        [vaultTable, fileTable, projectTable, revisionQueueTable, revisionSyncTable],
+        [
+          vaultTable,
+          fileTable,
+          projectTable,
+          revisionQueueTable,
+          revisionSyncTable,
+          estimateTable,
+          presetTable,
+        ],
         'readwrite',
         {
           durability: 'strict',
@@ -75,6 +89,8 @@ export async function commitVault(
           tx.objectStore(projectTable).delete(accountRange(account));
           tx.objectStore(revisionQueueTable).delete(accountRange(account));
           tx.objectStore(revisionSyncTable).delete(accountRange(account));
+          tx.objectStore(estimateTable).delete(accountRange(account));
+          tx.objectStore(presetTable).delete(accountRange(account));
         }
       };
     });
