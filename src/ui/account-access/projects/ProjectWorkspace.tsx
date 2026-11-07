@@ -1,5 +1,14 @@
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
-import { createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import {
+  createResource,
+  createSignal,
+  For,
+  Match,
+  onCleanup,
+  Show,
+  Switch,
+  untrack,
+} from 'solid-js';
 import { localProjects, newProject } from '../../../platform/projects/projects';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
@@ -16,6 +25,7 @@ import { NameForm } from './forms';
 import { ReceiveProjectKey } from './ProjectKeyTransfer';
 import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
+import { ProjectReview, ProjectReviewLinks } from '../project-review/ProjectReview';
 import { SurfaceWorkspace } from './SurfaceWorkspace';
 import { followProjectLink, projectHref, projectRoute } from './project-route';
 import { syncCopy } from './sync-copy';
@@ -48,6 +58,7 @@ export function ProjectWorkspace(props: {
   const [busy, setBusy] = createSignal(false);
   const [failure, setFailure] = createSignal(false);
   const current = () => projects()?.rows.find((project) => project.id === route()?.project);
+  const activeReview = () => current() && !current()?.archived && current()?.id;
   const activeSurface = () => {
     const project = current();
     if (!project || project.archived) return;
@@ -105,20 +116,26 @@ export function ProjectWorkspace(props: {
   }
   return (
     <section class="project-workspace" aria-label={c().hierarchy}>
-      <a class="project-back" data-control-id="projects.offline" href="/offline-originals">
-        {c().offlineShelf}
-      </a>
-      <p role="status">
-        {busy()
-          ? c().saving
-          : projects.loading
-            ? c().loading
-            : current() && (!route()?.surface || activeSurface())
-              ? route()?.surface
-                ? c().surfaceLocal
-                : c().local
-              : ''}
-      </p>
+      <Show when={!route()?.review}>
+        <a class="project-back" data-control-id="projects.offline" href="/offline-originals">
+          {c().offlineShelf}
+        </a>
+      </Show>
+      <Show when={!route()?.review || busy() || projects.loading}>
+        <p role="status">
+          {busy()
+            ? c().saving
+            : projects.loading
+              ? c().loading
+              : current() &&
+                  (!route()?.surface || activeSurface()) &&
+                  (!route()?.review || !current()?.archived)
+                ? route()?.surface
+                  ? c().surfaceLocal
+                  : c().local
+                : ''}
+        </p>
+      </Show>
       <Show when={failure() || projects()?.failed}>
         <p role="alert">{c().error}</p>
         <button
@@ -232,17 +249,18 @@ export function ProjectWorkspace(props: {
             </>
           }
         >
-          <a
-            class="project-back"
-            href="/projects"
-            data-control-id="project.library"
-            onClick={(event) => followProjectLink(event, navigate)}
-          >
-            {c().back}
-          </a>
-          <Show
-            when={!route()?.surface}
-            fallback={
+          <Show when={!route()?.review || !activeReview()}>
+            <a
+              class="project-back"
+              href="/projects"
+              data-control-id="project.library"
+              onClick={(event) => followProjectLink(event, navigate)}
+            >
+              {c().back}
+            </a>
+          </Show>
+          <Switch>
+            <Match when={route()?.surface}>
               <Show
                 when={activeSurface()?.surface.id}
                 keyed
@@ -262,71 +280,90 @@ export function ProjectWorkspace(props: {
                   />
                 )}
               </Show>
-            }
-          >
-            <Show when={current()?.id} keyed fallback={<p role="status">{c().missing}</p>}>
-              {(id) => (
-                <>
-                  <ProjectDetail
-                    project={current()!}
-                    language={props.language}
-                    vault={props.vault}
-                    busy={busy()}
-                    onRun={run}
-                    onSave={save}
-                    onNavigate={navigate}
-                    sharing={
-                      <Show when={!current()!.archived && current()!.id} keyed>
-                        {(id) => (
-                          <ProjectInvitations
-                            projectId={id}
-                            project={projectSnapshot(current()!)}
-                            originalIds={[
-                              ...new Set(
-                                current()!.objects.flatMap((object) =>
-                                  object.surfaces.flatMap((surface) =>
-                                    surface.images.map((image) => image.id),
+            </Match>
+            <Match when={route()?.review}>
+              <Show when={activeReview()} keyed fallback={<p role="status">{c().missing}</p>}>
+                <ProjectReview
+                  project={current()!}
+                  route={route()!.review!}
+                  language={props.language}
+                  account={props.model.account()!.id}
+                  navigate={navigate}
+                />
+              </Show>
+            </Match>
+            <Match when={true}>
+              <Show when={current()?.id} keyed fallback={<p role="status">{c().missing}</p>}>
+                {(id) => (
+                  <>
+                    <Show when={!current()!.archived}>
+                      <ProjectReviewLinks
+                        project={id}
+                        language={props.language}
+                        navigate={navigate}
+                      />
+                    </Show>
+                    <ProjectDetail
+                      project={current()!}
+                      language={props.language}
+                      vault={props.vault}
+                      busy={busy()}
+                      onRun={run}
+                      onSave={save}
+                      onNavigate={navigate}
+                      sharing={
+                        <Show when={!current()!.archived && current()!.id} keyed>
+                          {(id) => (
+                            <ProjectInvitations
+                              projectId={id}
+                              project={projectSnapshot(current()!)}
+                              originalIds={[
+                                ...new Set(
+                                  current()!.objects.flatMap((object) =>
+                                    object.surfaces.flatMap((surface) =>
+                                      surface.images.map((image) => image.id),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ]}
-                            canHost
-                            model={props.model}
-                            vault={props.vault}
-                          />
-                        )}
-                      </Show>
-                    }
-                  />
-                  <ProjectLifecycle model={props.model} project={id} />
-                  <Show when={current()!.id} keyed>
-                    {(id) => (
-                      <ProjectBackup
-                        project={id}
-                        vault={props.vault}
-                        language={props.language}
-                        busy={busy()}
-                        run={run}
-                      />
-                    )}
-                  </Show>
-                  <Show when={current()!.id} keyed>
-                    {(id: string) => (
-                      <ProjectSync
-                        projectId={id}
-                        project={current()!}
-                        language={props.language}
-                        model={sync}
-                        busy={busy()}
-                        run={run}
-                        onResolved={update}
-                      />
-                    )}
-                  </Show>
-                </>
-              )}
-            </Show>
-          </Show>
+                              ]}
+                              canHost
+                              model={props.model}
+                              vault={props.vault}
+                            />
+                          )}
+                        </Show>
+                      }
+                    />
+                    <ProjectLifecycle model={props.model} project={id} />
+                    <Show when={current()!.id} keyed>
+                      {(id) => (
+                        <ProjectBackup
+                          project={id}
+                          vault={props.vault}
+                          language={props.language}
+                          busy={busy()}
+                          run={run}
+                        />
+                      )}
+                    </Show>
+                    <Show when={current()!.id} keyed>
+                      {(id: string) => (
+                        <ProjectSync
+                          projectId={id}
+                          project={current()!}
+                          language={props.language}
+                          model={sync}
+                          busy={busy()}
+                          run={run}
+                          onResolved={update}
+                        />
+                      )}
+                    </Show>
+                  </>
+                )}
+              </Show>
+            </Match>
+          </Switch>
         </Show>
       </Show>
     </section>

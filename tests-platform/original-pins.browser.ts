@@ -113,7 +113,11 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await expect(shelf().getByText(name)).toBeVisible();
   await expect(page.getByText('Available offline', { exact: true })).toBeVisible();
 
-  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  await expect
+    .poll(() =>
+      page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.active?.state),
+    )
+    .toBe('activated');
   const offlinePath = '/offline-originals';
   await expect(page.getByRole('link', { name: 'Offline originals' })).toHaveAttribute(
     'href',
@@ -122,7 +126,8 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await page.close();
   await context.setOffline(true);
   page = await context.newPage();
-  await page.goto(origin + offlinePath);
+  const shell = await page.goto(origin + offlinePath);
+  expect(shell?.fromServiceWorker()).toBe(true);
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.getByText('Vault locked', { exact: true })).toBeVisible();
   await expect(page.getByText(name)).toHaveCount(0);
