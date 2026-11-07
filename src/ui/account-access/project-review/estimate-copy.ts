@@ -8,6 +8,8 @@ const en = {
   transient:
     'Client-side restoration estimate. Save a version to persist inputs encrypted on this device. Geometry is not connected yet.',
   saved: 'Encrypted version saved locally. Not cloud-synced.',
+  recoveryLimit:
+    'Estimate backup/restore is not connected. Portable project backups are blocked once an estimate is saved.',
   saveFailed:
     'Could not open or save the estimate. Reopen to resolve a changed version; inputs are retained.',
   reprice: 'Project currency changed. Enter new prices; no exchange conversion is applied.',
@@ -119,6 +121,8 @@ const hu: typeof en = {
   transient:
     'Kliensoldali restaurálási becslés. A verzió mentése titkosítva tárolja az adatokat ezen az eszközön. Geometriai kapcsolat még nincs.',
   saved: 'Titkosított verzió helyben mentve. Nincs felhőszinkron.',
+  recoveryLimit:
+    'A becslés biztonsági mentése még nem érhető el. Mentett becslés esetén a hordozható projektmentés blokkolva van.',
   saveFailed:
     'A becslés nem nyitható meg vagy menthető. Verzióütközésnél nyissa meg újra; a bevitt adatok megmaradnak.',
   reprice: 'A projekt pénzneme megváltozott. Adjon meg új árakat; nincs árfolyamváltás.',

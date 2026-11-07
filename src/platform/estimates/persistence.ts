@@ -59,6 +59,14 @@ export function presetRepository(vault: LocalVault) {
     },
     async save(preset: Preset) {
       if (
+        !['rate', 'productivity'].includes(preset.kind) ||
+        !['hourly', 'fixed', 'm²', 'cm²', 'ft²', 'in²'].includes(preset.unit) ||
+        (preset.kind === 'productivity' && ['hourly', 'fixed'].includes(preset.unit)) ||
+        (preset.kind === 'rate' && !/^[A-Z]{3}$/.test(preset.currency ?? '')) ||
+        (preset.kind === 'productivity' && preset.currency !== null)
+      )
+        throw new Error('Invalid preset unit/currency');
+      if (
         !preset.name.trim() ||
         !nonnegative(preset.value).nonnegative() ||
         (preset.kind === 'productivity' && !nonnegative(preset.value).positive())

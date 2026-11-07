@@ -37,6 +37,13 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
     const doc = { schema: 1 as const, draft: fixture, snapshots: [issued] };
     const repository = estimateRepository(vault);
     await repository.save(project, 0, doc);
+    const incompleteBackup = await vault
+      .projectBackups()
+      .export(project)
+      .then(
+        () => false,
+        () => true,
+      );
     const stale = await repository.save(project, 0, doc).then(
       () => false,
       () => true,
@@ -134,6 +141,7 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
     vault.close();
     other.close();
     return {
+      incompleteBackup,
       stale,
       immutable,
       isolation,
@@ -148,6 +156,7 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
   }, fixture);
   expect(result).toMatchObject({
     stale: true,
+    incompleteBackup: true,
     immutable: true,
     isolation: true,
     locked: true,

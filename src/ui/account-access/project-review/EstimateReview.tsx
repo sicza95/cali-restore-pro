@@ -152,7 +152,9 @@ export function EstimateReview(props: {
   }
   return (
     <div class="review-flow estimate-review">
-      <p class="review-note">{c().transient}</p>
+      <p class="review-note">
+        {c().transient} {c().recoveryLimit}
+      </p>
       <p role="status">{status()}</p>
       <Show when={priceCurrency() !== currency()}>
         <p role="alert">{c().reprice}</p>
