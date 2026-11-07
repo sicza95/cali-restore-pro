@@ -1,0 +1,117 @@
+.review-flow {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.review-note {
+  color: var(--cr-muted);
+  margin: 0;
+}
+.review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: start;
+  gap: 16px;
+}
+.review-flow :is(p, dt, dd),
+.review-pattern :is(p, label) {
+  overflow-wrap: anywhere;
+}
+.review-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  align-items: end;
+  gap: 12px;
+}
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+:is(.review-flow, .review-pattern) :is(button, input, select, summary, textarea, .project-back) {
+  min-inline-size: var(--cr-touch);
+  min-block-size: var(--cr-touch);
+}
+:is(.review-flow, .review-pattern) label.review-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.review-check input[type='checkbox'] {
+  flex: 0 0 var(--cr-touch);
+  inline-size: var(--cr-touch);
+  margin: 0;
+  accent-color: var(--cr-accent);
+}
+.review-facts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 12px;
+  margin: 0;
+}
+.review-facts > * {
+  padding-block: 8px;
+  border-block-end: 1px solid var(--cr-rule);
+}
+.review-facts dd {
+  text-align: end;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.review-facts small {
+  display: block;
+  color: var(--cr-muted);
+}
+.checkpoint-maps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 8px;
+}
+.checkpoint-map {
+  width: 100%;
+  background: var(--cr-canvas);
+  color: var(--cr-ink);
+  border: 1px solid var(--cr-rule);
+}
+.checkpoint-wall {
+  fill: var(--cr-surface);
+  stroke: var(--cr-border);
+}
+.checkpoint-mask {
+  fill: var(--cr-selected);
+  stroke: var(--cr-accent);
+}
+.checkpoint-added {
+  fill: var(--cr-accent);
+}
+.checkpoint-removed {
+  fill: none;
+  stroke: var(--cr-ink);
+  stroke-dasharray: 2 2;
+}
+.checkpoint-legend {
+  display: flex;
+  gap: 12px;
+}
+.checkpoint-legend span::before {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-inline-end: 6px;
+  content: '';
+}
+.checkpoint-legend span:first-child::before {
+  background: var(--cr-accent);
+}
+.checkpoint-legend span:last-child::before {
+  border: 1px dashed currentColor;
+}
+.review-pattern .checkpoint-map {
+  max-height: 144px;
+}
+@media (max-width: 950px) {
+  .review-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

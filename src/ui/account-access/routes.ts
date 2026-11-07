@@ -7,6 +7,7 @@ export const accountDestinations = {
   profile: '/settings/account',
   security: '/settings/security',
   preferences: '/settings/preferences',
+  libraries: '/settings/libraries',
   unlock: '/unlock',
   'devices/approve': '/devices/approve',
   admin: '/admin',

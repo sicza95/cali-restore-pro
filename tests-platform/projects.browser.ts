@@ -3,8 +3,11 @@ import AxeBuilder from '@axe-core/playwright';
 import { projectControls } from '../src/ui/account-access/projects/project-controls';
 
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
+import { verifyCheckpointReview } from './checkpoint-review';
 import { drawingControl, verifyDrawingReview } from './drawing-review';
 import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
+
+test.use({ hasTouch: true });
 
 test('project hierarchy and encrypted originals reopen from the local vault', async ({
   page,
@@ -140,6 +143,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   const beforeReview = await revisions();
   expect(beforeReview[0]).toEqual([expect.objectContaining({ revision: expect.any(Number) })]);
   await verifyDrawingReview(page, info);
+  await verifyCheckpointReview(page, info);
   expect(await revisions()).toEqual(beforeReview);
   await review('review.prepare').focus();
   await page.keyboard.press('Enter');
@@ -278,6 +282,11 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
     page.getByText('This project or surface is unavailable on this device.'),
   ).toBeVisible();
   await expect(page.getByText('plaster-detail.dng')).toHaveCount(0);
+  await page.goto('/settings/preferences');
+  await page.locator('[data-control-id="settings.libraries"]').click();
+  await expect(page).toHaveURL('/settings/libraries');
+  await expect(page.getByRole('heading', { name: 'Pattern editor' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Unlock with recovery key' })).toBeVisible();
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
   );

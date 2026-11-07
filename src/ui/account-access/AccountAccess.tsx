@@ -1,4 +1,5 @@
 import { Match, Show, Switch } from 'solid-js';
+import { PatternReview } from '../editor/checkpoint-review/PatternReview';
 import { AccessForm } from './access-form/AccessForm';
 import { AccountSecurity } from './account-security/AccountSecurity';
 import { VaultSection } from './account-security/VaultSection';
@@ -92,6 +93,13 @@ export function AccountAccess() {
                       </Match>
                       <Match when={view === 'preferences'}>
                         <Preferences model={model} />
+                      </Match>
+                      <Match when={view === 'libraries'}>
+                        <VaultSection
+                          account={id}
+                          language={lang()}
+                          workspace={() => <PatternReview language={lang()} library />}
+                        />
                       </Match>
                       <Match when={view === 'admin'}>
                         <Admin model={model} />
