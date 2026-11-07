@@ -1,5 +1,6 @@
 /* eslint-disable solid/reactivity -- The parent keys this panel by project ID. */
 import { createSignal, For, Show } from 'solid-js';
+import { scopeContent } from '../../../platform/estimates/scopes';
 import {
   localSharingKey,
   sealProjectSnapshot,
@@ -291,8 +292,19 @@ function InvitationControls(props: {
                           const scopes = item.sourceIds?.length
                             ? []
                             : await Promise.all(
-                                optionalScopes(item).map((scope) =>
-                                  sealScope(key.pair, recipientKey(), context, scope),
+                                optionalScopes(item).map(async (scope) =>
+                                  sealScope(
+                                    key.pair,
+                                    recipientKey(),
+                                    context,
+                                    scope,
+                                    await scopeContent(
+                                      props.vault,
+                                      props.projectId,
+                                      scope,
+                                      project.revision,
+                                    ),
+                                  ),
                                 ),
                               );
                           key.signal.throwIfAborted();

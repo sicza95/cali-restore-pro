@@ -1,38 +1,13 @@
 import { createSignal } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { validDecimal } from './fields';
+export type { Phase, Extra, Adjustment } from '../../../platform/estimates/types';
+import type { Phase, Extra } from '../../../platform/estimates/types';
 
 export const modes = ['time', 'productivity'] as const;
 export const methods = ['hourly', 'fixed', 'area'] as const;
 export const estimateUnits = ['m²', 'cm²', 'ft²', 'in²'] as const;
 export type EstimateUnit = (typeof estimateUnits)[number];
-export type Phase = {
-  id: string;
-  name: string;
-  archived: boolean;
-  surface: string;
-  scope: string;
-  measurement: 'missing' | 'stale' | 'ready';
-  mode: (typeof modes)[number];
-  time: string;
-  productivity: Partial<Record<EstimateUnit, string>>;
-  multiplier: string;
-  factorDraft?: string;
-  price: (typeof methods)[number];
-  rate: Partial<Record<string, string>>;
-  material: string;
-  units: EstimateUnit;
-};
-export type Extra = {
-  id: string;
-  name: string;
-  object: string;
-  method: 'fixed' | 'hourly';
-  hours: string;
-  rate: Partial<Record<string, string>>;
-  included: boolean;
-};
-export type Adjustment = { id: string; name: string; percent: string };
 export const smallestPositive = Number.MIN_VALUE;
 
 function newPhase(name: string, units: EstimateUnit): Phase {
@@ -100,6 +75,7 @@ export function createPhases(defaultUnit: () => EstimateUnit) {
   }
   return {
     rows,
+    replace: (next: Phase[]) => setRows(next),
     active,
     current,
     select,

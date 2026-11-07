@@ -69,8 +69,10 @@ export const estimateControls: readonly ControlContract[] = [
     command: key === 'scopeLink' ? 'Open authorized opaque surface' : 'Review work phase ' + key,
     permission: 'Unlocked account-local project author',
     prerequisite: 'Active phase and applicable scope, input mode or pricing method',
-    valueSource: 'Encrypted project hierarchy and temporary phase inputs',
-    behavior: key === 'scopeLink' ? 'functional' : 'review',
+    valueSource: 'Encrypted project hierarchy and explicitly saved estimate versions',
+    behavior: ['draw', 'clone', 'cloneFrom', 'measurement', 'acknowledge'].includes(key)
+      ? 'review'
+      : 'functional',
     owner:
       key === 'scopeLink'
         ? 'M-05'
@@ -91,8 +93,8 @@ export const estimateControls: readonly ControlContract[] = [
     command: 'Review financial input ' + key,
     permission: 'Unlocked account-local project author with full estimate review access',
     prerequisite: 'Authorized project, selected objects and applicable pricing inputs',
-    valueSource: 'Encrypted project hierarchy and temporary financial inputs',
-    behavior: 'review',
+    valueSource: 'Encrypted estimate versions and client-side restoration-v1 calculations',
+    behavior: 'functional',
     owner: 'M-09',
     composition: 'Estimate review · Financials',
     unavailable: {

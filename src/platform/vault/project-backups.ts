@@ -12,6 +12,7 @@ import {
 } from './file-format';
 import type { FileShape } from './file-format';
 import { projectDocuments } from './project-store';
+import { estimateTable } from './store';
 import type { RestoredOriginal } from './project-store';
 import {
   backupCipher,
@@ -84,6 +85,10 @@ export function projectBackups(
   return {
     async export(projectId: string, options: Options = {}) {
       const signal = signalFor(options);
+      if (await projectDocuments(root, account, stamp, signal, estimateTable).changed(projectId, 0))
+        throw new Error(
+          'Estimate-inclusive portable backups are not yet supported; refusing an incomplete backup',
+        );
       const document = await projectDocuments(root, account, stamp, signal).changed(projectId, 0);
       if (!document) throw new Error('Project unavailable');
       const project = validateProject(JSON.parse(document.text) as Project, projectId);

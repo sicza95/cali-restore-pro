@@ -156,7 +156,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await phase('cancel').tap();
   await expect(phase('multiplier')).toHaveValue('1');
   await phase('multiplier').fill('1,5');
-  await expect(phase('adjustHours')).toBeDisabled();
+  await expect(phase('adjustHours')).toBeEnabled();
   await phase('keepHours').tap();
   await expect(phase('time')).toHaveValue('4');
   await phase('measurement').selectOption('stale');
@@ -173,10 +173,10 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(phase('rate')).toHaveAttribute('aria-invalid', 'true');
   await phase('rate').fill('12.50');
   await phase('units').selectOption('m²');
-  await expect(phase('rate')).toHaveValue('');
+  await expect(phase('rate')).toHaveValue('125000');
   await phase('units').selectOption('cm²');
-  await expect(phase('rate')).toHaveValue('12.50');
-  await expect(phase('productivity')).toHaveValue('2,5');
+  await expect(phase('rate')).toHaveValue('12.5');
+  await expect(phase('productivity')).toHaveValue('2.5');
   await phase('material').fill('3');
   await finance('newExtra').tap();
   await finance('extraName').fill('Lighting');
@@ -203,15 +203,16 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(finance('taxPercent')).toHaveValue('20');
   await finance('assumptions').fill('Review cleaning access.');
   await finance('snapshot').tap();
-  const captured = page.getByRole('status').filter({ hasText: 'Captured for this review' });
-  await expect(captured).toContainText('12.50');
+  const captured = page.getByRole('status').filter({ hasText: 'Encrypted input version' });
+  await expect(captured).toContainText('12.5');
   await expect(captured).toContainText('Object 1');
   await expect(captured).not.toContainText('Lighting');
   await phase('rate').fill('88');
-  await expect(captured).toContainText('12.50');
+  await expect(captured).toContainText('12.5');
   await finance('snapshot').tap();
+  await expect(finance('version')).toHaveValue('2');
   await finance('version').selectOption('1');
-  await expect(captured).toContainText('12.50');
+  await expect(captured).toContainText('12.5');
   await expect(finance('issue')).toBeDisabled();
   await inspectReview(page, info, 'estimate', [
     'estimate.phase.add',

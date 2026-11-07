@@ -47,3 +47,36 @@ export function areaChange(
   const b = convertArea(next.area, next.unit, 'm²');
   return a.n * b.d === b.n * a.d ? 'none' : mode === 'time' ? 'review-hours' : 'recalculate';
 }
+
+export function receiveMeasurement(phase: Phase, next: Measurement): Partial<Phase> {
+  const notice = areaChange(phase.quantity, next, phase.mode);
+  return {
+    quantity: structuredClone(next),
+    measurement:
+      notice === 'review-hours' ? 'stale' : next.validity === 'valid' ? 'ready' : 'missing',
+  };
+}
+
+export function changeUnit(phase: Phase, unit: AreaUnit): Partial<Phase> {
+  const speed = phase.productivity[phase.units];
+  const rate = phase.rate[phase.units];
+  return {
+    units: unit,
+    productivity: speed?.trim()
+      ? {
+          ...phase.productivity,
+          [unit]: quantityText(convertArea(speed, phase.units, unit).round(18)),
+        }
+      : phase.productivity,
+    rate: rate?.trim()
+      ? {
+          ...phase.rate,
+          [unit]: quantityText(
+            decimal(rate)
+              .div(convertArea('1', phase.units, unit))
+              .round(18),
+          ),
+        }
+      : phase.rate,
+  };
+}

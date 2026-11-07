@@ -1,10 +1,14 @@
-import { createSignal, For, Show } from 'solid-js';
+import { createSignal, For, Show, onMount } from 'solid-js';
+import type { LocalVault } from '../../../platform/vault/vault';
+import type { EstimateInput, EstimateSnapshot } from '../../../platform/estimates/types';
+import { calculate } from '../../../platform/estimates/calculate';
+import { snapshot as makeSnapshot } from '../../../platform/estimates/snapshots';
+import { estimateRepository } from '../../../platform/estimates/persistence';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { Language } from '../types';
 import { estimateCopy } from './estimate-copy';
 import { financeControl as id } from './estimate-controls';
 import {
-  copyPhase,
   createPhases,
   extraRate,
   phaseEffort,
@@ -16,19 +20,11 @@ import type { Adjustment, Extra, Phase } from './estimate-model';
 import { Adjustments, Extras } from './FinancialInputs';
 import { ReviewCheck, ReviewSelect, validDecimal } from './fields';
 import { WorkPhases } from './WorkPhases';
-
-type Snapshot = {
-  currency: string;
-  revision: number;
-  objects: string[];
-  phases: Phase[];
-  extras: Extra[];
-  adjustments: Adjustment[];
-  tax: string | null;
-  assumptions: string;
-};
+import { PresetInputs } from './PresetInputs';
+import { quantityText } from '../../../platform/estimates/display';
 
 export function EstimateReview(props: {
+  vault: LocalVault;
   project: SavedProject;
   language: Language;
   navigate: (href: string) => void;
@@ -43,7 +39,12 @@ export function EstimateReview(props: {
   const [taxed, setTaxed] = createSignal(false);
   const [tax, setTax] = createSignal('');
   const [assumptions, setAssumptions] = createSignal('');
-  const [versions, setVersions] = createSignal<Snapshot[]>([]);
+  const [versions, setVersions] = createSignal<EstimateSnapshot[]>([]);
+  const [storedRevision, setStoredRevision] = createSignal(0);
+  const [ready, setReady] = createSignal(false);
+  const [busy, setBusy] = createSignal(false);
+  const [status, setStatus] = createSignal('');
+  const [priceCurrency, setPriceCurrency] = createSignal(project().settings.currency);
   const [version, setVersion] = createSignal('');
   const currency = () => project().settings.currency;
   const scoped = () =>
@@ -63,8 +64,59 @@ export function EstimateReview(props: {
       (extra) =>
         extra.included && (!extra.object || scoped().some((object) => object.id === extra.object)),
     );
-  const snapshot = () => versions()[Number(version()) - 1];
+  const snapshot = () => versions()[Number(version()) - 1]?.input;
+  const input = (): EstimateInput => ({
+    schema: 1,
+    project: project().id,
+    revision: project().revision,
+    currency: currency(),
+    priceCurrency: priceCurrency(),
+    objects: project().objects.map((o) => ({
+      id: o.id,
+      name: o.name,
+      surfaces: o.surfaces.map((s) => s.id),
+    })),
+    selected: scoped().map((o) => o.id),
+    phases: JSON.parse(JSON.stringify(model.rows)) as Phase[],
+    extras: extras(),
+    adjustments: adjustments(),
+    tax: { enabled: taxed(), rate: tax() },
+    assumptions: assumptions(),
+  });
+  const result = () => {
+    try {
+      return calculate(input());
+    } catch {
+      return undefined;
+    }
+  };
+  onMount(async () => {
+    try {
+      const saved = await estimateRepository(props.vault).load(project().id);
+      if (saved) {
+        const draft = saved.document.draft;
+        model.replace(draft.phases);
+        setExtras(draft.extras);
+        setAdjustments(draft.adjustments);
+        setSelection('selected');
+        setObjects(draft.selected);
+        setTaxed(draft.tax.enabled);
+        setTax(draft.tax.rate);
+        setAssumptions(draft.assumptions);
+        setPriceCurrency(draft.priceCurrency);
+        setVersions(saved.document.snapshots);
+        setStoredRevision(saved.revision);
+        setVersion(String(saved.document.snapshots.length));
+      }
+      setReady(true);
+    } catch {
+      setStatus(c().saveFailed);
+    }
+  });
   const valid = () =>
+    ready() &&
+    !busy() &&
+    !!result() &&
     scoped().length > 0 &&
     (selectedPhases().length > 0 || selectedExtras().length > 0) &&
     selectedPhases().every(phaseValid) &&
@@ -76,29 +128,59 @@ export function EstimateReview(props: {
     ) &&
     adjustments().every((row) => !!row.name.trim() && validDecimal(row.percent, -100, 100)) &&
     (!taxed() || validDecimal(tax(), 0, 100));
-  function capture() {
+  async function capture(issued = false) {
     if (!valid()) return;
-    setVersions((previous) => [
-      ...previous,
-      {
-        currency: currency(),
-        revision: project().revision,
-        objects: scoped().map(({ name }) => name),
-        phases: selectedPhases().map(copyPhase),
-        extras: selectedExtras().map((row) => ({ ...row, rate: { ...row.rate } })),
-        adjustments: adjustments().map((row) => ({ ...row })),
-        tax: taxed() ? tax() : null,
-        assumptions: assumptions(),
-      },
-    ]);
-    setVersion(String(versions().length));
+    setBusy(true);
+    setStatus('');
+    try {
+      const draft = input();
+      const next = [...versions(), makeSnapshot(draft, versions().length + 1, issued)];
+      const revision = await estimateRepository(props.vault).save(project().id, storedRevision(), {
+        schema: 1,
+        draft,
+        snapshots: next,
+      });
+      setStoredRevision(revision);
+      setVersions(next);
+      setVersion(String(next.length));
+      setStatus(c().saved);
+    } catch {
+      setStatus(c().saveFailed);
+    } finally {
+      setBusy(false);
+    }
   }
   return (
     <div class="review-flow estimate-review">
       <p class="review-note">{c().transient}</p>
+      <p role="status">{status()}</p>
+      <Show when={priceCurrency() !== currency()}>
+        <p role="alert">{c().reprice}</p>
+        <button
+          type="button"
+          onClick={() => {
+            for (const phase of model.rows) model.update(phase.id, { rate: {}, material: '' });
+            setExtras((rows) => rows.map((row) => ({ ...row, rate: {} })));
+            setPriceCurrency(currency());
+          }}
+        >
+          {c().newPrices}
+        </button>
+      </Show>
       <div class="review-grid">
         <WorkPhases copy={c()} project={project()} model={model} navigate={props.navigate} />
         <div class="review-flow">
+          <Show when={model.current()}>
+            {(phase) => (
+              <PresetInputs
+                vault={props.vault}
+                language={props.language}
+                phase={phase()}
+                currency={currency()}
+                update={(next) => model.update(phase().id, next)}
+              />
+            )}
+          </Show>
           <section class="project-pane">
             <h3>{c().selection}</h3>
             <p>
@@ -139,7 +221,9 @@ export function EstimateReview(props: {
                 {(key) => (
                   <>
                     <dt>{c()[key]}</dt>
-                    <dd>—</dd>
+                    <dd data-estimate-result={key}>
+                      {key === 'hours' ? quantityText(result()?.hours) : (result()?.[key] ?? '—')}
+                    </dd>
                   </>
                 )}
               </For>
@@ -162,11 +246,17 @@ export function EstimateReview(props: {
                 type="button"
                 data-control-id={id('snapshot')}
                 disabled={!valid()}
-                onClick={capture}
+                onClick={() => void capture()}
               >
                 {c().snapshot}
               </button>
-              <button type="button" class="secondary" data-control-id={id('issue')} disabled>
+              <button
+                type="button"
+                class="secondary"
+                data-control-id={id('issue')}
+                disabled={!valid() || !result()?.complete}
+                onClick={() => void capture(true)}
+              >
                 {c().issue}
               </button>
             </div>
@@ -184,9 +274,27 @@ export function EstimateReview(props: {
                     <p>
                       {c().snapshotState} · r{item().revision} · {item().currency}
                     </p>
-                    <p>{item().objects.join(' · ')}</p>
+                    <p>
+                      {versions()[Number(version()) - 1]?.result.calculation} · {c().total} ·{' '}
+                      {versions()[Number(version()) - 1]?.result.total ?? '—'}
+                    </p>
+                    <p>
+                      {item()
+                        .objects.filter((o) => item().selected.includes(o.id))
+                        .map((o) => o.name)
+                        .join(' · ')}
+                    </p>
                     <ul>
-                      <For each={item().phases}>
+                      <For
+                        each={item().phases.filter(
+                          (p) =>
+                            !p.archived &&
+                            item().objects.some(
+                              (o) =>
+                                item().selected.includes(o.id) && o.surfaces.includes(p.surface),
+                            ),
+                        )}
+                      >
                         {(phase) => (
                           <li>
                             {phase.name} · {c()[phase.price]} · {phaseRate(phase)}{' '}
@@ -195,7 +303,11 @@ export function EstimateReview(props: {
                           </li>
                         )}
                       </For>
-                      <For each={item().extras}>
+                      <For
+                        each={item().extras.filter(
+                          (e) => e.included && (!e.object || item().selected.includes(e.object)),
+                        )}
+                      >
                         {(extra) => (
                           <li>
                             {extra.name} · {extraRate(extra)}
@@ -210,9 +322,9 @@ export function EstimateReview(props: {
                         )}
                       </For>
                     </ul>
-                    <Show when={item().tax !== null}>
+                    <Show when={item().tax.enabled}>
                       <p>
-                        {c().taxTotal} · {item().tax}%
+                        {c().taxTotal} · {item().tax.rate}%
                       </p>
                     </Show>
                     <Show when={item().assumptions}>

@@ -1,7 +1,13 @@
 import { test, expect } from '@playwright/test';
 import { calculate, calculatePhase } from '../src/platform/estimates/calculate';
 import { decimal } from '../src/platform/estimates/decimal';
-import { areaChange, changeFactor, convertArea } from '../src/platform/estimates/units';
+import {
+  areaChange,
+  changeFactor,
+  changeUnit,
+  convertArea,
+  receiveMeasurement,
+} from '../src/platform/estimates/units';
 import { snapshot, summary } from '../src/platform/estimates/snapshots';
 import { parseEstimateScope } from '../src/platform/estimates/scopes';
 import { applyPreset } from '../src/platform/estimates/persistence';
@@ -68,6 +74,15 @@ test('unit normalization and physical change detection do not invent display cha
   expect(areaChange(q, { ...q, area: '0.001', unit: 'm²' }, 'time')).toBe('none');
   expect(areaChange(q, { ...q, area: '20' }, 'time')).toBe('review-hours');
   expect(areaChange(q, { ...q, area: '20' }, 'productivity')).toBe('recalculate');
+  const p = phase();
+  expect(calculatePhase({ ...p, ...changeUnit(p, 'm²') }, 2).work).toBe('200.00');
+  const changed = {
+    ...p,
+    mode: 'time' as const,
+    ...receiveMeasurement({ ...p, mode: 'time' }, { ...q, area: '20' }),
+  };
+  expect(changed.time).toBe('10');
+  expect(changed.measurement).toBe('stale');
   expect(calculatePhase(phase({ quantity: { ...q, area: '0.001', unit: 'm²' } }), 2).work).toBe(
     '200.00',
   );
@@ -149,6 +164,12 @@ test('snapshot is detached and summary is an allowlisted stale projection, not a
   ).toThrow();
   expect(() => calculate(input({ currency: 'USD' }))).toThrow('Repricing');
   expect(issued.input.currency).toBe('EUR');
+  expect(
+    parseEstimateScope(
+      'estimate-full',
+      JSON.stringify({ schema: 1, scope: 'estimate-full', snapshot: issued }),
+    ),
+  ).toHaveLength(1);
 });
 
 test('preset values and versions are copied, never linked to later library edits', () => {
