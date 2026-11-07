@@ -1,5 +1,6 @@
 /* eslint-disable solid/reactivity -- The invitation is fixed for this mounted row. */
 import { createSignal, Show } from 'solid-js';
+import { scopeContent } from '../../../platform/estimates/scopes';
 import {
   localSharingKey,
   sealScope,
@@ -61,7 +62,15 @@ export function EditScopes(props: {
                 recipient: props.item.recipientId,
               };
               const grants = await Promise.all(
-                added.map((scope) => sealScope(key.pair, recipientKey, context, scope)),
+                added.map(async (scope) =>
+                  sealScope(
+                    key.pair,
+                    recipientKey,
+                    context,
+                    scope,
+                    await scopeContent(props.vault, props.project, scope),
+                  ),
+                ),
               );
               key.signal.throwIfAborted();
               await props.model.request('/sharing-identity', { publicKey: key.publicKey });

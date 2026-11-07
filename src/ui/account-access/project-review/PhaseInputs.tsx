@@ -12,6 +12,9 @@ import type { Phase } from './estimate-model';
 import type { EstimateCopy } from './estimate-copy';
 import { phaseControl as id } from './estimate-controls';
 import { ReviewNumber, ReviewSelect, validDecimal } from './fields';
+import { changeFactor, changeUnit } from '../../../platform/estimates/units';
+import { calculatePhase } from '../../../platform/estimates/calculate';
+import { quantityText } from '../../../platform/estimates/display';
 
 const measurements = ['missing', 'stale', 'ready'] as const;
 
@@ -26,6 +29,13 @@ export function PhaseInputs(props: {
   const time = () => p().mode === 'time';
   const update = (value: Partial<Phase>) => props.update(value);
   const multiplier = () => p().factorDraft ?? p().multiplier;
+  const result = () => {
+    try {
+      return calculatePhase(p(), 2);
+    } catch {
+      return undefined;
+    }
+  };
   return (
     <>
       <h4>{c().breakdown}</h4>
@@ -53,7 +63,13 @@ export function PhaseInputs(props: {
           label={c().units}
           value={p().units}
           options={estimateUnits}
-          change={(units) => update({ units })}
+          change={(units) => {
+            try {
+              update(changeUnit(p(), units));
+            } catch {
+              update({ units });
+            }
+          }}
         />
         <ReviewSelect
           id={id('mode')}
@@ -82,7 +98,7 @@ export function PhaseInputs(props: {
               <ReviewNumber
                 id={id('hoursOutput')}
                 label={c().hoursOutput + ' · h'}
-                value="—"
+                value={quantityText(result()?.hours)}
                 error=""
                 readOnly
                 change={() => undefined}
@@ -100,7 +116,7 @@ export function PhaseInputs(props: {
           <ReviewNumber
             id={id('productivityOutput')}
             label={c().productivityOutput + ' · ' + p().units + '/h'}
-            value="—"
+            value={quantityText(result()?.productivity)}
             error=""
             readOnly
             change={() => undefined}
@@ -136,7 +152,16 @@ export function PhaseInputs(props: {
             >
               {c().keepHours}
             </button>
-            <button type="button" class="secondary" data-control-id={id('adjustHours')} disabled>
+            <button
+              type="button"
+              class="secondary"
+              data-control-id={id('adjustHours')}
+              disabled={
+                !validDecimal(multiplier(), smallestPositive) ||
+                !validDecimal(p().multiplier, smallestPositive)
+              }
+              onClick={() => update(changeFactor(p(), multiplier(), 'adjust'))}
+            >
               {c().adjustHours}
             </button>
             <button

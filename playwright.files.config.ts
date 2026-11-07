@@ -5,6 +5,7 @@ const origin = 'http://127.0.0.1:4184';
 export default defineConfig({
   testDir: 'tests-platform',
   testMatch: [
+    'estimates.browser.ts',
     'encrypted-files.browser.ts',
     'original-pins.browser.ts',
     'project-backups.browser.ts',

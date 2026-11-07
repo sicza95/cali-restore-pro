@@ -15,8 +15,15 @@ export async function scopeContent(
   const saved = await estimateRepository(vault).load(project);
   const latest = saved?.document.snapshots.filter((s) => s.issued).at(-1);
   if (!latest) throw new Error('Issue an estimate before sharing its scope');
+  if (revision === undefined) {
+    const projectRow = await vault.projects().changed(project, 0);
+    revision = projectRow?.revision;
+  }
+  const projection = summary(latest, revision ?? -1);
+  if (JSON.stringify(latest.input) !== JSON.stringify(saved!.document.draft))
+    projection.freshness = 'stale';
   return scope === 'estimate-summary'
-    ? summary(latest, revision ?? saved!.document.draft.revision)
+    ? projection
     : { schema: 1, scope: 'estimate-full', snapshot: latest };
 }
 
@@ -63,6 +70,17 @@ export function parseEstimateScope(scope: OptionalScope, text: string): string[]
     !Array.isArray(value.adjustments)
   )
     throw new Error('Invalid summary');
+  if (
+    typeof value.currency !== 'string' ||
+    !/^[A-Z]{3}$/.test(value.currency) ||
+    !Number.isSafeInteger(value.version) ||
+    Number(value.version) < 1 ||
+    !Number.isSafeInteger(value.projectRevision) ||
+    typeof value.createdAt !== 'string' ||
+    typeof value.snapshot !== 'string' ||
+    typeof value.illustrative !== 'boolean'
+  )
+    throw new Error('Invalid summary provenance');
   const money = (v: unknown) => typeof v === 'string' && /^-?\d+(?:\.\d+)?$/.test(v);
   if (![value.extras, value.beforeTax, value.taxTotal, value.total].every(money))
     throw new Error('Invalid summary money');

@@ -102,7 +102,9 @@ export function AccountAccess() {
                         <VaultSection
                           account={id}
                           language={lang()}
-                          workspace={() => <PrivateLibraries language={lang()} />}
+                          workspace={(vault) => (
+                            <PrivateLibraries vault={vault} language={lang()} />
+                          )}
                         />
                       </Match>
                       <Match when={view === 'admin'}>

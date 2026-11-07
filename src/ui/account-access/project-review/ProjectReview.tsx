@@ -9,6 +9,7 @@ import type { ReviewRoute } from './report-controls';
 import { EstimateReview } from './EstimateReview';
 import { ReportReview } from './ReportReview';
 import './styles.css';
+import type { LocalVault } from '../../../platform/vault/vault';
 
 export function ProjectReviewLinks(props: {
   project: string;
@@ -37,6 +38,7 @@ export function ProjectReviewLinks(props: {
 }
 
 export function ProjectReview(props: {
+  vault: LocalVault;
   project: SavedProject;
   language: Language;
   account: string;
@@ -85,6 +87,7 @@ export function ProjectReview(props: {
         }
       >
         <EstimateReview
+          vault={props.vault}
           project={props.project}
           language={props.language}
           navigate={props.navigate}

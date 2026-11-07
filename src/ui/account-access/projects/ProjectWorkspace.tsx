@@ -284,6 +284,7 @@ export function ProjectWorkspace(props: {
             <Match when={route()?.review}>
               <Show when={activeReview()} keyed fallback={<p role="status">{c().missing}</p>}>
                 <ProjectReview
+                  vault={props.vault}
                   project={current()!}
                   route={route()!.review!}
                   language={props.language}

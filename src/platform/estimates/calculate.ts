@@ -27,6 +27,7 @@ export function calculatePhase(
   const q = phase.quantity;
   const valid =
     q?.version === 1 &&
+    (q.source === 'fixture' || q.source === 'committed') &&
     q.validity === 'valid' &&
     q.area !== null &&
     !!q.calibration &&

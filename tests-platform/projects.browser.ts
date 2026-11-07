@@ -270,9 +270,9 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   const rates = page.locator('[data-control-id="libraries.rates"]');
   await expect(rates).toHaveCount(0);
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
-  await expect(rates).toBeDisabled();
-  await expect(rates).toHaveAccessibleDescription(/M-09/);
-  await expect(page.locator('[data-control-id="libraries.productivity"]')).toBeDisabled();
+  await expect(rates).toBeEnabled();
+  await expect(rates).toHaveAccessibleDescription(/Encrypted on this device/);
+  await expect(page.locator('[data-control-id="libraries.productivity"]')).toBeEnabled();
   await expect(page.locator('[data-control-id="libraries.branding"]')).toHaveAttribute(
     'href',
     '/settings/preferences#report-branding',
