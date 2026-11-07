@@ -1,0 +1,5 @@
+.private-library-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--cr-touch);
+}

@@ -36,6 +36,8 @@ Opaque route IDs must not include user/project names. Client project search decr
 
 At M-08, maintain a machine-readable control registry alongside UI code. Each entry records stable ID, label/help translation keys, command/query contract, permission/prerequisites, value source, functional-or-mock status, owner milestone and failure/empty/locked state. Browser coverage checks registry entries appear in their expected composition, with a documented reason for conditionally unavailable controls. This prevents a toolbar-only mock from hiding missing inspectors/settings/dialogs.
 
+See the [M-08 reconciliation](m08-control-reconciliation.md) for the implemented route map, registry and conditional control ownership.
+
 Mock controls may select tools, edit temporary review parameters, open sheets, navigate fixture steps and preview fixtures. An engine command without an implementation opens a labelled preview or is visibly unavailable with its reason; it never reports a durable drawing/calibration/alignment/history action. Keep fixture providers in explicit review compositions/adapters, with no production fallback to synthetic measurements. Platform saves acknowledge only actual encrypted transactions/remote commits.
 
 | Area                   | Controls present by M-08                                                                                                                                                                                                                          | Real computation/behavior owner                                     |

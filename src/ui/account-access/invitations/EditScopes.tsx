@@ -33,7 +33,7 @@ export function EditScopes(props: {
     optionalScopes(next()).filter((scope) => !optionalScopes(previous).includes(scope));
   return (
     <details class="scope-editor" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>{c().editScopes}</summary>
+      <summary data-control-id="sharing.scopes.open">{c().editScopes}</summary>
       <Show when={open()}>
         <form
           onSubmit={(event) => {
@@ -103,6 +103,7 @@ export function EditScopes(props: {
             </label>
           </Show>
           <button
+            data-control-id="sharing.scopes.apply"
             disabled={
               props.busy ||
               (estimateScope() === previous.estimateScope &&

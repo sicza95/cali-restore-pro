@@ -36,6 +36,7 @@ export function NameForm(props: {
 
 export function UnitsField(props: {
   copy: Copy;
+  controlId: string;
   value: Units | null;
   inherit?: boolean;
   label?: string;
@@ -43,7 +44,7 @@ export function UnitsField(props: {
   return (
     <label>
       {props.label ?? props.copy.units}
-      <select name="units" value={props.value ?? ''}>
+      <select data-control-id={props.controlId} name="units" value={props.value ?? ''}>
         {props.inherit && <option value="">{props.copy.inherit}</option>}
         <option value="metric">{props.copy.metric}</option>
         <option value="imperial">{props.copy.imperial}</option>

@@ -1,5 +1,4 @@
 import { Match, Show, Switch } from 'solid-js';
-import { PatternReview } from '../editor/checkpoint-review/PatternReview';
 import { AccessForm } from './access-form/AccessForm';
 import { AccountSecurity } from './account-security/AccountSecurity';
 import { VaultSection } from './account-security/VaultSection';
@@ -11,6 +10,7 @@ import { ProjectWorkspace } from './projects/ProjectWorkspace';
 import { accountDestinations, isAccountDestination, signInLink } from './routes';
 import { Admin } from './settings/admin/Admin';
 import { Preferences } from './settings/preferences/Preferences';
+import { PrivateLibraries } from './settings/preferences/PrivateLibraries';
 import { Profile } from './settings/profile/Profile';
 import './settings/styles.css';
 
@@ -74,7 +74,11 @@ export function AccountAccess() {
                     <Show
                       when={!model.sessionUnavailable()}
                       fallback={
-                        <button class="secondary" onClick={() => location.reload()}>
+                        <button
+                          data-control-id="app.session.retry"
+                          class="secondary"
+                          onClick={() => location.reload()}
+                        >
                           {c().retryAccess}
                         </button>
                       }
@@ -98,7 +102,7 @@ export function AccountAccess() {
                         <VaultSection
                           account={id}
                           language={lang()}
-                          workspace={() => <PatternReview language={lang()} library />}
+                          workspace={() => <PrivateLibraries language={lang()} />}
                         />
                       </Match>
                       <Match when={view === 'admin'}>
@@ -144,6 +148,7 @@ export function AccountAccess() {
           <section aria-label={t('platform')}>
             <span role="status">{t(connection())}</span>
             <button
+              data-control-id="app.service.retry"
               class="secondary"
               disabled={connection() === 'checking'}
               onClick={() => void model.refreshConnection()}

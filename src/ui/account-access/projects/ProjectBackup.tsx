@@ -145,7 +145,7 @@ export function ProjectBackup(props: Props) {
                 disabled={props.busy}
               />
             </label>
-            <button class="secondary" disabled={props.busy}>
+            <button data-control-id="backup.restore" class="secondary" disabled={props.busy}>
               {c().restore}
             </button>
           </form>
@@ -153,6 +153,7 @@ export function ProjectBackup(props: Props) {
       >
         {(id) => (
           <button
+            data-control-id="backup.export"
             class="secondary"
             disabled={props.busy}
             onClick={() =>
@@ -170,7 +171,11 @@ export function ProjectBackup(props: Props) {
       <Show when={transfer()}>
         <div class="project-fields">
           <progress aria-label={action()} max={1} value={progress()} />
-          <button class="secondary" onClick={() => transfer()?.abort()}>
+          <button
+            data-control-id="backup.cancel"
+            class="secondary"
+            onClick={() => transfer()?.abort()}
+          >
             {projectCopy[props.language].cancel}
           </button>
         </div>

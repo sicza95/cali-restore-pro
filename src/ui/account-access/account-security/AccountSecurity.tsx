@@ -32,7 +32,12 @@ export function AccountSecurity(props: AccountSecurityProps) {
               onSubmit={(e) => props.model.submit(e, 'confirm', 'confirmed')}
             >
               <PasswordField t={props.model.t} kind={'currentPassword'} />
-              <SubmitButton t={props.model.t} busy={props.model.busy()} label={'confirmPassword'} />
+              <SubmitButton
+                t={props.model.t}
+                busy={props.model.busy()}
+                label="confirmPassword"
+                controlId="account.confirm"
+              />
             </form>
           </section>
           <section class="account-section">
@@ -46,7 +51,10 @@ export function AccountSecurity(props: AccountSecurityProps) {
             >
               <PasswordField t={props.model.t} kind={'newPassword'} />
               <ConfirmField t={props.model.t} />
-              <button disabled={props.model.busy() || !props.model.confirmed()}>
+              <button
+                data-control-id="account.password.change"
+                disabled={props.model.busy() || !props.model.confirmed()}
+              >
                 {props.model.t('changePassword')}
               </button>
             </form>
@@ -62,7 +70,10 @@ export function AccountSecurity(props: AccountSecurityProps) {
             >
               <EmailField t={props.model.t} />
               <ConfirmField t={props.model.t} />
-              <button disabled={props.model.busy() || !props.model.confirmed()}>
+              <button
+                data-control-id="account.email.change"
+                disabled={props.model.busy() || !props.model.confirmed()}
+              >
                 {props.model.t('changeEmail')}
               </button>
             </form>
@@ -78,6 +89,7 @@ export function AccountSecurity(props: AccountSecurityProps) {
                 <p role="alert">{props.model.t('sessionFailed')}</p>
               </Show>
               <button
+                data-control-id="account.sessions.refresh"
                 class="secondary"
                 disabled={props.model.busy()}
                 onClick={() => void props.model.refreshSessions()}
@@ -103,6 +115,7 @@ export function AccountSecurity(props: AccountSecurityProps) {
                         </time>
                       </span>
                       <button
+                        data-control-id="account.sessions.revoke"
                         class="secondary"
                         disabled={
                           props.model.busy() ||
@@ -118,6 +131,7 @@ export function AccountSecurity(props: AccountSecurityProps) {
                 </For>
               </ul>
               <button
+                data-control-id="account.sessions.revoke-all"
                 class="secondary"
                 disabled={
                   props.model.busy() || !props.model.confirmed() || !props.model.revokeConfirmed()

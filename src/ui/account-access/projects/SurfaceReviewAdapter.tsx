@@ -1,28 +1,12 @@
 import { createSignal, For, Show, untrack } from 'solid-js';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { SurfaceCopy } from './surface-copy';
+import { SurfacePanControls } from './SurfacePanControls';
 import { SurfacePhoto } from './SurfacePhoto';
+import { GuideFields, SurfaceReviewGuides } from './SurfaceReviewGuides';
 import { fields, toolFields, tools } from './surface-review-controls';
 import type { ReviewTool } from './surface-review-controls';
-
-const defaults = (unit: string) => ({
-  cropX: '0',
-  cropY: '0',
-  cropWidth: '100',
-  cropHeight: '100',
-  rotation: '0',
-  skew: '0',
-  offsetX: '0',
-  offsetY: '0',
-  usable: '100',
-  width: '',
-  height: '',
-  flip: false,
-  aspect: 'free',
-  method: 'dimensions',
-  referenceOnly: false,
-  unit,
-});
+import { defaults, surfacePhotoStyle, validateDraft } from './surface-review-model';
 const id = (key: string) => 'surface.review.' + key;
 
 export function SurfaceReviewAdapter(props: {
@@ -46,11 +30,14 @@ export function SurfaceReviewAdapter(props: {
   const [focus, setFocus] = createSignal(false);
   const [zoom, setZoom] = createSignal(100);
   const [rotate, setRotate] = createSignal(0);
+  const [pan, setPan] = createSignal({ x: 0, y: 0 });
+  const panLimit = () => (96 * zoom()) / 100;
+  const boundPan = (value: number) => Math.max(-panLimit(), Math.min(panLimit(), value));
   const c = () => props.copy;
   const toolButtons: Partial<Record<ReviewTool, HTMLButtonElement>> = {};
   const unavailable = (key: ReviewTool) => {
     if (!size()) return props.photo ? c().previewUnavailable : c().empty;
-    if (key === 'align' && (props.role === 'main' || !props.reference))
+    if (key === 'align' && (props.role !== 'detail' || !props.reference))
       return c().alignmentUnavailable;
     if (key === 'calibrate' && props.role !== 'main') return c().calibrationUnavailable;
     return '';
@@ -69,38 +56,16 @@ export function SurfaceReviewAdapter(props: {
     setOriginal(false);
     setCompare(false);
   }
-  const valid = () => {
-    const key = tool();
-    if (!key) return false;
-    const d = draft();
-    const dimensions = size();
-    return (
-      toolFields[key].every((field) => {
-        const [min, max] = fields[field];
-        const value = Number(d[field]);
-        return d[field].trim() && value >= min && value <= max;
-      }) &&
-      (key !== 'prepare' ||
-        (Number(d.cropX) + Number(d.cropWidth) <= 100 &&
-          Number(d.cropY) + Number(d.cropHeight) <= 100 &&
-          (d.aspect !== 'square' ||
-            !dimensions ||
-            Math.abs(
-              Number(d.cropWidth) * dimensions.width - Number(d.cropHeight) * dimensions.height,
-            ) <= 100)))
-    );
-  };
+  const valid = () => !!tool() && validateDraft(tool()!, draft(), size());
   const preview = () => (tool() && valid() ? { ...applied(), [tool()!]: draft() } : applied());
-  const photoStyle = () => {
-    const p = original() ? undefined : preview().prepare;
-    const a = original() ? undefined : preview().align;
-    return {
-      transform: `scale(${zoom() / 100}) rotate(${rotate() + Number(p?.rotation ?? 0)}deg) skewX(${p?.skew ?? 0}deg) scaleX(${p?.flip ? -1 : 1}) translate(${a?.referenceOnly ? 0 : (a?.offsetX ?? 0)}%, ${a?.referenceOnly ? 0 : (a?.offsetY ?? 0)}%)`,
-      'clip-path': p
-        ? `inset(${p.cropY}% ${100 - Number(p.cropX) - Number(p.cropWidth)}% ${100 - Number(p.cropY) - Number(p.cropHeight)}% ${p.cropX}%)`
-        : undefined,
-    };
+  const lines = () => {
+    const state = preview().calibrate;
+    return !original() && state?.method === 'lines' ? state : undefined;
   };
+  const pairs = () =>
+    !original() && tool() === 'align' && draft().manualPairs && !draft().referenceOnly && valid()
+      ? draft()
+      : undefined;
   return (
     <div class="surface-review" classList={{ 'surface-focus': focus() }}>
       <div class="surface-rail" role="group" aria-label={c().tools}>
@@ -134,9 +99,23 @@ export function SurfaceReviewAdapter(props: {
                 project={props.project}
                 id={photo()}
                 copy={c()}
-                style={photoStyle()}
+                style={surfacePhotoStyle(
+                  { ...pan(), zoom: zoom(), rotate: rotate() },
+                  original() ? undefined : preview(),
+                )}
                 onReady={setSize}
-              />
+              >
+                <SurfaceReviewGuides
+                  lines={lines()}
+                  pairs={pairs()}
+                  rectification={original() ? undefined : preview().prepare}
+                  usable={
+                    !original() && !compare() && !preview().align?.referenceOnly
+                      ? preview().align?.usable
+                      : undefined
+                  }
+                />
+              </SurfacePhoto>
             )}
           </Show>
           <Show when={compare() && props.reference}>
@@ -146,23 +125,10 @@ export function SurfaceReviewAdapter(props: {
                 project={props.project}
                 id={reference()}
                 copy={{ ...c(), photo: c().main }}
-              />
+              >
+                <SurfaceReviewGuides pairs={pairs()} reference />
+              </SurfacePhoto>
             )}
-          </Show>
-          <Show
-            when={!original() && !compare() && preview().align && !preview().align?.referenceOnly}
-          >
-            <div
-              class="surface-usable"
-              aria-hidden="true"
-              style={{ inset: (100 - Math.sqrt(Number(preview().align?.usable) * 100)) / 2 + '%' }}
-            />
-          </Show>
-          <Show when={size() && tool() === 'calibrate' && draft().method === 'lines'}>
-            <div class="surface-guides" aria-hidden="true">
-              <span />
-              <span />
-            </div>
           </Show>
         </div>
         <div class="surface-actions">
@@ -186,6 +152,7 @@ export function SurfaceReviewAdapter(props: {
             onClick={() => {
               setZoom(100);
               setRotate(0);
+              setPan({ x: 0, y: 0 });
             }}
           >
             {c().fit}
@@ -209,8 +176,22 @@ export function SurfaceReviewAdapter(props: {
             {c().focus}
           </button>
         </div>
+        <SurfacePanControls
+          copy={c()}
+          disabled={!size()}
+          move={(dx, dy) => setPan(({ x, y }) => ({ x: boundPan(x + dx), y: boundPan(y + dy) }))}
+        />
       </section>
-      <section class="surface-inspector" aria-label={c().tools}>
+      <section
+        class="surface-inspector"
+        aria-label={c().tools}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && tool()) {
+            event.preventDefault();
+            close();
+          }
+        }}
+      >
         <p class="surface-transient">{c().transient}</p>
         <p role="status">{notice() ? c().applied : c().uncalibrated}</p>
         <For each={tools}>
@@ -247,6 +228,17 @@ export function SurfaceReviewAdapter(props: {
                   />
                   {c().flip}
                 </label>
+                <label>
+                  <input
+                    data-control-id={id('rectify')}
+                    type="checkbox"
+                    checked={draft().rectify}
+                    aria-describedby="surface-rectify-help"
+                    onChange={(e) => setDraft({ ...draft(), rectify: e.currentTarget.checked })}
+                  />
+                  {c().rectify}
+                </label>
+                <p id="surface-rectify-help">{c().rectifyHelp}</p>
               </Show>
               <Show when={key === 'align'}>
                 <button
@@ -278,6 +270,26 @@ export function SurfaceReviewAdapter(props: {
                   />
                   {c().referenceOnly}
                 </label>
+                <Show when={!draft().referenceOnly}>
+                  <label>
+                    <input
+                      data-control-id={id('manualPairs')}
+                      type="checkbox"
+                      checked={draft().manualPairs}
+                      aria-describedby="surface-pair-help"
+                      onChange={(e) => {
+                        const manualPairs = e.currentTarget.checked;
+                        setDraft({ ...draft(), manualPairs });
+                        if (manualPairs) setCompare(true);
+                      }}
+                    />
+                    {c().manualPairs}
+                  </label>
+                  <p id="surface-pair-help">{c().pairHelp}</p>
+                  <Show when={draft().manualPairs}>
+                    <GuideFields copy={c()} draft={draft()} change={setDraft} pairs />
+                  </Show>
+                </Show>
               </Show>
               <Show when={key === 'calibrate'}>
                 <label>
@@ -293,6 +305,7 @@ export function SurfaceReviewAdapter(props: {
                 </label>
                 <Show when={draft().method === 'lines'}>
                   <p>{c().lineHelp}</p>
+                  <GuideFields copy={c()} draft={draft()} change={setDraft} />
                 </Show>
                 <label>
                   {c().unit}
@@ -310,7 +323,7 @@ export function SurfaceReviewAdapter(props: {
                 </label>
               </Show>
               <div class="surface-fields">
-                <For each={toolFields[key]}>
+                <For each={key === 'align' && draft().referenceOnly ? [] : toolFields[key]}>
                   {(field) => (
                     <label>
                       {c()[field]}{' '}

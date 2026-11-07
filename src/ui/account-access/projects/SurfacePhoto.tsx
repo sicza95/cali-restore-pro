@@ -9,6 +9,7 @@ export function SurfacePhoto(props: {
   id: string;
   copy: SurfaceCopy;
   style?: JSX.CSSProperties;
+  children?: JSX.Element;
   onReady?: (size: { width: number; height: number }) => void;
 }) {
   const [url, setUrl] = createSignal<string>();
@@ -46,20 +47,23 @@ export function SurfacePhoto(props: {
         </p>
       </Show>
       <Show when={url() && status() !== 'invalid'}>
-        <img
-          src={url()}
-          alt={props.copy.photo}
-          style={props.style}
-          classList={{ 'surface-photo-loading': status() === 'loading' }}
-          onLoad={(event) => {
-            setStatus('ready');
-            props.onReady?.({
-              width: event.currentTarget.naturalWidth,
-              height: event.currentTarget.naturalHeight,
-            });
-          }}
-          onError={() => setStatus('invalid')}
-        />
+        <div class="surface-photo-frame" style={props.style}>
+          <img
+            src={url()}
+            alt={props.copy.photo}
+            draggable={false}
+            classList={{ 'surface-photo-loading': status() === 'loading' }}
+            onLoad={(event) => {
+              setStatus('ready');
+              props.onReady?.({
+                width: event.currentTarget.naturalWidth,
+                height: event.currentTarget.naturalHeight,
+              });
+            }}
+            onError={() => setStatus('invalid')}
+          />
+          <Show when={status() === 'ready'}>{props.children}</Show>
+        </div>
       </Show>
     </>
   );

@@ -39,16 +39,18 @@ export function Admin(props: SettingsProps) {
           >
             <label>
               {c().searchLabel}
-              <input name="q" type="search" maxlength={254} />
+              <input data-control-id="admin.search.query" name="q" type="search" maxlength={254} />
             </label>
-            <button>{c().search}</button>
+            <button data-control-id="admin.search">{c().search}</button>
           </form>
           <form
             class="admin-search"
             onSubmit={(e) => props.model.submit(e, 'confirm', 'confirmed')}
           >
             <PasswordField t={props.model.t} kind="currentPassword" />
-            <button disabled={props.model.busy()}>{props.model.t('confirmPassword')}</button>
+            <button data-control-id="admin.confirm" disabled={props.model.busy()}>
+              {props.model.t('confirmPassword')}
+            </button>
           </form>
           <p class="field-help">{c().adminPasswordHelp}</p>
           <Show when={page.loading}>
@@ -67,6 +69,7 @@ export function Admin(props: SettingsProps) {
                 <div class="admin-actions">
                   <Show when={query().history.length > 1}>
                     <button
+                      data-control-id="admin.previous"
                       class="secondary"
                       onClick={() => setQuery((q) => ({ ...q, history: q.history.slice(0, -1) }))}
                     >
@@ -76,6 +79,7 @@ export function Admin(props: SettingsProps) {
                   <Show when={data().next}>
                     {(next) => (
                       <button
+                        data-control-id="admin.next"
                         class="secondary"
                         onClick={() => setQuery((q) => ({ ...q, history: [...q.history, next()] }))}
                       >
@@ -92,7 +96,12 @@ export function Admin(props: SettingsProps) {
       <Show when={props.model.can('operations.view')}>
         <section class="admin-section">
           <h2>{c().mail}</h2>
-          <button class="secondary" disabled={ops.loading} onClick={() => void refreshOps()}>
+          <button
+            data-control-id="admin.operations.refresh"
+            class="secondary"
+            disabled={ops.loading}
+            onClick={() => void refreshOps()}
+          >
             {c().refreshOperations}
           </button>
           <Show when={ops.loading}>
@@ -112,7 +121,7 @@ export function Admin(props: SettingsProps) {
                   </For>
                 </dl>
                 <details>
-                  <summary>{c().mailJobs}</summary>
+                  <summary data-control-id="admin.operations.mail">{c().mailJobs}</summary>
                   <ul class="admin-list">
                     <For each={data().jobs} fallback={<li>{c().noMail}</li>}>
                       {(job) => (

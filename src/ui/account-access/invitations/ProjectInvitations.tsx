@@ -121,25 +121,44 @@ function InvitationControls(props: {
         >
           <label>
             {c().recipient}
-            <input type="email" name="email" required maxLength={254} disabled={sent.busy()} />
+            <input
+              data-control-id="sharing.recipient"
+              type="email"
+              name="email"
+              required
+              maxLength={254}
+              disabled={sent.busy()}
+            />
           </label>
           <label>
             {c().estimateScope}
-            <select name="estimateScope" disabled={sent.busy()}>
+            <select data-control-id="sharing.estimate" name="estimateScope" disabled={sent.busy()}>
               <option value="none">{c().noEstimate}</option>
               <option value="estimate-summary">{c()['estimate-summary']}</option>
               <option value="estimate-full">{c()['estimate-full']}</option>
             </select>
           </label>
           <label class="confirmation">
-            <input type="checkbox" name="shareHistory" disabled={sent.busy()} />
+            <input
+              data-control-id="sharing.history"
+              type="checkbox"
+              name="shareHistory"
+              disabled={sent.busy()}
+            />
             {c().includeHistory}
           </label>
           <label class="confirmation">
-            <input type="checkbox" name="coOwner" disabled={sent.busy()} />
+            <input
+              data-control-id="sharing.co-owner"
+              type="checkbox"
+              name="coOwner"
+              disabled={sent.busy()}
+            />
             {c().inviteCoOwner}
           </label>
-          <button disabled={sent.busy()}>{c().issue}</button>
+          <button data-control-id="sharing.issue" disabled={sent.busy()}>
+            {c().issue}
+          </button>
         </form>
         <ul class="session-list">
           <For each={sent.rows()} fallback={<li>{c().empty}</li>}>
@@ -173,6 +192,7 @@ function InvitationControls(props: {
                 </Show>
                 <Show when={item.state === 'pending' || item.state === 'accepted'}>
                   <button
+                    data-control-id="sharing.cancel"
                     class="secondary"
                     disabled={sent.busy()}
                     onClick={() =>
@@ -184,8 +204,23 @@ function InvitationControls(props: {
                     {c().cancel}
                   </button>
                 </Show>
+                <Show when={item.state === 'pending'}>
+                  <button
+                    type="button"
+                    class="secondary"
+                    data-control-id="sharing.resend"
+                    aria-describedby={`resend-help-${item.id}`}
+                    disabled
+                  >
+                    {c().resend}
+                  </button>
+                  <p class="field-help" id={`resend-help-${item.id}`}>
+                    {c().resendUnavailable}
+                  </p>
+                </Show>
                 <Show when={item.state === 'active' && !item.coOwner}>
                   <button
+                    data-control-id="sharing.revoke"
                     class="secondary"
                     disabled={sent.busy()}
                     onClick={() => {
@@ -281,6 +316,7 @@ function InvitationControls(props: {
                       <label>
                         {c().recipientCode}
                         <input
+                          data-control-id="sharing.recipient-code"
                           name="fingerprint"
                           required
                           pattern="[a-fA-F0-9]{64}"
@@ -289,11 +325,21 @@ function InvitationControls(props: {
                       </label>
                       <Show when={!item.sourceIds?.length && props.originalIds?.length}>
                         <label class="confirmation">
-                          <input type="checkbox" name="originals" disabled={sent.busy()} />
+                          <input
+                            data-control-id="sharing.originals"
+                            type="checkbox"
+                            name="originals"
+                            disabled={sent.busy()}
+                          />
                           {c().includeOriginals}
                         </label>
                       </Show>
-                      <button disabled={sent.busy()}>
+                      <button
+                        data-control-id={
+                          item.sourceIds?.length ? 'sharing.rotate' : 'sharing.activate'
+                        }
+                        disabled={sent.busy()}
+                      >
                         {item.sourceIds?.length ? c().rotate : c().activate}
                       </button>
                     </form>
@@ -305,6 +351,7 @@ function InvitationControls(props: {
         </ul>
       </Show>
       <button
+        data-control-id="sharing.refresh"
         class="secondary"
         disabled={sent.loading() || sent.busy()}
         onClick={() => void sent.refetch()}

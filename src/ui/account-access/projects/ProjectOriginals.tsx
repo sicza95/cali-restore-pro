@@ -57,7 +57,13 @@ export function ProjectOriginals(props: {
       >
         <label>
           {props.copy.file}
-          <input name="file" type="file" required disabled={props.busy} />
+          <input
+            data-control-id="originals.file"
+            name="file"
+            type="file"
+            required
+            disabled={props.busy}
+          />
         </label>
         <label>
           {props.copy.role}
@@ -112,6 +118,7 @@ export function ProjectOriginals(props: {
                   />
                 </label>
                 <button
+                  data-control-id="originals.remove"
                   class="secondary"
                   disabled={props.busy}
                   onClick={() =>
@@ -140,6 +147,7 @@ function RoleField(props: {
 }) {
   return (
     <select
+      data-control-id={props.change ? 'originals.change-role' : 'originals.role'}
       name="role"
       value={props.value ?? 'mapping'}
       disabled={props.disabled}
