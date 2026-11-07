@@ -13,7 +13,10 @@ export class Decimal {
     this.d = d / a;
   }
   static from(text: string) {
-    const value = text.trim().replace(',', '.');
+    const value = text
+      .trim()
+      .replace(',', '.')
+      .replace(/^([+-]?)\./, '$10.');
     if (!/^[+-]?\d+(?:\.\d{1,18})?$/.test(value) || value.length > 60)
       throw new Error('Invalid decimal');
     const [whole, fraction = ''] = value.split('.');

@@ -66,6 +66,8 @@ test('round each component then adjustments then tax; ties away from zero', () =
   expect(decimal('-1.005').round(2)).toBe('-1.01');
   expect(decimal('2.5').round(0)).toBe('3');
   expect(decimal('0.0005').round(3)).toBe('0.001');
+  expect(decimal('.5').round(2)).toBe('0.50');
+  expect(decimal('-.5').round(2)).toBe('-0.50');
 });
 
 test('unit normalization and physical change detection do not invent display changes', () => {

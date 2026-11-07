@@ -92,26 +92,26 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | SHARE-10    | Later    | Read-only quote-level estimate summary                              | M-06  | M-16       | Planned |
 | PAT-01      | Later    | Visual repeating-tile pattern editor                                | M-08  | M-15       | Planned |
 | PAT-02      | Later    | Reusable versioned patterns with consistent output                  | M-05  | M-16       | Planned |
-| EST-01      | Later    | User phase/productivity profiles and layer/detail overrides         | M-09  | M-16       | Planned |
-| EST-02      | Later    | Itemized estimate snapshots                                         | M-09  | M-16       | Planned |
-| EST-03      | Later    | User-defined work breakdown with editable starter phases            | M-09  | M-16       | Planned |
-| EST-04      | Later    | Individual-object, whole-project and selected-object estimates      | M-09  | M-16       | Planned |
-| EST-05      | Later    | Independent, explicit scope for every work phase                    | M-09  | M-16       | Planned |
-| EST-06      | Later    | One mask per phase with independent cloning                         | M-09  | M-16       | Planned |
-| EST-07      | Later    | Three per-phase pricing methods                                     | M-09  | M-16       | Planned |
-| EST-08      | Later    | Exactly one editable time/productivity input                        | M-09  | M-16       | Planned |
-| EST-09      | Later    | Area-change behaviour follows effort input mode                     | M-09  | M-16       | Planned |
-| EST-10      | Later    | User-controlled detail breakdown                                    | M-09  | M-16       | Planned |
-| EST-11      | Later    | Manual effort multiplier in initial estimation                      | M-09  | M-16       | Planned |
-| EST-12      | Later    | Optional additional material costs per phase                        | M-09  | M-16       | Planned |
-| EST-13      | Later    | Final-time input and explicit response to multiplier edits          | M-09  | M-16       | Planned |
-| EST-14      | Later    | Optional object/project extras with estimate inclusion              | M-09  | M-16       | Planned |
-| EST-15      | Later    | Extra-item price and labour-hour calculations                       | M-09  | M-16       | Planned |
-| EST-16      | Later    | Optional monetary percentage adjustments at project level           | M-09  | M-16       | Planned |
-| EST-17      | Later    | One currency per project                                            | M-09  | M-16       | Planned |
-| EST-18      | Later    | User-controlled repricing after currency changes                    | M-09  | M-16       | Planned |
-| EST-19      | Later    | Optional project tax after adjustments                              | M-09  | M-16       | Planned |
-| EST-20      | Later    | Monetary rounding and consistent totals                             | M-09  | M-16       | Planned |
+| EST-01      | Later    | User phase/productivity profiles and layer/detail overrides         | M-09  | M-16       | Partial |
+| EST-02      | Later    | Itemized estimate snapshots                                         | M-09  | M-16       | Partial |
+| EST-03      | Later    | User-defined work breakdown with editable starter phases            | M-09  | M-16       | Partial |
+| EST-04      | Later    | Individual-object, whole-project and selected-object estimates      | M-09  | M-16       | Partial |
+| EST-05      | Later    | Independent, explicit scope for every work phase                    | M-09  | M-16       | Partial |
+| EST-06      | Later    | One mask per phase with independent cloning                         | M-09  | M-16       | Partial |
+| EST-07      | Later    | Three per-phase pricing methods                                     | M-09  | M-16       | Partial |
+| EST-08      | Later    | Exactly one editable time/productivity input                        | M-09  | M-16       | Partial |
+| EST-09      | Later    | Area-change behaviour follows effort input mode                     | M-09  | M-16       | Partial |
+| EST-10      | Later    | User-controlled detail breakdown                                    | M-09  | M-16       | Partial |
+| EST-11      | Later    | Manual effort multiplier in initial estimation                      | M-09  | M-16       | Partial |
+| EST-12      | Later    | Optional additional material costs per phase                        | M-09  | M-16       | Partial |
+| EST-13      | Later    | Final-time input and explicit response to multiplier edits          | M-09  | M-16       | Partial |
+| EST-14      | Later    | Optional object/project extras with estimate inclusion              | M-09  | M-16       | Partial |
+| EST-15      | Later    | Extra-item price and labour-hour calculations                       | M-09  | M-16       | Partial |
+| EST-16      | Later    | Optional monetary percentage adjustments at project level           | M-09  | M-16       | Partial |
+| EST-17      | Later    | One currency per project                                            | M-09  | M-16       | Partial |
+| EST-18      | Later    | User-controlled repricing after currency changes                    | M-09  | M-16       | Partial |
+| EST-19      | Later    | Optional project tax after adjustments                              | M-09  | M-16       | Partial |
+| EST-20      | Later    | Monetary rounding and consistent totals                             | M-09  | M-16       | Partial |
 | ADMIN-01    | Must     | Consistent account lifecycle UI                                     | M-01  | M-07       | Partial |
 | ADMIN-02    | Must     | Privilege and content boundaries                                    | M-01  | M-16       | Partial |
 | ADMIN-03    | Must     | Explicit server-feature access grants                               | M-01  | M-07       | Partial |
@@ -125,6 +125,8 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | UI-01       | Must     | Shared visual/interaction system                                    | M-01  | M-16       | Partial |
 
 ## Completion evidence
+
+[M-09 calculation and persistence evidence](../m09-restoration-estimates.md) covers fixture arithmetic for EST-01 through EST-20, immutable estimate versions, private encrypted preset copies, selected scope and allowlisted summary/full publication (SHARE-03/10, PRIV-01). Status is Partial, not real-geometry or release acceptance. Estimate cloud sync, portable recovery (PROJ-04), scoped collaboration and M-10/M-11 outputs remain open; backup creation refuses projects with estimates to avoid incomplete recovery claims.
 
 M-01a adds [identity-core contracts and executed evidence](../m01a-identity.md): PRIV-05 has manual/revocable authentication without idle/absolute expiry (content locking remains M-03); ADMIN-01 has account-state/session APIs but no lifecycle UI; ADMIN-02 has tested least-privilege platform capabilities, operator bootstrap and database-enforced final-superuser protection (project/content scopes remain later); ADMIN-08 has real suspension/re-enable and atomic session revocation (forced deletion remains blocked). PRIV-06 gains an explicit identity-metadata allowlist; full retention/restore/privacy qualification remains open. Registration, verification/reset/change-email/password, mail and auth screens remain M-01b. No row becomes Accepted here.
 

@@ -4,6 +4,8 @@ The [workflow inventory](workflows-and-controls.md) specifies the intended contr
 
 ## Routes and direct-entry policy
 
+M-09 update: the estimate route now calculates and explicitly saves/opens encrypted device-local versions; private libraries create/apply/edit/archive versioned presets. Factor Adjust is functional. Scope geometry remains review-only. Read the [M-09 evidence and remaining recovery/collaboration gates](../m09-restoration-estimates.md); the original M-08 descriptions below remain historical boundaries.
+
 | Entry                                                          | Composition and condition                                                                                                                                                                                                                                 | Owner                                                       |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `/`, `/login`, `/register`, `/forgot-password`                 | Public identity forms. Login return targets are limited to the known destinations and valid opaque project paths. Register and reset request acknowledgments are neutral.                                                                                 | M-01                                                        |

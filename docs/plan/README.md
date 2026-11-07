@@ -66,6 +66,8 @@ M-01 was delivered in two named sub-milestones. **M-01a** delivers database acco
 
 ## Before drawing starts
 
+M-09's [bounded implementation and M-10 handoff](../m09-restoration-estimates.md) records real client calculations, encrypted device-local estimates/presets and scoped projections. Recovery, sync and collaborative edit gates remain open; it is not full milestone acceptance.
+
 M-11 is the platform completion checkpoint. A user can register, unlock, manage files and projects, share/revoke access, use settings and administration, recover offline work, enter an estimate, and create fixture-based outputs. The entire tool UI is navigable and every control has a recorded owner and availability state. No action claims to have drawn, calibrated, aligned or measured real image content.
 
 M-12 starts complex image work. M-13/M-14 build the actual measurement/drawing system against existing versioned contracts. M-16 replaces fixture providers in the production path, reruns the earlier workflow/access/export checks on real content and qualifies release. Final measurement claims remain unavailable until their source revision, calibration and engine results are valid.
