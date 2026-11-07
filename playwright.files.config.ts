@@ -9,6 +9,8 @@ export default defineConfig({
     'original-pins.browser.ts',
     'project-backups.browser.ts',
     'projects.browser.ts',
+    'project-reviews.browser.ts',
+    'project-review-scopes.browser.ts',
   ],
   outputDir: 'test-results/encrypted-files',
   use: { baseURL: origin, channel: process.env.CI ? undefined : 'chrome' },

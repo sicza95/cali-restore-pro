@@ -12,6 +12,8 @@ import type { OptionalScope } from '../../../platform/projects/sharing-scopes';
 import type { SharedProject } from '../../../platform/projects/shared-project';
 import type { SharedOriginal } from '../../../platform/projects/shared-originals';
 import type { LocalVault } from '../../../platform/vault/vault';
+import { SharedEstimateProjection } from '../project-review/SharedEstimateProjection';
+import { estimateCopy } from '../project-review/estimate-copy';
 import { invitationCopy } from './copy';
 import type { InboxInvitation, InvitationModel } from './types';
 import { useInvitations } from './useInvitations';
@@ -184,9 +186,20 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                             <section class="shared-project" aria-label={c()[scope().id]}>
                               <h2>{c()[scope().id]}</h2>
                               <p>{c().sampleOnly}</p>
-                              <ul>
-                                <For each={scope().rows}>{(row) => <li>{row}</li>}</For>
-                              </ul>
+                              <Show
+                                when={scope().id !== 'history'}
+                                fallback={
+                                  <ul>
+                                    <For each={scope().rows}>{(row) => <li>{row}</li>}</For>
+                                  </ul>
+                                }
+                              >
+                                <SharedEstimateProjection
+                                  scope={scope().id as 'estimate-full' | 'estimate-summary'}
+                                  rows={scope().rows}
+                                  language={props.model.lang()}
+                                />
+                              </Show>
                             </section>
                           )}
                         </Show>
@@ -198,6 +211,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                           <p>
                             {c().snapshot} · {c().revision} {project().revision}
                           </p>
+                          <p>{estimateCopy[props.model.lang()].assessmentOnly}</p>
                           <For each={project().objects}>
                             {(object) => (
                               <div>
