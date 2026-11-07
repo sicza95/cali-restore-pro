@@ -6,12 +6,15 @@ import { surfaceControls } from '../src/ui/account-access/projects/surface-revie
 import { verifyCheckpointReview } from './checkpoint-review';
 import { drawingControl, verifyDrawingReview } from './drawing-review';
 import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
+import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } from './photo-review';
+import { setupRememberedVault } from './vault-setup';
 
 test.use({ hasTouch: true });
 
 test('project hierarchy and encrypted originals reopen from the local vault', async ({
   page,
 }, info) => {
+  test.setTimeout(90_000);
   let account = '00000000-0000-4000-8000-000000000001';
   const pageErrors: string[] = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
@@ -30,10 +33,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/projects');
-  await page.getByLabel(/Remember this browser/).check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-  await page.getByLabel('I saved the recovery key').check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
+  await setupRememberedVault(page);
   const controls = (id: string) => {
     expect(projectControls.some((control) => control.id === id)).toBe(true);
     return page.locator(`[data-control-id="${id}"]`);
@@ -158,34 +158,13 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await review('review.cancel').click();
   await review('review.prepare').click();
   await expect(review('review.cropWidth')).toHaveValue('80');
-  for (const viewport of [
-    { width: 1194, height: 834 },
-    { width: 834, height: 1194 },
-  ]) {
-    await page.setViewportSize(viewport);
-    const rail = (await page.locator('.surface-rail').boundingBox())!;
-    const canvas = (await page.locator('.surface-stage').boundingBox())!;
-    const inspector = (await page.locator('.surface-inspector').boundingBox())!;
-    expect(rail.x).toBeLessThan(canvas.x);
-    if (viewport.width === 834) expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
-    else expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
-    for (const control of ['review.prepare', 'review.apply', 'review.cancel', 'view.next']) {
-      const box = (await review(control).boundingBox())!;
-      expect(box.height).toBeGreaterThanOrEqual(44);
-      expect(box.width).toBeGreaterThanOrEqual(44);
-    }
-    await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
-    await page.screenshot({
-      path: info.outputPath('surface-' + viewport.width + '.png'),
-      fullPage: true,
-    });
-  }
+  await verifyPhotoMatrix(page, info);
   await review('review.calibrate').click();
   await expect(review('review.unit')).toHaveValue('in');
   await expect(review('review.apply')).toBeDisabled();
   await review('review.width').fill('10');
   await review('review.height').fill('12');
-  await review('review.apply').click();
+  await verifyCalibrationGuides(page);
   expect(await revisions()).toEqual(beforeReview);
   await page.setViewportSize({ width: 1194, height: 834 });
   await attach.setInputFiles({ name: 'wall-detail.png', mimeType: 'image/png', buffer: png });
@@ -197,8 +176,11 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(review('review.auto')).toBeDisabled();
   await review('review.compare').check();
   await expect(page.locator('.surface-canvas img')).toHaveCount(2);
+  await verifyAlignmentGuides(page);
+  const beforeAlignment = await revisions();
   await review('review.offsetX').fill('10');
   await review('review.apply').click();
+  expect(await revisions()).toEqual(beforeAlignment);
   await review('view.previous').click();
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
   await review('review.prepare').click();
@@ -275,9 +257,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(controls('originals.attach')).toHaveCount(0);
   account = '00000000-0000-4000-8000-000000000002';
   await page.goto(surfacePath);
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-  await page.getByLabel('I saved the recovery key').check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
+  await setupRememberedVault(page);
   await expect(
     page.getByText('This project or surface is unavailable on this device.'),
   ).toBeVisible();
@@ -287,6 +267,16 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(page).toHaveURL('/settings/libraries');
   await expect(page.getByRole('heading', { name: 'Pattern editor' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Unlock with recovery key' })).toBeVisible();
+  const rates = page.locator('[data-control-id="libraries.rates"]');
+  await expect(rates).toHaveCount(0);
+  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
+  await expect(rates).toBeDisabled();
+  await expect(rates).toHaveAccessibleDescription(/M-09/);
+  await expect(page.locator('[data-control-id="libraries.productivity"]')).toBeDisabled();
+  await expect(page.locator('[data-control-id="libraries.branding"]')).toHaveAttribute(
+    'href',
+    '/settings/preferences#report-branding',
+  );
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
   );

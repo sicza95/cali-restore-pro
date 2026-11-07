@@ -17,6 +17,7 @@ export function AccountDeletion(props: {
     <div class="account-panel">
       <Show when={!props.pending}>
         <button
+          data-control-id="account.deletion.preflight"
           class="secondary"
           disabled={props.model.busy()}
           onClick={async () => {
@@ -81,11 +82,15 @@ export function AccountDeletion(props: {
           </label>
           <Show when={!props.pending}>
             <label class="confirmation">
-              <input type="checkbox" name="purge" />
+              <input data-control-id="account.deletion.purge" type="checkbox" name="purge" />
               {hu() ? 'A helyreállítási időszak kihagyása' : 'Skip live recovery and queue purge'}
             </label>
           </Show>
-          <button class="secondary" disabled={props.model.busy()}>
+          <button
+            data-control-id="account.deletion.apply"
+            class="secondary"
+            disabled={props.model.busy()}
+          >
             {props.pending
               ? hu()
                 ? 'Végleges törlés indítása'

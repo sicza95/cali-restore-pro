@@ -56,6 +56,7 @@ export function AccessForm(props: AccessFormProps) {
               </p>
             </Show>
             <SubmitButton
+              controlId={'auth.' + props.view}
               t={props.t}
               busy={props.busy()}
               label={props.view === 'login' ? 'login' : 'submit'}
@@ -74,10 +75,15 @@ export function AccessForm(props: AccessFormProps) {
         </Show>
         <Show when={props.view === 'verify-email'}>
           <details>
-            <summary>{props.t('resend')}</summary>
+            <summary data-control-id="auth.resend.open">{props.t('resend')}</summary>
             <form onSubmit={(e) => props.submit(e, 'resend-verification', 'neutral')}>
               <EmailField t={props.t} />
-              <SubmitButton t={props.t} busy={props.busy()} label="resend" />
+              <SubmitButton
+                t={props.t}
+                busy={props.busy()}
+                label="resend"
+                controlId="auth.resend"
+              />
             </form>
           </details>
         </Show>

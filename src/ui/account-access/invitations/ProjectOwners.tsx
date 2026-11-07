@@ -70,6 +70,7 @@ export function ProjectOwners(props: {
       <Show when={data()?.hostingTransfer?.toId === currentId() && data()?.hostingTransfer}>
         {(transfer) => (
           <button
+            data-control-id="owners.host.accept"
             disabled={busy()}
             onClick={() => {
               if (window.confirm(c().acceptHostingConfirm))
@@ -82,6 +83,7 @@ export function ProjectOwners(props: {
       </Show>
       <Show when={data() && currentId() && !data()?.owners.some((owner) => owner.host)}>
         <button
+          data-control-id="owners.host.claim"
           disabled={busy()}
           onClick={() => {
             if (window.confirm(c().acceptHostingConfirm))
@@ -102,6 +104,7 @@ export function ProjectOwners(props: {
                   <div class="owner-actions">
                     <Show when={currentHost() && owner.id !== pendingRecipient()?.id}>
                       <button
+                        data-control-id="owners.host.offer"
                         class="secondary"
                         disabled={busy()}
                         onClick={() => void change('/hosting-transfer', { toId: owner.id })}
@@ -110,6 +113,7 @@ export function ProjectOwners(props: {
                       </button>
                     </Show>
                     <button
+                      data-control-id="owners.remove"
                       class="secondary"
                       disabled={busy()}
                       onClick={() => {

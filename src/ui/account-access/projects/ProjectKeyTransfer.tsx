@@ -44,7 +44,7 @@ export function SendProjectKey(props: Form & { project: string }) {
         if (!event.currentTarget.open) setSecret('');
       }}
     >
-      <summary>{c().send}</summary>
+      <summary data-control-id="project.key.send.open">{c().send}</summary>
       <form
         class="project-fields"
         onSubmit={(event) => {
@@ -67,7 +67,7 @@ export function SendProjectKey(props: Form & { project: string }) {
             }}
           />
         </label>
-        <button class="secondary" disabled={props.busy}>
+        <button data-control-id="project.key.send" class="secondary" disabled={props.busy}>
           {c().create}
         </button>
       </form>
@@ -97,7 +97,7 @@ export function ReceiveProjectKey(
   const [secret, setSecret] = createSignal('');
   return (
     <details>
-      <summary>{c().receive}</summary>
+      <summary data-control-id="project.key.receive.open">{c().receive}</summary>
       <form
         class="project-fields"
         onSubmit={(event) => {
@@ -124,7 +124,7 @@ export function ReceiveProjectKey(
             onInput={(e) => setSecret(e.currentTarget.value)}
           />
         </label>
-        <button class="secondary" disabled={props.busy}>
+        <button data-control-id="project.key.receive" class="secondary" disabled={props.busy}>
           {c().open}
         </button>
       </form>

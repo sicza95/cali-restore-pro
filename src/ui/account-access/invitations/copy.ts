@@ -12,6 +12,9 @@ export const invitationCopy = {
     recipient: 'Recipient email',
     issue: 'Send invitation',
     cancel: 'Cancel invitation',
+    resend: 'Resend invitation',
+    resendUnavailable:
+      'Resending a pending invitation requires server support. The recipient can still accept it from Invitations.',
     accept: 'Accept invitation',
     pending: 'Awaiting acceptance',
     accepted: 'Awaiting secure activation',
@@ -84,6 +87,9 @@ export const invitationCopy = {
     recipient: 'A címzett e-mail-címe',
     issue: 'Meghívó küldése',
     cancel: 'Meghívó visszavonása',
+    resend: 'Meghívó újraküldése',
+    resendUnavailable:
+      'A függő meghívó újraküldéséhez szervertámogatás szükséges. A címzett továbbra is elfogadhatja a Meghívások oldalon.',
     accept: 'Meghívó elfogadása',
     pending: 'Elfogadásra vár',
     accepted: 'Biztonságos aktiválásra vár',

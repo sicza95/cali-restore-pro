@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { createDecipheriv } from 'node:crypto';
@@ -12,17 +11,11 @@ import {
   verifyPublicationPaused,
 } from './invitation-revocation';
 import { verifyScopeEdits } from './invitation-scopes';
+import { setupRememberedVault } from './vault-setup';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
 const recipientSession = process.env.M06_RECIPIENT_SESSION;
 const remainingSession = process.env.M06_REMAINING_SESSION;
-
-async function setupVault(page: Page) {
-  await page.getByLabel(/Remember this browser/).check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-  await page.getByLabel('I saved the recovery key').check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-}
 
 test('project sharing, revocation and accepted hosting transfer preserve ownership', async ({
   browser,
@@ -49,7 +42,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const remainingInbox = await remaining.newPage();
     const oldKey = await captureOriginalKey(inbox);
     await project.goto('/projects');
-    await setupVault(project);
+    await setupRememberedVault(project);
     await project.getByLabel('Project name').fill('Synthetic chapel');
     await project.getByRole('button', { name: 'New project' }).click();
     await project.getByLabel('Add object').fill('North wall');
@@ -71,11 +64,13 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await project.getByLabel('Estimate access (sample data)').selectOption('estimate-summary');
     await project.getByRole('button', { name: 'Send invitation' }).click();
     await expect(project.getByText('Awaiting acceptance')).toBeVisible();
+    await expect(project.locator('[data-control-id="sharing.resend"]')).toBeDisabled();
+    await expect(project.locator('[data-control-id="sharing.cancel"]')).toBeEnabled();
     await project.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
     const ownerCode = await project.locator('.invitation-panel code').innerText();
 
     await inbox.goto('/invitations');
-    await setupVault(inbox);
+    await setupRememberedVault(inbox);
     await inbox.getByRole('button', { name: 'Accept invitation' }).click();
     await expect(inbox.getByText('Awaiting secure activation')).toBeVisible();
     const list = await (await recipient.request.get('/api/v1/invitations')).json();
@@ -98,6 +93,8 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     );
     await project.getByRole('button', { name: 'Share project snapshot' }).click();
     await expect(project.getByText('Shared content available')).toBeVisible();
+    await expect(project.locator('[data-control-id="sharing.resend"]')).toHaveCount(0);
+    await expect(project.locator('[data-control-id="sharing.revoke"]')).toBeEnabled();
     const activation = (await upload).postDataJSON();
     expect(JSON.stringify(activation)).not.toMatch(
       /Synthetic chapel|North wall|Upper plaster|shared-plaster/,
@@ -165,7 +162,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
       .filter({ hasText: 'remaining@example.test' });
     await expect(remainingRow.getByText('Awaiting acceptance')).toBeVisible();
     await remainingInbox.goto('/invitations');
-    await setupVault(remainingInbox);
+    await setupRememberedVault(remainingInbox);
     await remainingInbox.getByRole('button', { name: 'Accept invitation' }).click();
     await remainingInbox.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
     const remainingCode = await remainingInbox.locator('.invitation-panel code').innerText();

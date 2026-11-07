@@ -73,6 +73,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                   }).format(new Date(item.expiresAt))}
                 </time>
                 <button
+                  data-control-id="invitations.accept"
                   disabled={inbox.busy()}
                   onClick={() =>
                     void inbox.run(async () => {
@@ -156,6 +157,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                   <label>
                     {c().senderCode}
                     <input
+                      data-control-id="invitations.owner-code"
                       name="fingerprint"
                       required
                       pattern="[a-fA-F0-9]{64}"
@@ -163,12 +165,18 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                       disabled={inbox.loading() || inbox.busy()}
                     />
                   </label>
-                  <button disabled={inbox.loading() || inbox.busy()}>{c().open}</button>
+                  <button
+                    data-control-id="invitations.open"
+                    disabled={inbox.loading() || inbox.busy()}
+                  >
+                    {c().open}
+                  </button>
                   <For each={optionalScopes(item)}>
                     {(scope) => (
                       <button
                         class="secondary"
                         value={scope}
+                        data-control-id={'invitations.scope.' + scope}
                         disabled={inbox.loading() || inbox.busy()}
                       >
                         {c()[scope]}
@@ -265,6 +273,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
         <p>{c().empty}</p>
       </Show>
       <button
+        data-control-id="invitations.refresh"
         class="secondary"
         disabled={inbox.loading() || inbox.busy()}
         onClick={() => {

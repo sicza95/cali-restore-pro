@@ -22,7 +22,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
   return (
     <li>
       <details>
-        <summary>
+        <summary data-control-id="admin.account.open">
           <strong class="account-email">{a().email}</strong>
           <span>
             {c()[a().role]} · {c()[a().state]}
@@ -45,7 +45,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
               <Show when={props.model.can('roles.manage')}>
                 <label>
                   {c().role}
-                  <select name="role" value={a().role}>
+                  <select data-control-id="admin.account.role" name="role" value={a().role}>
                     <For each={['member', 'administrator', 'superuser'] as const}>
                       {(role) => <option value={role}>{c()[role]}</option>}
                     </For>
@@ -54,13 +54,17 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
               </Show>
               <label>
                 {c().state}
-                <select name="state" value={a().state}>
+                <select data-control-id="admin.account.state" name="state" value={a().state}>
                   <option value="active">{c().active}</option>
                   <option value="suspended">{c().suspended}</option>
                 </select>
               </label>
               <ConfirmField t={props.model.t} />
-              <button class="secondary" disabled={disabled()}>
+              <button
+                data-control-id="admin.account.policy"
+                class="secondary"
+                disabled={disabled()}
+              >
                 {c().changePolicy}
               </button>
             </form>
@@ -79,12 +83,18 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
               <h2>{c().entitlement}</h2>
               <p class="field-help">{c().hostingHelp}</p>
               <label class="confirmation">
-                <input name="serverFeatures" type="checkbox" checked={a().serverFeatures} />
+                <input
+                  data-control-id="admin.account.grant"
+                  name="serverFeatures"
+                  type="checkbox"
+                  checked={a().serverFeatures}
+                />
                 {c().granted}
               </label>
               <label>
                 {c().quota}
                 <input
+                  data-control-id="admin.account.quota"
                   name="quotaMiB"
                   type="number"
                   min="0"
@@ -95,7 +105,11 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
                 />
               </label>
               <ConfirmField t={props.model.t} />
-              <button class="secondary" disabled={disabled()}>
+              <button
+                data-control-id="admin.account.entitlements"
+                class="secondary"
+                disabled={disabled()}
+              >
                 {c().saveEntitlement}
               </button>
             </form>
@@ -125,7 +139,11 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
                 )}
               </For>
               <ConfirmField t={props.model.t} />
-              <button class="secondary" disabled={disabled()}>
+              <button
+                data-control-id="admin.account.delegate"
+                class="secondary"
+                disabled={disabled()}
+              >
                 {c().saveDelegation}
               </button>
             </form>
@@ -137,7 +155,11 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
           >
             <form onSubmit={(e) => submit(e, 'sessions/revoke', () => ({}))}>
               <ConfirmField t={props.model.t} />
-              <button class="secondary" disabled={disabled()}>
+              <button
+                data-control-id="admin.account.revoke"
+                class="secondary"
+                disabled={disabled()}
+              >
                 {props.model.t('revokeAll')}
               </button>
             </form>

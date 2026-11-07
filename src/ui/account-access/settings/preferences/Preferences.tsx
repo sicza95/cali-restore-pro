@@ -67,7 +67,7 @@ export function Preferences(props: SettingsProps) {
       >
         <div class="preferences-actions">
           <p>{c().localHelp}</p>
-          <button>{c().save}</button>
+          <button data-control-id="preferences.save">{c().save}</button>
         </div>
         <Show when={result()}>
           {(status) => <p role={status() === 'saved' ? 'status' : 'alert'}>{c()[status()]}</p>}
@@ -79,14 +79,19 @@ export function Preferences(props: SettingsProps) {
           <div class="account-panel">
             <label>
               {c().theme}
-              <select name="theme" value={p.theme}>
+              <select data-control-id="preferences.theme" name="theme" value={p.theme}>
                 <option value="system">{c().system}</option>
                 <option value="light">{c().light}</option>
                 <option value="dark">{c().dark}</option>
               </select>
             </label>
             <label class="confirmation">
-              <input name="opaque" type="checkbox" checked={p.opaque} />
+              <input
+                data-control-id="preferences.transparency"
+                name="opaque"
+                type="checkbox"
+                checked={p.opaque}
+              />
               {c().opaque}
             </label>
           </div>
@@ -98,14 +103,14 @@ export function Preferences(props: SettingsProps) {
           <div class="account-panel">
             <label>
               {c().units}
-              <select name="units" value={p.units}>
+              <select data-control-id="preferences.units" name="units" value={p.units}>
                 <option>cm²</option>
                 <option>m²</option>
               </select>
             </label>
             <label>
               {c().currency}
-              <select name="currency" value={p.currency}>
+              <select data-control-id="preferences.currency" name="currency" value={p.currency}>
                 <For each={['HUF', 'EUR', 'GBP', 'USD', 'CHF']}>
                   {(currency) => <option>{currency}</option>}
                 </For>
@@ -113,45 +118,84 @@ export function Preferences(props: SettingsProps) {
             </label>
             <label>
               {c().reportLanguage}
-              <select name="reportLanguage" value={p.reportLanguage}>
+              <select
+                data-control-id="preferences.report-language"
+                name="reportLanguage"
+                value={p.reportLanguage}
+              >
                 <option value="en">English</option>
                 <option value="hu">Magyar</option>
               </select>
             </label>
             <label class="confirmation">
-              <input name="snap" type="checkbox" checked={p.snap} />
+              <input
+                data-control-id="preferences.snap"
+                name="snap"
+                type="checkbox"
+                checked={p.snap}
+              />
               {c().snap}
             </label>
           </div>
         </section>
-        <section class="account-section">
+        <section class="account-section" id="report-branding">
           <div>
             <h2>{c().branding}</h2>
           </div>
           <div class="account-panel">
             <label>
               {c().studio}
-              <input name="studio" maxlength={120} value={p.studio} />
+              <input
+                data-control-id="preferences.branding.studio"
+                name="studio"
+                maxlength={120}
+                value={p.studio}
+              />
             </label>
             <label>
               {c().contact}
-              <input name="contact" maxlength={254} value={p.contact} />
+              <input
+                data-control-id="preferences.branding.contact"
+                name="contact"
+                maxlength={254}
+                value={p.contact}
+              />
             </label>
             <label>
               {c().footer}
-              <input name="footer" maxlength={240} value={p.footer} />
+              <input
+                data-control-id="preferences.branding.footer"
+                name="footer"
+                maxlength={240}
+                value={p.footer}
+              />
             </label>
             <label>
               {c().accent}
-              <input name="accent" type="color" value={p.accent} />
+              <input
+                data-control-id="preferences.branding.accent"
+                name="accent"
+                type="color"
+                value={p.accent}
+              />
             </label>
             <label>
               {c().logo}
-              <input name="logo" type="file" accept="image/png" />
+              <input
+                data-control-id="preferences.branding.logo"
+                name="logo"
+                type="file"
+                accept="image/png"
+              />
             </label>
             <Show when={logo()}>
               <img src={logo()} class="report-logo" alt={c().branding} />
-              <button type="button" class="secondary" onClick={() => setLogo('')}>
+              <button
+                data-control-id="preferences.branding.clear-logo"
+                type="button"
+                class="secondary"
+                onClick={() => setLogo('')}
+              >
                 {c().removeLogo}
               </button>
             </Show>
@@ -164,7 +208,12 @@ export function Preferences(props: SettingsProps) {
           </div>
           <div class="account-panel">
             <label class="confirmation">
-              <input name="diagnostics" type="checkbox" checked={p.diagnostics} />
+              <input
+                data-control-id="preferences.diagnostics"
+                name="diagnostics"
+                type="checkbox"
+                checked={p.diagnostics}
+              />
               {c().optIn}
             </label>
           </div>

@@ -64,6 +64,7 @@ export function ProjectDetail(props: {
               <label>
                 {c().object}
                 <select
+                  data-control-id="project.object.select"
                   value={object().id}
                   disabled={props.busy}
                   onChange={(e) => {
@@ -83,6 +84,7 @@ export function ProjectDetail(props: {
               <label>
                 {c().surface}
                 <select
+                  data-control-id="project.surface.select"
                   value={surface().id}
                   disabled={props.busy}
                   onChange={(e) => setSurface(e.currentTarget.value)}
@@ -114,6 +116,7 @@ export function ProjectDetail(props: {
               {c().openSurface}
             </a>
             <NameForm
+              controlId="project.object.rename"
               label={c().object}
               value={object().name}
               action={c().rename}
@@ -121,6 +124,7 @@ export function ProjectDetail(props: {
               onSubmit={(name) => props.onRun(() => editObject({ name: projectName(name) }))}
             />
             <NameForm
+              controlId="project.surface.rename"
               label={c().surface}
               value={surface().name}
               action={c().rename}
@@ -128,6 +132,7 @@ export function ProjectDetail(props: {
               onSubmit={(name) => props.onRun(() => editSurface({ name: projectName(name) }))}
             />
             <NameForm
+              controlId="project.object.create"
               label={c().addObject}
               action={c().addObject}
               disabled={props.busy}
@@ -141,6 +146,7 @@ export function ProjectDetail(props: {
               }
             />
             <NameForm
+              controlId="project.surface.create"
               label={c().addSurface}
               action={c().addSurface}
               disabled={props.busy}
@@ -156,6 +162,7 @@ export function ProjectDetail(props: {
           <section class="project-pane">
             <h3>{c().settings}</h3>
             <NameForm
+              controlId="project.rename"
               label={c().name}
               value={props.project.name}
               action={c().rename}
@@ -193,6 +200,7 @@ export function ProjectDetail(props: {
               <label>
                 {c().currency}
                 <input
+                  data-control-id="project.currency"
                   name="currency"
                   required
                   pattern="[A-Za-z]{3}"
@@ -200,14 +208,21 @@ export function ProjectDetail(props: {
                   value={props.project.settings.currency}
                 />
               </label>
-              <UnitsField label={c().units} copy={c()} value={props.project.settings.units} />
               <UnitsField
+                controlId="project.units"
+                label={c().units}
+                copy={c()}
+                value={props.project.settings.units}
+              />
+              <UnitsField
+                controlId="project.object.units"
                 label={object().name + ' · ' + c().units}
                 copy={c()}
                 inherit
                 value={object().units}
               />
               <UnitsField
+                controlId="project.surface.units"
                 label={surface().name + ' · ' + c().units}
                 copy={c()}
                 inherit

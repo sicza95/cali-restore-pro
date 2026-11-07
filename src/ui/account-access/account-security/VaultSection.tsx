@@ -4,6 +4,7 @@ import { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
 import { vaultEntryControls } from './entry-controls';
 import { vaultCopy } from './vault-copy';
+import { VaultFileField, VaultKeyField } from './VaultFields';
 import { download, readFile } from './vault-files';
 import './vault.css';
 
@@ -107,18 +108,6 @@ export function VaultSection(props: {
     };
   const secret = (event: SubmitEvent) =>
     String(new FormData(event.currentTarget as HTMLFormElement).get('key') ?? '');
-  const keyField = (label: string) => (
-    <label>
-      {label}
-      <input name="key" type="password" autocomplete="off" required maxLength={64} />
-    </label>
-  );
-  const fileField = () => (
-    <label>
-      {c().file}
-      <input name="file" type="file" accept=".json,application/json" required />
-    </label>
-  );
   const generate = () => {
     setAck(false);
     setRecovery(newCode());
@@ -176,7 +165,7 @@ export function VaultSection(props: {
           <Show
             when={recovery()}
             fallback={
-              <button disabled={busy()} onClick={generate}>
+              <button data-control-id="vault.setup.generate" disabled={busy()} onClick={generate}>
                 {c().create}
               </button>
             }
@@ -197,6 +186,7 @@ export function VaultSection(props: {
             </label>
             <Show when={!pairing()}>
               <button
+                data-control-id="vault.setup.confirm"
                 disabled={!ack() || busy()}
                 onClick={() =>
                   void run(
@@ -210,7 +200,7 @@ export function VaultSection(props: {
             </Show>
           </Show>
           <details>
-            <summary>{c().restore}</summary>
+            <summary data-control-id="vault.restore.open">{c().restore}</summary>
             <form
               onSubmit={formAction(async (e) => {
                 const code = secret(e);
@@ -221,17 +211,20 @@ export function VaultSection(props: {
                 return vault.restore(file, code, optedIn);
               }, loadText)}
             >
-              {keyField(c().key)}
-              {fileField()}
-              <button disabled={busy()}>{c().restore}</button>
+              <VaultKeyField label={c().key} />
+              <VaultFileField label={c().file} />
+              <button data-control-id="vault.restore.submit" disabled={busy()}>
+                {c().restore}
+              </button>
             </form>
           </details>
           <details>
-            <summary>{c().request}</summary>
+            <summary data-control-id="vault.request.open">{c().request}</summary>
             <Show
               when={pairing()}
               fallback={
                 <button
+                  data-control-id="vault.request.pair"
                   class="secondary"
                   disabled={busy()}
                   onClick={() => {
@@ -259,8 +252,10 @@ export function VaultSection(props: {
                   return vault.acceptTransfer(file, code, optedIn);
                 }, loadText)}
               >
-                {fileField()}
-                <button disabled={busy() || !ack()}>{c().accept}</button>
+                <VaultFileField label={c().file} />
+                <button data-control-id="vault.request.accept" disabled={busy() || !ack()}>
+                  {c().accept}
+                </button>
               </form>
             </Show>
           </details>
@@ -276,7 +271,7 @@ export function VaultSection(props: {
             </button>
           </Show>
           <form onSubmit={formAction((e) => vault.unlock(secret(e)), loadText)}>
-            {keyField(c().key)}
+            <VaultKeyField label={c().key} />
             <button data-control-id={vaultEntryControls.recovery.id} disabled={busy()}>
               {c().unlock}
             </button>
@@ -299,6 +294,7 @@ export function VaultSection(props: {
           </label>
           <p role="status">{text() === saved() ? c().saved : c().unsaved}</p>
           <button
+            data-control-id="vault.note.save"
             disabled={busy() || text() === saved()}
             onClick={() => {
               const value = text() ?? '';
@@ -320,6 +316,7 @@ export function VaultSection(props: {
           </button>
           <label class="confirmation">
             <input
+              data-control-id="vault.trust"
               type="checkbox"
               checked={!!status()?.remembered}
               disabled={busy()}
@@ -332,6 +329,7 @@ export function VaultSection(props: {
             {c().remember}
           </label>
           <button
+            data-control-id="vault.backup.download"
             class="secondary"
             disabled={busy()}
             onClick={() =>
@@ -346,14 +344,14 @@ export function VaultSection(props: {
         </Show>
         <Show when={text() !== undefined && (manage() || props.entry === 'approve')}>
           <details>
-            <summary>{c().approve}</summary>
+            <summary data-control-id="vault.approval.open">{c().approve}</summary>
             <form
               onSubmit={formAction(
                 (e) => vault.approveTransfer(secret(e)),
                 (file) => download(file, 'calirestore-device-approval.json'),
               )}
             >
-              {keyField(c().pairing)}
+              <VaultKeyField label={c().pairing} />
               <button data-control-id={vaultEntryControls.approve.id} disabled={busy()}>
                 {c().approve}
               </button>
@@ -362,7 +360,7 @@ export function VaultSection(props: {
         </Show>
         <Show when={status()?.exists && manage()}>
           <details>
-            <summary>{c().forget}</summary>
+            <summary data-control-id="vault.forget.open">{c().forget}</summary>
             <label class="confirmation">
               <input
                 type="checkbox"
@@ -373,6 +371,7 @@ export function VaultSection(props: {
               {c().discard}
             </label>
             <button
+              data-control-id="vault.forget.confirm"
               class="secondary"
               disabled={busy() || !discard()}
               onClick={() =>

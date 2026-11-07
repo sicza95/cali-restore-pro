@@ -37,7 +37,7 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
     '.';
   return (
     <details class="project-pane">
-      <summary>
+      <summary data-control-id="project.trash.open">
         {props.project
           ? hu()
             ? 'Szerverprojekt törlése'
@@ -50,7 +50,12 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
         when={props.project}
         fallback={
           <>
-            <button class="secondary" disabled={props.model.busy()} onClick={() => void refresh()}>
+            <button
+              data-control-id="project.trash.refresh"
+              class="secondary"
+              disabled={props.model.busy()}
+              onClick={() => void refresh()}
+            >
               {hu() ? 'Kuka frissítése' : 'Refresh trash'}
             </button>
             <Show when={trash()}>
@@ -66,6 +71,7 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
                           <a href={'/projects/' + entry.id}>{entry.id}</a>
                           <p>{deadlines(entry)}</p>
                           <button
+                            data-control-id="project.trash.restore"
                             class="secondary"
                             disabled={
                               props.model.busy() || Date.parse(entry.recoverUntil) <= Date.now()
@@ -75,6 +81,7 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
                             {hu() ? 'Helyreállítás' : 'Recover'}
                           </button>
                           <button
+                            data-control-id="project.trash.purge"
                             class="secondary"
                             disabled={
                               props.model.busy() || Date.parse(entry.recoverUntil) <= Date.now()
@@ -125,7 +132,11 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
               <input type="checkbox" name="purge" />
               {hu() ? 'A helyreállítási időszak kihagyása' : 'Skip live recovery and queue purge'}
             </label>
-            <button class="secondary" disabled={props.model.busy()}>
+            <button
+              data-control-id="project.trash.delete"
+              class="secondary"
+              disabled={props.model.busy()}
+            >
               {hu() ? 'Törlés' : 'Delete hosted project'}
             </button>
           </form>
