@@ -62,16 +62,16 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Partial |
 | OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Planned |
 | OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Planned |
-| OUT-03      | Must     | Printable PDF map and standard client report                        | M-10  | M-16       | Planned |
+| OUT-03      | Must     | Printable PDF map and standard client report                        | M-10  | M-16       | Partial |
 | OUT-04      | Must     | Separate normal outputs, backups, and diagnostics                   | M-07  | M-16       | Partial |
-| OUT-05      | Must     | Explicit assessment versions per report surface                     | M-10  | M-16       | Planned |
+| OUT-05      | Must     | Explicit assessment versions per report surface                     | M-10  | M-16       | Partial |
 | OUT-06      | Must     | Five initial export formats                                         | M-10  | M-16       | Planned |
 | OUT-07      | Must     | Optional report branding with defaults/overrides                    | M-02  | M-16       | Partial |
 | OUT-08      | Must     | Selected-content-only export files                                  | M-10  | M-16       | Planned |
 | OUT-09      | Must     | Export metadata defaults with explicit inclusion                    | M-10  | M-16       | Planned |
 | OUT-10      | Must     | Snapshot and editable-estimate XLSX modes                           | M-09  | M-16       | Planned |
 | OUT-11      | Must     | Labelled drafts and valid final measurement claims                  | M-09  | M-16       | Planned |
-| OUT-12      | Must     | Inherited output units with an individual-output override           | M-05  | M-16       | Planned |
+| OUT-12      | Must     | Inherited output units with an individual-output override           | M-05  | M-16       | Partial |
 | PRIV-01     | Must     | Client-side content encryption                                      | M-03  | M-16       | Partial |
 | PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Partial |
 | PRIV-03     | Should   | Optional passkey sign-in and compatible content unlock              | M-03  | M-16       | Planned |
@@ -125,6 +125,8 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | UI-01       | Must     | Shared visual/interaction system                                    | M-01  | M-16       | Partial |
 
 ## Completion evidence
+
+[M-10 report workflow evidence](../m10-reports-and-exports.md) covers encrypted device-local report drafts, scoped issued estimate previews, selected surfaces and fixture comparisons, captured branding, independent EN/HU and units, and output controls (OUT-03, OUT-05 through OUT-08, OUT-10 through OUT-12 and UX-02). Downloads, payload inspection and real assessment qualification remain with M-11/M-16.
 
 [M-09 calculation and persistence evidence](../m09-restoration-estimates.md) covers fixture arithmetic for EST-01 through EST-20, immutable estimate versions, private encrypted preset copies, selected scope and allowlisted summary/full publication (SHARE-03/10, PRIV-01). Status is Partial, not real-geometry or release acceptance. Estimate cloud sync, portable recovery (PROJ-04), scoped collaboration and M-10/M-11 outputs remain open; backup creation refuses projects with estimates to avoid incomplete recovery claims.
 

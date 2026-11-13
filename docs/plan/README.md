@@ -70,6 +70,8 @@ M-09's [bounded implementation and M-10 handoff](../m09-restoration-estimates.md
 
 M-11 is the platform completion checkpoint. A user can register, unlock, manage files and projects, share/revoke access, use settings and administration, recover offline work, enter an estimate, and create fixture-based outputs. The entire tool UI is navigable and every control has a recorded owner and availability state. No action claims to have drawn, calibrated, aligned or measured real image content.
 
+M-10's [report and export workflow handoff](../m10-reports-and-exports.md) records encrypted draft configuration, scoped estimate preview evidence and the encoder boundary for M-11.
+
 M-12 starts complex image work. M-13/M-14 build the actual measurement/drawing system against existing versioned contracts. M-16 replaces fixture providers in the production path, reruns the earlier workflow/access/export checks on real content and qualifies release. Final measurement claims remain unavailable until their source revision, calibration and engine results are valid.
 
 ## Commit and push discipline
