@@ -159,7 +159,7 @@ export async function openScope(
     scopeBinding(context, scope),
   );
   const text = new TextDecoder('utf-8', { fatal: true }).decode(result);
-  return parseEstimateScope(scope, text) ?? parseScopeSample(scope, text);
+  return parseEstimateScope(scope, text, context.project) ?? parseScopeSample(scope, text);
 }
 
 export type CheckpointEnvelope = {

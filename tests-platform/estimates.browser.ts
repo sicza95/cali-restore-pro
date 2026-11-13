@@ -238,6 +238,44 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
     });
   }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.locator('[data-control-id="project.review.outputs"]').click();
+  const report = (id: string) => page.locator(`[data-control-id="report.review.${id}"]`);
+  await report('finances').selectOption('summary');
+  await expect(report('estimateVersion').locator('option:checked')).toHaveText('v1');
+  await report('format').selectOption('XLSX');
+  await expect(report('workbook').locator('option')).toHaveCount(1);
+  await report('preview').click();
+  const preview = page.getByRole('dialog');
+  await expect(preview).toContainText('630');
+  await expect(preview).toContainText('restoration-v1');
+  await expect(preview).not.toContainText('Manual cleaning allowance');
+  await expect(preview).not.toContainText('40 HUF/h');
+  await report('cancel').click();
+  await report('finances').selectOption('full');
+  await report('workbook').selectOption('editable');
+  await report('version').selectOption('baseline');
+  await report('preview').click();
+  await expect(preview).toContainText('630');
+  await expect(preview).toContainText('40 HUF/h');
+  await expect(preview).not.toContainText('88 HUF/h');
+  await expect(preview).toContainText('Illustrative checkpoint');
+  await expect(preview).toContainText('Editable estimate');
+  for (const viewport of [
+    { width: 1194, height: 834 },
+    { width: 834, height: 1194 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('.report-scroll')).toHaveJSProperty(
+      'scrollWidth',
+      await preview.locator('.report-scroll').evaluate((node) => node.clientWidth),
+    );
+    await page.screenshot({ path: info.outputPath(`issued-report-${viewport.width}.png`) });
+  }
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await report('cancel').click();
+  await page.locator('[data-control-id="project.review.estimates"]').click();
   await page.getByLabel('App language').selectOption('hu');
   await expect(page.getByRole('button', { name: 'Becslési verzió mentése' })).toBeVisible();
   await page.screenshot({ path: info.outputPath('estimate-hu-390.png'), fullPage: true });

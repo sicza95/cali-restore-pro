@@ -2,8 +2,8 @@ import { For, Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { ReportCopy } from './report-copy';
 import { reportControl as id } from './report-controls';
-import { defaultSelection, versions } from './report-model';
-import type { Selection } from './report-model';
+import { defaultSelection, versions } from '../../../platform/reports/types';
+import type { Selection } from '../../../platform/reports/types';
 import { ReviewCheck, ReviewSelect } from './fields';
 
 export function ReportScope(props: {

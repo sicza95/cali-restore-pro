@@ -12,7 +12,7 @@ import {
 } from './file-format';
 import type { FileShape } from './file-format';
 import { projectDocuments } from './project-store';
-import { estimateTable } from './store';
+import { estimateTable, reportTable } from './store';
 import type { RestoredOriginal } from './project-store';
 import {
   backupCipher,
@@ -22,6 +22,8 @@ import {
   maxBackupBytes,
   maxIndexBytes,
 } from './backup-format';
+
+export class ReportBackupUnavailable extends Error {}
 
 type Original = FileShape & { id: string };
 type BackupIndex = { project: Project; originals: Original[] };
@@ -88,6 +90,10 @@ export function projectBackups(
       if (await projectDocuments(root, account, stamp, signal, estimateTable).changed(projectId, 0))
         throw new Error(
           'Estimate-inclusive portable backups are not yet supported; refusing an incomplete backup',
+        );
+      if (await projectDocuments(root, account, stamp, signal, reportTable).changed(projectId, 0))
+        throw new ReportBackupUnavailable(
+          'Report-inclusive portable backups are not yet supported',
         );
       const document = await projectDocuments(root, account, stamp, signal).changed(projectId, 0);
       if (!document) throw new Error('Project unavailable');

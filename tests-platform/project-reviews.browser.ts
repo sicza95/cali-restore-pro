@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { estimateControls } from '../src/ui/account-access/project-review/estimate-controls';
 import { reportControls } from '../src/ui/account-access/project-review/report-controls';
-import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
+import { projectTable, reportTable, revisionQueueTable } from '../src/platform/vault/store';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const other = '00000000-0000-4000-8000-000000000002';
@@ -21,32 +21,29 @@ async function openVault(page: Page) {
   await page.getByRole('button', { name: 'Set up vault' }).click();
 }
 
-async function revisions(page: Page) {
-  return page.evaluate(
-    async (tables) => {
-      const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('calirestore-vault');
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-      try {
-        const tx = db.transaction(tables);
-        return await Promise.all(
-          tables.map(
-            (table) =>
-              new Promise<unknown[]>((resolve, reject) => {
-                const request = tx.objectStore(table).getAll();
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-              }),
-          ),
-        );
-      } finally {
-        db.close();
-      }
-    },
-    [projectTable, revisionQueueTable],
-  );
+async function revisions(page: Page, tables = [projectTable, revisionQueueTable]) {
+  return page.evaluate(async (tables) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('calirestore-vault');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      const tx = db.transaction(tables);
+      return await Promise.all(
+        tables.map(
+          (table) =>
+            new Promise<unknown[]>((resolve, reject) => {
+              const request = tx.objectStore(table).getAll();
+              request.onsuccess = () => resolve(request.result);
+              request.onerror = () => reject(request.error);
+            }),
+        ),
+      );
+    } finally {
+      db.close();
+    }
+  }, tables);
 }
 
 async function inspectReview(page: Page, info: TestInfo, label: string, ids: string[]) {
@@ -258,7 +255,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await report('resolution').selectOption('600');
   await report('format').selectOption('XLSX');
   await expect(report('resolution')).toHaveCount(0);
-  await report('workbook').selectOption('editable');
+  await expect(report('workbook').locator('option')).toHaveCount(1);
   await expect(report('download')).toBeDisabled();
   await expect(report('final')).toBeDisabled();
   await report('preview').focus();
@@ -266,7 +263,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   const draft = page.getByRole('dialog');
   await expect(draft).toHaveAccessibleName('Restaurálási jelentés');
   await expect(draft.locator('article')).toHaveAttribute('lang', 'hu');
-  await expect(draft).toContainText('Szerkeszthető becslés');
+  await expect(draft).toContainText('Numerikus pillanatkép');
   await expect(draft).toContainText('64,58 ft²');
   await expect(draft).toContainText('Összehasonlítás');
   await expect(draft).toContainText('Chapel Studio');
@@ -314,13 +311,23 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await page.goBack();
   await expect(page).toHaveURL(path + '/reports');
   await expect(report('units')).toHaveValue('ft²');
+  await report('save').click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Report draft saved on this device.' }),
+  ).toBeVisible();
+  const stored = await revisions(page, [reportTable]);
+  expect(stored[0]).toHaveLength(1);
+  expect(JSON.stringify(stored)).not.toContain('Inspect fragile edges.');
+  expect(JSON.stringify(stored)).not.toContain('Chapel Studio');
   await page.goto(path + '/outputs');
   await expect(report('preview')).toHaveCount(0);
   await expect(page.getByText('East Chapel')).toHaveCount(0);
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(report('preview')).toBeVisible();
-  await expect(report('units')).toHaveValue('inherited');
+  await expect(report('units')).toHaveValue('ft²');
   await expect(report('language')).toHaveValue('en');
+  await expect(report('studio')).toHaveValue('Chapel Studio');
+  await expect(report('compare')).toHaveValue('followup');
   await page.getByRole('button', { name: 'Lock vault' }).click();
   await expect(report('preview')).toHaveCount(0);
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();

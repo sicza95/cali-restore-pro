@@ -1,7 +1,16 @@
 import { open, seal } from './crypto';
 import type { Envelope } from './crypto';
 import { assertID } from './file-format';
-import { accountRange, connect, fileTable, projectTable, vaultTable } from './store';
+import {
+  accountRange,
+  connect,
+  fileTable,
+  projectTable,
+  vaultTable,
+  estimateTable,
+  presetTable,
+  reportTable,
+} from './store';
 import type { VaultRow } from './store';
 import type { LocalFile } from './file-store';
 
@@ -13,14 +22,16 @@ export function projectDocuments(
   account: string,
   stamp: string,
   signal: AbortSignal,
-  table = projectTable,
+  table:
+    | typeof projectTable
+    | typeof estimateTable
+    | typeof presetTable
+    | typeof reportTable = projectTable,
 ) {
   const purpose = (id: string, revision: number) =>
     table === projectTable
       ? (`project:${id}:${revision}` as const)
-      : table === 'encrypted-estimates'
-        ? (`encrypted-estimates:${id}:${revision}` as const)
-        : (`encrypted-estimate-presets:${id}:${revision}` as const);
+      : (`${table}:${id}:${revision}` as const);
   async function transact<T>(
     mode: IDBTransactionMode,
     work: (store: IDBObjectStore, finish: (result: T) => void, abort: () => void) => void,

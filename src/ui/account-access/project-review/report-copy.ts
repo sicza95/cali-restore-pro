@@ -1,9 +1,28 @@
 import type { Language } from '../types';
 
 const en = {
+  save: 'Save report draft',
+  saved: 'Report draft saved on this device.',
+  reload: 'Reopen saved draft',
+  working: 'Working with encrypted report data…',
+  loadError: 'Could not open the saved report draft.',
+  saveError:
+    'Could not save the report draft. Edits are still here. Reopen to load the last saved version.',
+  estimateError: 'Could not load issued estimate versions.',
+  previewError: 'Could not prepare the preview. Try again.',
+  olderDraft:
+    'Draft saved against an earlier project revision. Review its selections before saving again.',
+  unknownFreshness: 'Freshness was not recorded when this estimate was shared.',
+  estimateTotal: 'Estimate total',
+  workPrice: 'Work price',
+  estimateVersion: 'Issued estimate version',
+  outsideScope:
+    'Estimate omitted because the report excludes surfaces covered by the issued quote.',
+  staleEstimate: 'Earlier estimate version. Totals reflect the issued snapshot.',
+  category: 'Affected category area',
   title: 'Restoration report',
   transient:
-    'Draft review. Checkpoint examples are illustrative and output generation is unavailable.',
+    'Checkpoint examples use illustrative data. Saved drafts stay on this device. Projects with saved drafts require report-inclusive backup support.',
   scope: 'Report scope',
   includeObject: 'Include object',
   includeSurface: 'Include surface',
@@ -56,7 +75,7 @@ const en = {
   draft: 'Draft review',
   projectRevision: 'Project revision',
   projectDate: 'Project updated',
-  previewNote: 'Draft and sample values are for review only.',
+  previewNote: 'Draft preview. Checkpoint measurements are illustrative data.',
   missing: 'Measurement unavailable for this version.',
   comparison: 'Comparison',
   sampleMap: 'Illustrative map',
@@ -73,9 +92,28 @@ const en = {
   refPending: 'Selected for review. Image placement arrives with report rendering.',
 };
 const hu: typeof en = {
+  save: 'Jelentéspiszkozat mentése',
+  saved: 'A jelentéspiszkozat mentve ezen az eszközön.',
+  reload: 'Mentett piszkozat megnyitása',
+  working: 'Titkosított jelentésadatok feldolgozása…',
+  loadError: 'A mentett jelentéspiszkozat megnyitása sikertelen.',
+  saveError:
+    'A jelentéspiszkozat mentése sikertelen. A módosítások megmaradtak. Nyissa meg újra az utolsó mentett verzió betöltéséhez.',
+  estimateError: 'A kiadott becslésverziók betöltése sikertelen.',
+  previewError: 'Az előnézet előkészítése sikertelen. Próbálja újra.',
+  olderDraft:
+    'A piszkozat korábbi projektverzióhoz tartozik. Mentés előtt ellenőrizze a kijelöléseket.',
+  unknownFreshness: 'A becslés aktualitását megosztáskor nem rögzítették.',
+  estimateTotal: 'Becsült végösszeg',
+  workPrice: 'Munkadíj',
+  estimateVersion: 'Kiadott becslésverzió',
+  outsideScope:
+    'A becslés kimaradt, mert a jelentés kihagy a kiadott ajánlatban szereplő felületeket.',
+  staleEstimate: 'Korábbi becslésverzió. Az összegek a kiadott pillanatképet tükrözik.',
+  category: 'A károsodási kategória területe',
   title: 'Restaurálási jelentés',
   transient:
-    'Piszkozat-előnézet. Az ellenőrzőpontok szemléltető minták. Az exportálás még nem érhető el.',
+    'Az ellenőrzőpontok szemléltető adatokat használnak. A mentett piszkozatok ezen az eszközön maradnak. Mentésükhöz jelentésadatokat is támogató biztonsági mentés szükséges.',
   scope: 'A jelentés hatóköre',
   includeObject: 'Tárgy bevonása',
   includeSurface: 'Felület bevonása',
@@ -128,7 +166,7 @@ const hu: typeof en = {
   draft: 'Piszkozat-előnézet',
   projectRevision: 'Projektverzió',
   projectDate: 'Projekt frissítve',
-  previewNote: 'A piszkozat és a mintaértékek szemléltető jellegűek.',
+  previewNote: 'Piszkozat-előnézet. Az ellenőrzőpontok mérési adatai szemléltető jellegűek.',
   missing: 'Ehhez a verzióhoz nincs mérés.',
   comparison: 'Összehasonlítás',
   sampleMap: 'Szemléltető térkép',

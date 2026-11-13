@@ -9,6 +9,7 @@ type Purpose =
   | 'transfer'
   | 'sharing-identity'
   | `encrypted-estimates:${string}`
+  | `encrypted-reports:${string}`
   | `encrypted-estimate-presets:${string}`
   | `project:${string}`
   | `sync:${string}`
