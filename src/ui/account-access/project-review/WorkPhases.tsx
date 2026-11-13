@@ -1,7 +1,7 @@
 import { createSignal, For, Show, untrack } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
 import { followProjectLink, projectHref } from '../projects/project-route';
-import type { EstimateCopy } from './estimate-copy';
+import type { EstimateCopy } from '../../../platform/estimates/copy';
 import { phaseControl as id } from './estimate-controls';
 import { ReviewSelect } from './fields';
 import { PhaseInputs } from './PhaseInputs';

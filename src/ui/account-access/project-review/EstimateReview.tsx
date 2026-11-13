@@ -6,7 +6,7 @@ import { snapshot as makeSnapshot } from '../../../platform/estimates/snapshots'
 import { estimateRepository } from '../../../platform/estimates/persistence';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { Language } from '../types';
-import { estimateCopy } from './estimate-copy';
+import { estimateCopy } from '../../../platform/estimates/copy';
 import { financeControl as id } from './estimate-controls';
 import {
   createPhases,

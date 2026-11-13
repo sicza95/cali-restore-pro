@@ -3,12 +3,12 @@ import { createStore, reconcile, unwrap } from 'solid-js/store';
 import { estimateRepository } from '../../../platform/estimates/persistence';
 import { coversEstimate, reportEstimate } from '../../../platform/reports/estimate';
 import { reportRepository } from '../../../platform/reports/persistence';
-import type { Branding, ReportSettings } from '../../../platform/reports/types';
+import { workbookEstimate } from '../../../platform/reports/workbook-estimate';
+import type { Branding, Draft, ReportSettings } from '../../../platform/reports/types';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { loadPreferences } from '../settings/preferences/utils';
 import { selectedSurfaces } from './report-model';
-import type { Draft } from './report-model';
 
 export function useReport(props: { project: SavedProject; vault: LocalVault; account: string }) {
   const defaults = untrack(() => loadPreferences(props.account));
@@ -160,8 +160,14 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
             revision,
             changed,
           );
-          if (selection.format === 'XLSX' && draft.estimate.detail)
-            draft.workbook = selection.workbook;
+          if (
+            selection.format === 'XLSX' &&
+            selection.workbook === 'editable' &&
+            draft.estimate.detail
+          ) {
+            draft.workbook = 'editable';
+            draft.workbookEstimate = workbookEstimate(snapshot, surfaces);
+          }
         }
       }
       if (mounted && token === attempt) {

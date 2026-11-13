@@ -1,9 +1,8 @@
 import { For, Show } from 'solid-js';
-import { checkpointFixtures } from '../../editor/checkpoint-review/fixtures';
-import { reportCopy } from './report-copy';
-import type { ReportCopy } from './report-copy';
-import type { Draft, PreviewSurface } from './report-model';
-import type { Version } from '../../../platform/reports/types';
+import { checkpointFixtures } from '../../../platform/checkpoints/fixtures';
+import { reportCopy } from '../../../platform/reports/copy';
+import type { ReportCopy } from '../../../platform/reports/copy';
+import type { Draft, PreviewSurface, Version } from '../../../platform/reports/types';
 import { convertArea } from '../../../platform/estimates/units';
 import { ReportEstimatePreview } from './ReportEstimatePreview';
 

@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
-import type { ReportCopy } from './report-copy';
+import type { ReportCopy } from '../../../platform/reports/copy';
 import { reportControl as id } from './report-controls';
 import { defaultSelection, versions } from '../../../platform/reports/types';
 import type { Selection } from '../../../platform/reports/types';

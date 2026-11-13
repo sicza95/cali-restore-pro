@@ -1,4 +1,4 @@
-import type { Language } from '../types';
+type Language = 'en' | 'hu';
 
 const en = {
   save: 'Save report draft',
@@ -21,6 +21,7 @@ const en = {
   staleEstimate: 'Earlier estimate version. Totals reflect the issued snapshot.',
   category: 'Affected category area',
   title: 'Restoration report',
+  project: 'Project',
   transient:
     'Checkpoint examples use illustrative data. Saved drafts stay on this device. Projects with saved drafts require report-inclusive backup support.',
   scope: 'Report scope',
@@ -68,10 +69,21 @@ const en = {
   preview: 'Preview draft',
   cancel: 'Cancel preview',
   download: 'Download',
+  exportNote: 'Draft export. Checkpoint measurements are illustrative data.',
+  exporting: 'Preparing download on this device…',
+  cancelDownload: 'Cancel download',
+  exportError: 'Could not create the file. Try again or choose a smaller selection or resolution.',
+  section: 'Section',
+  item: 'Item',
+  value: 'Value',
+  unit: 'Unit',
+  estimateDate: 'Estimate issued',
+  calculation: 'Calculation version',
+  currentEstimate: 'Current estimate version',
   final: 'Issue final report',
   noSelection: 'Include at least one surface to preview.',
   encoder:
-    'Download requires the M-11 encoders. A final report requires valid measurements for every selected version.',
+    'Download an illustrative draft from the preview. A final report requires valid measurements for every selected version.',
   draft: 'Draft review',
   projectRevision: 'Project revision',
   projectDate: 'Project updated',
@@ -89,7 +101,7 @@ const en = {
   unique: 'Unique affected area',
   status: 'Status',
   sample: 'Illustrative checkpoint',
-  refPending: 'Selected for review. Image placement arrives with report rendering.',
+  refPending: 'Selected reference. The image is unavailable in this draft.',
 };
 const hu: typeof en = {
   save: 'Jelentéspiszkozat mentése',
@@ -112,6 +124,7 @@ const hu: typeof en = {
   staleEstimate: 'Korábbi becslésverzió. Az összegek a kiadott pillanatképet tükrözik.',
   category: 'A károsodási kategória területe',
   title: 'Restaurálási jelentés',
+  project: 'Projekt',
   transient:
     'Az ellenőrzőpontok szemléltető adatokat használnak. A mentett piszkozatok ezen az eszközön maradnak. Mentésükhöz jelentésadatokat is támogató biztonsági mentés szükséges.',
   scope: 'A jelentés hatóköre',
@@ -159,10 +172,21 @@ const hu: typeof en = {
   preview: 'Piszkozat előnézete',
   cancel: 'Előnézet bezárása',
   download: 'Letöltés',
+  exportNote: 'Piszkozat-export. Az ellenőrzőpontok mérési adatai szemléltető jellegűek.',
+  exporting: 'A letöltés előkészítése ezen az eszközön…',
+  cancelDownload: 'Letöltés megszakítása',
+  exportError: 'A fájl nem készült el. Próbálja újra, csökkentse a kijelölést vagy a felbontást.',
+  section: 'Szakasz',
+  item: 'Tétel',
+  value: 'Érték',
+  unit: 'Mértékegység',
+  estimateDate: 'Becslés kiadva',
+  calculation: 'Számítási verzió',
+  currentEstimate: 'Aktuális becslésverzió',
   final: 'Végleges jelentés kiadása',
   noSelection: 'Az előnézethez válasszon legalább egy felületet.',
   encoder:
-    'A letöltéshez az M-11 kódolói szükségesek. A végleges jelentés minden kijelölt verzióhoz érvényes mérést igényel.',
+    'Az előnézetből letölthető a szemléltető piszkozat. A végleges jelentés minden kijelölt verzióhoz érvényes mérést igényel.',
   draft: 'Piszkozat-előnézet',
   projectRevision: 'Projektverzió',
   projectDate: 'Projekt frissítve',
@@ -180,7 +204,7 @@ const hu: typeof en = {
   unique: 'Egyedi érintett terület',
   status: 'Állapot',
   sample: 'Szemléltető ellenőrzőpont',
-  refPending: 'Kijelölve az előnézethez. A képek elhelyezése a jelentéskészítéssel érkezik.',
+  refPending: 'Kijelölt referenciafotó. A kép nem érhető el ebben a piszkozatban.',
 };
 export type ReportCopy = typeof en;
 export const reportCopy: Record<Language, ReportCopy> = { en, hu };

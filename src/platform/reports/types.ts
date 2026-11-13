@@ -1,4 +1,6 @@
 import type { AreaUnit } from '../estimates/types';
+import type { ReportEstimate } from './estimate';
+import type { WorkbookEstimate } from './workbook-estimate';
 
 export const versions = ['current', 'baseline', 'followup'] as const;
 export const contentKeys = ['map', 'legend', 'table', 'detail'] as const;
@@ -48,4 +50,27 @@ export type ReportDraft = {
   projectRevision: number;
   savedAt: string;
   settings: ReportSettings;
+};
+
+export type PreviewSurface = {
+  id: string;
+  name: string;
+  object: string;
+  version: Version;
+  compare: Selection['compare'];
+  unit: AreaUnit;
+  references: number[];
+};
+
+export type Draft = Pick<
+  ReportSettings,
+  'language' | 'content' | 'notes' | 'branding' | 'format'
+> & {
+  project: { name: string; revision: number; updatedAt: number };
+  surfaces: PreviewSurface[];
+  estimate?: ReportEstimate;
+  estimateState?: 'unavailable' | 'outsideScope';
+  resolution?: ReportSettings['resolution'];
+  workbook?: ReportSettings['workbook'];
+  workbookEstimate?: WorkbookEstimate;
 };

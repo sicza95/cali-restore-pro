@@ -1,13 +1,13 @@
 import { createSignal, createUniqueId, For, Show } from 'solid-js';
 import type { EstimateScope } from '../../../platform/projects/sharing-scopes';
 import type { Language } from '../types';
-import { estimateCopy } from './estimate-copy';
+import { estimateCopy } from '../../../platform/estimates/copy';
 import type { EstimateSummary } from '../../../platform/estimates/snapshots';
 import type { EstimateSnapshot } from '../../../platform/estimates/types';
 import { reportEstimate } from '../../../platform/reports/estimate';
 import type { FullEstimateScope, ReportEstimate } from '../../../platform/reports/estimate';
 import { ReportEstimatePreview } from './ReportEstimatePreview';
-import { reportCopy } from './report-copy';
+import { reportCopy } from '../../../platform/reports/copy';
 import './styles.css';
 
 export function SharedEstimateProjection(props: {

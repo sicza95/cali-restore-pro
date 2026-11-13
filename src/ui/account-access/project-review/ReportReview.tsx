@@ -5,7 +5,7 @@ import type { Language } from '../types';
 import { estimateUnits } from './estimate-model';
 import { ReviewCheck, ReviewSelect } from './fields';
 import { reportControl as id } from './report-controls';
-import { reportCopy } from './report-copy';
+import { reportCopy } from '../../../platform/reports/copy';
 import {
   contentKeys,
   defaultSelection,
@@ -13,8 +13,9 @@ import {
   resolutions,
 } from '../../../platform/reports/types';
 import { selectedSurfaces } from './report-model';
-import type { Draft } from './report-model';
+import type { Draft } from '../../../platform/reports/types';
 import { useReport } from './useReport';
+import { useReportDownload } from './useReportDownload';
 import { ReportPreview } from './ReportPreview';
 import { ReportScope } from './ReportScope';
 import { BrandingSettings } from './ReportSettings';
@@ -32,6 +33,8 @@ export function ReportReview(props: {
   const model = useReport(props);
   const { settings, set, ready, busy, status, issued, savedRevision } = model;
   const [draft, setDraft] = createSignal<Draft>();
+  const current = () => draft()?.project.revision === props.project.revision;
+  const download = useReportDownload(() => props.vault, current);
   let dialog!: HTMLDialogElement;
   const selected = () => selectedSurfaces(props.project, settings);
   const canEditWorkbook = () =>
@@ -92,9 +95,6 @@ export function ReportReview(props: {
             {c().cancel}
           </button>
         </Show>
-        <button type="button" class="secondary" data-control-id={id('download')} disabled>
-          {c().download}
-        </button>
         <button type="button" class="secondary" data-control-id={id('final')} disabled>
           {c().final}
         </button>
@@ -236,7 +236,11 @@ export function ReportReview(props: {
         class="drawing-dialog report-dialog"
         ref={(element) => (dialog = element)}
         aria-labelledby="report-preview-title"
-        onClose={() => setDraft(undefined)}
+        onCancel={download.cancel}
+        onClose={() => {
+          download.cancel();
+          setDraft(undefined);
+        }}
       >
         <div
           class="report-scroll"
@@ -246,15 +250,46 @@ export function ReportReview(props: {
         >
           <Show when={draft()}>{(value) => <ReportPreview draft={value()} />}</Show>
         </div>
-        <button
-          type="button"
-          class="secondary"
-          autofocus
-          data-control-id={id('cancel')}
-          onClick={() => dialog.close()}
-        >
-          {c().cancel}
-        </button>
+        <div class="report-download-actions">
+          <div class="review-actions">
+            <button
+              type="button"
+              data-control-id={id('download')}
+              disabled={!current() || download.working()}
+              onClick={() => void download.download(draft()!)}
+            >
+              {c().download}
+            </button>
+            <Show when={download.working()}>
+              <button
+                type="button"
+                class="secondary"
+                data-control-id={id('cancelDownload')}
+                onClick={download.cancel}
+              >
+                {c().cancelDownload}
+              </button>
+            </Show>
+            <button
+              type="button"
+              class="secondary"
+              autofocus
+              data-control-id={id('cancel')}
+              onClick={() => {
+                download.cancel();
+                dialog.close();
+              }}
+            >
+              {c().cancel}
+            </button>
+          </div>
+          <Show when={download.working()}>
+            <p role="status">{c().exporting}</p>
+          </Show>
+          <Show when={download.failed()}>
+            <p role="alert">{c().exportError}</p>
+          </Show>
+        </div>
       </dialog>
     </div>
   );

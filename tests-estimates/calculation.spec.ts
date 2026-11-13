@@ -160,9 +160,13 @@ test('snapshot is detached and summary is an allowlisted stale projection, not a
   const text = JSON.stringify(projection);
   for (const secret of ['hours', 'material', 'productivity', 'rate', 'Private access', 'Cleaning'])
     expect(text).not.toContain(secret);
-  expect(parseEstimateScope('estimate-summary', text)).toEqual([text]);
+  expect(parseEstimateScope('estimate-summary', text, issued.input.project)).toEqual([text]);
   expect(() =>
-    parseEstimateScope('estimate-summary', JSON.stringify({ ...projection, hours: '5' })),
+    parseEstimateScope(
+      'estimate-summary',
+      JSON.stringify({ ...projection, hours: '5' }),
+      issued.input.project,
+    ),
   ).toThrow();
   expect(() => calculate(input({ currency: 'USD' }))).toThrow('Repricing');
   expect(issued.input.currency).toBe('EUR');
@@ -170,6 +174,7 @@ test('snapshot is detached and summary is an allowlisted stale projection, not a
     parseEstimateScope(
       'estimate-full',
       JSON.stringify({ schema: 1, scope: 'estimate-full', snapshot: issued }),
+      issued.input.project,
     ),
   ).toHaveLength(1);
 });

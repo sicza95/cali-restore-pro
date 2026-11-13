@@ -9,7 +9,7 @@ import {
   smallestPositive,
 } from './estimate-model';
 import type { Phase } from './estimate-model';
-import type { EstimateCopy } from './estimate-copy';
+import type { EstimateCopy } from '../../../platform/estimates/copy';
 import { phaseControl as id } from './estimate-controls';
 import { ReviewNumber, ReviewSelect, validDecimal } from './fields';
 import { changeFactor, changeUnit } from '../../../platform/estimates/units';

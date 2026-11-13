@@ -127,6 +127,11 @@ export class LocalVault {
     return encryptedFiles(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
+  accessSignal() {
+    this.#unlocked();
+    return this.#fileAccess.signal;
+  }
+
   originalPins() {
     const { root } = this.#unlocked();
     return originalPins(root, this.account, () => this.#row?.stamp ?? '', this.#fileAccess.signal);

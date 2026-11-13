@@ -2,8 +2,8 @@ import { For, Show } from 'solid-js';
 import type { ReportEstimate } from '../../../platform/reports/estimate';
 import { quantityText } from '../../../platform/estimates/display';
 import type { Language } from '../types';
-import { estimateCopy } from './estimate-copy';
-import { reportCopy } from './report-copy';
+import { estimateCopy } from '../../../platform/estimates/copy';
+import { reportCopy } from '../../../platform/reports/copy';
 
 export function ReportEstimatePreview(props: { estimate: ReportEstimate; language: Language }) {
   const c = () => reportCopy[props.language];
