@@ -60,17 +60,17 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | MEAS-05     | Must     | Actual geometry coverage with visual-only opacity                   | M-08  | M-13       | Planned |
 | MEAS-06     | Must     | Preserve work and inputs through empty/incomplete assessment        | M-05  | M-16       | Planned |
 | MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Partial |
-| OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Planned |
-| OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Planned |
+| OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Partial |
+| OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Partial |
 | OUT-03      | Must     | Printable PDF map and standard client report                        | M-10  | M-16       | Partial |
 | OUT-04      | Must     | Separate normal outputs, backups, and diagnostics                   | M-07  | M-16       | Partial |
 | OUT-05      | Must     | Explicit assessment versions per report surface                     | M-10  | M-16       | Partial |
-| OUT-06      | Must     | Five initial export formats                                         | M-10  | M-16       | Planned |
+| OUT-06      | Must     | Five initial export formats                                         | M-10  | M-16       | Partial |
 | OUT-07      | Must     | Optional report branding with defaults/overrides                    | M-02  | M-16       | Partial |
-| OUT-08      | Must     | Selected-content-only export files                                  | M-10  | M-16       | Planned |
-| OUT-09      | Must     | Export metadata defaults with explicit inclusion                    | M-10  | M-16       | Planned |
-| OUT-10      | Must     | Snapshot and editable-estimate XLSX modes                           | M-09  | M-16       | Planned |
-| OUT-11      | Must     | Labelled drafts and valid final measurement claims                  | M-09  | M-16       | Planned |
+| OUT-08      | Must     | Selected-content-only export files                                  | M-10  | M-16       | Partial |
+| OUT-09      | Must     | Export metadata defaults with explicit inclusion                    | M-10  | M-16       | Partial |
+| OUT-10      | Must     | Snapshot and editable-estimate XLSX modes                           | M-09  | M-16       | Partial |
+| OUT-11      | Must     | Labelled drafts and valid final measurement claims                  | M-09  | M-16       | Partial |
 | OUT-12      | Must     | Inherited output units with an individual-output override           | M-05  | M-16       | Partial |
 | PRIV-01     | Must     | Client-side content encryption                                      | M-03  | M-16       | Partial |
 | PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Partial |
@@ -127,6 +127,8 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 ## Completion evidence
 
 [M-10 report workflow evidence](../m10-reports-and-exports.md) covers encrypted device-local report drafts, scoped issued estimate previews, selected surfaces and fixture comparisons, captured branding, independent EN/HU and units, and output controls (OUT-03, OUT-05 through OUT-08, OUT-10 through OUT-12 and UX-02). Downloads, payload inspection and real assessment qualification remain with M-11/M-16.
+
+[M-11 client export evidence](../m11-client-exports.md) covers five browser-generated formats, composited fixture maps, numeric and editable workbooks, draft labelling, selection and metadata checks, and abort and size limits (OUT-01 through OUT-03 and OUT-05 through OUT-12). Raw masks, explicit source metadata inclusion, real reference images and final measured reports remain open.
 
 [M-09 calculation and persistence evidence](../m09-restoration-estimates.md) covers fixture arithmetic for EST-01 through EST-20, immutable estimate versions, private encrypted preset copies, selected scope and allowlisted summary/full publication (SHARE-03/10, PRIV-01). Status is Partial, not real-geometry or release acceptance. Estimate cloud sync, portable recovery (PROJ-04), scoped collaboration and M-10/M-11 outputs remain open; backup creation refuses projects with estimates to avoid incomplete recovery claims.
 

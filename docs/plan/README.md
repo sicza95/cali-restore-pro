@@ -72,6 +72,8 @@ M-11 is the platform completion checkpoint. A user can register, unlock, manage 
 
 M-10's [report and export workflow handoff](../m10-reports-and-exports.md) records encrypted draft configuration, scoped estimate preview evidence and the encoder boundary for M-11.
 
+M-11's [client export evidence and M-12 handoff](../m11-client-exports.md) records verified fixture downloads in all five formats and the remaining real-measurement and device gates.
+
 M-12 starts complex image work. M-13/M-14 build the actual measurement/drawing system against existing versioned contracts. M-16 replaces fixture providers in the production path, reruns the earlier workflow/access/export checks on real content and qualifies release. Final measurement claims remain unavailable until their source revision, calibration and engine results are valid.
 
 ## Commit and push discipline
