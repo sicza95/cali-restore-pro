@@ -1,6 +1,7 @@
 /* eslint-disable solid/reactivity -- Backup commands read the current project when invoked. */
 import { createSignal, onCleanup, Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
+import { ReportBackupUnavailable } from '../../../platform/vault/project-backups';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
 import { projectCopy } from './project-copy';
@@ -16,6 +17,8 @@ const copy = {
     import: 'Import encrypted backup',
     file: 'Backup file',
     restore: 'Restore as a local copy',
+    reportBackup:
+      'This project has a report draft. Portable backups with report drafts are unavailable.',
     exportFailed:
       'Backup could not be prepared. Check that all originals are available on this device and the backup fits within 512 MiB.',
     importFailed:
@@ -32,6 +35,8 @@ const copy = {
     import: 'Titkosított biztonsági mentés importálása',
     file: 'Biztonsági mentés fájlja',
     restore: 'Visszaállítás helyi másolatként',
+    reportBackup:
+      'A projekthez jelentéspiszkozat tartozik. A jelentéspiszkozatot tartalmazó hordozható mentés nem érhető el.',
     exportFailed:
       'Nem sikerült előkészíteni a mentést. Ellenőrizze, hogy minden eredeti fájl elérhető-e ezen az eszközön, és a mentés legfeljebb 512 MiB méretű-e.',
     importFailed:
@@ -84,8 +89,9 @@ export function ProjectBackup(props: Props) {
       clearDownload();
       try {
         await work({ signal: controller.signal, progress: setProgress });
-      } catch {
+      } catch (error) {
         if (controller.signal.aborted) setCancelled(true);
+        else if (error instanceof ReportBackupUnavailable) setError(c().reportBackup);
         else setError(props.project ? c().exportFailed : c().importFailed);
       } finally {
         setTransfer(undefined);

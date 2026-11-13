@@ -79,6 +79,7 @@ export function ProjectReview(props: {
         when={props.route === 'estimates'}
         fallback={
           <ReportReview
+            vault={props.vault}
             project={props.project}
             language={props.language}
             account={props.account}

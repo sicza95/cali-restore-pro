@@ -24,10 +24,14 @@ export async function scopeContent(
     projection.freshness = 'stale';
   return scope === 'estimate-summary'
     ? projection
-    : { schema: 1, scope: 'estimate-full', snapshot: latest };
+    : { schema: 1, scope: 'estimate-full', snapshot: latest, freshness: projection.freshness };
 }
 
-export function parseEstimateScope(scope: OptionalScope, text: string): string[] | undefined {
+export function parseEstimateScope(
+  scope: OptionalScope,
+  text: string,
+  project: string,
+): string[] | undefined {
   const value = JSON.parse(text) as Record<string, unknown>;
   if (Array.isArray(value)) return undefined;
   if (!value || value.schema !== 1 || value.scope !== scope)
@@ -37,10 +41,14 @@ export function parseEstimateScope(scope: OptionalScope, text: string): string[]
     if (
       !snapshot?.issued ||
       snapshot.schema !== 1 ||
+      snapshot.input.project !== project ||
       JSON.stringify(calculate(snapshot.input)) !== JSON.stringify(snapshot.result)
     )
       throw new Error('Invalid full estimate');
-    return [JSON.stringify({ schema: 1, scope, snapshot })];
+    const freshness = value.freshness ?? 'unknown';
+    if (freshness !== 'current' && freshness !== 'stale' && freshness !== 'unknown')
+      throw new Error('Invalid full estimate freshness');
+    return [JSON.stringify({ schema: 1, scope, snapshot, freshness })];
   }
   if (scope !== 'estimate-summary') throw new Error('Invalid scope');
   const keys = [

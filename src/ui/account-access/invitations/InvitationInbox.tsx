@@ -193,7 +193,9 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                           {(scope) => (
                             <section class="shared-project" aria-label={c()[scope().id]}>
                               <h2>{c()[scope().id]}</h2>
-                              <p>{c().sampleOnly}</p>
+                              <Show when={!scope().rows[0]?.startsWith('{')}>
+                                <p>{c().sampleOnly}</p>
+                              </Show>
                               <Show
                                 when={scope().id !== 'history'}
                                 fallback={

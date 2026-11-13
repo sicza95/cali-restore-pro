@@ -2,9 +2,10 @@ import { For, Show } from 'solid-js';
 import { checkpointFixtures } from '../../editor/checkpoint-review/fixtures';
 import { reportCopy } from './report-copy';
 import type { ReportCopy } from './report-copy';
-import type { Draft, PreviewSurface, Version } from './report-model';
-
-const areaScale = { 'm²': 1, 'cm²': 10000, 'ft²': 10.7639104167, 'in²': 1550.0031 };
+import type { Draft, PreviewSurface } from './report-model';
+import type { Version } from '../../../platform/reports/types';
+import { convertArea } from '../../../platform/estimates/units';
+import { ReportEstimatePreview } from './ReportEstimatePreview';
 
 function ReportVersion(props: {
   draft: Draft;
@@ -19,7 +20,7 @@ function ReportVersion(props: {
   const unit = () => props.surface.unit;
   const area = (value: number) =>
     new Intl.NumberFormat(props.draft.language, { maximumFractionDigits: 2 }).format(
-      value * areaScale[unit()],
+      Number(convertArea(String(value), 'm²', unit()).round(2)),
     ) +
     ' ' +
     unit();
@@ -61,6 +62,8 @@ function ReportVersion(props: {
             <dd>{sample() ? area(sample()!.area) : '—'}</dd>
             <dt>{c().unique}</dt>
             <dd>{sample() ? area(sample()!.unique) : '—'}</dd>
+            <dt>{c().category}</dt>
+            <dd>{sample() ? area(sample()!.category) : '—'}</dd>
           </Show>
           <Show when={props.draft.content.detail}>
             <dt>{c().flaking}</dt>
@@ -78,11 +81,9 @@ export function ReportPreview(props: { draft: Draft }) {
   return (
     <article lang={draft().language} class="report-paper" aria-labelledby="report-preview-title">
       <p class="review-note">
-        {c().draft} · {draft().format}
-        {draft().format === 'XLSX' ? ' · ' + c()[draft().workbook] : ''}
-        {draft().format === 'PNG' || draft().format === 'PDF'
-          ? ' · ' + draft().resolution + ' dpi'
-          : ''}
+        {draft().format}
+        {draft().workbook ? ' · ' + c()[draft().workbook!] : ''}
+        {draft().resolution ? ' · ' + draft().resolution + ' dpi' : ''}
       </p>
       <h3 id="report-preview-title">{c().title}</h3>
       <p>
@@ -95,6 +96,11 @@ export function ReportPreview(props: { draft: Draft }) {
         )}
       </p>
       <p class="review-note">{c().previewNote}</p>
+      <Show when={draft().estimateState}>
+        {(state) => (
+          <p role="status">{state() === 'outsideScope' ? c().outsideScope : c().noEstimate}</p>
+        )}
+      </Show>
       <Show when={draft().branding}>
         {(brand) => (
           <div class="report-brand" style={{ 'border-inline-start-color': brand().accent }}>
@@ -159,13 +165,8 @@ export function ReportPreview(props: { draft: Draft }) {
           <p class="report-notes">{draft().notes}</p>
         </section>
       </Show>
-      <Show when={draft().finances !== 'none'}>
-        <section>
-          <h4>
-            {c().finances} · {draft().finances === 'summary' ? c().summary : c().full}
-          </h4>
-          <p>{c().noEstimate}</p>
-        </section>
+      <Show when={draft().estimate}>
+        {(estimate) => <ReportEstimatePreview estimate={estimate()} language={draft().language} />}
       </Show>
       <Show when={draft().branding?.footer}>
         <footer>{draft().branding!.footer}</footer>

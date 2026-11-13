@@ -1,6 +1,6 @@
 import { importCode, newCode, open, parseEnvelope, seal } from './crypto';
 import type { Envelope } from './crypto';
-import { commitVault, readVault, estimateTable, presetTable } from './store';
+import { commitVault, readVault, estimateTable, presetTable, reportTable } from './store';
 import type { VaultRow } from './store';
 import { encryptedFiles } from './files';
 import { revisionQueue } from './revision-queue';
@@ -145,6 +145,11 @@ export class LocalVault {
   estimatePresets() {
     const { root, row } = this.#unlocked();
     return projectDocuments(root, this.account, row.stamp, this.#fileAccess.signal, presetTable);
+  }
+
+  reports() {
+    const { root, row } = this.#unlocked();
+    return projectDocuments(root, this.account, row.stamp, this.#fileAccess.signal, reportTable);
   }
 
   projectBackups() {

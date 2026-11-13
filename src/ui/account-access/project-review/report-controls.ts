@@ -27,6 +27,8 @@ const reportKeys = [
   'resolution',
   'workbook',
   'preview',
+  'save',
+  'estimateVersion',
   'cancel',
   'download',
   'final',
@@ -83,8 +85,9 @@ export const reportControls: readonly ControlContract[] = [
     permission: 'Unlocked account-local project author',
     prerequisite:
       'Selected authorized objects and surfaces; format-specific controls when applicable',
-    valueSource: 'Authorized project hierarchy, account defaults and explicit in-memory draft',
-    behavior: 'review',
+    valueSource:
+      'Authorized project hierarchy, account defaults and encrypted report draft and issued estimate selection',
+    behavior: key === 'save' ? 'functional' : 'review',
     owner:
       key === 'download' || key === 'format' || key === 'resolution'
         ? 'M-11'

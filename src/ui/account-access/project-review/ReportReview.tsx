@@ -1,91 +1,47 @@
-import { createSignal, For, Show, untrack } from 'solid-js';
-import { createStore } from 'solid-js/store';
+import { createSignal, For, Show } from 'solid-js';
+import type { LocalVault } from '../../../platform/vault/vault';
 import type { SavedProject } from '../../../platform/projects/types';
-import { loadPreferences } from '../settings/preferences/utils';
 import type { Language } from '../types';
 import { estimateUnits } from './estimate-model';
 import { ReviewCheck, ReviewSelect } from './fields';
 import { reportControl as id } from './report-controls';
 import { reportCopy } from './report-copy';
-import { contentKeys, defaultSelection, formats } from './report-model';
-import type { Draft, Format, Selection } from './report-model';
+import {
+  contentKeys,
+  defaultSelection,
+  formats,
+  resolutions,
+} from '../../../platform/reports/types';
+import { selectedSurfaces } from './report-model';
+import type { Draft } from './report-model';
+import { useReport } from './useReport';
 import { ReportPreview } from './ReportPreview';
 import { ReportScope } from './ReportScope';
-import { BrandingSettings, createBranding } from './ReportSettings';
+import { BrandingSettings } from './ReportSettings';
 
 const units = ['inherited', ...estimateUnits] as const;
 
 export function ReportReview(props: {
+  vault: LocalVault;
   project: SavedProject;
   language: Language;
   account: string;
   output: boolean;
 }) {
   const c = () => reportCopy[props.language];
-  const defaults = untrack(() => loadPreferences(props.account));
-  const [language, setLanguage] = createSignal<Language>(
-    defaults.reportLanguage === 'hu' ? 'hu' : 'en',
-  );
-  const [unit, setUnit] = createSignal<(typeof units)[number]>('inherited');
-  const [excluded, setExcluded] = createSignal<string[]>([]);
-  const [surfaces, setSurfaces] = createStore<Record<string, Selection>>({});
-  const [content, setContent] = createStore({
-    map: true,
-    legend: true,
-    table: true,
-    detail: false,
-  });
-  const [notes, setNotes] = createSignal('');
-  const [finances, setFinances] = createSignal<Draft['finances']>('none');
-  const [format, setFormat] = createSignal<Format>('PDF');
-  const [dpi, setDpi] = createSignal('300');
-  const [workbook, setWorkbook] = createSignal<Draft['workbook']>('snapshot');
+  const model = useReport(props);
+  const { settings, set, ready, busy, status, issued, savedRevision } = model;
   const [draft, setDraft] = createSignal<Draft>();
-  const branding = createBranding(defaults);
   let dialog!: HTMLDialogElement;
-
-  const selected = (): Draft['surfaces'] =>
-    props.project.objects
-      .filter((object) => !excluded().includes(object.id))
-      .flatMap((object) =>
-        object.surfaces.flatMap((surface) => {
-          const scope = surfaces[surface.id] ?? defaultSelection;
-          if (!scope.included) return [];
-          const inherited = surface.units ?? object.units ?? props.project.settings.units;
-          const chosen = unit();
-          return [
-            {
-              id: surface.id,
-              name: surface.name,
-              object: object.name,
-              version: scope.version,
-              compare: scope.compare,
-              unit: chosen === 'inherited' ? (inherited === 'imperial' ? 'ft²' : 'm²') : chosen,
-              references: surface.images
-                .filter(({ role }) => role === 'reference')
-                .flatMap(({ id }, index) => (scope.references.includes(id) ? [index + 1] : [])),
-            },
-          ];
-        }),
-      );
+  const selected = () => selectedSurfaces(props.project, settings);
+  const canEditWorkbook = () =>
+    settings.finances === 'full' && issued().some(({ id }) => id === settings.estimate);
 
   function preview() {
-    const entries = selected();
-    if (!entries.length) return;
-    const { name, revision, updatedAt } = props.project;
-    setDraft({
-      project: { name, revision, updatedAt },
-      surfaces: entries,
-      language: language(),
-      content: { ...content },
-      notes: notes(),
-      finances: finances(),
-      branding: branding.branding(),
-      format: format(),
-      resolution: dpi(),
-      workbook: workbook(),
+    void model.preview((value) => {
+      setDraft(value);
+      dialog.showModal();
     });
-    dialog.showModal();
   }
 
   const actions = () => (
@@ -95,27 +51,27 @@ export function ReportReview(props: {
         <ReviewSelect
           id={id('format')}
           label={c().format}
-          value={format()}
+          value={settings.format}
           options={formats}
-          change={setFormat}
+          change={(value) => set('format', value)}
         />
-        <Show when={format() === 'PNG' || format() === 'PDF'}>
+        <Show when={settings.format === 'PNG' || settings.format === 'PDF'}>
           <ReviewSelect
             id={id('resolution')}
             label={c().resolution}
-            value={dpi()}
-            options={['150', '300', '600']}
-            change={setDpi}
+            value={settings.resolution}
+            options={resolutions}
+            change={(value) => set('resolution', value)}
           />
         </Show>
-        <Show when={format() === 'XLSX'}>
+        <Show when={settings.format === 'XLSX'}>
           <ReviewSelect
             id={id('workbook')}
             label={c().workbook}
-            value={workbook()}
-            options={['snapshot', 'editable']}
+            value={canEditWorkbook() ? settings.workbook : 'snapshot'}
+            options={canEditWorkbook() ? ['snapshot', 'editable'] : ['snapshot']}
             text={(key) => c()[key]}
-            change={setWorkbook}
+            change={(value) => set('workbook', value)}
           />
         </Show>
       </div>
@@ -126,11 +82,16 @@ export function ReportReview(props: {
         <button
           type="button"
           data-control-id={id('preview')}
-          disabled={!selected().length}
+          disabled={!ready() || busy() || !selected().length}
           onClick={preview}
         >
           {c().preview}
         </button>
+        <Show when={model.preparing()}>
+          <button type="button" class="secondary" onClick={model.cancel}>
+            {c().cancel}
+          </button>
+        </Show>
         <button type="button" class="secondary" data-control-id={id('download')} disabled>
           {c().download}
         </button>
@@ -145,81 +106,132 @@ export function ReportReview(props: {
   return (
     <div class="review-flow report-review">
       <p class="review-note">{c().transient}</p>
-      <Show when={props.output}>{actions()}</Show>
-      <div class="review-grid">
-        <ReportScope
-          project={props.project}
-          copy={c()}
-          excluded={excluded()}
-          surfaces={surfaces}
-          toggle={(id) =>
-            setExcluded((rows) =>
-              rows.includes(id) ? rows.filter((row) => row !== id) : [...rows, id],
-            )
-          }
-          change={(id, patch) =>
-            setSurfaces(id, { ...(surfaces[id] ?? defaultSelection), ...patch })
-          }
-        />
-        <div class="review-flow">
-          <section class="project-pane">
-            <h3>{c().settings}</h3>
-            <div class="review-fields">
-              <ReviewSelect
-                id={id('language')}
-                label={c().language}
-                value={language()}
-                options={['en', 'hu']}
-                text={(key) => (key === 'en' ? 'English' : 'Magyar')}
-                change={setLanguage}
-              />
-              <ReviewSelect
-                id={id('units')}
-                label={c().units}
-                value={unit()}
-                options={units}
-                text={(key) => (key === 'inherited' ? c().inherited : key)}
-                change={setUnit}
-              />
-            </div>
-          </section>
-          <section class="project-pane">
-            <h3>{c().content}</h3>
-            <div class="review-fields">
-              <For each={contentKeys}>
-                {(key) => (
-                  <ReviewCheck
-                    id={id(key)}
-                    checked={content[key]}
-                    change={(value) => setContent(key, value)}
-                  >
-                    {c()[key]}
-                  </ReviewCheck>
-                )}
-              </For>
-            </div>
-            <ReviewSelect
-              id={id('finances')}
-              label={c().finances}
-              value={finances()}
-              options={['none', 'summary', 'full']}
-              text={(key) => c()[key]}
-              change={setFinances}
-            />
-            <label>
-              {c().notes}
-              <textarea
-                data-control-id={id('notes')}
-                value={notes()}
-                maxlength="2000"
-                onInput={(e) => setNotes(e.currentTarget.value)}
-              />
-            </label>
-          </section>
-          <BrandingSettings copy={c()} model={branding} />
+      <section class="project-pane" aria-label={c().draft}>
+        <div class="review-actions">
+          <button
+            type="button"
+            data-control-id={id('save')}
+            disabled={!ready() || busy()}
+            onClick={() => void model.save()}
+          >
+            {c().save}
+          </button>
+          <Show
+            when={
+              status() === 'loadError' || status() === 'estimateError' || status() === 'saveError'
+            }
+          >
+            <button
+              type="button"
+              class="secondary"
+              disabled={busy()}
+              onClick={() => void model.open()}
+            >
+              {c().reload}
+            </button>
+          </Show>
         </div>
-      </div>
-      <Show when={!props.output}>{actions()}</Show>
+        <Show when={busy()}>
+          <p role="status">{c().working}</p>
+        </Show>
+        <Show when={status()}>
+          {(state) => <p role={state() === 'saved' ? 'status' : 'alert'}>{c()[state()]}</p>}
+        </Show>
+        <Show when={savedRevision() !== undefined && savedRevision() !== props.project.revision}>
+          <p role="status">{c().olderDraft}</p>
+        </Show>
+      </section>
+      <Show when={ready()}>
+        <Show when={props.output}>{actions()}</Show>
+        <div class="review-grid">
+          <ReportScope
+            project={props.project}
+            copy={c()}
+            excluded={settings.excluded}
+            surfaces={settings.surfaces}
+            toggle={(id) =>
+              set('excluded', (rows) =>
+                rows.includes(id) ? rows.filter((row) => row !== id) : [...rows, id],
+              )
+            }
+            change={(id, patch) =>
+              set('surfaces', id, { ...(settings.surfaces[id] ?? defaultSelection), ...patch })
+            }
+          />
+          <div class="review-flow">
+            <section class="project-pane">
+              <h3>{c().settings}</h3>
+              <div class="review-fields">
+                <ReviewSelect
+                  id={id('language')}
+                  label={c().language}
+                  value={settings.language}
+                  options={['en', 'hu']}
+                  text={(key) => (key === 'en' ? 'English' : 'Magyar')}
+                  change={(value) => set('language', value)}
+                />
+                <ReviewSelect
+                  id={id('units')}
+                  label={c().units}
+                  value={settings.unit}
+                  options={units}
+                  text={(key) => (key === 'inherited' ? c().inherited : key)}
+                  change={(value) => set('unit', value)}
+                />
+              </div>
+            </section>
+            <section class="project-pane">
+              <h3>{c().content}</h3>
+              <div class="review-fields">
+                <For each={contentKeys}>
+                  {(key) => (
+                    <ReviewCheck
+                      id={id(key)}
+                      checked={settings.content[key]}
+                      change={(value) => set('content', key, value)}
+                    >
+                      {c()[key]}
+                    </ReviewCheck>
+                  )}
+                </For>
+              </div>
+              <ReviewSelect
+                id={id('finances')}
+                label={c().finances}
+                value={settings.finances}
+                options={['none', 'summary', 'full']}
+                text={(key) => c()[key]}
+                change={(value) => set('finances', value)}
+              />
+              <Show when={settings.finances !== 'none'}>
+                <ReviewSelect
+                  id={id('estimateVersion')}
+                  label={c().estimateVersion}
+                  value={settings.estimate}
+                  options={[...new Set(['', ...issued().map(({ id }) => id), settings.estimate])]}
+                  text={(key) => {
+                    if (!key) return c().noEstimate;
+                    const row = issued().find(({ id }) => id === key);
+                    return row ? 'v' + row.version : c().noEstimate;
+                  }}
+                  change={(value) => set('estimate', value)}
+                />
+              </Show>
+              <label>
+                {c().notes}
+                <textarea
+                  data-control-id={id('notes')}
+                  value={settings.notes}
+                  maxlength="2000"
+                  onInput={(e) => set('notes', e.currentTarget.value)}
+                />
+              </label>
+            </section>
+            <BrandingSettings copy={c()} model={model} />
+          </div>
+        </div>
+        <Show when={!props.output}>{actions()}</Show>
+      </Show>
       <dialog
         class="drawing-dialog report-dialog"
         ref={(element) => (dialog = element)}

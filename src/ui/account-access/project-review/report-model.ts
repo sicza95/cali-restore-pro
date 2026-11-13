@@ -1,50 +1,60 @@
+import type { ReportEstimate } from '../../../platform/reports/estimate';
+import type { AreaUnit } from '../../../platform/estimates/types';
 import type { SavedProject } from '../../../platform/projects/types';
-import type { Language } from '../types';
-import type { FixtureId } from '../../editor/checkpoint-review/fixtures';
-import type { EstimateUnit } from './estimate-model';
+import type { ReportSettings, Selection, Version } from '../../../platform/reports/types';
+import { defaultSelection } from '../../../platform/reports/types';
 
-export type Version = 'current' | FixtureId;
-export type Selection = {
-  included: boolean;
-  version: Version;
-  compare: Version | '';
-  references: string[];
-};
-export const defaultSelection: Selection = {
-  included: true,
-  version: 'current',
-  compare: '',
-  references: [],
-};
-export const versions = ['current', 'baseline', 'followup'] as const satisfies readonly Version[];
-export const contentKeys = ['map', 'legend', 'table', 'detail'] as const;
-export const formats = ['PDF', 'SVG', 'PNG', 'CSV', 'XLSX'] as const;
-export type Format = (typeof formats)[number];
-export type Branding = {
-  studio: string;
-  contact: string;
-  footer: string;
-  accent: string;
-  logo: string;
-};
 export type PreviewSurface = {
   id: string;
   name: string;
   object: string;
   version: Version;
   compare: Selection['compare'];
-  unit: EstimateUnit;
+  unit: AreaUnit;
   references: number[];
 };
-export type Draft = {
+
+export type Draft = Pick<
+  ReportSettings,
+  'language' | 'content' | 'notes' | 'branding' | 'format'
+> & {
   project: Pick<SavedProject, 'name' | 'revision' | 'updatedAt'>;
   surfaces: PreviewSurface[];
-  language: Language;
-  content: Record<(typeof contentKeys)[number], boolean>;
-  notes: string;
-  finances: 'none' | 'summary' | 'full';
-  branding?: Branding;
-  format: Format;
-  resolution: string;
-  workbook: 'snapshot' | 'editable';
+  estimate?: ReportEstimate;
+  estimateState?: 'unavailable' | 'outsideScope';
+  resolution?: ReportSettings['resolution'];
+  workbook?: ReportSettings['workbook'];
 };
+
+export function selectedSurfaces(
+  project: SavedProject,
+  settings: ReportSettings,
+): PreviewSurface[] {
+  return project.objects
+    .filter((object) => !settings.excluded.includes(object.id))
+    .flatMap((object) =>
+      object.surfaces.flatMap((surface) => {
+        const scope = settings.surfaces[surface.id] ?? defaultSelection;
+        if (!scope.included) return [];
+        const inherited = surface.units ?? object.units ?? project.settings.units;
+        return [
+          {
+            id: surface.id,
+            name: surface.name,
+            object: object.name,
+            version: scope.version,
+            compare: scope.compare,
+            unit:
+              settings.unit === 'inherited'
+                ? inherited === 'imperial'
+                  ? 'ft²'
+                  : 'm²'
+                : settings.unit,
+            references: surface.images
+              .filter(({ role }) => role === 'reference')
+              .flatMap(({ id }, index) => (scope.references.includes(id) ? [index + 1] : [])),
+          },
+        ];
+      }),
+    );
+}
