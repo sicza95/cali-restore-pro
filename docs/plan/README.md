@@ -74,6 +74,8 @@ M-10's [report and export workflow handoff](../m10-reports-and-exports.md) recor
 
 M-11's [client export evidence and M-12 handoff](../m11-client-exports.md) records verified fixture downloads in all five formats and the remaining real-measurement and device gates.
 
+[M-12 image import evidence](../m12-image-import.md) records the working pixel contract, supported decoder variants and remaining device gates.
+
 M-12 starts complex image work. M-13/M-14 build the actual measurement/drawing system against existing versioned contracts. M-16 replaces fixture providers in the production path, reruns the earlier workflow/access/export checks on real content and qualifies release. Final measurement claims remain unavailable until their source revision, calibration and engine results are valid.
 
 ## Commit and push discipline

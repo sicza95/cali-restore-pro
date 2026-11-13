@@ -25,7 +25,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | ALIGN-01    | Must     | Automatic-first alignment with user verification                    | M-08  | M-13       | Planned |
 | ALIGN-02    | Must     | Detail-photo realignment preserves global drawing                   | M-08  | M-13       | Planned |
 | ALIGN-03    | Must     | Accepted partial mapped areas with reference-only fallback          | M-08  | M-13       | Planned |
-| IMG-01      | Must     | Seven validated initial image-format families                       | M-04  | M-16       | Planned |
+| IMG-01      | Must     | Seven validated initial image-format families                       | M-04  | M-16       | Partial |
 | IMG-02      | Must     | Preserve original source                                            | M-04  | M-13       | Partial |
 | IMG-03      | Must     | Large-source import separated from editing                          | M-04  | M-16       | Partial |
 | IMG-05      | Must     | 8K-class source-image workload                                      | M-04  | M-16       | Partial |
@@ -141,6 +141,8 @@ M-02 adds [account settings, administration and verification](../m02-account-adm
 M-03 adds [the vault format, threat model and verification](../m03-client-vault.md). PROJ-03 and PRIV-01/02/04/07 have synthetic encrypted local save, recovery, trust, lock and forget evidence. Remote sync, real project data, physical devices, production deployment and cryptographic review remain open. The future scope/history design is documented, but no collaborative grant, editor draft/history or passkey path is implemented.
 
 M-04 adds [encrypted original storage and transfer](../m04-encrypted-files.md). IMG-02/03/05 have opaque, byte-preserving staged import and bounded synthetic transfer evidence; editor integration, format qualification and physical iPad checks remain open. ADMIN-04/05 have single-owner accounting, atomic reservations and hosting-withdrawal evidence; shared ownership and accepted hosting transfer remain open.
+
+M-12 adds [bounded image import and variant evidence](../m12-image-import.md). IMG-01/02/03/05 now have client validation, recoverable encrypted working assets, normalized orientation and color, cancellation, camera-preview spot checks and desktop 8K ingest evidence. Physical iPad/Safari, broad camera coverage and sustained editing qualification remain open.
 
 PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verification.md). The complete privacy acceptance remains M-16; the bootstrap schema does not close encryption or project-content requirements.
 
