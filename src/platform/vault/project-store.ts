@@ -15,6 +15,7 @@ import type { VaultRow } from './store';
 import type { LocalFile } from './file-store';
 
 export type ProjectRow = { id: string; revision: number; envelope: Envelope };
+export type PendingAttachment = { id: string; signal: AbortSignal };
 export type RestoredOriginal = { id: string; header: LocalFile; parts: ArrayBuffer[] };
 
 export function projectDocuments(
@@ -36,11 +37,12 @@ export function projectDocuments(
     mode: IDBTransactionMode,
     work: (store: IDBObjectStore, finish: (result: T) => void, abort: () => void) => void,
     withFiles = false,
+    operation = signal,
   ) {
-    signal.throwIfAborted();
+    operation.throwIfAborted();
     const db = await connect();
     try {
-      signal.throwIfAborted();
+      operation.throwIfAborted();
       return await new Promise<T>((resolve, reject) => {
         const tables = [vaultTable, table];
         if (withFiles) tables.push(fileTable);
@@ -55,16 +57,16 @@ export function projectDocuments(
             if (!(error instanceof DOMException) || error.name !== 'InvalidStateError') throw error;
           }
         };
-        signal.addEventListener('abort', cancel, { once: true });
+        operation.addEventListener('abort', cancel, { once: true });
         tx.oncomplete = () => {
-          signal.removeEventListener('abort', cancel);
-          if (signal.aborted && !withFiles) reject(signal.reason);
+          operation.removeEventListener('abort', cancel);
+          if (operation.aborted && !withFiles) reject(operation.reason);
           else resolve(result);
         };
         tx.onabort = () => {
-          signal.removeEventListener('abort', cancel);
+          operation.removeEventListener('abort', cancel);
           reject(
-            signal.reason ??
+            operation.reason ??
               tx.error ??
               new Error('The vault or project changed. Reopen it and try again.'),
           );
@@ -134,21 +136,38 @@ export function projectDocuments(
       signal.throwIfAborted();
       return result;
     },
-    async save(id: string, expected: number, text: string) {
+    async save(id: string, expected: number, text: string, attachment?: PendingAttachment) {
       assertID(id);
+      const operation = attachment ? AbortSignal.any([signal, attachment.signal]) : signal;
+      operation.throwIfAborted();
+      if (attachment) assertID(attachment.id);
       const revision = expected + 1;
       const envelope = await seal(root, account, purpose(id, revision), text);
-      await transact<void>('readwrite', (store, finish, abort) => {
-        const key = [account, id];
-        const request = store.get(key);
-        request.onsuccess = () => {
-          if (((request.result as ProjectRow | undefined)?.revision ?? 0) !== expected) abort();
-          else {
+      await transact<void>(
+        'readwrite',
+        (store, finish, abort) => {
+          const key = [account, id];
+          const request = store.get(key);
+          request.onsuccess = () => {
+            if (((request.result as ProjectRow | undefined)?.revision ?? 0) !== expected)
+              return abort();
             store.put({ id, revision, envelope } satisfies ProjectRow, key);
+            if (attachment) {
+              const files = store.transaction.objectStore(fileTable);
+              const fileKey = [account, attachment.id];
+              const file = files.get(fileKey);
+              file.onsuccess = () => {
+                const header = file.result as LocalFile | undefined;
+                if (header?.project !== id || header.ready) return abort();
+                files.put({ ...header, ready: true }, fileKey);
+              };
+            }
             finish(undefined);
-          }
-        };
-      });
+          };
+        },
+        !!attachment,
+        operation,
+      );
       return revision;
     },
   };

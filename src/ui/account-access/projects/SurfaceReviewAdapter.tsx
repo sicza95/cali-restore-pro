@@ -33,13 +33,12 @@ export function SurfaceReviewAdapter(props: {
   const [pan, setPan] = createSignal({ x: 0, y: 0 });
   const panLimit = () => (96 * zoom()) / 100;
   const boundPan = (value: number) => Math.max(-panLimit(), Math.min(panLimit(), value));
-  const c = () => props.copy;
   const toolButtons: Partial<Record<ReviewTool, HTMLButtonElement>> = {};
   const unavailable = (key: ReviewTool) => {
-    if (!size()) return props.photo ? c().previewUnavailable : c().empty;
+    if (!size()) return props.photo ? props.copy.previewUnavailable : props.copy.empty;
     if (key === 'align' && (props.role !== 'detail' || !props.reference))
-      return c().alignmentUnavailable;
-    if (key === 'calibrate' && props.role !== 'main') return c().calibrationUnavailable;
+      return props.copy.alignmentUnavailable;
+    if (key === 'calibrate' && props.role !== 'main') return props.copy.calibrationUnavailable;
     return '';
   };
   function select(key: ReviewTool) {
@@ -68,7 +67,7 @@ export function SurfaceReviewAdapter(props: {
       : undefined;
   return (
     <div class="surface-review" classList={{ 'surface-focus': focus() }}>
-      <div class="surface-rail" role="group" aria-label={c().tools}>
+      <div class="surface-rail" role="group" aria-label={props.copy.tools}>
         <For each={tools}>
           {(key) => (
             <button
@@ -85,24 +84,25 @@ export function SurfaceReviewAdapter(props: {
                 if (!unavailable(key)) select(key);
               }}
             >
-              {c()[key]}
+              {props.copy[key]}
             </button>
           )}
         </For>
       </div>
-      <section class="surface-stage" aria-label={c().photo}>
+      <section class="surface-stage" aria-label={props.copy.photo}>
         <div class="surface-canvas" classList={{ 'surface-compare': compare() }}>
-          <Show when={props.photo} fallback={<p>{c().empty}</p>}>
+          <Show when={props.photo} fallback={<p>{props.copy.empty}</p>}>
             {(photo) => (
               <SurfacePhoto
                 vault={props.vault}
                 project={props.project}
                 id={photo()}
-                copy={c()}
+                copy={props.copy}
                 style={surfacePhotoStyle(
                   { ...pan(), zoom: zoom(), rotate: rotate() },
                   original() ? undefined : preview(),
                 )}
+                zoom={zoom()}
                 onReady={setSize}
               >
                 <SurfaceReviewGuides
@@ -124,7 +124,7 @@ export function SurfaceReviewAdapter(props: {
                 vault={props.vault}
                 project={props.project}
                 id={reference()}
-                copy={{ ...c(), photo: c().main }}
+                copy={{ ...props.copy, photo: props.copy.main }}
               >
                 <SurfaceReviewGuides pairs={pairs()} reference />
               </SurfacePhoto>
@@ -133,7 +133,7 @@ export function SurfaceReviewAdapter(props: {
         </div>
         <div class="surface-actions">
           <label>
-            {c().zoom}
+            {props.copy.zoom}
             <input
               data-control-id="surface.view.zoom"
               type="range"
@@ -155,7 +155,7 @@ export function SurfaceReviewAdapter(props: {
               setPan({ x: 0, y: 0 });
             }}
           >
-            {c().fit}
+            {props.copy.fit}
           </button>
           <button
             type="button"
@@ -164,7 +164,7 @@ export function SurfaceReviewAdapter(props: {
             disabled={!size()}
             onClick={() => setRotate((value) => (value + 90) % 360)}
           >
-            {c().rotate}
+            {props.copy.rotate}
           </button>
           <button
             type="button"
@@ -173,18 +173,18 @@ export function SurfaceReviewAdapter(props: {
             aria-pressed={focus()}
             onClick={() => setFocus(!focus())}
           >
-            {c().focus}
+            {props.copy.focus}
           </button>
         </div>
         <SurfacePanControls
-          copy={c()}
+          copy={props.copy}
           disabled={!size()}
           move={(dx, dy) => setPan(({ x, y }) => ({ x: boundPan(x + dx), y: boundPan(y + dy) }))}
         />
       </section>
       <section
         class="surface-inspector"
-        aria-label={c().tools}
+        aria-label={props.copy.tools}
         onKeyDown={(event) => {
           if (event.key === 'Escape' && tool()) {
             event.preventDefault();
@@ -192,31 +192,31 @@ export function SurfaceReviewAdapter(props: {
           }
         }}
       >
-        <p class="surface-transient">{c().transient}</p>
-        <p role="status">{notice() ? c().applied : c().uncalibrated}</p>
+        <p class="surface-transient">{props.copy.transient}</p>
+        <p role="status">{notice() ? props.copy.applied : props.copy.uncalibrated}</p>
         <For each={tools}>
           {(key) => (
             <Show when={unavailable(key)}>
               <span class="surface-reason" id={id(key) + '-reason'}>
-                {c()[key]} · {unavailable(key)}
+                {props.copy[key]} · {unavailable(key)}
               </span>
             </Show>
           )}
         </For>
-        <Show when={tool()} keyed fallback={<p>{c().initial}</p>}>
+        <Show when={tool()} keyed fallback={<p>{props.copy.initial}</p>}>
           {(key) => (
             <>
-              <h3>{c()[key]}</h3>
+              <h3>{props.copy[key]}</h3>
               <Show when={key === 'prepare'}>
                 <label>
-                  {c().aspect}
+                  {props.copy.aspect}
                   <select
                     data-control-id={id('aspect')}
                     value={draft().aspect}
                     onChange={(e) => setDraft({ ...draft(), aspect: e.currentTarget.value })}
                   >
-                    <option value="free">{c().free}</option>
-                    <option value="square">{c().square}</option>
+                    <option value="free">{props.copy.free}</option>
+                    <option value="square">{props.copy.square}</option>
                   </select>
                 </label>
                 <label>
@@ -226,7 +226,7 @@ export function SurfaceReviewAdapter(props: {
                     checked={draft().flip}
                     onChange={(e) => setDraft({ ...draft(), flip: e.currentTarget.checked })}
                   />
-                  {c().flip}
+                  {props.copy.flip}
                 </label>
                 <label>
                   <input
@@ -236,9 +236,9 @@ export function SurfaceReviewAdapter(props: {
                     aria-describedby="surface-rectify-help"
                     onChange={(e) => setDraft({ ...draft(), rectify: e.currentTarget.checked })}
                   />
-                  {c().rectify}
+                  {props.copy.rectify}
                 </label>
-                <p id="surface-rectify-help">{c().rectifyHelp}</p>
+                <p id="surface-rectify-help">{props.copy.rectifyHelp}</p>
               </Show>
               <Show when={key === 'align'}>
                 <button
@@ -247,9 +247,9 @@ export function SurfaceReviewAdapter(props: {
                   data-control-id={id('auto')}
                   aria-describedby="surface-auto-help"
                 >
-                  {c().auto}
+                  {props.copy.auto}
                 </button>
-                <p id="surface-auto-help">{c().autoUnavailable}</p>
+                <p id="surface-auto-help">{props.copy.autoUnavailable}</p>
                 <label>
                   <input
                     data-control-id={id('compare')}
@@ -257,7 +257,7 @@ export function SurfaceReviewAdapter(props: {
                     checked={compare()}
                     onChange={(e) => setCompare(e.currentTarget.checked)}
                   />
-                  {c().compare}
+                  {props.copy.compare}
                 </label>
                 <label>
                   <input
@@ -268,7 +268,7 @@ export function SurfaceReviewAdapter(props: {
                       setDraft({ ...draft(), referenceOnly: e.currentTarget.checked })
                     }
                   />
-                  {c().referenceOnly}
+                  {props.copy.referenceOnly}
                 </label>
                 <Show when={!draft().referenceOnly}>
                   <label>
@@ -283,32 +283,32 @@ export function SurfaceReviewAdapter(props: {
                         if (manualPairs) setCompare(true);
                       }}
                     />
-                    {c().manualPairs}
+                    {props.copy.manualPairs}
                   </label>
-                  <p id="surface-pair-help">{c().pairHelp}</p>
+                  <p id="surface-pair-help">{props.copy.pairHelp}</p>
                   <Show when={draft().manualPairs}>
-                    <GuideFields copy={c()} draft={draft()} change={setDraft} pairs />
+                    <GuideFields copy={props.copy} draft={draft()} change={setDraft} pairs />
                   </Show>
                 </Show>
               </Show>
               <Show when={key === 'calibrate'}>
                 <label>
-                  {c().method}
+                  {props.copy.method}
                   <select
                     data-control-id={id('method')}
                     value={draft().method}
                     onChange={(e) => setDraft({ ...draft(), method: e.currentTarget.value })}
                   >
-                    <option value="dimensions">{c().dimensions}</option>
-                    <option value="lines">{c().lines}</option>
+                    <option value="dimensions">{props.copy.dimensions}</option>
+                    <option value="lines">{props.copy.lines}</option>
                   </select>
                 </label>
                 <Show when={draft().method === 'lines'}>
-                  <p>{c().lineHelp}</p>
-                  <GuideFields copy={c()} draft={draft()} change={setDraft} />
+                  <p>{props.copy.lineHelp}</p>
+                  <GuideFields copy={props.copy} draft={draft()} change={setDraft} />
                 </Show>
                 <label>
-                  {c().unit}
+                  {props.copy.unit}
                   <select
                     data-control-id={id('unit')}
                     value={draft().unit}
@@ -326,7 +326,7 @@ export function SurfaceReviewAdapter(props: {
                 <For each={key === 'align' && draft().referenceOnly ? [] : toolFields[key]}>
                   {(field) => (
                     <label>
-                      {c()[field]}{' '}
+                      {props.copy[field]}{' '}
                       <small>
                         {fields[field][0]}–{fields[field][1]}
                       </small>
@@ -353,11 +353,11 @@ export function SurfaceReviewAdapter(props: {
                     checked={original()}
                     onChange={(e) => setOriginal(e.currentTarget.checked)}
                   />
-                  {c().original}
+                  {props.copy.original}
                 </label>
               </Show>
               <Show when={!valid()}>
-                <p id="surface-review-invalid">{c().invalid}</p>
+                <p id="surface-review-invalid">{props.copy.invalid}</p>
               </Show>
               <div class="surface-actions">
                 <button
@@ -372,7 +372,7 @@ export function SurfaceReviewAdapter(props: {
                     }
                   }}
                 >
-                  {c().apply}
+                  {props.copy.apply}
                 </button>
                 <button
                   type="button"
@@ -380,7 +380,7 @@ export function SurfaceReviewAdapter(props: {
                   data-control-id={id('cancel')}
                   onClick={close}
                 >
-                  {c().cancel}
+                  {props.copy.cancel}
                 </button>
                 <button
                   type="button"
@@ -388,7 +388,7 @@ export function SurfaceReviewAdapter(props: {
                   data-control-id={id('reset')}
                   onClick={() => setDraft(defaults(props.unit))}
                 >
-                  {c().reset}
+                  {props.copy.reset}
                 </button>
               </div>
             </>

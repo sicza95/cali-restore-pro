@@ -1,3 +1,4 @@
+import { orientedJpeg } from './fixtures/images';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
@@ -50,14 +51,14 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await project.getByLabel('Add surface').fill('Upper plaster');
     await project.getByRole('button', { name: 'Add surface' }).click();
     await expect(project.getByText('Upper plaster · Metric')).toBeVisible();
-    const originalBytes = Buffer.from('Synthetic original bytes for an encrypted grant.');
+    const originalBytes = orientedJpeg;
     await project.getByLabel('Original file', { exact: true }).setInputFiles({
-      name: 'shared-plaster.bin',
-      mimeType: 'application/octet-stream',
+      name: 'shared-plaster.jpg',
+      mimeType: 'image/jpeg',
       buffer: originalBytes,
     });
     await project.getByRole('button', { name: 'Attach original', exact: true }).click();
-    await expect(project.getByText('shared-plaster.bin')).toBeVisible();
+    await expect(project.getByText('shared-plaster.jpg')).toBeVisible();
     await project.getByText('Project invitations', { exact: true }).click();
     await enableHostingAndSync(project);
     await project.getByLabel('Recipient email').fill('recipient@example.test');
@@ -141,7 +142,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
 
     await expect(inbox.getByRole('heading', { name: 'North wall' })).toBeVisible();
     await expect(inbox.getByText('Upper plaster · Metric')).toBeVisible();
-    await expect(inbox.getByText('shared-plaster.bin')).toBeVisible();
+    await expect(inbox.getByText('shared-plaster.jpg')).toBeVisible();
     expect((await owner.request.get(original + '/parts/1')).status()).toBe(404);
     const encryptedPart = await recipient.request.get(original + '/parts/1');
     expect(encryptedPart.status()).toBe(200);
@@ -149,7 +150,7 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const download = inbox.waitForEvent('download');
     await inbox.getByRole('button', { name: 'Download original' }).click();
     const openedFile = await download;
-    expect(openedFile.suggestedFilename()).toBe('shared-plaster.bin');
+    expect(openedFile.suggestedFilename()).toBe('shared-plaster.jpg');
     expect(await readFile(await openedFile.path())).toEqual(originalBytes);
     expect(Buffer.from(oldKey(), 'base64')).toHaveLength(32);
 

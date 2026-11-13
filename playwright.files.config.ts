@@ -7,6 +7,7 @@ export default defineConfig({
   testMatch: [
     'estimates.browser.ts',
     'encrypted-files.browser.ts',
+    'image-import.browser.ts',
     'original-pins.browser.ts',
     'project-backups.browser.ts',
     'projects.browser.ts',

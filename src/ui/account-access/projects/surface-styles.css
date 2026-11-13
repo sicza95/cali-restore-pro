@@ -76,6 +76,18 @@
   min-inline-size: 0;
   max-inline-size: 100%;
 }
+.surface-tile-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.surface-tile-layer > div {
+  position: absolute;
+  background-size: 100% 100%;
+}
+.surface-tile-layer > .surface-tile-ready {
+  background-color: var(--cr-canvas);
+}
 .surface-guides {
   position: absolute;
   inset: 0;

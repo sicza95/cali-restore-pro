@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { dng } from './fixtures/images';
 
-async function openFreshVault(page: Page) {
+async function openFreshVault(page: Page, origin = '') {
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({
       json: {
@@ -16,7 +17,7 @@ async function openFreshVault(page: Page) {
     }),
   );
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
-  await page.goto('/projects');
+  await page.goto(origin + '/projects');
   await page.getByRole('button', { name: 'Set up vault' }).click();
   await page.getByLabel('I saved the recovery key').check();
   await page.getByRole('button', { name: 'Set up vault' }).click();
@@ -33,7 +34,7 @@ test('download and restore an encrypted project through the controls in a fresh 
   await page.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'plaster-detail.dng',
     mimeType: 'image/x-adobe-dng',
-    buffer: Buffer.from([1, 2, 3]),
+    buffer: dng,
   });
   await page.getByRole('combobox', { name: 'Image role', exact: true }).selectOption('reference');
   await page.getByRole('button', { name: 'Attach original', exact: true }).click();
@@ -54,7 +55,8 @@ test('download and restore an encrypted project through the controls in a fresh 
   const fresh = await browser.newContext({ viewport: { width: 834, height: 1194 } });
   try {
     const target = await fresh.newPage();
-    await openFreshVault(target);
+    await openFreshVault(target, 'http://127.0.0.1:4186');
+    await expect.poll(() => target.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
     await expect(target.getByRole('link', { name: 'East Chapel' })).toHaveCount(0);
     await fresh.setOffline(true);
     await target.getByText('Import encrypted backup', { exact: true }).click();
@@ -72,6 +74,8 @@ test('download and restore an encrypted project through the controls in a fresh 
     await expect(
       target.getByRole('listitem').getByRole('combobox', { name: 'Image role' }),
     ).toHaveValue('reference');
+    await target.getByRole('link', { name: 'Open surface', exact: true }).click();
+    await expect(target.locator('.surface-canvas img')).toHaveJSProperty('naturalWidth', 48);
     expect(new URL(target.url()).pathname).not.toBe(new URL(page.url()).pathname);
   } finally {
     await fresh.close();

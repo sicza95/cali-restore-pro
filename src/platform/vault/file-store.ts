@@ -1,6 +1,7 @@
 import { connect, fileTable, vaultTable } from './store';
 import type { VaultRow } from './store';
 import type { FileShape } from './file-format';
+import { imageHeaderPart, imagePart } from './image-cache';
 import type { Envelope } from './crypto';
 
 export type LocalFile = FileShape & {
@@ -89,6 +90,31 @@ export function localFiles(account: string, stamp: string) {
           const header = r.result as LocalFile | undefined;
           if (!header || header.ready) abort();
           else s.put({ ...header, ready: true }, [account, id]);
+        };
+      }),
+    writeImage: (id: string, project: string, parts: ArrayBuffer[], signal: AbortSignal) =>
+      run<void>('readwrite', (s, _, abort) => {
+        const r = s.get([account, id]);
+        const transaction = s.transaction;
+        const cancel = () => {
+          try {
+            abort();
+          } catch (error) {
+            if (!(error instanceof DOMException) || error.name !== 'InvalidStateError') throw error;
+          }
+        };
+        if (signal.aborted) return abort();
+        signal.addEventListener('abort', cancel, { once: true });
+        const release = () => signal.removeEventListener('abort', cancel);
+        transaction.addEventListener('complete', release, { once: true });
+        transaction.addEventListener('abort', release, { once: true });
+        r.onsuccess = () => {
+          const header = r.result as LocalFile | undefined;
+          if (header?.project !== project) return abort();
+          s.delete(IDBKeyRange.bound([account, id, -Infinity], [account, id, imageHeaderPart]));
+          for (let i = 0; i < parts.length; i++) {
+            s.put(parts[i], [account, id, i === 0 ? imageHeaderPart : imagePart(i - 1)]);
+          }
         };
       }),
     remove: (id: string) =>

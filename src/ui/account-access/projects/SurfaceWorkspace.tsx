@@ -1,3 +1,4 @@
+import type { PendingAttachment } from '../../../platform/vault/project-store';
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js';
 import type {
   SavedProject,
@@ -28,7 +29,7 @@ export function SurfaceWorkspace(props: {
   language: Language;
   busy: boolean;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
-  onSave: (project: SavedProject) => Promise<void>;
+  onSave: (project: SavedProject, attachment?: PendingAttachment) => Promise<void>;
   onNavigate: (href: string) => void;
 }) {
   const c = () => projectCopy[props.language];
@@ -58,20 +59,23 @@ export function SurfaceWorkspace(props: {
   const reviewKey = createMemo(() => [photo()?.id, role(), reference()?.id].join('/'));
   const move = (offset: number) => setSelected(images()[index() + offset]?.id);
   const href = () => projectHref(props.project.id);
-  const saveImages = (images: Attachment[]) =>
-    props.onSave({
-      ...props.project,
-      objects: props.project.objects.map((object) =>
-        object.id === props.object.id
-          ? {
-              ...object,
-              surfaces: object.surfaces.map((surface) =>
-                surface.id === props.surface.id ? { ...surface, images } : surface,
-              ),
-            }
-          : object,
-      ),
-    });
+  const saveImages = (images: Attachment[], attachment?: PendingAttachment) =>
+    props.onSave(
+      {
+        ...props.project,
+        objects: props.project.objects.map((object) =>
+          object.id === props.object.id
+            ? {
+                ...object,
+                surfaces: object.surfaces.map((surface) =>
+                  surface.id === props.surface.id ? { ...surface, images } : surface,
+                ),
+              }
+            : object,
+        ),
+      },
+      attachment,
+    );
   return (
     <>
       <a

@@ -69,6 +69,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   });
   const bundle = await build({
     configFile: false,
+    worker: { format: 'es' },
     logLevel: 'silent',
     build: {
       write: false,

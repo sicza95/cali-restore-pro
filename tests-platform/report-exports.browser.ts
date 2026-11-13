@@ -99,7 +99,13 @@ function zipParts(bytes: Buffer) {
 }
 
 test('encodes scoped fixture payloads and cancels without publishing', async ({ page }, info) => {
-  await page.goto('/');
+  await page.route('**/report-encoder-test', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<!doctype html><title>Encoder tests</title>',
+    }),
+  );
+  await page.goto('/report-encoder-test');
   const files = await page.evaluate(
     async ({ draft, estimate }) => {
       const load = (path: string): Promise<unknown> => import(path);

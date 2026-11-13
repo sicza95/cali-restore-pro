@@ -19,8 +19,8 @@ export const surfaceCopy = {
     tools: 'Surface tools',
     transient: 'Temporary review · Changes clear when you leave this photo.',
     previewUnavailable:
-      'Preview unavailable for this original. Use a local JPEG, PNG, WebP or AVIF up to 24 MiB.',
-    loading: 'Opening encrypted original…',
+      'Preview unavailable for this original. Check that a supported copy is available on this device.',
+    loading: 'Opening working image…',
     empty: 'Attach an original below to start reviewing this surface.',
     alignmentUnavailable: 'Alignment review needs a detail photo and a separate mapping reference.',
     calibrationUnavailable: 'Calibration review is available on the mapping reference.',
@@ -98,8 +98,8 @@ export const surfaceCopy = {
     tools: 'Felületi eszközök',
     transient: 'Ideiglenes előnézet · A módosítások a fotó elhagyásakor törlődnek.',
     previewUnavailable:
-      'Az eredeti nem jeleníthető meg. Használjon helyi JPEG, PNG, WebP vagy AVIF fájlt legfeljebb 24 MiB méretben.',
-    loading: 'Titkosított eredeti megnyitása…',
+      'Az eredeti előnézete nem érhető el. Ellenőrizze, hogy van-e támogatott másolat az eszközön.',
+    loading: 'Munkakép megnyitása…',
     empty: 'Az előnézethez csatoljon egy eredeti fájlt alább.',
     alignmentUnavailable: 'Az illesztéshez részletfotó és külön térképezési referencia szükséges.',
     calibrationUnavailable: 'A kalibrálás a térképezési referencián érhető el.',
