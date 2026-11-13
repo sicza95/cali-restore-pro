@@ -1,5 +1,5 @@
 import { For, Show, untrack } from 'solid-js';
-import type { ReportCopy } from './report-copy';
+import type { ReportCopy } from '../../../platform/reports/copy';
 import { brandingSources } from '../../../platform/reports/types';
 import type { useReport } from './useReport';
 import { ReviewCheck, ReviewSelect } from './fields';

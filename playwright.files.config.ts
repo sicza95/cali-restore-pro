@@ -12,6 +12,7 @@ export default defineConfig({
     'projects.browser.ts',
     'project-reviews.browser.ts',
     'project-review-scopes.browser.ts',
+    'report-exports.browser.ts',
   ],
   outputDir: 'test-results/encrypted-files',
   use: { baseURL: origin, channel: process.env.CI ? undefined : 'chrome' },

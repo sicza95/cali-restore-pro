@@ -1,8 +1,12 @@
 import { createSignal, For, Show } from 'solid-js';
 import type { Language } from '../../account-access/types';
 import { checkpointCopy } from './copy';
-import { checkpointFixtures, fixtureIds, measurementStates } from './fixtures';
-import type { FixtureId, MeasurementState } from './fixtures';
+import {
+  checkpointFixtures,
+  fixtureIds,
+  measurementStates,
+} from '../../../platform/checkpoints/fixtures';
+import type { FixtureId, MeasurementState } from '../../../platform/checkpoints/fixtures';
 import { PatternReview } from './PatternReview';
 import './styles.css';
 

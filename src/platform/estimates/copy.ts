@@ -1,4 +1,4 @@
-import type { Language } from '../types';
+type Language = 'en' | 'hu';
 
 const en = {
   estimates: 'Estimate review',

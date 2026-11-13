@@ -256,11 +256,12 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await report('format').selectOption('XLSX');
   await expect(report('resolution')).toHaveCount(0);
   await expect(report('workbook').locator('option')).toHaveCount(1);
-  await expect(report('download')).toBeDisabled();
+  await expect(report('download')).toBeHidden();
   await expect(report('final')).toBeDisabled();
   await report('preview').focus();
   await page.keyboard.press('Enter');
   const draft = page.getByRole('dialog');
+  await expect(report('download')).toBeEnabled();
   await expect(draft).toHaveAccessibleName('Restaurálási jelentés');
   await expect(draft.locator('article')).toHaveAttribute('lang', 'hu');
   await expect(draft).toContainText('Numerikus pillanatkép');

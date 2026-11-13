@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
 import { input } from '../tests-estimates/fixtures';
 
 test('encrypted estimate and preset persistence, immutable versions, isolation and lock', async ({
@@ -250,6 +251,14 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await expect(preview).toContainText('restoration-v1');
   await expect(preview).not.toContainText('Manual cleaning allowance');
   await expect(preview).not.toContainText('40 HUF/h');
+  const summaryDownload = page.waitForEvent('download');
+  await report('download').click();
+  const summaryFile = await summaryDownload;
+  expect(summaryFile.suggestedFilename()).toBe('calirestore-report-draft.xlsx');
+  const summaryBytes = await readFile((await summaryFile.path())!, 'utf8');
+  expect(summaryBytes).toContain('<v>630</v>');
+  expect(summaryBytes).not.toContain('Manual cleaning allowance');
+  expect(summaryBytes).not.toContain('<f>');
   await report('cancel').click();
   await report('finances').selectOption('full');
   await report('workbook').selectOption('editable');
@@ -274,6 +283,13 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
     await page.screenshot({ path: info.outputPath(`issued-report-${viewport.width}.png`) });
   }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  const editableDownload = page.waitForEvent('download');
+  await report('download').click();
+  const editableBytes = await readFile((await (await editableDownload).path())!, 'utf8');
+  expect(editableBytes).toContain('Manual cleaning allowance');
+  expect(editableBytes).toMatch(/r="L2"><v>40<\/v>/);
+  expect(editableBytes).not.toContain('Studio hourly');
+  expect(editableBytes).toContain('<f>');
   await report('cancel').click();
   await page.locator('[data-control-id="project.review.estimates"]').click();
   await page.getByLabel('App language').selectOption('hu');

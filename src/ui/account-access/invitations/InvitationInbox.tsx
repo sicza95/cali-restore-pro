@@ -13,7 +13,7 @@ import type { SharedProject } from '../../../platform/projects/shared-project';
 import type { SharedOriginal } from '../../../platform/projects/shared-originals';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { SharedEstimateProjection } from '../project-review/SharedEstimateProjection';
-import { estimateCopy } from '../project-review/estimate-copy';
+import { estimateCopy } from '../../../platform/estimates/copy';
 import { invitationCopy } from './copy';
 import type { InboxInvitation, InvitationModel } from './types';
 import { useInvitations } from './useInvitations';

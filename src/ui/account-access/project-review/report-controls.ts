@@ -1,6 +1,6 @@
 import type { ControlContract } from '../../control-registry/types';
-import type { ReportCopy } from './report-copy';
-import type { EstimateCopy } from './estimate-copy';
+import type { ReportCopy } from '../../../platform/reports/copy';
+import type { EstimateCopy } from '../../../platform/estimates/copy';
 
 const reportKeys = [
   'includeObject',
@@ -31,6 +31,7 @@ const reportKeys = [
   'estimateVersion',
   'cancel',
   'download',
+  'cancelDownload',
   'final',
 ] as const satisfies readonly (keyof ReportCopy)[];
 export const reportControl = (key: (typeof reportKeys)[number]) => 'report.review.' + key;
@@ -87,9 +88,14 @@ export const reportControls: readonly ControlContract[] = [
       'Selected authorized objects and surfaces; format-specific controls when applicable',
     valueSource:
       'Authorized project hierarchy, account defaults and encrypted report draft and issued estimate selection',
-    behavior: key === 'save' ? 'functional' : 'review',
+    behavior:
+      key === 'save' || key === 'download' || key === 'cancelDownload' ? 'functional' : 'review',
     owner:
-      key === 'download' || key === 'format' || key === 'resolution'
+      key === 'download' ||
+      key === 'cancelDownload' ||
+      key === 'format' ||
+      key === 'resolution' ||
+      key === 'workbook'
         ? 'M-11'
         : key === 'final'
           ? 'M-16'

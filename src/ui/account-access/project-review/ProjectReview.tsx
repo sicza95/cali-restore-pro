@@ -3,7 +3,7 @@ import type { SavedProject } from '../../../platform/projects/types';
 import type { Language } from '../types';
 import { followProjectLink, projectHref, projectReviewHref } from '../projects/project-route';
 import { projectCopy } from '../projects/project-copy';
-import { estimateCopy } from './estimate-copy';
+import { estimateCopy } from '../../../platform/estimates/copy';
 import { reviewRoutes, routeControl } from './report-controls';
 import type { ReviewRoute } from './report-controls';
 import { EstimateReview } from './EstimateReview';
