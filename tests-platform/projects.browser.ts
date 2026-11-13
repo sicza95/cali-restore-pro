@@ -7,6 +7,7 @@ import { verifyCheckpointReview } from './checkpoint-review';
 import { drawingControl, verifyDrawingReview } from './drawing-review';
 import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
 import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } from './photo-review';
+import { dng } from './fixtures/images';
 import { setupRememberedVault } from './vault-setup';
 
 test.use({ hasTouch: true });
@@ -137,6 +138,15 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
       },
       [projectTable, revisionQueueTable],
     );
+  await attach.setInputFiles({
+    name: 'damaged.png',
+    mimeType: 'image/png',
+    buffer: png.subarray(0, 24),
+  });
+  await controls('originals.attach').click();
+  await expect(page.getByRole('alert')).toContainText('damaged or incomplete');
+  await expect(page.locator('.project-originals li')).toHaveText('No originals on this surface.');
+  await expect(attach).toHaveValue(/damaged\.png$/);
   await attach.setInputFiles({ name: 'wall.png', mimeType: 'image/png', buffer: png });
   await controls('originals.attach').click();
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
@@ -158,6 +168,14 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await review('review.cancel').click();
   await review('review.prepare').click();
   await expect(review('review.cropWidth')).toHaveValue('80');
+  const zoom = review('view.zoom');
+  await zoom.fill('250');
+  await expect(page.locator('.surface-tile-ready').first()).toBeVisible();
+  await page.screenshot({ path: info.outputPath('image-tiles-landscape.png'), fullPage: true });
+  await page.setViewportSize({ width: 834, height: 1194 });
+  await expect(page.locator('.surface-tile-ready').first()).toBeVisible();
+  await page.screenshot({ path: info.outputPath('image-tiles-portrait.png'), fullPage: true });
+  await page.setViewportSize({ width: 1194, height: 834 });
   await verifyPhotoMatrix(page, info);
   await review('review.calibrate').click();
   await expect(review('review.unit')).toHaveValue('in');
@@ -188,7 +206,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await attach.setInputFiles({
     name: 'plaster-detail.dng',
     mimeType: 'image/x-adobe-dng',
-    buffer: Buffer.from([1, 2, 3]),
+    buffer: dng,
   });
   await page
     .locator('.project-originals form')
@@ -197,8 +215,8 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await controls('originals.attach').click();
   await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
   await review('view.photo').selectOption({ label: '3 · plaster-detail.dng' });
-  await expect(page.getByText(/^Preview unavailable for this original/)).toBeVisible();
-  await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.locator('.surface-canvas img')).toHaveJSProperty('naturalWidth', 48);
+  await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('projects-landscape.png'), fullPage: true });
   await page.goBack();

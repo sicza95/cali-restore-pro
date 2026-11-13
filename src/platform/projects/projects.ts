@@ -1,3 +1,4 @@
+import type { PendingAttachment } from '../vault/project-store';
 import type { LocalVault } from '../vault/vault';
 import type { Project, RestorationObject, SavedProject, Surface } from './types';
 
@@ -56,11 +57,20 @@ export function localProjects(vault: LocalVault) {
         revision,
       }));
     },
-    async save({ revision, ...value }: SavedProject) {
+    async save({ revision, ...value }: SavedProject, attachment?: PendingAttachment) {
       const next = validateProject({ ...value, updatedAt: Date.now() }, value.id);
+      if (
+        attachment &&
+        !next.objects.some((object) =>
+          object.surfaces.some((surface) =>
+            surface.images.some((image) => image.id === attachment.id),
+          ),
+        )
+      )
+        throw new Error('Missing image attachment');
       return {
         ...next,
-        revision: await vault.projects().save(next.id, revision, JSON.stringify(next)),
+        revision: await vault.projects().save(next.id, revision, JSON.stringify(next), attachment),
       };
     },
   };

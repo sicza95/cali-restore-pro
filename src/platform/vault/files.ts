@@ -1,3 +1,7 @@
+import { buildWorkingImage } from '../images/build';
+import { tilePart } from '../images/types';
+import type { WorkingImage } from '../images/types';
+import { imageCipher, imageHeaderPart, imagePart } from './image-cache';
 import {
   assertID,
   assertShape,
@@ -101,6 +105,7 @@ export function encryptedFiles(
     shape: FileShape,
     options: Options,
     getPart: (part: number, signal: AbortSignal) => Promise<ArrayBuffer>,
+    beforeFinish?: (signal: AbortSignal) => Promise<void>,
   ) {
     const signal = signalFor(options);
     signal.throwIfAborted();
@@ -122,12 +127,115 @@ export function encryptedFiles(
           options.progress?.(Math.min(part * chunkBytes, shape.sourceBytes), shape.sourceBytes);
       }
       signal.throwIfAborted();
-      await local.finish(ref.id);
+      await beforeFinish?.(signal);
+      signal.throwIfAborted();
+      if (!beforeFinish) await local.finish(ref.id);
+      signal.throwIfAborted();
       return ref;
     } catch (error) {
       await local.remove(ref.id).catch(() => undefined);
       throw error;
     }
+  }
+
+  async function stage(project: string, file: File, options: Options = {}, image?: WorkingImage) {
+    locked.throwIfAborted();
+    const ref = { project, id: crypto.randomUUID() };
+    const manifest = sourceManifest(file);
+    const shape = { sourceBytes: file.size, manifestBytes: manifest.byteLength + 16 };
+    assertShape(shape);
+    const key = await cipher(ref);
+    return persist(
+      ref,
+      shape,
+      options,
+      async (part) =>
+        key.seal(
+          part,
+          part === 0
+            ? manifest
+            : await file.slice((part - 1) * chunkBytes, part * chunkBytes).arrayBuffer(),
+        ),
+      image && ((signal) => saveImage(ref, image, signal)),
+    );
+  }
+
+  async function saveImage(ref: Ref, image: WorkingImage, signal: AbortSignal) {
+    const key = await imageCipher(root, account, ref.project, ref.id);
+    const parts = await key.sealParts(image, signal);
+    await local.writeImage(ref.id, ref.project, parts, signal);
+  }
+
+  async function workingImage(ref: Ref, options: Options = {}) {
+    const signal = signalFor(options);
+    signal.throwIfAborted();
+    const shape = await ready(ref);
+    const key = await imageCipher(root, account, ref.project, ref.id);
+    const getAsset = async (part: number) => {
+      signal.throwIfAborted();
+      const bytes = await local.read(ref.id, part);
+      if (!bytes) throw new Error('Working image unavailable');
+      const blob = await key.asset(part, bytes);
+      signal.throwIfAborted();
+      return blob;
+    };
+    let manifest;
+    let proxy;
+    try {
+      const header = await local.read(ref.id, imageHeaderPart);
+      if (header) {
+        manifest = await key.manifest(header);
+        proxy = await getAsset(imagePart(0));
+      }
+    } catch {
+      signal.throwIfAborted();
+    }
+    if (!manifest || !proxy) {
+      const original = await cipher(ref);
+      parseManifest(await original.open(0, await readPart(ref.id, shape, 0)), shape);
+      let cachedPart = 0;
+      let cachedBytes = new Uint8Array();
+      const image = await buildWorkingImage(
+        {
+          size: shape.sourceBytes,
+          async read(start, end) {
+            const output = new Uint8Array(end - start);
+            for (let at = start; at < end;) {
+              signal.throwIfAborted();
+              const part = Math.floor(at / chunkBytes) + 1;
+              if (part !== cachedPart) {
+                cachedBytes.fill(0);
+                cachedBytes = new Uint8Array(
+                  await original.open(part, await readPart(ref.id, shape, part)),
+                );
+                if (signal.aborted) {
+                  cachedBytes.fill(0);
+                  signal.throwIfAborted();
+                }
+                cachedPart = part;
+              }
+              const offset = at % chunkBytes;
+              const count = Math.min(end - at, cachedBytes.length - offset);
+              output.set(cachedBytes.subarray(offset, offset + count), at - start);
+              at += count;
+            }
+            return output.buffer;
+          },
+        },
+        signal,
+      ).finally(() => cachedBytes.fill(0));
+      await saveImage(ref, image, signal);
+      manifest = image.manifest;
+      proxy = image.parts[0]!;
+    }
+    signal.throwIfAborted();
+    const layout = manifest;
+    return {
+      manifest: layout,
+      proxy,
+      tile: (level: number, x: number, y: number) =>
+        getAsset(imagePart(tilePart(layout, level, x, y))),
+    };
   }
 
   async function uploadParts(
@@ -178,21 +286,34 @@ export function encryptedFiles(
       }
       return exportKey(version);
     },
-    async stage(project: string, file: File, options: Options = {}) {
-      locked.throwIfAborted();
-      const ref = { project, id: crypto.randomUUID() };
-      const manifest = sourceManifest(file);
-      const shape = { sourceBytes: file.size, manifestBytes: manifest.byteLength + 16 };
-      assertShape(shape);
-      const key = await cipher(ref);
-      return persist(ref, shape, options, async (part) =>
-        key.seal(
-          part,
-          part === 0
-            ? manifest
-            : await file.slice((part - 1) * chunkBytes, part * chunkBytes).arrayBuffer(),
-        ),
+    stage: (project: string, file: File, options?: Options) => stage(project, file, options),
+    workingImage,
+    async importImage(
+      project: string,
+      file: File,
+      attach: (ref: Ref, signal: AbortSignal) => Promise<void>,
+      options: { signal: AbortSignal; progress: (fraction: number) => void },
+    ) {
+      const signal = signalFor(options);
+      const image = await buildWorkingImage(file, signal, (fraction) =>
+        options.progress(fraction * 0.5),
       );
+      const ref = await stage(
+        project,
+        file,
+        {
+          signal,
+          progress: (done, total) => options.progress(0.5 + (done / total) * 0.4),
+        },
+        image,
+      );
+      try {
+        signal.throwIfAborted();
+        await attach(ref, signal);
+      } catch (error) {
+        await local.remove(ref.id).catch(() => undefined);
+        throw error;
+      }
     },
     async metadata(ref: Ref) {
       const shape = await ready(ref);

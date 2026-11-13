@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import { orientedJpeg } from './fixtures/images';
 import { expect, test } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { estimateControls } from '../src/ui/account-access/project-review/estimate-controls';
@@ -96,16 +97,16 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   const path = new URL(page.url()).pathname;
   expect(path).toMatch(/^\/projects\/[a-f0-9-]{36}$/);
   await page.getByLabel('Original file', { exact: true }).setInputFiles({
-    name: 'private-source.png',
-    mimeType: 'image/png',
-    buffer: Buffer.from([1, 2, 3, 4]),
+    name: 'private-source.jpg',
+    mimeType: 'image/jpeg',
+    buffer: orientedJpeg,
   });
   await page
     .locator('.project-originals form')
     .getByRole('combobox', { name: 'Image role' })
     .selectOption('reference');
   await page.getByRole('button', { name: 'Attach original' }).click();
-  await expect(page.getByText('private-source.png')).toBeVisible();
+  await expect(page.getByText('private-source.jpg')).toBeVisible();
   await page.getByLabel('Add object').fill('North wall');
   await page.getByRole('button', { name: 'Add object' }).click();
   await page
@@ -270,7 +271,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(draft).toContainText('Chapel Studio');
   await expect(draft).toContainText('Referenciafotó 1');
   await expect(draft).not.toContainText('North wall');
-  await expect(draft).not.toContainText('private-source.png');
+  await expect(draft).not.toContainText('private-source.jpg');
   await expect(draft.locator('svg')).toHaveCount(0);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.keyboard.press('Escape');

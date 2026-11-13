@@ -1,4 +1,5 @@
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
+import type { PendingAttachment } from '../../../platform/vault/project-store';
 import { createSignal, For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { newObject, newSurface, projectName } from '../../../platform/projects/projects';
@@ -21,7 +22,7 @@ export function ProjectDetail(props: {
   vault: LocalVault;
   busy: boolean;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
-  onSave: (project: SavedProject) => Promise<void>;
+  onSave: (project: SavedProject, attachment?: PendingAttachment) => Promise<void>;
   sharing: JSX.Element;
   onNavigate: (href: string) => void;
 }) {
@@ -33,15 +34,22 @@ export function ProjectDetail(props: {
   const surface = () =>
     object().surfaces.find((s) => s.id === surfaceId()) ?? object().surfaces[0]!;
   const units = () => surface().units ?? object().units ?? props.project.settings.units;
-  const edit = (value: Partial<SavedProject>) => props.onSave({ ...props.project, ...value });
-  const editObject = (value: Partial<RestorationObject>) =>
-    edit({
-      objects: props.project.objects.map((o) => (o.id === object().id ? { ...o, ...value } : o)),
-    });
-  const editSurface = (value: Partial<Surface>) =>
-    editObject({
-      surfaces: object().surfaces.map((s) => (s.id === surface().id ? { ...s, ...value } : s)),
-    });
+  const edit = (value: Partial<SavedProject>, attachment?: PendingAttachment) =>
+    props.onSave({ ...props.project, ...value }, attachment);
+  const editObject = (value: Partial<RestorationObject>, attachment?: PendingAttachment) =>
+    edit(
+      {
+        objects: props.project.objects.map((o) => (o.id === object().id ? { ...o, ...value } : o)),
+      },
+      attachment,
+    );
+  const editSurface = (value: Partial<Surface>, attachment?: PendingAttachment) =>
+    editObject(
+      {
+        surfaces: object().surfaces.map((s) => (s.id === surface().id ? { ...s, ...value } : s)),
+      },
+      attachment,
+    );
   return (
     <>
       <div class="project-heading">
@@ -246,7 +254,7 @@ export function ProjectDetail(props: {
               vault={props.vault}
               busy={props.busy}
               onRun={props.onRun}
-              onSave={(images) => editSurface({ images })}
+              onSave={(images, attachment) => editSurface({ images }, attachment)}
             />
           )}
         </Show>

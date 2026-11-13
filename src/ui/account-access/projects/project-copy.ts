@@ -45,6 +45,12 @@ export const projectCopy = {
     noFiles: 'No originals on this surface.',
     unavailable: 'Original unavailable',
     cancel: 'Cancel attachment',
+    imageImport: {
+      invalid: 'This image is damaged or incomplete. Choose an intact copy.',
+      unsupported: 'This image variant is unsupported. Try a JPEG or PNG version.',
+      limit: 'This image exceeds the import limits. Try a smaller copy.',
+      unavailable: 'Image processing is unavailable in this browser. Try again.',
+    },
     refresh: 'Reload projects',
   },
   hu: {
@@ -93,6 +99,12 @@ export const projectCopy = {
     noFiles: 'Nincs eredeti ezen a felületen.',
     unavailable: 'Az eredeti nem érhető el',
     cancel: 'Csatolás megszakítása',
+    imageImport: {
+      invalid: 'A kép sérült vagy hiányos. Válasszon ép másolatot.',
+      unsupported: 'Ez a képváltozat nem támogatott. Próbálja JPEG vagy PNG formátumban.',
+      limit: 'A kép túllépi az importálási korlátokat. Próbáljon kisebb másolatot.',
+      unavailable: 'A képfeldolgozás nem érhető el ebben a böngészőben. Próbálja újra.',
+    },
     refresh: 'Projektek újratöltése',
   },
 };

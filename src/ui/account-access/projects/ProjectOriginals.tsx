@@ -1,5 +1,8 @@
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
+import type { PendingAttachment } from '../../../platform/vault/project-store';
 import { createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import { ImageImportError } from '../../../platform/images/types';
+import type { ImportIssue } from '../../../platform/images/types';
 import type { Attachment, ImageRole, Surface } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Copy } from './forms';
@@ -11,11 +14,12 @@ export function ProjectOriginals(props: {
   vault: LocalVault;
   busy: boolean;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
-  onSave: (images: Attachment[]) => Promise<void>;
+  onSave: (images: Attachment[], attachment?: PendingAttachment) => Promise<void>;
 }) {
   const files = untrack(() => props.vault.files());
   const [transfer, setTransfer] = createSignal<AbortController>();
   const [progress, setProgress] = createSignal(0);
+  const [issue, setIssue] = createSignal<ImportIssue>();
   onCleanup(() => transfer()?.abort());
 
   return (
@@ -32,23 +36,26 @@ export function ProjectOriginals(props: {
           const role = fields.get('role') as ImageRole;
           void props.onRun(async () => {
             const controller = new AbortController();
+            setIssue(undefined);
             setProgress(0);
             setTransfer(controller);
             try {
-              const ref = await files.stage(props.project, file, {
-                signal: controller.signal,
-                progress: (done, total) => setProgress(done / total),
-              });
-              try {
-                controller.signal.throwIfAborted();
-                await props.onSave([...props.surface.images, { id: ref.id, role }]);
-              } catch (error) {
-                await files.removeLocal(ref).catch(() => undefined);
-                throw error;
-              }
+              const project = props.project;
+              const images = props.surface.images;
+              await files.importImage(
+                project,
+                file,
+                async (ref, signal) => {
+                  await props.onSave([...images, { id: ref.id, role }], { id: ref.id, signal });
+                },
+                { signal: controller.signal, progress: setProgress },
+              );
               form.reset();
             } catch (error) {
-              if (!controller.signal.aborted) throw error;
+              if (!controller.signal.aborted) {
+                if (error instanceof ImageImportError) setIssue(error.code);
+                else throw error;
+              }
             } finally {
               setTransfer(undefined);
             }
@@ -61,6 +68,8 @@ export function ProjectOriginals(props: {
             data-control-id="originals.file"
             name="file"
             type="file"
+            accept=".jpg,.jpeg,.png,.tif,.tiff,.heic,.heif,.dng,.cr2,.cr3,.webp,.avif"
+            onChange={() => setIssue(undefined)}
             required
             disabled={props.busy}
           />
@@ -73,6 +82,7 @@ export function ProjectOriginals(props: {
           {props.copy.attach}
         </button>
       </form>
+      <Show when={issue()}>{(code) => <p role="alert">{props.copy.imageImport[code()]}</p>}</Show>
       <Show when={transfer()}>
         <div class="project-fields">
           <progress aria-label={props.copy.attach} max={1} value={progress()} />
