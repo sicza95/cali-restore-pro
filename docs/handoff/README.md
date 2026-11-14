@@ -7,19 +7,27 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is planned; the owner accepted decisions 1 to 3 as recommended.
-- **Suite status after commit 5:** see the latest log entry.
+- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`; the owner accepted decisions 1 to 3 as recommended.
+- **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Start commit 1 of [pointer drawing first](../plan/editor-pointer-first.md) on `main` (split `DrawingInspector` into tool settings and numeric entry, no behaviour change). Commits 2 to 6 go through one branch and PR.
+Open one branch for commits 2 to 6 of [pointer drawing first](../plan/editor-pointer-first.md) and start commit 2: `path.apply` and `path.cancel` move into the tool chip with a live point count, Enter applies and Escape cancels on the canvas or rail. Check the chip at 834 and 390 px.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 1: split the drawing inspector
+
+- `DrawingInspector.tsx` is gone. `DrawingToolSettings.tsx` holds the heading and help, brush toggles and strength, path operation, the node tool's mark picker, close path and Apply/Cancel (plus `DrawingToolOptions` for the chip). `DrawingNumericEntry.tsx` holds `place.x/y`, `brush.dot`, `point.add`, `point.select`, `point.x/y`, curve, handles and `point.delete`.
+- `DrawingReviewAdapter` passes numeric entry into the settings' `numeric` slot, so its DOM is unchanged. `DrawingWorkspace` renders settings above "Details" and numeric entry inside it, in its own panel named "Enter by number" / "Megadás számokkal" (new `numericEntry` copy). "Details" stays open. Apply/Cancel sit with settings until commit 2 moves them to the chip.
+- Verified: `npm run check`, `npm test` (12), `npm run test:files` (21) pass; looked at the fresh `drawing-1194.png`.
+- Verified too: `npm run build-storybook` succeeds.
+- Not verified: `test:app`, keyboard tab order by hand.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Phase 1 step 2 plan
 

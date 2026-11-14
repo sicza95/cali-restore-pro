@@ -54,6 +54,7 @@ const messages = {
   fit: ['Fit reference', 'Referencia igazítása'],
   tool: ['Tool inspector', 'Eszközbeállítások'],
   details: ['Details', 'Részletek'],
+  numericEntry: ['Enter by number', 'Megadás számokkal'],
   layers: ['Layers and masks', 'Rétegek és maszkok'],
   blocked: [
     'Choose a visible, unlocked mask to draw.',

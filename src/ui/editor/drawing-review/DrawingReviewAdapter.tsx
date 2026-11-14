@@ -9,7 +9,8 @@ import { createDrawingTools } from './createDrawingTools';
 import { DrawingCanvas } from './DrawingCanvas';
 import { DrawNumber, DrawToggle } from './DrawingFields';
 import { DrawingHistory, ResolveDrawingDraft } from './DrawingHistory';
-import { DrawingInspector } from './DrawingInspector';
+import { DrawingNumericEntry } from './DrawingNumericEntry';
+import { DrawingToolSettings } from './DrawingToolSettings';
 import { DrawingLayers, layerName } from './DrawingLayers';
 import { drawingFrame, drawingProjection } from '../../../platform/projects/drawing-region';
 import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
@@ -211,7 +212,15 @@ export function DrawingReviewAdapter(props: {
         </section>
         <Show when={size() && props.state}>
           <aside class="drawing-inspector" aria-label={c().drawingMode}>
-            <DrawingInspector model={m} tools={t} copy={c()} reason={toolReason(t.tool())} />
+            <DrawingToolSettings
+              model={m}
+              tools={t}
+              copy={c()}
+              reason={toolReason(t.tool())}
+              numeric={
+                <DrawingNumericEntry model={m} tools={t} copy={c()} reason={toolReason(t.tool())} />
+              }
+            />
             <div class="drawing-management">
               <fieldset disabled={m.busy()} class="drawing-layer-controls">
                 <DrawingHistory
