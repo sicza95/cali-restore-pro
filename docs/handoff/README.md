@@ -7,13 +7,13 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commits 1 and 2 of that plan are done.
-- **Suite status after commit 2:** `npm run check` passes. `npm test` 11/11. `npm run test:files` 21/21. `npm run build-storybook` and `npm run build` succeed. `npm run test:app` was 16 passed, 1 skipped after commit 1 and was not re-run; commit 2 changes nothing the application renders.
+- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commits 1 to 3 of that plan are done.
+- **Suite status after commit 3:** `npm run check` passes. `npm test` 12/12. `npm run test:files` 21/21. `npm run build-storybook` and `npm run build` succeed. `npm run test:app` was 16 passed, 1 skipped after commit 1 and was not re-run; commits 2 and 3 change nothing the application renders.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Commit 3 of the [editor convergence plan](../plan/editor-convergence.md): `ToolRail` takes its tool list, a per-tool disabled reason and a control-id function, defaulting to today's constant.
+Commit 4 of the [editor convergence plan](../plan/editor-convergence.md): render drawing review through `EditorWorkspace` with a new `DrawingWorkspace` adapter. `EditorWorkspace` does not yet forward a tool list, reasons or control ids to `ToolRail`, and its `tool` prop is still typed as the review `Tool`; commit 4 has to add that. Open question 2 (branch and PR for this commit) should be answered first.
 
 ## Open questions for the owner
 
@@ -22,6 +22,16 @@ Commit 3 of the [editor convergence plan](../plan/editor-convergence.md): `ToolR
 3. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 3: ToolRail takes its tools
+
+- `ToolRail` is generic over the tool id and accepts `tools`, `label`, `disabledReason` and `controlId`. Without them it renders the same seven tools, `editor.tool.*` ids and "Drawing tools" name as before. `toolControlId` in `tool-rail/constants.ts` is the shared default for the rail and its registry.
+- A tool with a reason gets `aria-disabled`, the reason as `title`, and `aria-describedby` pointing at a visually hidden `<id>-reason` span; clicking or pressing it does not call `onChange`. It stays focusable, as in `DrawingReviewAdapter`.
+- Difference from `DrawingReviewAdapter`: the reason span sits inside the button, not beside it, so the rail's children stay one button per tool (`responsive.css` hides tools with `.cr-tool:nth-child(n + 5)`). Disabled tools show their icon at 45% opacity.
+- `label` is beyond the plan's list; the application rail has a translated name.
+- New story `Editor/Tool rail/Custom tools` and a Storybook test for a supplied list, custom control ids and the unavailable tool.
+- Verified: `npm run check`, `npm test` 12/12, `npm run test:files` 21/21, `npm run build-storybook`, `npm run build`.
+- Not verified: `npm run test:app` was not re-run. The new story was not reviewed by eye; the disabled styling is untested in the dark theme and at 390 px, where the fifth and later tools are hidden.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 2: controlled shell
 

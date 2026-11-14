@@ -9,7 +9,7 @@ export { Switch } from './controls/switch/Switch';
 export { ToolRail } from './controls/tool-rail/ToolRail';
 export { tools } from './controls/tool-rail/constants';
 export type { ButtonProps } from './controls/button/types';
-export type { Tool } from './controls/tool-rail/types';
+export type { Tool, ToolItem, ToolRailProps } from './controls/tool-rail/types';
 export type { SaveState } from './controls/save-status/types';
 export { Area } from './editor/area/Area';
 export { CalibrationDialog } from './editor/calibration-dialog/CalibrationDialog';

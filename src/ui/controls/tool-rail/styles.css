@@ -27,3 +27,23 @@
   background: var(--cr-accent);
   color: var(--cr-accent-ink);
 }
+
+.cr-tool[aria-disabled='true'] {
+  cursor: default;
+}
+
+.cr-tool[aria-disabled='true']:not([aria-pressed='true']) {
+  background: transparent;
+}
+
+.cr-tool[aria-disabled='true'] > svg {
+  opacity: 0.45;
+}
+
+.cr-tool-reason {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
