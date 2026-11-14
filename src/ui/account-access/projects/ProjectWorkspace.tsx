@@ -2,6 +2,7 @@ import type { PendingAttachment } from '../../../platform/vault/project-store';
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
 import {
   createResource,
+  createMemo,
   createSignal,
   For,
   Match,
@@ -267,19 +268,28 @@ export function ProjectWorkspace(props: {
                 keyed
                 fallback={<p role="status">{c().missing}</p>}
               >
-                {(id) => (
-                  <SurfaceWorkspace
-                    project={current()!}
-                    object={activeSurface()!.object}
-                    surface={activeSurface()!.object.surfaces.find((surface) => surface.id === id)!}
-                    vault={props.vault}
-                    language={props.language}
-                    busy={busy()}
-                    onRun={run}
-                    onSave={save}
-                    onNavigate={navigate}
-                  />
-                )}
+                {(id) => {
+                  // Keep the mounted route's last value during navigation teardown.
+                  const initial = { project: current()!, ...activeSurface()! };
+                  const context = createMemo<typeof initial>((previous) => {
+                    const project = current();
+                    const match = activeSurface();
+                    return project && match?.surface.id === id ? { project, ...match } : previous;
+                  }, initial);
+                  return (
+                    <SurfaceWorkspace
+                      project={context().project}
+                      object={context().object}
+                      surface={context().surface}
+                      vault={props.vault}
+                      language={props.language}
+                      busy={busy()}
+                      onRun={run}
+                      onSave={save}
+                      onNavigate={navigate}
+                    />
+                  );
+                }}
               </Show>
             </Match>
             <Match when={route()?.review}>

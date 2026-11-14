@@ -12,6 +12,7 @@ export default defineConfig({
     'project-backups.browser.ts',
     'projects.browser.ts',
     'planar-reference.browser.ts',
+    'drawing-geometry.browser.ts',
     'project-reviews.browser.ts',
     'project-review-scopes.browser.ts',
     'report-exports.browser.ts',

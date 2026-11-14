@@ -53,28 +53,31 @@ export function createDrawingTools(review: DrawingReview, notify: (notice: 'chan
     if (next === 'master') review.select(masterId);
     setTool(next);
   }
-  function resolveDraft(choice: 'commit' | 'discard' | 'cancel') {
+  async function resolveDraft(choice: 'commit' | 'discard' | 'cancel') {
+    if (choice === 'commit' && !(await review.commitDraft())) return false;
     setResolve(false);
-    if (choice === 'cancel') return;
-    if (choice === 'commit') review.commitDraft();
-    else review.discardDraft();
+    if (choice === 'cancel') return false;
+    if (choice === 'discard') review.discardDraft();
     if (review.layer().marks.length) activate('nodes');
+    return true;
   }
-  function stroke(points: Point[], width = brush().width) {
+  async function stroke(points: Point[], width = brush().width) {
     const erase = tool() === 'eraser';
     const action = erase ? 'erase' : 'stroke';
-    review.accept(
-      {
-        id: review.nextId(),
+    if (
+      await review.accept(
+        {
+          id: review.nextId(),
+          action,
+          points,
+          width,
+          operation: erase ? 'subtract' : 'add',
+          closed: false,
+        },
         action,
-        points,
-        width,
-        operation: erase ? 'subtract' : 'add',
-        closed: false,
-      },
-      action,
-    );
-    notify('changed');
+      )
+    )
+      notify('changed');
   }
   const cornerShape = () => tool() === 'shape' && shape() !== 'polygon';
   const minimum = () =>
@@ -86,6 +89,7 @@ export function createDrawingTools(review: DrawingReview, notify: (notice: 'chan
         : 2;
   const maximum = () => (cornerShape() ? 2 : pointLimit);
   function addPoint(point: Point) {
+    if (!review.contains(point)) return;
     const current = sketch();
     if (current.points.length >= maximum() || (tool() === 'nodes' && !current.mark)) return;
     const index = tool() === 'nodes' ? current.index + 1 : current.points.length;
@@ -119,11 +123,19 @@ export function createDrawingTools(review: DrawingReview, notify: (notice: 'chan
     const points = sketch().points;
     if (tool() === 'nodes' && !sketch().mark) return false;
     if (points.length < minimum()) return false;
-    return !cornerShape() || (points[0]!.x !== points[1]!.x && points[0]!.y !== points[1]!.y);
+    if (cornerShape() && (points[0]!.x === points[1]!.x || points[0]!.y === points[1]!.y))
+      return false;
+    return tool() === 'nodes'
+      ? points.every(
+          (point) =>
+            sketch().mark!.points.includes(point) ||
+            (review.contains(point) && (!point.handle || review.contains(point.handle))),
+        )
+      : review.containsMark(previewMark());
   };
   const previewMark = (): Mark => {
     const { mark, points, closed } = sketch();
-    const shaped = tool() === 'shape' && valid();
+    const shaped = tool() === 'shape' && points.length >= minimum();
     return {
       id: mark?.id ?? 0,
       action: mark?.action ?? (tool() === 'shape' ? 'shape' : 'path'),
@@ -131,13 +143,17 @@ export function createDrawingTools(review: DrawingReview, notify: (notice: 'chan
       closed: shaped || closed,
       operation: mark?.operation ?? operation(),
       width: mark?.width ?? 0.65,
+      region: mark?.region,
     };
   };
-  function apply() {
+  async function apply() {
     if (!valid() || review.blocked()) return;
     const mark = previewMark();
-    if (tool() === 'nodes') review.editMark(mark);
-    else review.accept({ ...mark, id: review.nextId() }, mark.action);
+    const accepted =
+      tool() === 'nodes'
+        ? await review.editMark(mark)
+        : await review.accept({ ...mark, id: review.nextId() }, mark.action);
+    if (!accepted) return;
     reset();
     notify('changed');
   }

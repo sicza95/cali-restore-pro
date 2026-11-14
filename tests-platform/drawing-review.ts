@@ -21,7 +21,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   };
 
   await c('mode.drawing').click();
-  await expect(page.getByText(/^Temporary review\. Drafts/)).toBeVisible();
+  await expect(page.getByText(/^Committed masks are saved to this surface/)).toBeVisible();
   await expect(c('tool.nodes')).toBeDisabled();
   await expect(c('brush.width')).toHaveCount(0);
   await c('tool.select').focus();
@@ -243,8 +243,10 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('layer.parent').selectOption({ label: 'Folder' });
   await c('layer.fill').selectOption('hatch');
   await c('layer.opacity').fill('33');
+  await c('layer.opacity').blur();
+  await expect(c('layer.outline')).toBeEnabled();
   await c('layer.outline').uncheck();
-  await expect(page.locator('.drawing-overlay rect[fill^="url("]')).toHaveCount(1);
+  await expect(page.locator('.drawing-overlay path[fill^="url("]')).toHaveCount(1);
   await c('layer.down').click();
   await expect(c('layer.select').last()).toContainText('Independent phase');
   await c('mode.photo').click();

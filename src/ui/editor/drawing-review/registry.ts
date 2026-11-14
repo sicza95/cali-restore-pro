@@ -38,11 +38,11 @@ export const drawingControls: readonly ControlContract[] = [
     'M-14',
     'Open an authorized surface',
     'Local workspace mode',
-    'transient',
+    'draftLifetime',
     'Keep photo review available and explain missing mapping reference in drawing mode',
     [
       ['mode.photo', 'photoMode', 'Open photo preparation and calibration review'],
-      ['mode.drawing', 'drawingMode', 'Open temporary drawing review on the mapping reference'],
+      ['mode.drawing', 'drawingMode', 'Open canonical mask authoring on the selected photo'],
     ],
   ),
   ...register(

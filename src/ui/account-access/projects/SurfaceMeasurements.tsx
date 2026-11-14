@@ -66,15 +66,19 @@ export function SurfaceMeasurements(props: {
           </Show>
         </Show>
         <For each={[...(shown()?.layers ?? []), ...(shown()?.categories ?? [])]}>
-          {(entry) => (
-            <>
-              <dt>{entry.id}</dt>
-              <dd>
-                {area(entry.areaM2.value)}
-                {entry.percent.value === null ? '' : ' · ' + format(entry.percent.value) + '%'}
-              </dd>
-            </>
-          )}
+          {(entry) => {
+            const row = () =>
+              props.state.drawing?.find((layer) => (layer.key ?? String(layer.id)) === entry.id);
+            return (
+              <>
+                <dt>{row()?.name || entry.id}</dt>
+                <dd>
+                  {area(entry.areaM2.value)}
+                  {entry.percent.value === null ? '' : ' · ' + format(entry.percent.value) + '%'}
+                </dd>
+              </>
+            );
+          }}
         </For>
       </dl>
     </section>

@@ -1,3 +1,5 @@
+import type { DrawingLayer } from './planar-drawing';
+
 export type Point = readonly [number, number];
 export type Bounds = readonly [left: number, top: number, width: number, height: number];
 export type Matrix = readonly [
@@ -72,4 +74,5 @@ export type PlanarSurface = {
   master?: Mask;
   layers: MaskLayer[];
   categories: Category[];
+  drawing?: DrawingLayer[];
 };

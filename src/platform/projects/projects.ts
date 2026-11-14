@@ -1,4 +1,5 @@
 import { assertPlanarState } from './planar-state';
+import { assertDrawing } from './drawing-state';
 import type { PendingAttachment } from '../vault/project-store';
 import type { LocalVault } from '../vault/vault';
 import type { Project, RestorationObject, SavedProject, Surface } from './types';
@@ -59,6 +60,7 @@ export function validateProject(project: Project, id: string) {
       const attachments = new Set(surface.images.map((image) => image.id));
       for (const entry of assessments) {
         assertPlanarState(entry);
+        if (entry.drawing !== undefined) assertDrawing(entry.drawing);
         if (
           ![
             entry.source,

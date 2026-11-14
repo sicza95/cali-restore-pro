@@ -2,10 +2,16 @@ const messages = {
   mode: ['Surface workspace', 'Felület munkaterülete'],
   photoMode: ['Photo review', 'Fotó ellenőrzése'],
   drawingMode: ['Drawing review', 'Rajz ellenőrzése'],
-  transient: [
-    'Temporary review. Drafts, commits and layer changes last only while this surface and reference stay open.',
-    'Ideiglenes előnézet. A vázlatok, rögzítések és rétegmódosítások csak a felület és a referencia megnyitásáig élnek.',
+  draftLifetime: [
+    'Committed masks are saved to this surface. Uncommitted drafts and undo history last while the surface stays open.',
+    'A rögzített maszkokat a felület tárolja. A vázlatok és a visszavonási előzmények a felület bezárásáig érhetők el.',
   ],
+  alignmentRequired: [
+    'Drawing requires an accepted mapping region on this photo.',
+    'A rajzoláshoz elfogadott térképezési terület kell ezen a fotón.',
+  ],
+  saving: ['Saving masks…', 'Maszkok mentése…'],
+  saveFailed: ['Mask changes could not be saved.', 'A maszk módosításait nem sikerült menteni.'],
   unavailable: [
     'Drawing requires a supported mapping reference.',
     'A rajzoláshoz támogatott térképezési referencia kell.',
@@ -137,7 +143,7 @@ const messages = {
   batch: ['Draft batch', 'Vázlatköteg'],
   draft: ['Draft mark', 'Vázlatjel'],
   changed: ['Preview updated', 'Előnézet frissítve'],
-  committed: ['Committed in this review', 'Rögzítve az előnézetben'],
+  committed: ['Saved to this surface', 'Mentve a felületre'],
   discarded: ['Draft discarded', 'Vázlat elvetve'],
   noSketch: [
     'Point edits and unfinished marks clear when leaving the tool or layer.',

@@ -93,6 +93,14 @@
   height: 100%;
   pointer-events: none;
 }
+.drawing-layer-controls {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
 .drawing-markable {
   cursor: crosshair;
 }
@@ -111,8 +119,13 @@
   stroke-linejoin: round;
 }
 .drawing-pending-mark {
-  stroke-width: 0.6;
-  stroke-dasharray: 1.5 0.8;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.drawing-live-stroke {
+  fill: var(--cr-mask);
+  fill-opacity: 0.6;
+  stroke: none;
 }
 .drawing-point {
   fill: var(--cr-ground);
@@ -123,7 +136,7 @@
   fill: var(--cr-mask);
 }
 .drawing-cursor {
-  stroke-width: 0.4;
+  stroke-width: 1;
 }
 .drawing-view {
   margin-top: 8px;
