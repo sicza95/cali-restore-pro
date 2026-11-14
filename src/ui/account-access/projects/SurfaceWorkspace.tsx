@@ -7,6 +7,9 @@ import type {
   Attachment,
 } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
+import { updateSurfaceImages } from '../../../platform/projects/surface-attachments';
+import type { PlanarSurface } from '../../../platform/projects/planar-types';
+import { SurfaceMeasurements } from './SurfaceMeasurements';
 import type { Language } from '../types';
 import { CheckpointReview } from '../../editor/checkpoint-review/CheckpointReview';
 import { checkpointCopy } from '../../editor/checkpoint-review/copy';
@@ -50,6 +53,8 @@ export function SurfaceWorkspace(props: {
     );
   const photo = () => images()[index()];
   const reference = () => images().find((image) => image.role === 'mapping');
+  const assessment = () =>
+    props.surface.assessments?.find((entry) => entry.source.id === reference()?.id);
   const role = () =>
     photo()?.role === 'reference'
       ? 'reference'
@@ -59,7 +64,7 @@ export function SurfaceWorkspace(props: {
   const reviewKey = createMemo(() => [photo()?.id, role(), reference()?.id].join('/'));
   const move = (offset: number) => setSelected(images()[index() + offset]?.id);
   const href = () => projectHref(props.project.id);
-  const saveImages = (images: Attachment[], attachment?: PendingAttachment) =>
+  const saveSurface = (changes: Partial<Surface>, attachment?: PendingAttachment) =>
     props.onSave(
       {
         ...props.project,
@@ -68,7 +73,7 @@ export function SurfaceWorkspace(props: {
             ? {
                 ...object,
                 surfaces: object.surfaces.map((surface) =>
-                  surface.id === props.surface.id ? { ...surface, images } : surface,
+                  surface.id === props.surface.id ? { ...surface, ...changes } : surface,
                 ),
               }
             : object,
@@ -76,6 +81,18 @@ export function SurfaceWorkspace(props: {
       },
       attachment,
     );
+  const saveAssessment = (state: PlanarSurface) => {
+    const assessments = props.surface.assessments ?? [];
+    // Project commands here run as deferred event callbacks.
+    // eslint-disable-next-line solid/reactivity
+    return props.onRun(() =>
+      saveSurface({
+        assessments: [...assessments.filter((entry) => entry.source.id !== state.source.id), state],
+      }),
+    );
+  };
+  const saveImages = (images: Attachment[], attachment?: PendingAttachment) =>
+    saveSurface(updateSurfaceImages(props.surface, images), attachment);
   return (
     <>
       <a
@@ -210,6 +227,14 @@ export function SurfaceWorkspace(props: {
               reference={reference()?.id}
               copy={view()}
               unit={imperial() ? 'in' : 'cm'}
+              state={
+                assessment() ??
+                (!reference()
+                  ? props.surface.assessments?.find((entry) => entry.source.id === photo()?.id)
+                  : undefined)
+              }
+              busy={props.busy}
+              onSave={saveAssessment}
             />
           )}
         </Show>
@@ -241,6 +266,24 @@ export function SurfaceWorkspace(props: {
         <div hidden={mode() !== 'checkpoint'}>
           <CheckpointReview language={props.language} imperial={imperial()} />
         </div>
+      </Show>
+      <Show
+        when={assessment() && mode() === 'photo' ? assessment() : undefined}
+        fallback={
+          <Show when={mode() === 'photo'}>
+            <p role="status">{view().unavailable}</p>
+          </Show>
+        }
+      >
+        {(state) => (
+          <SurfaceMeasurements
+            state={state()}
+            revision={props.project.revision}
+            copy={view()}
+            language={props.language}
+            imperial={imperial()}
+          />
+        )}
       </Show>
       <ProjectOriginals
         project={props.project.id}

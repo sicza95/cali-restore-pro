@@ -22,42 +22,42 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | SURF-01     | Must     | Objects contain named, separately assessed surfaces                 | M-05  | M-13       | Partial |
 | SURF-02     | Must     | Shared surface mapping from aligned images                          | M-08  | M-14       | Planned |
 | IMG-04      | Must     | Mapping and reference-only image roles                              | M-05  | M-13       | Partial |
-| ALIGN-01    | Must     | Automatic-first alignment with user verification                    | M-08  | M-13       | Planned |
-| ALIGN-02    | Must     | Detail-photo realignment preserves global drawing                   | M-08  | M-13       | Planned |
-| ALIGN-03    | Must     | Accepted partial mapped areas with reference-only fallback          | M-08  | M-13       | Planned |
+| ALIGN-01    | Must     | Automatic-first alignment with user verification                    | M-08  | M-13       | Partial |
+| ALIGN-02    | Must     | Detail-photo realignment preserves global drawing                   | M-08  | M-13       | Partial |
+| ALIGN-03    | Must     | Accepted partial mapped areas with reference-only fallback          | M-08  | M-13       | Partial |
 | IMG-01      | Must     | Seven validated initial image-format families                       | M-04  | M-16       | Partial |
 | IMG-02      | Must     | Preserve original source                                            | M-04  | M-13       | Partial |
 | IMG-03      | Must     | Large-source import separated from editing                          | M-04  | M-16       | Partial |
 | IMG-05      | Must     | 8K-class source-image workload                                      | M-04  | M-16       | Partial |
-| FRAME-01    | Must     | Crop, rotate, flip, rectify/perspective and required skew workflows | M-08  | M-13       | Planned |
+| FRAME-01    | Must     | Crop, rotate, flip, rectify/perspective and required skew workflows | M-08  | M-13       | Partial |
 | FRAME-02    | Must     | Separate view navigation from document transforms                   | M-08  | M-14       | Planned |
-| FRAME-03    | Must     | Later main-reference transforms carry shared mask space             | M-05  | M-13       | Planned |
-| FRAME-04    | Must     | Main-reference crop clips measurement without deleting drawing      | M-05  | M-13       | Planned |
-| CAL-01      | Must     | Two first-class physical calibration methods                        | M-08  | M-13       | Planned |
-| CAL-02      | Must     | Calibration provenance and invalidation                             | M-08  | M-13       | Planned |
-| CAL-03      | Must     | Reference-format-independent calibration                            | M-08  | M-13       | Planned |
+| FRAME-03    | Must     | Later main-reference transforms carry shared mask space             | M-05  | M-13       | Partial |
+| FRAME-04    | Must     | Main-reference crop clips measurement without deleting drawing      | M-05  | M-13       | Partial |
+| CAL-01      | Must     | Two first-class physical calibration methods                        | M-08  | M-13       | Partial |
+| CAL-02      | Must     | Calibration provenance and invalidation                             | M-08  | M-13       | Partial |
+| CAL-03      | Must     | Reference-format-independent calibration                            | M-08  | M-13       | Partial |
 | MASK-01     | Must     | Responsive brush and erase with selectable commit behaviour         | M-08  | M-16       | Partial |
 | MASK-02     | Must     | Precise pen and shape workflows                                     | M-08  | M-14       | Partial |
 | MASK-03     | Must     | Point and curve editing for every mask                              | M-08  | M-14       | Partial |
-| MASK-04     | Must     | Vector mask source of truth with derived display caches             | M-05  | M-13       | Planned |
+| MASK-04     | Must     | Vector mask source of truth with derived display caches             | M-05  | M-13       | Partial |
 | MASK-05     | Must     | Source-dependent fine detail without a fixed physical minimum       | M-08  | M-16       | Planned |
 | MASK-06     | Must     | Lightweight encrypted recovery of layer-owned painting drafts       | M-03  | M-15       | Planned |
 | MASK-07     | Must     | Constant-width defaults with optional pressure-sensitive width      | M-08  | M-16       | Partial |
 | MASK-08     | Must     | Optional adjustable stroke stabilization                            | M-08  | M-16       | Partial |
 | MASK-09     | Must     | Surface-relative brush and eraser size                              | M-08  | M-16       | Partial |
 | LAYER-01    | Must     | Layer CRUD, rename, ordering, visibility, lock, opacity             | M-05  | M-14       | Partial |
-| LAYER-02    | Must     | Preserve master/crop measurement with non-destructive drawing       | M-05  | M-13       | Planned |
+| LAYER-02    | Must     | Preserve master/crop measurement with non-destructive drawing       | M-05  | M-13       | Partial |
 | LAYER-03    | Must     | Fill, colour, pattern and outline                                   | M-08  | M-15       | Partial |
 | LAYER-04    | Must     | Folder-like damage categories with per-layer and union totals       | M-05  | M-13       | Partial |
 | LAYER-05    | Must     | Optional nested folders with unique descendant totals               | M-05  | M-13       | Partial |
 | HIST-01     | Must     | Chronological, bounded surface-wide undo/redo                       | M-08  | M-15       | Partial |
 | HIST-02     | Must     | Multitouch Undo/Redo with a shared rapid-tap window                 | M-08  | M-16       | Planned |
 | HIST-03     | Must     | Bounded encrypted local history across reopening                    | M-03  | M-15       | Planned |
-| MEAS-01     | Must     | Trustworthy per-layer coverage and area                             | M-08  | M-13       | Planned |
-| MEAS-02     | Must     | Explicit measurement states                                         | M-08  | M-13       | Planned |
-| MEAS-03     | Must     | Flat-surface measurement with an extensible method boundary         | M-05  | M-13       | Planned |
-| MEAS-04     | Must     | Unique overall damage area with full category breakdowns            | M-08  | M-13       | Planned |
-| MEAS-05     | Must     | Actual geometry coverage with visual-only opacity                   | M-08  | M-13       | Planned |
+| MEAS-01     | Must     | Trustworthy per-layer coverage and area                             | M-08  | M-13       | Partial |
+| MEAS-02     | Must     | Explicit measurement states                                         | M-08  | M-13       | Partial |
+| MEAS-03     | Must     | Flat-surface measurement with an extensible method boundary         | M-05  | M-13       | Partial |
+| MEAS-04     | Must     | Unique overall damage area with full category breakdowns            | M-08  | M-13       | Partial |
+| MEAS-05     | Must     | Actual geometry coverage with visual-only opacity                   | M-08  | M-13       | Partial |
 | MEAS-06     | Must     | Preserve work and inputs through empty/incomplete assessment        | M-05  | M-16       | Planned |
 | MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Partial |
 | OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Partial |
@@ -143,6 +143,8 @@ M-03 adds [the vault format, threat model and verification](../m03-client-vault.
 M-04 adds [encrypted original storage and transfer](../m04-encrypted-files.md). IMG-02/03/05 have opaque, byte-preserving staged import and bounded synthetic transfer evidence; editor integration, format qualification and physical iPad checks remain open. ADMIN-04/05 have single-owner accounting, atomic reservations and hosting-withdrawal evidence; shared ownership and accepted hosting transfer remain open.
 
 M-12 adds [bounded image import and variant evidence](../m12-image-import.md). IMG-01/02/03/05 now have client validation, recoverable encrypted working assets, normalized orientation and color, cancellation, camera-preview spot checks and desktop 8K ingest evidence. Physical iPad/Safari, broad camera coverage and sustained editing qualification remain open.
+
+[M-13 planar assessment evidence](../m13-planar-assessment.md) covers FRAME-01/03/04, CAL-01 through CAL-03, MASK-04, LAYER-02/04/05, MEAS-01 through MEAS-05 and ALIGN-01 through ALIGN-03. The versioned engine, surface controls, oracle cases and encrypted recovery provide Partial evidence. Drawing gestures, representative calibrated photographs, device qualification and downstream measurements remain open.
 
 PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verification.md). The complete privacy acceptance remains M-16; the bootstrap schema does not close encryption or project-content requirements.
 

@@ -1,3 +1,4 @@
+import { assertPlanarState } from './planar-state';
 import type { PendingAttachment } from '../vault/project-store';
 import type { LocalVault } from '../vault/vault';
 import type { Project, RestorationObject, SavedProject, Surface } from './types';
@@ -46,6 +47,29 @@ export function validateProject(project: Project, id: string) {
   if (!project.objects.length || project.objects.some((object) => !object.surfaces.length))
     throw new Error('Incomplete project hierarchy');
   if (!/^[A-Z]{3}$/.test(project.settings.currency)) throw new Error('Invalid currency');
+  for (const object of project.objects) {
+    for (const surface of object.surfaces) {
+      const assessments = surface.assessments ?? [];
+      if (
+        !Array.isArray(assessments) ||
+        assessments.length > 128 ||
+        new Set(assessments.map((entry) => entry.source.id)).size !== assessments.length
+      )
+        throw new Error('Invalid surface assessments');
+      const attachments = new Set(surface.images.map((image) => image.id));
+      for (const entry of assessments) {
+        assertPlanarState(entry);
+        if (
+          ![
+            entry.source,
+            ...entry.details.map((item) => item.source),
+            ...entry.alignments.map((item) => item.source),
+          ].every((source) => attachments.has(source.id))
+        )
+          throw new Error('Assessment photo is not attached');
+      }
+    }
+  }
   return project;
 }
 

@@ -2,6 +2,7 @@
 import type { PendingAttachment } from '../../../platform/vault/project-store';
 import { createSignal, For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
+import { updateSurfaceImages } from '../../../platform/projects/surface-attachments';
 import { newObject, newSurface, projectName } from '../../../platform/projects/projects';
 import type {
   RestorationObject,
@@ -254,7 +255,9 @@ export function ProjectDetail(props: {
               vault={props.vault}
               busy={props.busy}
               onRun={props.onRun}
-              onSave={(images, attachment) => editSurface({ images }, attachment)}
+              onSave={(images, attachment) =>
+                editSurface(updateSurfaceImages(surface(), images), attachment)
+              }
             />
           )}
         </Show>

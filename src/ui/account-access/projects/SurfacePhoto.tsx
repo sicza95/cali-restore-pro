@@ -1,5 +1,8 @@
 import { createMemo, createSignal, onCleanup, Show, untrack } from 'solid-js';
 import type { JSX } from 'solid-js';
+import type { ImageManifest } from '../../../platform/images/types';
+import type { Matrix } from '../../../platform/projects/planar-types';
+import { photoMatrixStyle } from './surface-review-model';
 import { SurfaceTiles } from './SurfaceTiles';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { SurfaceCopy } from './surface-copy';
@@ -13,6 +16,8 @@ export function SurfacePhoto(props: {
   zoom?: number;
   children?: JSX.Element;
   onReady?: (size: { width: number; height: number }) => void;
+  onManifest?: (manifest: ImageManifest) => void;
+  matrix?: Matrix;
 }) {
   const [url, setUrl] = createSignal<string>();
   const [status, setStatus] = createSignal<'loading' | 'ready' | 'invalid'>('loading');
@@ -44,6 +49,23 @@ export function SurfacePhoto(props: {
       if (!controller.signal.aborted) setStatus('invalid');
     },
   );
+  const [rendered, setRendered] = createSignal({ width: 0, height: 0 });
+  const frameStyle = () => {
+    const matrix = props.matrix;
+    const manifest = image()?.manifest;
+    const { width, height } = rendered();
+    if (!matrix || !manifest || !width || !height) return props.style;
+    const style = photoMatrixStyle(
+      matrix,
+      width / manifest.pixels.width,
+      height / manifest.pixels.height,
+    );
+    return {
+      ...props.style,
+      transform: [props.style?.transform, style].filter(Boolean).join(' '),
+      'transform-origin': '0 0',
+    };
+  };
   const level = createMemo(() => {
     const manifest = image()?.manifest;
     const zoom = props.zoom ?? 100;
@@ -62,7 +84,16 @@ export function SurfacePhoto(props: {
         </p>
       </Show>
       <Show when={url() && status() !== 'invalid'}>
-        <div class="surface-photo-frame" style={props.style}>
+        <div
+          class="surface-photo-frame"
+          style={frameStyle()}
+          ref={(element) => {
+            if (!props.onManifest) return;
+            const observer = new ResizeObserver(([entry]) => setRendered(entry!.contentRect));
+            observer.observe(element);
+            onCleanup(() => observer.disconnect());
+          }}
+        >
           <img
             src={url()}
             alt={props.copy.photo}
@@ -71,6 +102,7 @@ export function SurfacePhoto(props: {
             onLoad={() => {
               setStatus('ready');
               props.onReady?.(image()!.manifest.pixels);
+              props.onManifest?.(image()!.manifest);
             }}
             onError={() => setStatus('invalid')}
           />

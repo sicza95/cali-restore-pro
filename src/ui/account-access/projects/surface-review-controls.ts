@@ -47,6 +47,7 @@ const review = [
   'original',
   'compare',
   'auto',
+  'stopMatch',
   'manualPairs',
   'referenceOnly',
   'method',
@@ -60,8 +61,8 @@ const review = [
 ];
 
 function reviewPrerequisite(key: string) {
-  if (key === 'auto')
-    return 'Separate mapping reference and M-13 matcher. Show disabled before M-13.';
+  if (key === 'stopMatch') return 'Automatic alignment job running';
+  if (key === 'auto') return 'Separate available working images with overlapping landmarks';
   if (key.startsWith('pair'))
     return 'Alignment with manual correspondence enabled and fallback off';
   if (key.startsWith('horizontal.') || key.startsWith('vertical.'))
@@ -92,16 +93,13 @@ export const surfaceControls: readonly ControlContract[] = [
     id: 'surface.review.' + key,
     labelKey: key.split('.').at(-1)!,
     helpKey: key === 'auto' ? 'autoUnavailable' : 'transient',
-    command:
-      key === 'auto'
-        ? 'Request automatic alignment when the matcher is available'
-        : 'Review ' + key,
+    command: key === 'auto' ? 'Propose alignment landmarks for verification' : 'Edit ' + key,
     owner: 'M-13',
     composition: 'Surface review adapter',
     permission: 'Authorized project and unlocked vault',
     prerequisite: reviewPrerequisite(key),
-    valueSource: 'In-memory review parameters',
-    behavior: 'review',
+    valueSource: 'Local draft and encrypted surface assessment',
+    behavior: 'functional',
     unavailable: {
       failure: 'Show validation or availability reason',
       empty: 'Disable review without a preview',

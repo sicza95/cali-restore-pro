@@ -1,7 +1,14 @@
+import type { PlanarSurface } from './planar-types';
 export type Units = 'metric' | 'imperial';
 export type ImageRole = 'mapping' | 'reference';
 export type Attachment = { id: string; role: ImageRole };
-export type Surface = { id: string; name: string; units: Units | null; images: Attachment[] };
+export type Surface = {
+  id: string;
+  name: string;
+  units: Units | null;
+  images: Attachment[];
+  assessments?: PlanarSurface[];
+};
 export type RestorationObject = {
   id: string;
   name: string;

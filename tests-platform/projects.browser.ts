@@ -161,7 +161,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(review('review.apply')).toBeDisabled();
   await review('review.cropWidth').fill('80');
   await review('review.apply').click();
-  await expect(page.getByText('Applied for this review session.')).toBeVisible();
+  await expect(page.getByText('Saved to this surface.')).toBeVisible();
   await review('review.prepare').click();
   await expect(review('review.cropWidth')).toHaveValue('80');
   await review('review.cropWidth').fill('50');
@@ -183,7 +183,8 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await review('review.width').fill('10');
   await review('review.height').fill('12');
   await verifyCalibrationGuides(page);
-  expect(await revisions()).toEqual(beforeReview);
+  await expect(page.getByText('Measurements are current.')).toBeVisible();
+  expect((await revisions())[0]).not.toEqual(beforeReview[0]);
   await page.setViewportSize({ width: 1194, height: 834 });
   await attach.setInputFiles({ name: 'wall-detail.png', mimeType: 'image/png', buffer: png });
   await controls('originals.attach').click();
@@ -191,18 +192,19 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await review('view.next').click();
   await expect(review('review.align')).toHaveAttribute('aria-disabled', 'false');
   await review('review.align').click();
-  await expect(review('review.auto')).toBeDisabled();
+  await expect(review('review.auto')).toBeEnabled();
   await review('review.compare').check();
   await expect(page.locator('.surface-canvas img')).toHaveCount(2);
   await verifyAlignmentGuides(page);
   const beforeAlignment = await revisions();
   await review('review.offsetX').fill('10');
   await review('review.apply').click();
-  expect(await revisions()).toEqual(beforeAlignment);
+  await expect(page.getByText('Saved to this surface.')).toBeVisible();
+  expect((await revisions())[0]).not.toEqual(beforeAlignment[0]);
   await review('view.previous').click();
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
   await review('review.prepare').click();
-  await expect(review('review.cropWidth')).toHaveValue('100');
+  await expect(review('review.cropWidth')).toHaveValue('80');
   await attach.setInputFiles({
     name: 'plaster-detail.dng',
     mimeType: 'image/x-adobe-dng',
@@ -232,6 +234,12 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(drawingControl(page, 'layer.select')).toHaveCount(1);
   await expect(drawingControl(page, 'layer.select')).toContainText('0 · Mark');
   await drawingControl(page, 'mode.photo').click();
+  await expect(page.getByText('Measurements are current.')).toBeVisible();
+  await review('review.prepare').click();
+  await expect(review('review.cropWidth')).toHaveValue('80');
+  await review('review.cropWidth').fill('75');
+  await review('review.apply').click();
+  await expect(page.getByText('Calibration needs review after preparation changed.')).toBeVisible();
   await page.screenshot({ path: info.outputPath('surface-reopened.png') });
   await controls('surface.project').click();
   await page

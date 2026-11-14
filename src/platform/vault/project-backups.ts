@@ -1,3 +1,4 @@
+import { remapSurfaceImages } from '../projects/surface-attachments';
 import { validateProject } from '../projects/projects';
 import type { Project } from '../projects/types';
 import { newCode } from './crypto';
@@ -194,10 +195,17 @@ export function projectBackups(
           parts,
         });
       }
-      for (const object of project.objects)
-        for (const surface of object.surfaces)
-          for (const image of surface.images) image.id = fileIds.get(image.id)!;
-      const next = { ...project, id };
+      const next = validateProject(
+        {
+          ...project,
+          id,
+          objects: project.objects.map((object) => ({
+            ...object,
+            surfaces: object.surfaces.map((surface) => remapSurfaceImages(surface, fileIds)),
+          })),
+        },
+        id,
+      );
       await projectDocuments(root, account, stamp, signal).restore(
         id,
         JSON.stringify(next),

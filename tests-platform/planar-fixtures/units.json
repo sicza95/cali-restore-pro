@@ -1,0 +1,62 @@
+{
+  "id": "FX-11",
+  "oracle": "p01-rational-v1",
+  "projectUnit": "cm2",
+  "objects": [
+    {
+      "id": "object-a",
+      "unit": null,
+      "surfaces": [
+        {
+          "id": "a-1",
+          "areaM2": "1",
+          "unit": "mm2"
+        },
+        {
+          "id": "a-2",
+          "areaM2": "1",
+          "unit": null
+        }
+      ]
+    },
+    {
+      "id": "object-b",
+      "unit": "m2",
+      "surfaces": [
+        {
+          "id": "b-1",
+          "areaM2": "1",
+          "unit": null
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "aTotal": "20000",
+    "bTotal": "1",
+    "projectTotal": "30000",
+    "changedProjectUnit": "mm2",
+    "changedATotal": "2000000",
+    "changedProjectTotal": "3000000",
+    "oneSquareInchM2": "16129/25000000",
+    "oneSquareFootM2": "145161/1562500",
+    "outputOverrideM2": "3"
+  },
+  "workbookExample": {
+    "id": "FX-08",
+    "areaCm2": "142.08",
+    "speedCm2PerHour": "10",
+    "rateHufPerCm2": "150",
+    "expectedHours": "14.208",
+    "expectedHuf": "21312"
+  },
+  "laterScope": {
+    "id": "FX-09",
+    "objectCosts": ["100", "200"],
+    "selectedExtra": "80",
+    "excludedExtra": "50",
+    "expectedAll": "380",
+    "expectedFirstOnly": "180",
+    "automaticProrating": false
+  }
+}

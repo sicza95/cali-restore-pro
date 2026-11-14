@@ -1,12 +1,22 @@
-import { createSignal, For, Show, untrack } from 'solid-js';
+import { createMemo, createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import { detailMapping } from '../../../platform/projects/planar-alignment';
+import { photoFrame, sameSource } from '../../../platform/projects/planar-state';
+import { preparationMatrix } from '../../../platform/projects/planar-transform';
+import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
+import { commitAssessment, preparation, savedDraft } from './surface-assessment';
+import { surfaceMatcher } from './surface-match';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { SurfaceCopy } from './surface-copy';
+import { SurfaceCalibrationFields } from './SurfaceCalibrationFields';
+import { SurfaceAlignmentFields } from './SurfaceAlignmentFields';
+import { SurfaceToolReasons } from './SurfaceToolReasons';
 import { SurfacePanControls } from './SurfacePanControls';
 import { SurfacePhoto } from './SurfacePhoto';
-import { GuideFields, SurfaceReviewGuides } from './SurfaceReviewGuides';
-import { fields, toolFields, tools } from './surface-review-controls';
+import { SurfaceReviewGuides } from './SurfaceReviewGuides';
+import { tools } from './surface-review-controls';
 import type { ReviewTool } from './surface-review-controls';
 import { defaults, surfacePhotoStyle, validateDraft } from './surface-review-model';
+import { SurfaceDraftFields } from './SurfaceDraftFields';
 const id = (key: string) => 'surface.review.' + key;
 
 export function SurfaceReviewAdapter(props: {
@@ -17,13 +27,35 @@ export function SurfaceReviewAdapter(props: {
   copy: SurfaceCopy;
   role?: 'main' | 'detail' | 'reference';
   unit: 'cm' | 'in';
+  state?: PlanarSurface;
+  busy: boolean;
+  onSave: (state: PlanarSurface) => Promise<boolean>;
 }) {
-  const [size, setSize] = createSignal<{ width: number; height: number }>();
+  const [size, setSize] = createSignal<SourceFrame>();
+  const matcher = untrack(() => surfaceMatcher(props.vault, props.project));
+  const controller = new AbortController();
+  onCleanup(() => controller.abort());
   const [tool, setTool] = createSignal<ReviewTool>();
   const [draft, setDraft] = createSignal(untrack(() => defaults(props.unit)));
-  const [applied, setApplied] = createSignal<
-    Partial<Record<ReviewTool, ReturnType<typeof defaults>>>
-  >({});
+  const [automatic, setAutomatic] = createSignal(false);
+  const [originalState] = createResource(
+    () =>
+      tool() && props.reference && props.reference !== props.photo && !props.state
+        ? props.reference
+        : undefined,
+    async (id) => {
+      const image = await props.vault
+        .files()
+        .workingImage({ project: props.project, id }, { signal: controller.signal })
+        .catch(() => undefined);
+      if (image)
+        return { id, ...image.manifest.pixels, embeddedPreview: image.manifest.embeddedPreview };
+    },
+  );
+  const referenceSource = () =>
+    !props.reference || props.reference === props.photo
+      ? size()
+      : (props.state?.source ?? originalState());
   const [notice, setNotice] = createSignal<'applied'>();
   const [original, setOriginal] = createSignal(false);
   const [compare, setCompare] = createSignal(false);
@@ -42,7 +74,12 @@ export function SurfaceReviewAdapter(props: {
     return '';
   };
   function select(key: ReviewTool) {
-    setDraft(applied()[key] ?? defaults(props.unit));
+    matcher.cancel();
+    setDraft(savedDraft(props.state, size(), key, props.unit));
+    setAutomatic(
+      props.state?.alignments.find((item) => item.source.id === props.photo)?.input.method ===
+        'automatic',
+    );
     setNotice(undefined);
     setOriginal(false);
     setCompare(false);
@@ -50,17 +87,43 @@ export function SurfaceReviewAdapter(props: {
   }
   function close() {
     const key = tool();
+    matcher.cancel();
     setTool(undefined);
     if (key) toolButtons[key]?.focus();
     setOriginal(false);
     setCompare(false);
   }
-  const valid = () => !!tool() && validateDraft(tool()!, draft(), size());
-  const preview = () => (tool() && valid() ? { ...applied(), [tool()!]: draft() } : applied());
-  const lines = () => {
-    const state = preview().calibrate;
-    return !original() && state?.method === 'lines' ? state : undefined;
+  const candidate = createMemo(() => {
+    const key = tool();
+    const source = size();
+    const reference = referenceSource();
+    if (!key || !source || !reference || !validateDraft(key, draft(), source)) return;
+    try {
+      return commitAssessment(props.state, reference, source, key, draft(), automatic());
+    } catch {
+      return;
+    }
+  });
+  const valid = () => !!candidate();
+  const preview = (key: ReviewTool) =>
+    tool() === key && valid() ? draft() : savedDraft(props.state, size(), key, props.unit);
+  const matrix = () => {
+    const source = size();
+    if (!source || original()) return;
+    const state = candidate() ?? props.state;
+    const local = preparationMatrix(source, preparation(source, preview('prepare')));
+    if (!state || compare()) return local;
+    const alignment = state.alignments.find((item) => sameSource(item.source, source));
+    const detail =
+      state.details.find((item) => sameSource(item.source, source)) ?? photoFrame(source);
+    if (alignment && alignment.preparationRevision === detail.revision)
+      return detailMapping(state, alignment, detail) ?? local;
+    return local;
   };
+  const lines = () =>
+    !original() && props.role === 'main' && preview('calibrate').method === 'lines'
+      ? preview('calibrate')
+      : undefined;
   const pairs = () =>
     !original() && tool() === 'align' && draft().manualPairs && !draft().referenceOnly && valid()
       ? draft()
@@ -100,18 +163,29 @@ export function SurfaceReviewAdapter(props: {
                 copy={props.copy}
                 style={surfacePhotoStyle(
                   { ...pan(), zoom: zoom(), rotate: rotate() },
-                  original() ? undefined : preview(),
+                  original() ? undefined : preview('prepare'),
                 )}
                 zoom={zoom()}
-                onReady={setSize}
+                matrix={matrix()}
+                onManifest={(manifest) =>
+                  setSize({
+                    id: photo(),
+                    ...manifest.pixels,
+                    embeddedPreview: manifest.embeddedPreview,
+                  })
+                }
               >
                 <SurfaceReviewGuides
                   lines={lines()}
                   pairs={pairs()}
-                  rectification={original() ? undefined : preview().prepare}
+                  rectification={original() ? undefined : preview('prepare')}
                   usable={
-                    !original() && !compare() && !preview().align?.referenceOnly
-                      ? preview().align?.usable
+                    !original() &&
+                    !compare() &&
+                    !preview('align').referenceOnly &&
+                    (tool() === 'align' ||
+                      props.state?.alignments.some((item) => item.source.id === props.photo))
+                      ? preview('align').usable
                       : undefined
                   }
                 />
@@ -193,16 +267,10 @@ export function SurfaceReviewAdapter(props: {
         }}
       >
         <p class="surface-transient">{props.copy.transient}</p>
-        <p role="status">{notice() ? props.copy.applied : props.copy.uncalibrated}</p>
-        <For each={tools}>
-          {(key) => (
-            <Show when={unavailable(key)}>
-              <span class="surface-reason" id={id(key) + '-reason'}>
-                {props.copy[key]} · {unavailable(key)}
-              </span>
-            </Show>
-          )}
-        </For>
+        <Show when={notice()}>
+          <p role="status">{props.copy.applied}</p>
+        </Show>
+        <SurfaceToolReasons reason={unavailable} copy={props.copy} />
         <Show when={tool()} keyed fallback={<p>{props.copy.initial}</p>}>
           {(key) => (
             <>
@@ -241,110 +309,29 @@ export function SurfaceReviewAdapter(props: {
                 <p id="surface-rectify-help">{props.copy.rectifyHelp}</p>
               </Show>
               <Show when={key === 'align'}>
-                <button
-                  class="secondary"
-                  disabled
-                  data-control-id={id('auto')}
-                  aria-describedby="surface-auto-help"
-                >
-                  {props.copy.auto}
-                </button>
-                <p id="surface-auto-help">{props.copy.autoUnavailable}</p>
-                <label>
-                  <input
-                    data-control-id={id('compare')}
-                    type="checkbox"
-                    checked={compare()}
-                    onChange={(e) => setCompare(e.currentTarget.checked)}
-                  />
-                  {props.copy.compare}
-                </label>
-                <label>
-                  <input
-                    data-control-id={id('referenceOnly')}
-                    type="checkbox"
-                    checked={draft().referenceOnly}
-                    onChange={(e) =>
-                      setDraft({ ...draft(), referenceOnly: e.currentTarget.checked })
-                    }
-                  />
-                  {props.copy.referenceOnly}
-                </label>
-                <Show when={!draft().referenceOnly}>
-                  <label>
-                    <input
-                      data-control-id={id('manualPairs')}
-                      type="checkbox"
-                      checked={draft().manualPairs}
-                      aria-describedby="surface-pair-help"
-                      onChange={(e) => {
-                        const manualPairs = e.currentTarget.checked;
-                        setDraft({ ...draft(), manualPairs });
-                        if (manualPairs) setCompare(true);
-                      }}
-                    />
-                    {props.copy.manualPairs}
-                  </label>
-                  <p id="surface-pair-help">{props.copy.pairHelp}</p>
-                  <Show when={draft().manualPairs}>
-                    <GuideFields copy={props.copy} draft={draft()} change={setDraft} pairs />
-                  </Show>
-                </Show>
+                <SurfaceAlignmentFields
+                  matcher={matcher}
+                  copy={props.copy}
+                  photo={props.photo}
+                  reference={props.reference}
+                  busy={props.busy}
+                  draft={draft()}
+                  compare={compare()}
+                  setDraft={setDraft}
+                  setCompare={setCompare}
+                  setAutomatic={setAutomatic}
+                />
               </Show>
               <Show when={key === 'calibrate'}>
-                <label>
-                  {props.copy.method}
-                  <select
-                    data-control-id={id('method')}
-                    value={draft().method}
-                    onChange={(e) => setDraft({ ...draft(), method: e.currentTarget.value })}
-                  >
-                    <option value="dimensions">{props.copy.dimensions}</option>
-                    <option value="lines">{props.copy.lines}</option>
-                  </select>
-                </label>
-                <Show when={draft().method === 'lines'}>
-                  <p>{props.copy.lineHelp}</p>
-                  <GuideFields copy={props.copy} draft={draft()} change={setDraft} />
-                </Show>
-                <label>
-                  {props.copy.unit}
-                  <select
-                    data-control-id={id('unit')}
-                    value={draft().unit}
-                    onChange={(e) => setDraft({ ...draft(), unit: e.currentTarget.value })}
-                  >
-                    <option value="mm">mm</option>
-                    <option value="cm">cm</option>
-                    <option value="m">m</option>
-                    <option value="in">in</option>
-                    <option value="ft">ft</option>
-                  </select>
-                </label>
+                <SurfaceCalibrationFields copy={props.copy} draft={draft()} setDraft={setDraft} />
               </Show>
-              <div class="surface-fields">
-                <For each={key === 'align' && draft().referenceOnly ? [] : toolFields[key]}>
-                  {(field) => (
-                    <label>
-                      {props.copy[field]}{' '}
-                      <small>
-                        {fields[field][0]}–{fields[field][1]}
-                      </small>
-                      <input
-                        type="number"
-                        step="any"
-                        min={fields[field][0]}
-                        max={fields[field][1]}
-                        required
-                        value={draft()[field]}
-                        data-control-id={id(field)}
-                        aria-describedby={!valid() ? 'surface-review-invalid' : undefined}
-                        onInput={(e) => setDraft({ ...draft(), [field]: e.currentTarget.value })}
-                      />
-                    </label>
-                  )}
-                </For>
-              </div>
+              <SurfaceDraftFields
+                tool={key}
+                copy={props.copy}
+                draft={draft()}
+                valid={valid()}
+                setDraft={setDraft}
+              />
               <Show when={key !== 'calibrate'}>
                 <label>
                   <input
@@ -357,16 +344,16 @@ export function SurfaceReviewAdapter(props: {
                 </label>
               </Show>
               <Show when={!valid()}>
-                <p id="surface-review-invalid">{props.copy.invalid}</p>
+                <p id="surface-review-invalid">{props.copy.invalidFields}</p>
               </Show>
               <div class="surface-actions">
                 <button
                   type="button"
                   data-control-id={id('apply')}
-                  disabled={!valid()}
-                  onClick={() => {
-                    if (valid()) {
-                      setApplied({ ...applied(), [key]: draft() });
+                  disabled={!valid() || props.busy || matcher.status() === 'matching'}
+                  onClick={async () => {
+                    const next = candidate();
+                    if (next && (await props.onSave(next))) {
                       setNotice('applied');
                       close();
                     }
@@ -386,7 +373,10 @@ export function SurfaceReviewAdapter(props: {
                   type="button"
                   class="secondary"
                   data-control-id={id('reset')}
-                  onClick={() => setDraft(defaults(props.unit))}
+                  onClick={() => {
+                    setAutomatic(false);
+                    setDraft(defaults(props.unit));
+                  }}
                 >
                   {props.copy.reset}
                 </button>
