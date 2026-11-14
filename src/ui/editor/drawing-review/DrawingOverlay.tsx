@@ -1,63 +1,50 @@
-import { createUniqueId, For, Show, untrack } from 'solid-js';
+import { createMemo, createUniqueId, For, Show, untrack } from 'solid-js';
+import { drawMask, markFootprint } from '../../../platform/projects/planar-drawing';
+import { project } from '../../../platform/projects/planar-transform';
+import type {
+  Mask,
+  Matrix,
+  PlanarSurface,
+  Ring,
+  SourceFrame,
+} from '../../../platform/projects/planar-types';
 import type { DrawingReview } from './createDrawingReview';
 import type { DrawingTools } from './createDrawingTools';
+import { storedLayers, storedMark } from './drawing-document';
 import { pathData } from './geometry';
-import type { Layer, Mark, Point } from './types';
+import type { Layer, Point } from './types';
 
-function MaskPaint(props: { layer: Layer; marks: Mark[]; ratio: number }) {
+function MaskPaint(props: { layer: Layer; path: string; width: number }) {
   const id = createUniqueId();
-  const paint = () => {
-    const start = props.marks.reduce(
-      (last, mark, index) => (mark.operation === 'replace' ? index : last),
-      0,
-    );
-    return props.marks.slice(start);
-  };
+  const color = () => props.layer.color;
   return (
     <g opacity={props.layer.opacity / 100}>
       <defs>
-        <pattern id={id + '-hatch'} width="2" height="2" patternUnits="userSpaceOnUse">
-          <path d="M-1 1 1 -1M0 2 2 0M1 3 3 1" stroke={props.layer.color} stroke-width=".5" />
-        </pattern>
-        <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height={100 * props.ratio}>
-          <For each={paint()}>
-            {(mark) => {
-              const color = mark.operation === 'subtract' ? '#000' : '#fff';
-              return (
-                <path
-                  d={pathData(mark, props.ratio)}
-                  fill={mark.closed ? color : 'none'}
-                  stroke={color}
-                  stroke-width={mark.width}
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              );
-            }}
-          </For>
-        </mask>
-      </defs>
-      <g mask={`url(#${id})`}>
-        <Show when={props.layer.fill !== 'none'}>
-          <rect
-            width="100"
-            height={100 * props.ratio}
-            fill={props.layer.fill === 'hatch' ? `url(#${id}-hatch)` : props.layer.color}
+        <pattern
+          id={id}
+          width={props.width * 0.02}
+          height={props.width * 0.02}
+          patternUnits="userSpaceOnUse"
+        >
+          <path
+            d={`M0 0L${props.width * 0.02} ${props.width * 0.02}`}
+            stroke={color()}
+            stroke-width={props.width * 0.005}
           />
-        </Show>
-        <Show when={props.layer.outline}>
-          <For each={paint().filter(({ operation }) => operation !== 'subtract')}>
-            {(mark) => (
-              <path
-                d={pathData(mark, props.ratio)}
-                stroke={props.layer.color}
-                stroke-width={mark.closed ? '1.2' : Math.max(mark.width * 0.35, 0.3)}
-                fill="none"
-              />
-            )}
-          </For>
-        </Show>
-      </g>
+        </pattern>
+      </defs>
+      <path
+        d={props.path}
+        fill={
+          props.layer.fill === 'none'
+            ? 'none'
+            : props.layer.fill === 'hatch'
+              ? `url(#${id})`
+              : color()
+        }
+        stroke={props.layer.outline ? color() : 'none'}
+        vector-effect="non-scaling-stroke"
+      />
     </g>
   );
 }
@@ -65,75 +52,148 @@ function MaskPaint(props: { layer: Layer; marks: Mark[]; ratio: number }) {
 export function DrawingOverlay(props: {
   model: DrawingReview;
   tools: DrawingTools;
-  ratio: number;
-  stroke?: Mark;
+  view: SourceFrame;
+  source: SourceFrame;
+  state?: PlanarSurface;
+  fromCanonical?: Matrix;
+  region: Ring;
+  stroke?: Point[];
   cursor?: Point;
 }) {
   const m = untrack(() => props.model);
   const t = untrack(() => props.tools);
   const pending = (id: number) => m.drafts()[id]?.pending ?? [];
+  const clip = createUniqueId();
+  const at = (point: readonly [number, number]) =>
+    props.fromCanonical ? project(props.fromCanonical, point) : point;
+  const pixel = (point: Point) =>
+    at([(point.x * props.source.width) / 100, (point.y * props.source.height) / 100]);
+  const path = (mask?: Mask) =>
+    mask?.map((ring) => 'M' + ring.map((point) => at(point).join(' ')).join('L') + 'Z').join('') ??
+    '';
   const ordered = (parent = 0): Layer[] =>
     m
       .layers()
       .filter((layer) => layer.parent === parent)
       .flatMap((layer) => (layer.kind === 'folder' ? ordered(layer.id) : [layer]));
+  const draw = (layer: Layer) => {
+    const draft = pending(layer.id);
+    const state = props.state;
+    const saved = state?.drawing?.find((item) => item.id === layer.id);
+    const key = saved?.key ?? layer.key ?? String(layer.id);
+    const committed =
+      layer.kind === 'master' ? state?.master : state?.layers.find((item) => item.id === key)?.mask;
+    if (!draft.length) return committed;
+    try {
+      return drawMask(
+        storedLayers([{ ...layer, marks: [...layer.marks, ...draft] }], props.source)[0]!,
+        props.source,
+      );
+    } catch {
+      return committed;
+    }
+  };
+  const sketch = () => {
+    const mark = t.previewMark();
+    if (!mark.points.length) return '';
+    // The line guide follows the editable control points. The fill uses the canonical footprint.
+    const map = (point: Point) => {
+      const [x, y] = pixel(point);
+      return { x, y };
+    };
+    return pathData(
+      {
+        ...mark,
+        points: mark.points.map((point) => ({
+          ...map(point),
+          handle: point.handle && map(point.handle),
+        })),
+      },
+      1,
+    );
+  };
+  const draftPath = (mark: Parameters<typeof storedMark>[0]) => {
+    try {
+      return path(markFootprint(storedMark(mark, props.source)));
+    } catch {
+      return '';
+    }
+  };
+  const brushPath = (points: Point[], width: number) =>
+    draftPath({
+      id: 0,
+      action: 'stroke',
+      points,
+      width,
+      operation: 'add',
+      closed: false,
+      region: props.region,
+    });
+  const live = createMemo(() =>
+    props.stroke?.length ? brushPath(props.stroke, t.brush().width) : '',
+  );
   return (
-    <svg class="drawing-overlay" viewBox={`0 0 100 ${100 * props.ratio}`} aria-hidden="true">
-      <For each={ordered().map(({ id }) => id)}>
-        {(id) => {
-          const layer = () => m.layers().find((layer) => layer.id === id)!;
-          return (
-            <Show when={layer().visible}>
-              <MaskPaint
-                layer={layer()}
-                marks={[...layer().marks, ...pending(id)]}
-                ratio={props.ratio}
-              />
-              <For each={pending(id)}>
-                {(mark) => <path class="drawing-pending-mark" d={pathData(mark, props.ratio)} />}
-              </For>
-            </Show>
-          );
-        }}
-      </For>
-      <Show when={props.stroke}>
-        {(mark) => (
-          <path
-            class="drawing-live-stroke"
-            d={pathData(mark(), props.ratio)}
-            stroke-width={mark().width}
-          />
-        )}
-      </Show>
+    <svg
+      class="drawing-overlay"
+      viewBox={`0 0 ${props.view.width} ${props.view.height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <clipPath id={clip}>
+          <path d={path([props.region])} />
+        </clipPath>
+      </defs>
+      <g clip-path={`url(#${clip})`}>
+        <For each={ordered().map(({ id }) => id)}>
+          {(id) => {
+            const layer = () => m.layers().find((item) => item.id === id)!;
+            return (
+              <Show when={layer().visible}>
+                <MaskPaint layer={layer()} path={path(draw(layer()))} width={props.view.width} />
+                <For each={pending(id)}>
+                  {(mark) => (
+                    <path
+                      class="drawing-pending-mark"
+                      vector-effect="non-scaling-stroke"
+                      d={draftPath(mark)}
+                    />
+                  )}
+                </For>
+              </Show>
+            );
+          }}
+        </For>
+        <Show when={live()}>
+          <path class="drawing-live-stroke" d={live()} />
+        </Show>
+      </g>
       <Show when={t.sketch().points.length && !m.blocked()}>
-        <path class="drawing-pending-mark" d={pathData(t.previewMark(), props.ratio)} />
+        <path class="drawing-pending-mark" vector-effect="non-scaling-stroke" d={sketch()} />
         <For each={t.sketch().points}>
           {(point, index) => (
             <circle
               class="drawing-point"
               classList={{ 'drawing-point-selected': t.sketch().index === index() }}
-              cx={point.x}
-              cy={point.y * props.ratio}
-              r="0.85"
+              cx={pixel(point)[0]}
+              cy={pixel(point)[1]}
+              r={props.view.width * 0.0085}
             />
           )}
         </For>
         <Show when={t.node()?.handle}>
           {(handle) => (
             <>
-              <line
+              <path
                 class="drawing-pending-mark"
-                x1={t.node()!.x}
-                y1={t.node()!.y * props.ratio}
-                x2={handle().x}
-                y2={handle().y * props.ratio}
+                vector-effect="non-scaling-stroke"
+                d={`M${pixel(t.node()!).join(' ')}L${pixel(handle()).join(' ')}`}
               />
-              <rect
+              <circle
                 class="drawing-point"
-                x={handle().x - 0.65}
-                y={handle().y * props.ratio - 0.65}
-                width="1.3"
-                height="1.3"
+                cx={pixel(handle())[0]}
+                cy={pixel(handle())[1]}
+                r={props.view.width * 0.0065}
               />
             </>
           )}
@@ -141,11 +201,10 @@ export function DrawingOverlay(props: {
       </Show>
       <Show when={t.brush().outline && props.cursor}>
         {(cursor) => (
-          <circle
+          <path
             class="drawing-cursor"
-            cx={cursor().x}
-            cy={cursor().y * props.ratio}
-            r={t.brush().width / 2}
+            vector-effect="non-scaling-stroke"
+            d={brushPath([cursor()], t.brush().width)}
           />
         )}
       </Show>

@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, on, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, on, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { moveFocus } from '../../shared/moveFocus';
 import { Icon } from '../../icon/Icon';
@@ -11,32 +11,62 @@ import { DrawNumber, DrawToggle } from './DrawingFields';
 import { DrawingHistory, ResolveDrawingDraft } from './DrawingHistory';
 import { DrawingInspector } from './DrawingInspector';
 import { DrawingLayers, layerName } from './DrawingLayers';
+import { drawingFrame, drawingProjection } from '../../../platform/projects/drawing-region';
+import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
 import type { Tool } from './types';
 import './styles.css';
 
-type Dimensions = { width: number; height: number };
-
-/** Blank, in-memory review only. The caller supplies an authorized photo preview. */
 export function DrawingReviewAdapter(props: {
   active: boolean;
   copy: DrawingCopy;
-  photo?: (ready: (size: Dimensions) => void) => JSX.Element;
+  state?: PlanarSurface;
+  source?: SourceFrame;
+  referenceOnly: boolean;
+  busy: boolean;
+  onSave: (state: PlanarSurface) => Promise<boolean>;
+  children: JSX.Element;
 }) {
   const c = () => props.copy;
-  const m = createDrawingReview();
+  const frame = createMemo(() =>
+    props.state && props.source && !props.referenceOnly
+      ? drawingFrame(props.state, props.source)
+      : {},
+  );
+  const projection = createMemo(
+    () => props.state && drawingProjection(frame(), props.state.source),
+  );
+  const region = () => (!frame().toCanonical || projection() ? frame().region : undefined);
+  const m = createDrawingReview({
+    state: () => props.state,
+    region,
+    save: (state) => props.onSave(state),
+    busy: () => props.busy,
+  });
   const [notice, setNotice] = createSignal<'changed' | 'committed' | 'discarded'>();
   const t = createDrawingTools(m, setNotice);
-  const [size, setSize] = createSignal<Dimensions>();
+  const size = () => props.source;
   const [original, setOriginal] = createSignal(false);
   const [zoom, setZoom] = createSignal(100);
   createEffect(on(m.selected, () => setNotice(undefined), { defer: true }));
+  createEffect(on(() => props.source?.id, t.reset, { defer: true }));
   const blocked = () =>
-    !size() ? c().unavailable : original() ? c().showMasks : m.blocked() ? c().blocked : '';
+    !size() || !props.state
+      ? c().unavailable
+      : !region()
+        ? c().alignmentRequired
+        : original()
+          ? c().showMasks
+          : m.busy()
+            ? c().saving
+            : m.blocked()
+              ? c().blocked
+              : '';
   const toolReason = (tool: Tool) => {
     if (tool === 'select' || tool === 'hand') return size() ? '' : c().unavailable;
     if (tool === 'master') {
       const master = m.layers().find(({ id }) => id === masterId)!;
-      if (size() && !original()) return master.locked || !master.visible ? c().blocked : '';
+      if (region() && !original() && !m.busy())
+        return master.locked || !master.visible ? c().blocked : '';
     }
     if (blocked()) return blocked();
     if (tool === 'nodes' && !m.draft() && !m.layer().marks.length) return c().noPaths;
@@ -47,6 +77,12 @@ export function DrawingReviewAdapter(props: {
       t.activate(tool);
       setNotice(undefined);
     }
+  }
+  async function commitDraft() {
+    if (await m.commitDraft()) setNotice('committed');
+  }
+  async function resolveDraft(choice: 'commit' | 'discard' | 'cancel') {
+    if (await t.resolveDraft(choice)) setNotice(choice === 'commit' ? 'committed' : 'discarded');
   }
   function shortcut(event: KeyboardEvent) {
     if (
@@ -74,7 +110,7 @@ export function DrawingReviewAdapter(props: {
   return (
     <div hidden={!props.active}>
       <section class="drawing-review" aria-label={c().drawingMode} onKeyDown={shortcut}>
-        <p class="drawing-transient">{c().transient}</p>
+        <p class="drawing-transient">{c().draftLifetime}</p>
         <div
           class="drawing-rail"
           role="toolbar"
@@ -116,12 +152,18 @@ export function DrawingReviewAdapter(props: {
             model={m}
             tools={t}
             size={size()}
+            source={props.state?.source}
+            state={props.state}
+            toCanonical={frame().toCanonical}
+            fromCanonical={projection()}
+            region={region()}
             active={props.active}
             canDraw={!blocked()}
             original={original()}
             zoom={zoom()}
+            onZoom={setZoom}
           >
-            {props.photo ? props.photo(setSize) : <p>{c().unavailable}</p>}
+            {props.children}
           </DrawingCanvas>
           <div class="drawing-actions drawing-view">
             <Show when={size()}>
@@ -153,28 +195,28 @@ export function DrawingReviewAdapter(props: {
             {blocked() || (!m.layer().marks.length && !m.draft() ? c().noPaths : '')}
           </p>
           <p class="drawing-feedback" role="status">
-            <Show when={notice()}>
+            <Show when={m.failed()}>{c().saveFailed}</Show>
+            <Show when={!m.failed() && !m.busy() && notice()}>
               {(message) => c()[message()] + ' · ' + layerName(m.layer(), c())}
             </Show>
           </p>
         </section>
-        <Show when={size()}>
+        <Show when={size() && props.state}>
           <aside class="drawing-inspector" aria-label={c().drawingMode}>
             <DrawingInspector model={m} tools={t} copy={c()} reason={toolReason(t.tool())} />
             <div class="drawing-management">
-              <DrawingHistory
-                model={m}
-                copy={c()}
-                onCommit={() => {
-                  m.commitDraft();
-                  setNotice('committed');
-                }}
-                onDiscard={() => {
-                  m.discardDraft();
-                  setNotice('discarded');
-                }}
-              />
-              <DrawingLayers model={m} copy={c()} />
+              <fieldset disabled={m.busy()} class="drawing-layer-controls">
+                <DrawingHistory
+                  model={m}
+                  copy={c()}
+                  onCommit={commitDraft}
+                  onDiscard={() => {
+                    m.discardDraft();
+                    setNotice('discarded');
+                  }}
+                />
+                <DrawingLayers model={m} copy={c()} />
+              </fieldset>
             </div>
           </aside>
         </Show>
@@ -182,11 +224,8 @@ export function DrawingReviewAdapter(props: {
           <ResolveDrawingDraft
             copy={c()}
             layer={layerName(m.layer(), c())}
-            canCommit={!!m.draft()?.pending.length}
-            onChoice={(choice) => {
-              t.resolveDraft(choice);
-              if (choice !== 'cancel') setNotice(choice === 'commit' ? 'committed' : 'discarded');
-            }}
+            canCommit={!!m.draft()?.pending.length && !m.blocked()}
+            onChoice={resolveDraft}
           />
         </Show>
       </section>

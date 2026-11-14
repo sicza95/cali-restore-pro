@@ -1,4 +1,6 @@
-export type Point = { x: number; y: number; handle?: { x: number; y: number } };
+import type { Mask, Ring } from '../../../platform/projects/planar-types';
+
+export type Point = { x: number; y: number; handle?: { x: number; y: number }; pressure?: number };
 export type Operation = 'add' | 'subtract' | 'replace';
 export type Shape = 'rectangle' | 'ellipse' | 'polygon';
 export type LayerKind = 'master' | 'damage' | 'phase' | 'folder';
@@ -12,6 +14,7 @@ export type Mark = {
   closed: boolean;
   operation: Operation;
   width: number;
+  region?: Ring;
 };
 
 export type Layer = {
@@ -27,6 +30,8 @@ export type Layer = {
   fill: 'solid' | 'hatch' | 'none';
   outline: boolean;
   marks: Mark[];
+  base?: Mask;
+  key?: string;
 };
 
 export type Draft = { pending: Mark[]; undone: Mark[] };

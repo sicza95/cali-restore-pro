@@ -20,7 +20,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | CHECK-02    | Must     | Linked checkpoint comparison with coverage/area changes             | M-08  | M-15       | Planned |
 | CHECK-03    | Must     | Recoverable checkpoint restoration                                  | M-08  | M-15       | Planned |
 | SURF-01     | Must     | Objects contain named, separately assessed surfaces                 | M-05  | M-13       | Partial |
-| SURF-02     | Must     | Shared surface mapping from aligned images                          | M-08  | M-14       | Planned |
+| SURF-02     | Must     | Shared surface mapping from aligned images                          | M-14  | M-16       | Partial |
 | IMG-04      | Must     | Mapping and reference-only image roles                              | M-05  | M-13       | Partial |
 | ALIGN-01    | Must     | Automatic-first alignment with user verification                    | M-08  | M-13       | Partial |
 | ALIGN-02    | Must     | Detail-photo realignment preserves global drawing                   | M-08  | M-13       | Partial |
@@ -30,7 +30,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | IMG-03      | Must     | Large-source import separated from editing                          | M-04  | M-16       | Partial |
 | IMG-05      | Must     | 8K-class source-image workload                                      | M-04  | M-16       | Partial |
 | FRAME-01    | Must     | Crop, rotate, flip, rectify/perspective and required skew workflows | M-08  | M-13       | Partial |
-| FRAME-02    | Must     | Separate view navigation from document transforms                   | M-08  | M-14       | Planned |
+| FRAME-02    | Must     | Separate view navigation from document transforms                   | M-14  | M-16       | Partial |
 | FRAME-03    | Must     | Later main-reference transforms carry shared mask space             | M-05  | M-13       | Partial |
 | FRAME-04    | Must     | Main-reference crop clips measurement without deleting drawing      | M-05  | M-13       | Partial |
 | CAL-01      | Must     | Two first-class physical calibration methods                        | M-08  | M-13       | Partial |
@@ -51,7 +51,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | LAYER-04    | Must     | Folder-like damage categories with per-layer and union totals       | M-05  | M-13       | Partial |
 | LAYER-05    | Must     | Optional nested folders with unique descendant totals               | M-05  | M-13       | Partial |
 | HIST-01     | Must     | Chronological, bounded surface-wide undo/redo                       | M-08  | M-15       | Partial |
-| HIST-02     | Must     | Multitouch Undo/Redo with a shared rapid-tap window                 | M-08  | M-16       | Planned |
+| HIST-02     | Must     | Multitouch Undo/Redo with a shared rapid-tap window                 | M-14  | M-16       | Partial |
 | HIST-03     | Must     | Bounded encrypted local history across reopening                    | M-03  | M-15       | Planned |
 | MEAS-01     | Must     | Trustworthy per-layer coverage and area                             | M-08  | M-13       | Partial |
 | MEAS-02     | Must     | Explicit measurement states                                         | M-08  | M-13       | Partial |
@@ -145,6 +145,8 @@ M-04 adds [encrypted original storage and transfer](../m04-encrypted-files.md). 
 M-12 adds [bounded image import and variant evidence](../m12-image-import.md). IMG-01/02/03/05 now have client validation, recoverable encrypted working assets, normalized orientation and color, cancellation, camera-preview spot checks and desktop 8K ingest evidence. Physical iPad/Safari, broad camera coverage and sustained editing qualification remain open.
 
 [M-13 planar assessment evidence](../m13-planar-assessment.md) covers FRAME-01/03/04, CAL-01 through CAL-03, MASK-04, LAYER-02/04/05, MEAS-01 through MEAS-05 and ALIGN-01 through ALIGN-03. The versioned engine, surface controls, oracle cases and encrypted recovery provide Partial evidence. Drawing gestures, representative calibrated photographs, device qualification and downstream measurements remain open.
+
+[M-14 mask authoring evidence](../m14-mask-authoring.md) adds canonical authoring and encrypted commits for SURF-02, FRAME-02, MASK-01 through MASK-04, MASK-07 through MASK-09, LAYER-01 through LAYER-05 and HIST-01/02. Physical iPad input and sustained load, encrypted draft and history recovery, and downstream measurements remain open.
 
 PRIV-06 is Partial from M-00: [metadata boundary and verification](../m00-verification.md). The complete privacy acceptance remains M-16; the bootstrap schema does not close encryption or project-content requirements.
 

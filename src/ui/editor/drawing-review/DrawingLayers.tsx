@@ -166,8 +166,7 @@ export function DrawingLayers(props: { model: DrawingReview; copy: DrawingCopy }
                     value={String(layer().parent)}
                     onChange={(e) => {
                       const parent = Number(e.currentTarget.value);
-                      if (parent) m.update(parent, { expanded: true });
-                      m.update(id, { parent });
+                      void m.update(id, { parent });
                     }}
                   >
                     <option value="0">{c().root}</option>
@@ -197,7 +196,7 @@ export function DrawingLayers(props: { model: DrawingReview; copy: DrawingCopy }
                       type="color"
                       data-control-id={control('layer.color')}
                       value={layer().color}
-                      onInput={(e) => m.update(id, { color: e.currentTarget.value })}
+                      onChange={(e) => m.update(id, { color: e.currentTarget.value })}
                     />
                   </label>
                   <label>

@@ -92,6 +92,7 @@ export function DrawingInspector(props: {
               class="secondary"
               type="button"
               data-control-id={control('brush.dot')}
+              disabled={!m.contains(t.coordinates())}
               onClick={() => t.stroke([t.coordinates()])}
             >
               {c().addStroke}

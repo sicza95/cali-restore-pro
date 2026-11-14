@@ -78,6 +78,8 @@ M-11's [client export evidence and M-12 handoff](../m11-client-exports.md) recor
 
 [M-13 planar assessment evidence](../m13-planar-assessment.md) records the saved coordinate, calibration and measurement contract and the independent reference cases.
 
+[M-14 mask authoring evidence](../m14-mask-authoring.md) records the drawing geometry, viewport gestures and encrypted commit workflows.
+
 M-12 starts complex image work. M-13/M-14 build the actual measurement/drawing system against existing versioned contracts. M-16 replaces fixture providers in the production path, reruns the earlier workflow/access/export checks on real content and qualifies release. Final measurement claims remain unavailable until their source revision, calibration and engine results are valid.
 
 ## Commit and push discipline

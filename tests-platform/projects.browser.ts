@@ -5,6 +5,7 @@ import { projectControls } from '../src/ui/account-access/projects/project-contr
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
 import { verifyCheckpointReview } from './checkpoint-review';
 import { drawingControl, verifyDrawingReview } from './drawing-review';
+import { verifyDetailDrawing, verifyDrawingInput } from './drawing-input';
 import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
 import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } from './photo-review';
 import { dng } from './fixtures/images';
@@ -152,16 +153,20 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
   const beforeReview = await revisions();
   expect(beforeReview[0]).toEqual([expect.objectContaining({ revision: expect.any(Number) })]);
+  await drawingControl(page, 'mode.drawing').click();
+  await verifyDrawingInput(page);
   await verifyDrawingReview(page, info);
+  const afterDrawing = await revisions();
+  expect(afterDrawing).not.toEqual(beforeReview);
   await verifyCheckpointReview(page, info);
-  expect(await revisions()).toEqual(beforeReview);
+  expect(await revisions()).toEqual(afterDrawing);
   await review('review.prepare').focus();
   await page.keyboard.press('Enter');
   await review('review.cropWidth').fill('101');
   await expect(review('review.apply')).toBeDisabled();
   await review('review.cropWidth').fill('80');
   await review('review.apply').click();
-  await expect(page.getByText('Saved to this surface.')).toBeVisible();
+  await expect(page.getByText('Saved to this surface.', { exact: true })).toBeVisible();
   await review('review.prepare').click();
   await expect(review('review.cropWidth')).toHaveValue('80');
   await review('review.cropWidth').fill('50');
@@ -193,14 +198,19 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(review('review.align')).toHaveAttribute('aria-disabled', 'false');
   await review('review.align').click();
   await expect(review('review.auto')).toBeEnabled();
+  await drawingControl(page, 'mode.drawing').click();
+  await expect(drawingControl(page, 'tool.brush')).toBeDisabled();
+  await drawingControl(page, 'mode.photo').click();
   await review('review.compare').check();
   await expect(page.locator('.surface-canvas img')).toHaveCount(2);
   await verifyAlignmentGuides(page);
   const beforeAlignment = await revisions();
   await review('review.offsetX').fill('10');
+  await review('review.usable').fill('49');
   await review('review.apply').click();
-  await expect(page.getByText('Saved to this surface.')).toBeVisible();
+  await expect(page.getByText('Saved to this surface.', { exact: true })).toBeVisible();
   expect((await revisions())[0]).not.toEqual(beforeAlignment[0]);
+  await verifyDetailDrawing(page);
   await review('view.previous').click();
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
   await review('review.prepare').click();
@@ -219,6 +229,9 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await review('view.photo').selectOption({ label: '3 · plaster-detail.dng' });
   await expect(page.locator('.surface-canvas img')).toHaveJSProperty('naturalWidth', 48);
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
+  await drawingControl(page, 'mode.drawing').click();
+  await expect(drawingControl(page, 'tool.brush')).toBeDisabled();
+  await drawingControl(page, 'mode.photo').click();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('projects-landscape.png'), fullPage: true });
   await page.goBack();
@@ -231,8 +244,13 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
   await drawingControl(page, 'mode.drawing').click();
-  await expect(drawingControl(page, 'layer.select')).toHaveCount(1);
-  await expect(drawingControl(page, 'layer.select')).toContainText('0 · Mark');
+  await expect(
+    drawingControl(page, 'layer.select').filter({ hasText: 'Independent phase' }),
+  ).toContainText('3 · Mark');
+  await expect(
+    drawingControl(page, 'layer.select').filter({ hasText: 'Master mask' }),
+  ).toContainText('1 · Mark');
+  await expect(drawingControl(page, 'history.undo')).toBeDisabled();
   await drawingControl(page, 'mode.photo').click();
   await expect(page.getByText('Measurements are current.')).toBeVisible();
   await review('review.prepare').click();

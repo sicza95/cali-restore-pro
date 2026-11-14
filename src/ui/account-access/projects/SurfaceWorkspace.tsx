@@ -13,11 +13,10 @@ import { SurfaceMeasurements } from './SurfaceMeasurements';
 import type { Language } from '../types';
 import { CheckpointReview } from '../../editor/checkpoint-review/CheckpointReview';
 import { checkpointCopy } from '../../editor/checkpoint-review/copy';
-import { DrawingReviewAdapter } from '../../editor/drawing-review/DrawingReviewAdapter';
 import { control as drawingControl } from '../../editor/drawing-review/constants';
 import { drawingCopy } from '../../editor/drawing-review/copy';
 import { SurfaceReviewAdapter } from './SurfaceReviewAdapter';
-import { SurfacePhoto } from './SurfacePhoto';
+import { SurfaceDrawing } from './SurfaceDrawing';
 import { surfaceCopy } from './surface-copy';
 import './surface-styles.css';
 import { ProjectOriginals } from './ProjectOriginals';
@@ -162,7 +161,7 @@ export function SurfaceWorkspace(props: {
             </For>
           </select>
         </label>
-        <Show when={mode() === 'photo'}>
+        <Show when={mode() !== 'checkpoint'}>
           <label>
             {view().photo}
             <select
@@ -242,22 +241,18 @@ export function SurfaceWorkspace(props: {
       <Show when={drawingStarted()}>
         <Show when={reference()?.id ?? 'empty'} keyed>
           {(key) => (
-            <DrawingReviewAdapter
+            <SurfaceDrawing
               active={drawing()}
               copy={draw()}
-              photo={
-                key === 'empty'
-                  ? undefined
-                  : (ready) => (
-                      <SurfacePhoto
-                        vault={props.vault}
-                        project={props.project.id}
-                        id={key}
-                        copy={{ ...view(), photo: draw().reference }}
-                        onReady={ready}
-                      />
-                    )
-              }
+              vault={props.vault}
+              project={props.project.id}
+              photo={photo()?.id}
+              reference={key === 'empty' ? undefined : key}
+              referenceOnly={role() === 'reference'}
+              state={assessment()}
+              view={view()}
+              busy={props.busy}
+              onSave={saveAssessment}
             />
           )}
         </Show>

@@ -9,6 +9,16 @@ export function flattenPath(
   segments: readonly PathSegment[],
   tolerance: number,
 ): Ring {
+  const points = flattenCenterline(start, segments, tolerance);
+  assertMask([points]);
+  return points;
+}
+
+export function flattenCenterline(
+  start: Point,
+  segments: readonly PathSegment[],
+  tolerance: number,
+): Ring {
   if (!Number.isFinite(tolerance) || tolerance <= 0) throw new Error('Invalid path tolerance');
   const points = [start];
   function cubic(a: Point, b: Point, c: Point, d: Point, depth: number) {
@@ -31,8 +41,8 @@ export function flattenPath(
   for (const segment of segments) {
     if ('controls' in segment) cubic(points.at(-1)!, ...segment.controls, segment.to, 0);
     else points.push(segment.to);
+    if (points.length > maxEdges) throw new Error('Path exceeds geometry budget');
   }
-  assertMask([points]);
   return points;
 }
 
