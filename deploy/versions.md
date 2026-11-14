@@ -22,4 +22,6 @@ All pre-existing frontend versions remain pinned; the API generator is the only 
 
 M-01a pins the official fixed crypto revision identified by [GO-2026-5932](https://pkg.go.dev/vuln/GO-2026-5932). The earlier tag's advisory concerned legacy OpenPGP packages that this app never imported; the selected revision removes those packages. Password hashing uses only Argon2id, not OpenPGP. The final scan is recorded with the identity evidence.
 
+M-16 updates the pinned Go builder and module minimum to 1.27.4 for [GO-2026-6859](https://pkg.go.dev/vuln/GO-2026-6859).
+
 Primary references: [Go releases](https://go.dev/dl/), [PostgreSQL 18.6](https://www.postgresql.org/docs/release/18.6/), [pgx releases and license](https://github.com/jackc/pgx), [Hey API type generator](https://heyapi.dev/docs/openapi/typescript/plugins/typescript), [Distroless](https://github.com/GoogleContainerTools/distroless), [Mailpit](https://github.com/axllent/mailpit), [Cloudflared](https://github.com/cloudflare/cloudflared), [Go vulnerability tooling](https://go.dev/doc/security/vuln/).
