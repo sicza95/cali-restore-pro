@@ -1,46 +1,41 @@
-import { Show, createSignal } from 'solid-js';
+import { For, Show, children, createMemo } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
 import { Button } from '../../controls/button/Button';
 import { IconButton } from '../../controls/icon-button/IconButton';
 import { RangeControl } from '../../controls/range-control/RangeControl';
 import { SaveStatus } from '../../controls/save-status/SaveStatus';
 import { ToolRail } from '../../controls/tool-rail/ToolRail';
-import type { Tool } from '../../controls/tool-rail/types';
 import { Icon } from '../../icon/Icon';
-import { CalibrationDialog } from '../calibration-dialog/CalibrationDialog';
+import { editorCopy } from '../constants';
 import { LayerPanel } from '../layer-panel/LayerPanel';
-import { PhotoCanvas } from '../photo-canvas/PhotoCanvas';
-import { PhotoStrip } from '../photo-strip/PhotoStrip';
-import { defaults } from './constants';
-import { sampleLayers } from '../constants';
-import type { EditorWorkspaceProps } from './types';
-import type { LayerId } from '../types';
+import type { EditorCopy } from '../types';
+import type { EditorWorkspaceProps, ToolContextProps } from './types';
 
-/** An interactive UI composition; it deliberately has no drawing or vault implementation. */
+/** The floating chip that names the active tool and layer and holds the tool's options. */
+function ToolContext(props: ToolContextProps) {
+  const options = children(() => props.children);
+  return (
+    <div class="cr-tool-context cr-glass">
+      <Icon name={props.tool} size={18} />
+      <span>{props.layer}</span>
+      <Show when={options()}>
+        <span class="cr-context-divider" />
+        {options()}
+      </Show>
+    </div>
+  );
+}
+
+/** The editor layout. It is controlled: adapters own the state, the canvas and persistence. */
 export function EditorWorkspace(props: EditorWorkspaceProps) {
-  const [tool, setTool] = createSignal<Tool>(defaults.tool);
-  const [layer, setLayer] = createSignal<LayerId>(defaults.layer);
-  const [visible, setVisible] = createSignal<ReadonlySet<LayerId>>(new Set(defaults.visibleLayers));
-  const [width, setWidth] = createSignal<number>(defaults.width);
-  const [opacity, setOpacity] = createSignal<number>(defaults.opacity);
-  const [detail, setDetail] = createSignal(false);
-  const [focus, setFocus] = createSignal(props.initialFocus ?? false);
-  const [calibrationOpen, setCalibrationOpen] = createSignal(false);
-  const [notice, setNotice] = createSignal('');
-
-  const toggleVisible = (id: LayerId) => {
-    setVisible((previous) => {
-      const next = new Set(previous);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const copy = createMemo<EditorCopy>(() => ({ ...editorCopy, ...props.copy }));
+  const activeName = () => props.layers.find((item) => item.id === props.activeLayer)?.name;
 
   return (
-    <main
-      class="cr-editor"
-      classList={{ 'cr-editor--focus': focus() }}
-      aria-label="Assessment editor"
+    <Dynamic
+      component={props.as ?? 'main'}
+      class={props.focus ? 'cr-editor cr-editor--focus' : 'cr-editor'}
+      aria-label={copy().editor}
     >
       <header class="cr-editor-header">
         <div class="cr-editor-brand">
@@ -49,116 +44,112 @@ export function EditorWorkspace(props: EditorWorkspaceProps) {
         </div>
         <div class="cr-editor-identity">
           <span>
-            North Chapel <span class="cr-crumb-slash">/</span> Wall painting
+            <For each={props.breadcrumb}>
+              {(crumb, index) => (
+                <>
+                  <Show when={index() > 0}>
+                    {' '}
+                    <span class="cr-crumb-slash">/</span>{' '}
+                  </Show>
+                  {crumb}
+                </>
+              )}
+            </For>
           </span>
           <h1>
-            North wall <Icon name="chevron" size={13} />
+            {props.title} <Icon name="chevron" size={13} />
           </h1>
         </div>
-        <SaveStatus state={props.saveState ?? 'saved'} />
-        <div class="cr-header-tools" role="group" aria-label="Workspace actions">
-          <IconButton variant="ghost" icon="undo" label="Undo (no edits in this story)" disabled />
-          <IconButton variant="ghost" icon="redo" label="Redo (no edits in this story)" disabled />
+        <SaveStatus state={props.saveState} />
+        <div class="cr-header-tools" role="group" aria-label={copy().workspaceActions}>
+          <IconButton
+            variant="ghost"
+            icon="undo"
+            label={copy().undo}
+            disabled={!props.history.canUndo}
+            onClick={() => props.history.onUndo()}
+          />
+          <IconButton
+            variant="ghost"
+            icon="redo"
+            label={copy().redo}
+            disabled={!props.history.canRedo}
+            onClick={() => props.history.onRedo()}
+          />
           <IconButton
             variant="ghost"
             icon="focus"
-            label={focus() ? 'Show panels' : 'Focus canvas'}
-            aria-pressed={focus()}
-            onClick={() => setFocus(!focus())}
+            label={props.focus ? copy().showPanels : copy().focusCanvas}
+            aria-pressed={props.focus}
+            onClick={() => props.onFocus(!props.focus)}
           />
           <Button
             variant="ghost"
             icon="export"
-            disabled
-            title="Output is not connected in this UI story"
+            disabled={!props.onExport}
+            title={props.onExport ? undefined : copy().exportUnavailable}
             class="cr-export-button"
+            onClick={() => props.onExport?.()}
           >
-            Export
+            {copy().export}
           </Button>
         </div>
       </header>
       <div class="cr-editor-workspace">
-        <section class="cr-canvas-region" aria-label="Assessment canvas">
-          <div class="cr-opacity-layer" style={{ '--cr-mask-opacity': opacity() / 100 }}>
-            <PhotoCanvas visible={visible()} detail={detail()} empty={props.initialEmpty} />
+        <section class="cr-canvas-region" aria-label={copy().canvas}>
+          <div class="cr-opacity-layer" style={{ '--cr-mask-opacity': props.maskOpacity / 100 }}>
+            {props.canvas}
           </div>
-          <Show when={!props.initialEmpty}>
-            <ToolRail active={tool()} onChange={setTool} />
+          <Show when={!props.empty}>
+            <ToolRail active={props.tool} onChange={(tool) => props.onTool(tool)} />
           </Show>
-          <Show when={!props.initialEmpty}>
-            <div class="cr-tool-context cr-glass">
-              <Icon name={tool()} size={18} />
-              <span>{sampleLayers.find((item) => item.id === layer())?.name}</span>
-              <span class="cr-context-divider" />
-              <RangeControl
-                label="Width"
-                min={1}
-                max={60}
-                value={width()}
-                unit="mm"
-                onChange={setWidth}
-              />
-            </div>
+          <Show when={!props.empty}>
+            <ToolContext tool={props.tool} layer={activeName()}>
+              {props.toolOptions}
+            </ToolContext>
           </Show>
         </section>
-        <Show when={!focus()}>
+        <Show when={!props.focus}>
           <LayerPanel
-            empty={props.initialEmpty}
-            active={layer()}
-            onSelect={setLayer}
-            visible={visible()}
-            onToggleVisible={toggleVisible}
-            onCalibrate={() => setCalibrationOpen(true)}
+            copy={copy()}
+            empty={props.empty}
+            layers={props.layers}
+            active={props.activeLayer}
+            onSelect={(layer) => props.onSelectLayer(layer)}
+            onToggleVisible={(layer) => props.onToggleLayer(layer)}
+            onCalibrate={props.onCalibrate && (() => props.onCalibrate?.())}
+            detail={props.inspectorDetail}
           />
         </Show>
       </div>
-      <Show when={!focus()}>
+      <Show when={!props.focus}>
         <footer class="cr-editor-footer">
-          <Show when={!props.initialEmpty}>
-            <PhotoStrip detail={detail()} onChange={setDetail} />
-          </Show>
+          {props.footerStart}
           <div class="cr-footer-context">
             <RangeControl
-              label="Mask opacity"
+              label={copy().maskOpacity}
               min={10}
               max={80}
-              value={opacity()}
+              value={props.maskOpacity}
               unit="%"
-              onChange={setOpacity}
+              onChange={(opacity) => props.onMaskOpacity(opacity)}
             />
             <span class="cr-commit-label">
               <span class="cr-live-dot" />
-              Per-stroke save
+              {copy().perStrokeSave}
             </span>
           </div>
-          <span class="cr-zoom">
-            {detail() ? '2×' : 'Fit'}
-            <small>{detail() ? 'Detail view' : 'Full surface'}</small>
-          </span>
+          <Show when={props.zoom}>
+            {(zoom) => (
+              <span class="cr-zoom">
+                {zoom().value}
+                <small>{zoom().label}</small>
+              </span>
+            )}
+          </Show>
         </footer>
       </Show>
-      <Show when={notice()}>
-        <div class="cr-inline-notice" role="status">
-          {notice()}
-          <IconButton
-            icon="close"
-            label="Dismiss calibration notice"
-            variant="ghost"
-            onClick={() => setNotice('')}
-          />
-        </div>
-      </Show>
-      <Show when={calibrationOpen()}>
-        <CalibrationDialog
-          onClose={() => setCalibrationOpen(false)}
-          onApply={(dimensions) => {
-            setNotice(
-              `Preview dimensions: ${dimensions.widthCm} × ${dimensions.heightCm} cm. No assessment data changed.`,
-            );
-            setCalibrationOpen(false);
-          }}
-        />
-      </Show>
-    </main>
+      {props.children}
+    </Dynamic>
   );
 }

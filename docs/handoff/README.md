@@ -7,13 +7,13 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commit 1 of that plan is done.
-- **Suite status after commit 1:** `npm run check` passes. `npm test` 11/11 from a cold Storybook server, no retries. `npm run test:app` 16 passed, 1 skipped (`invitations.spec.ts` needs its `M06_*` session variables). `npm run test:files` was 21/21 on `d2f0e33` and was not re-run; commit 1 touches none of its files.
-- **Not run:** `test:files` (since `d2f0e33`), `test:sync`, `test:estimates`, `build-storybook`, Go tests, backup and smoke scripts.
+- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commits 1 and 2 of that plan are done.
+- **Suite status after commit 2:** `npm run check` passes. `npm test` 11/11. `npm run test:files` 21/21. `npm run build-storybook` and `npm run build` succeed. `npm run test:app` was 16 passed, 1 skipped after commit 1 and was not re-run; commit 2 changes nothing the application renders.
+- **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Commit 2 of the [editor convergence plan](../plan/editor-convergence.md): make `EditorWorkspace` a controlled shell, with stories, DOM and the Storybook suite unchanged.
+Commit 3 of the [editor convergence plan](../plan/editor-convergence.md): `ToolRail` takes its tool list, a per-tool disabled reason and a control-id function, defaulting to today's constant.
 
 ## Open questions for the owner
 
@@ -22,6 +22,17 @@ Commit 2 of the [editor convergence plan](../plan/editor-convergence.md): make `
 3. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 2: controlled shell
+
+- `EditorWorkspace` holds no signals. Layers, active layer, tool, history, save state, focus mode, mask opacity, zoom label and copy are props; `canvas`, `toolOptions`, `inspectorDetail`, `footerStart` and `children` are slots. The root element is configurable through `as` and its height reads `--cr-editor-height` (default `100dvh`).
+- `EditorLayer` and `EditorCopy` are in `src/ui/editor/types.ts`; `LayerId` is `string`. English shell strings are in `editorCopy` (`src/ui/editor/constants.ts`).
+- `LayerPanel` renders master, folders, loose damage layers and phases from `layers`, keyed by id so rows keep focus when the model replaces a layer object. Measurements and coverage are derived from layer areas. `LayerRow` and `LayerMeasurements` are split out.
+- `src/stories/EditorReviewAdapter.tsx` owns every signal; the sample surface moved to `src/stories/editor-review/`. `Direction.stories.tsx` renders the adapter, because the shell can no longer render without data.
+- Beyond the plan's prop list: `empty`, `focus`/`onFocus`, `maskOpacity`/`onMaskOpacity`, `zoom`, `onCalibrate`, `onExport` and `children`, all needed to keep today's stories.
+- Deferred: `EditorLayer.swatch` is populated but not rendered. Swatches still use the `cr-swatch--<id>` class, because rendering from data would change the DOM. Commit 4 has to render it, since application layer ids are UUIDs.
+- Verified: `#storybook-root` markup, element boxes and focused element are byte-identical before and after for all eight Workspace stories and the Direction story at 1194, 834 and 390 px wide, and after each of 16 interactions (86 snapshots). `npm run check`, `npm test` 11/11, `npm run test:files` 21/21, `npm run build-storybook`, `npm run build`.
+- Not verified: `npm run test:app` was not re-run. No screenshot review was done beyond the geometry comparison.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 1: green baseline
 

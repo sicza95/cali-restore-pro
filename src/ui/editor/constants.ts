@@ -1,8 +1,36 @@
+import type { EditorCopy } from './types';
+
 export const referencePhoto = '/photos/painted-plaster.png';
 
-export const sampleLayers = [
-  { id: 'flaking', name: 'Flaking', area: 0.42, kind: 'damage' },
-  { id: 'lacunae', name: 'Lacunae', area: 0.36, kind: 'damage' },
-  { id: 'cracks', name: 'Cracks', area: 0.14, kind: 'damage' },
-  { id: 'cleaning', name: 'Cleaning', area: 0.9, kind: 'phase' },
-] as const;
+/** English shell strings; adapters override them through the `copy` prop. */
+export const editorCopy: EditorCopy = {
+  editor: 'Assessment editor',
+  workspaceActions: 'Workspace actions',
+  undo: 'Undo',
+  redo: 'Redo',
+  focusCanvas: 'Focus canvas',
+  showPanels: 'Show panels',
+  export: 'Export',
+  exportUnavailable: 'Export is not available here',
+  canvas: 'Assessment canvas',
+  maskOpacity: 'Mask opacity',
+  perStrokeSave: 'Per-stroke save',
+  inspector: 'Surface inspector',
+  inspectorTabs: 'Inspector',
+  layers: 'Layers',
+  measurements: 'Measurements',
+  hideLayer: (name) => `Hide ${name}`,
+  showLayer: (name) => `Show ${name}`,
+  emptyTitle: 'No assessment yet',
+  emptyNote: 'Add an overview photo to define the surface.',
+  uniqueCoverage: 'Unique coverage',
+  workPhases: 'Work phases',
+  quantities: 'Surface quantities',
+  assessedSurface: 'Assessed surface',
+  uniqueArea: (name) => `${name} · unique`,
+  coverage: 'Coverage',
+  uniqueNote: 'Unique coverage counts overlapping damage once.',
+  phaseNote: 'Treatment areas are measured separately.',
+  calibration: 'Calibration & units',
+  calibrationUnavailable: 'Add a reference photo first',
+};

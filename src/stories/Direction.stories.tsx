@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
-import { EditorWorkspace, Icon } from '../ui';
+import { Icon } from '../ui';
+import { EditorReviewAdapter } from './EditorReviewAdapter';
 
 const meta = { title: 'Start here/Direction', parameters: { layout: 'fullscreen' } } satisfies Meta;
 export default meta;
@@ -21,7 +22,7 @@ export const Baseline: Story = {
         <p>Tools on the left. Glass where it floats. A quiet, solid inspector.</p>
       </header>
       <div class="cr-direction-preview">
-        <EditorWorkspace />
+        <EditorReviewAdapter />
       </div>
       <div class="cr-direction-notes">
         <section>

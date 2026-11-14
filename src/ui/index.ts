@@ -19,4 +19,4 @@ export { PhotoCanvas } from './editor/photo-canvas/PhotoCanvas';
 export { PhotoStrip } from './editor/photo-strip/PhotoStrip';
 export { referencePhoto } from './editor/constants';
 export type { EditorWorkspaceProps } from './editor/editor-workspace/types';
-export type { LayerId } from './editor/types';
+export type { EditorCopy, EditorLayer, LayerId } from './editor/types';
