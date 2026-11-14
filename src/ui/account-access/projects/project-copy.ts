@@ -9,6 +9,10 @@ export const projectCopy = {
     archive: 'Archive',
     restore: 'Restore project',
     empty: 'No matching projects.',
+    noProjects: 'No projects yet',
+    createHint: 'Create a project to organize objects, surfaces, and original photographs.',
+    objectCounts: (objects: number, surfaces: number) =>
+      `${objects} ${objects === 1 ? 'object' : 'objects'} · ${surfaces} ${surfaces === 1 ? 'surface' : 'surfaces'}`,
     loading: 'Opening projects…',
     saving: 'Saving…',
     error: 'Could not complete the action. Reopen projects and try again.',
@@ -65,6 +69,11 @@ export const projectCopy = {
     archive: 'Archiválás',
     restore: 'Projekt visszaállítása',
     empty: 'Nincs találat.',
+    noProjects: 'Még nincsenek projektek',
+    createHint:
+      'Hozzon létre projektet az objektumok, felületek és eredeti fényképek rendszerezéséhez.',
+    objectCounts: (objects: number, surfaces: number) =>
+      `${objects} objektum · ${surfaces} felület`,
     loading: 'Projektek megnyitása…',
     saving: 'Mentés…',
     error: 'A művelet sikertelen. Nyissa meg újra a projekteket, és próbálja újra.',

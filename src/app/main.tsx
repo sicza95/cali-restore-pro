@@ -2,6 +2,7 @@ import { render } from 'solid-js/web';
 import '@fontsource-variable/dm-sans';
 import '../ui/tokens.css';
 import '../ui/account-access/styles.css';
+import '../ui/account-access/shell.css';
 import { AccountAccess } from '../ui/account-access/AccountAccess';
 
 import { OfflineOriginalsPage } from '../ui/account-access/invitations/OfflineOriginalsPage';

@@ -57,11 +57,14 @@ M-00 adds a Go/PostgreSQL platform substrate alongside this UI library. M-01a ad
 
 ```sh
 npm ci
-npm run setup:secrets
-docker compose --profile dev up --build -d --wait
+npm run dev:start
 ```
 
-Open the [app](http://localhost:8080). Docker builds the product frontend and Go 1.27.3 service, starts private PostgreSQL 18.6, runs one-shot migrations, and starts app/worker only after those pass. Node and a shell are absent from the non-root runtime. Existing Storybook commands above remain independent. See [platform operations](deploy/README.md) for configuration, port overrides, health checks, tests, backup/restore, optional mail/tunnel profiles and the production boundaries.
+Open the app and Mailpit at the URLs printed by the launcher. Docker builds the product frontend and Go service, starts private PostgreSQL, runs migrations, and waits for the app and worker to become healthy. See [platform operations](deploy/README.md) for configuration, port overrides, health checks, tests, and backup and restore.
+
+Run `docker compose --profile dev down` to stop the stack and keep local data. Use `npm run dev:ui` for a frontend-only preview with hot reload. Account and project actions require the Docker app.
+
+Use `npm run dev:start -- --isolated` to start a separate stack with its own database and object volumes. It defaults to [port 18083](http://localhost:18083) for the app and [port 18026](http://localhost:18026) for Mailpit. Stop it with `docker compose -p calirestore-ui-dev --profile dev down`.
 
 ## Platform implementation plan
 

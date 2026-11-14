@@ -2,6 +2,8 @@ import { Show } from 'solid-js';
 import { EmailField } from '../email-field/EmailField';
 import { PasswordField } from '../password-field/PasswordField';
 import { SubmitButton } from '../submit-button/SubmitButton';
+import { Icon } from '../../icon/Icon';
+import plaster from './painted-plaster.jpg';
 import type { AccessFormProps } from './types';
 
 export function AccessForm(props: AccessFormProps) {
@@ -10,14 +12,12 @@ export function AccessForm(props: AccessFormProps) {
     props.view === 'confirm-email' ||
     props.view === 'reset-password';
   return (
-    <section class="account-section">
-      <div>
-        <h2>
-          {props.t(linkView() || props.view === 'recover-deleted-account' ? props.view : 'account')}
-        </h2>
-        <p>{props.t('accessHelp')}</p>
-      </div>
-      <div class="account-panel">
+    <section class="access-layout">
+      <div class="access-form">
+        <header>
+          <h1>{props.t(props.view)}</h1>
+          <p>{props.t('accessHelp')}</p>
+        </header>
         <Show when={!linkView() || props.linkToken} fallback={<p>{props.t('missingLink')}</p>}>
           <form
             onSubmit={(e) =>
@@ -67,8 +67,10 @@ export function AccessForm(props: AccessFormProps) {
           </form>
         </Show>
         <Show when={props.view === 'login'}>
-          <a href="/verify-email">{props.t('resend')}</a>
-          <a href="/recover-deleted-account">{props.t('recover-deleted-account')}</a>
+          <div class="access-recovery">
+            <a href="/verify-email">{props.t('resend')}</a>
+            <a href="/recover-deleted-account">{props.t('recover-deleted-account')}</a>
+          </div>
         </Show>
         <Show when={props.view === 'recover-deleted-account'}>
           <a href="/login">{props.t('login')}</a>
@@ -88,6 +90,15 @@ export function AccessForm(props: AccessFormProps) {
           </details>
         </Show>
       </div>
+      <figure class="access-specimen">
+        <img src={plaster} width="1152" height="768" alt="" />
+        <figcaption>
+          <Icon name="photo" size={18} />
+          {props.language === 'hu'
+            ? 'Festett vakolat · Illusztráció'
+            : 'Painted plaster · Illustrative reference'}
+        </figcaption>
+      </figure>
     </section>
   );
 }

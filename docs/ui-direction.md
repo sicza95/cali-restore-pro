@@ -20,6 +20,12 @@ Review tokens and controls first, then the landscape and portrait editor composi
 
 ## Sample data and limits
 
+### Application shell refresh
+
+The production shell uses the saved access, project-library, and landscape and portrait editor boards. The refresh uses the Framed Sheet direction (seed 1788590004), with the existing DM Sans and theme tokens. Sign-in pairs the account form with the generated plaster reference. The project register shows object and surface counts from the vault, and surface review puts the live photo and condition marks between the tool rail and inspector. In portrait, the inspector moves below the canvas. Settings, sharing, estimates, and reports use the same sheet and navigation.
+
+The sign-in JPEG is a resized copy of the generated sample documented in [the photo record](../public/photos/README.md). The caption identifies it as illustrative. It is never inserted into a project. Browser screenshots and checks use synthetic project data. Physical iPad, Safari, and Pencil qualification remains separate.
+
 North Chapel / Wall painting / North wall and all quantities are illustrative: assessed surface 6.00 m²; Flaking 0.42 m²; Lacunae 0.36 m²; unique Paint loss 0.78 m² (13.0%); separate Cracks 0.14 m² and Cleaning 0.90 m². These are review fixtures, not measurement-engine results. The generated photo is recorded in `public/photos/README.md`.
 
 The editor composition owns only temporary review state. No production geometry, decoder, worker, vault, cloud protocol or recovery implementation is selected by this UI increment. Existing engine qualification and physical-device work remain separate.
