@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { showAppNavigation } from './app-navigation';
 
 const member = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -37,6 +38,7 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: info.outputPath('preferences-portrait-dark.png'), fullPage: true });
+  await showAppNavigation(page);
   await page.getByRole('link', { name: 'Account profile' }).click();
   await page.getByRole('button', { name: 'Check deletion eligibility' }).click();
   await expect(page.getByText(/Transfer hosting and resolve last-owner projects/)).toBeVisible();

@@ -7,13 +7,13 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 0 complete except the test fixes below → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md).
-- **Suite status on `d2f0e33`:** `npm run check` passes. `npm test` 9/11 (two cold-start timeouts in `openStory`, pass on retry). `npm run test:app` 14 passed, 2 failed, 1 skipped (`identity.spec.ts:38` and `settings.spec.ts:17` look for navigation links that the shell refresh put behind the Menu button at 834 px). `npm run test:files` 21/21.
-- **Not run:** `test:sync`, `test:estimates`, `build-storybook`, Go tests, backup and smoke scripts.
+- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commit 1 of that plan is done.
+- **Suite status after commit 1:** `npm run check` passes. `npm test` 11/11 from a cold Storybook server, no retries. `npm run test:app` 16 passed, 1 skipped (`invitations.spec.ts` needs its `M06_*` session variables). `npm run test:files` was 21/21 on `d2f0e33` and was not re-run; commit 1 touches none of its files.
+- **Not run:** `test:files` (since `d2f0e33`), `test:sync`, `test:estimates`, `build-storybook`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Commit 1 of the [editor convergence plan](../plan/editor-convergence.md): fix the two `test:app` failures and the `openStory` cold-start timeout so the baseline is green, then commit 2 (make `EditorWorkspace` a controlled shell with the Storybook suite unchanged).
+Commit 2 of the [editor convergence plan](../plan/editor-convergence.md): make `EditorWorkspace` a controlled shell, with stories, DOM and the Storybook suite unchanged.
 
 ## Open questions for the owner
 
@@ -22,6 +22,14 @@ Commit 1 of the [editor convergence plan](../plan/editor-convergence.md): fix th
 3. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 1: green baseline
+
+- Committed and pushed the baseline re-check and the Phase 1 plan as `bbce8a9` (signed, verified on GitHub).
+- `tests-platform/app-navigation.ts` adds `showAppNavigation`, which opens the Menu disclosure when it is showing. `identity.spec.ts` and `settings.spec.ts` call it before using "Sign out" and "Account profile" at 834 px. No application code changed.
+- `tests/warm-up.ts` is a Playwright global setup that loads one story before the workers start, so the first test on each worker no longer races the Storybook dev server's first compile. `playwright.built.config.ts` inherits it.
+- Verified: `npm run check`; `npm test` 11/11 with the server started cold by Playwright; `npm run test:app` 16 passed, 1 skipped against a fresh disposable Compose project (`calirestore-qa-commit1`, ports 18093/18094), removed with its volumes afterwards. The development stack was not touched.
+- Not verified: the Storybook suite against the static build (`playwright.built.config.ts`) and `npm run test:files` were not re-run.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Baseline re-check and Phase 1 plan
 

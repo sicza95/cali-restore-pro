@@ -123,7 +123,7 @@ Each step is meant to be one or a few signed conventional commits, with the hand
 
 - [x] `CLAUDE.md`, shared handoff (`docs/handoff/README.md`), this review.
 - [x] Re-run Playwright on current `main` and correct or retire findings that no longer hold (see [Re-check on current main](#re-check-on-current-main)).
-- [ ] Fix the two app tests broken by the shell refresh and the cold-start timeout in `tests/ui.spec.ts`.
+- [x] Fix the two app tests broken by the shell refresh and the cold-start timeout in `tests/ui.spec.ts`. The app tests open the Menu disclosure when it is showing; `npm test` loads one story in a global setup before the workers start. `npm test` 11/11 from a cold server, `npm run test:app` 16 passed, 1 skipped.
 
 ### Phase 1 — Converge the editor (highest value)
 
