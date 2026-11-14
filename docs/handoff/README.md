@@ -7,20 +7,26 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 (pointer drawing as the primary path, numeric form behind the disclosure) is next and has no plan yet.
+- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is planned; the owner accepted decisions 1 to 3 as recommended.
 - **Suite status after commit 5:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Write the Phase 1 step 2 plan: make pointer/Pencil drawing the primary path inside `EditorWorkspace` and close the "Details" disclosure by default (open question 1). Start from the known gaps in the commit 4 log entry (portrait inspector height, 390 px footer, the "Coverage —" footer and disabled calibration button, nested folders).
+Start commit 1 of [pointer drawing first](../plan/editor-pointer-first.md) on `main` (split `DrawingInspector` into tool settings and numeric entry, no behaviour change). Commits 2 to 6 go through one branch and PR.
 
 ## Open questions for the owner
 
-1. Numeric point form (kept inside a "Details" disclosure, open by default, in commit 4): keep it inside a "Details" disclosure as the accessible fallback (recommended), or drop it?
-2. Is the 390 px phone layout a supported target, or only iPad and desktop?
+1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Phase 1 step 2 plan
+
+- Wrote [`docs/plan/editor-pointer-first.md`](../plan/editor-pointer-first.md). Main finding: closing "Details" as it is today would hide Apply for pen and shape paths, draft Commit and Discard, layer creation and properties, and every brush setting, because `DrawingInspector`, `DrawingHistory` and `DrawingLayers` all sit inside it. The plan moves those out (tool chip, inspector, shell header and `LayerPanel`) in commits 1 to 4, closes the disclosure in commit 5 and adds pointer path tests in commit 6.
+- Folded the old open question 1 (keep the numeric form) into the plan, using the step 1 recommendation: keep it inside "Details".
+- Owner accepted decisions 1 to 3 as recommended: "Details" keeps the numeric form, save mode and history log; mark picking by tap waits; commit 1 to `main`, commits 2 to 6 through one PR.
+- No code changed, no tests run.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 5: tests for the converged editor
 
