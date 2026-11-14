@@ -7,7 +7,8 @@ export const pinCopy = {
     heading: 'Offline originals',
     pin: 'Make available offline',
     ready: 'Available offline',
-    open: 'Save a copy',
+    open: 'Prepare a copy',
+    download: 'Download prepared copy',
     remove: 'Remove offline copy',
     cancel: 'Cancel pin',
     progress: 'Saving encrypted original',
@@ -19,7 +20,8 @@ export const pinCopy = {
     heading: 'Offline eredeti fájlok',
     pin: 'Elérhetővé tétel offline',
     ready: 'Offline elérhető',
-    open: 'Másolat mentése',
+    open: 'Másolat előkészítése',
+    download: 'Az előkészített másolat letöltése',
     remove: 'Offline másolat eltávolítása',
     cancel: 'Mentés megszakítása',
     progress: 'Titkosított eredeti mentése',
@@ -97,8 +99,23 @@ export function OfflineOriginals(props: {
   const c = () => pinCopy[props.language];
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
+  const [prepared, setPrepared] = createSignal<{ row: Rows[number]; name: string; url: string }>();
+  let accessEpoch = 0;
+  function clearPrepared() {
+    accessEpoch++;
+    const copy = prepared();
+    if (copy) URL.revokeObjectURL(copy.url);
+    setPrepared(undefined);
+  }
+  onMount(() => window.addEventListener('online', clearPrepared));
+  onCleanup(() => {
+    window.removeEventListener('online', clearPrepared);
+    clearPrepared();
+  });
   async function run(row: Rows[number], remove: boolean) {
     const { pins, signal, refresh } = props.model;
+    clearPrepared();
+    const epoch = accessEpoch;
     setBusy(true);
     setFailed(false);
     try {
@@ -106,12 +123,13 @@ export function OfflineOriginals(props: {
       else {
         const original = await pins.open(row, signal);
         signal.throwIfAborted();
-        saveOriginal(original);
+        if (epoch === accessEpoch)
+          setPrepared({ row, name: original.name, url: URL.createObjectURL(original.blob) });
       }
     } catch {
       if (!signal.aborted) setFailed(true);
     } finally {
-      await refresh().catch(() => setFailed(true));
+      if (remove) await refresh().catch(() => setFailed(true));
       setBusy(false);
     }
   }
@@ -155,6 +173,18 @@ export function OfflineOriginals(props: {
                   >
                     {c().open}
                   </button>
+                  <Show when={prepared()?.row === row && !props.model.checking() && prepared()}>
+                    {(copy) => (
+                      <a
+                        data-control-id="offline.original.save"
+                        class="original-copy-link"
+                        href={copy().url}
+                        download={copy().name}
+                      >
+                        {c().download}
+                      </a>
+                    )}
+                  </Show>
                   <button
                     data-control-id="offline.original.remove"
                     class="secondary"

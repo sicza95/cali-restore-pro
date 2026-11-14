@@ -314,8 +314,14 @@ export const sharingControls = [
       [
         'offline.original.download',
         'open',
-        'Open complete authorized encrypted local pin',
+        'Authenticate and prepare a copy of an authorized local pin',
         'Complete authorized pin and unlocked vault',
+      ],
+      [
+        'offline.original.save',
+        'download',
+        'Download the prepared copy',
+        'Prepared copy and unlocked vault',
       ],
       [
         'offline.original.remove',

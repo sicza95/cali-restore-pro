@@ -50,9 +50,13 @@
   margin-inline: auto;
 }
 
-.offline-originals-back {
+.offline-originals-back,
+.original-copy-link {
   display: inline-flex;
   align-items: center;
   min-height: var(--cr-touch);
+}
+
+.offline-originals-back {
   margin-bottom: 8px;
 }
