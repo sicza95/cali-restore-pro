@@ -1,4 +1,5 @@
 import { For, Show, untrack } from 'solid-js';
+import type { JSX } from 'solid-js';
 import { control } from './constants';
 import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
@@ -6,38 +7,28 @@ import type { DrawingTools } from './createDrawingTools';
 import { DrawNumber, DrawToggle } from './DrawingFields';
 import type { BrushOptions, Operation, Shape } from './types';
 
-export function DrawingInspector(props: {
+/**
+ * The active tool's heading, help and settings: brush behaviour, path operation, the node tool's
+ * mark picker, close path and the sketch's Apply and Cancel. Numeric entry renders separately,
+ * through `DrawingNumericEntry`, or in the `numeric` slot where it sits between the two.
+ */
+export function DrawingToolSettings(props: {
   model: DrawingReview;
   tools: DrawingTools;
   copy: DrawingCopy;
   reason: string;
   /** False when the host shows brush width and shape kind itself, through `DrawingToolOptions`. */
   toolOptions?: boolean;
+  /** Rendered after the tool's settings and before close path and Apply. */
+  numeric?: JSX.Element;
 }) {
   const m = untrack(() => props.model);
   const t = untrack(() => props.tools);
   const c = () => props.copy;
   const nodes = () => t.tool() === 'nodes';
   const shape = () => t.tool() === 'shape';
-  const corners = () => shape() && t.shape() !== 'polygon';
   const setBrush = (changes: Partial<BrushOptions>) => t.setBrush({ ...t.brush(), ...changes });
   const options = () => props.toolOptions !== false;
-  const inputCoordinates = () => (
-    <div class="drawing-fields">
-      <DrawNumber
-        name="place.x"
-        label={t.brushing() ? c().x : c().newX}
-        value={t.coordinates().x}
-        onValue={(x) => t.setCoordinates({ ...t.coordinates(), x })}
-      />
-      <DrawNumber
-        name="place.y"
-        label={t.brushing() ? c().y : c().newY}
-        value={t.coordinates().y}
-        onValue={(y) => t.setCoordinates({ ...t.coordinates(), y })}
-      />
-    </div>
-  );
   return (
     <section class="drawing-panel" aria-label={c().tool}>
       <h3>{c()[t.tool()]}</h3>
@@ -85,16 +76,6 @@ export function DrawingInspector(props: {
               checked={t.brush().finger}
               onValue={(finger) => setBrush({ finger })}
             />
-            {inputCoordinates()}
-            <button
-              class="secondary"
-              type="button"
-              data-control-id={control('brush.dot')}
-              disabled={!m.contains(t.coordinates())}
-              onClick={() => t.stroke([t.coordinates()])}
-            >
-              {c().addStroke}
-            </button>
           </Show>
           <Show when={t.sketching()}>
             <Show
@@ -144,112 +125,37 @@ export function DrawingInspector(props: {
                 </select>
               </label>
             </Show>
-            <Show when={!nodes() || t.sketch().mark}>
-              {inputCoordinates()}
+          </Show>
+          {props.numeric}
+          <Show when={t.sketching() && (!nodes() || t.sketch().mark)}>
+            <Show when={!shape() && (t.sketch().points.length >= 3 || t.sketch().closed)}>
+              <DrawToggle
+                name="path.close"
+                label={c().closePath}
+                checked={t.sketch().closed}
+                onValue={(closed) => t.setSketch({ ...t.sketch(), closed })}
+              />
+            </Show>
+            <div class="drawing-actions">
+              <button
+                type="button"
+                data-control-id={control('path.apply')}
+                disabled={!t.valid()}
+                onClick={t.apply}
+              >
+                {nodes() ? c().applyPoints : c().apply}
+              </button>
               <button
                 class="secondary"
                 type="button"
-                data-control-id={control('point.add')}
-                disabled={t.sketch().points.length >= t.maximum()}
-                onClick={() => t.addPoint(t.coordinates())}
+                data-control-id={control('path.cancel')}
+                disabled={!t.sketch().points.length}
+                onClick={t.reset}
               >
-                {c().addPoint}
+                {c().cancel}
               </button>
-              <Show when={t.node()}>
-                <label>
-                  {c().point}
-                  <select
-                    data-control-id={control('point.select')}
-                    value={String(t.sketch().index)}
-                    onChange={(e) =>
-                      t.setSketch({ ...t.sketch(), index: Number(e.currentTarget.value) })
-                    }
-                  >
-                    <For each={t.sketch().points}>
-                      {(_, index) => <option value={index()}>{index() + 1}</option>}
-                    </For>
-                  </select>
-                </label>
-                <div class="drawing-fields">
-                  <DrawNumber
-                    name="point.x"
-                    label={c().x}
-                    value={t.node()!.x}
-                    onValue={(x) => t.updatePoint({ x })}
-                  />
-                  <DrawNumber
-                    name="point.y"
-                    label={c().y}
-                    value={t.node()!.y}
-                    onValue={(y) => t.updatePoint({ y })}
-                  />
-                </div>
-                <Show when={!corners()}>
-                  <DrawToggle
-                    name="point.curve"
-                    label={c().curve}
-                    checked={!!t.node()?.handle}
-                    onValue={(curved) => {
-                      const { x, y } = t.node()!;
-                      t.updatePoint({ handle: curved ? { x, y } : undefined });
-                    }}
-                  />
-                  <Show when={t.node()?.handle}>
-                    <div class="drawing-fields">
-                      <DrawNumber
-                        name="point.handleX"
-                        label={c().handleX}
-                        value={t.node()!.handle!.x}
-                        onValue={(x) => t.updatePoint({ handle: { ...t.node()!.handle!, x } })}
-                      />
-                      <DrawNumber
-                        name="point.handleY"
-                        label={c().handleY}
-                        value={t.node()!.handle!.y}
-                        onValue={(y) => t.updatePoint({ handle: { ...t.node()!.handle!, y } })}
-                      />
-                    </div>
-                  </Show>
-                </Show>
-                <button
-                  class="secondary"
-                  type="button"
-                  data-control-id={control('point.delete')}
-                  disabled={nodes() && t.sketch().points.length <= t.minimum()}
-                  onClick={t.deletePoint}
-                >
-                  {c().deletePoint}
-                </button>
-              </Show>
-              <Show when={!shape() && (t.sketch().points.length >= 3 || t.sketch().closed)}>
-                <DrawToggle
-                  name="path.close"
-                  label={c().closePath}
-                  checked={t.sketch().closed}
-                  onValue={(closed) => t.setSketch({ ...t.sketch(), closed })}
-                />
-              </Show>
-              <div class="drawing-actions">
-                <button
-                  type="button"
-                  data-control-id={control('path.apply')}
-                  disabled={!t.valid()}
-                  onClick={t.apply}
-                >
-                  {nodes() ? c().applyPoints : c().apply}
-                </button>
-                <button
-                  class="secondary"
-                  type="button"
-                  data-control-id={control('path.cancel')}
-                  disabled={!t.sketch().points.length}
-                  onClick={t.reset}
-                >
-                  {c().cancel}
-                </button>
-              </div>
-              <p class="drawing-help">{c().noSketch}</p>
-            </Show>
+            </div>
+            <p class="drawing-help">{c().noSketch}</p>
           </Show>
         </Show>
       </Show>

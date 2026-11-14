@@ -8,7 +8,8 @@ import { createDrawingTools } from './createDrawingTools';
 import { DrawingCanvas } from './DrawingCanvas';
 import { DrawNumber, DrawToggle } from './DrawingFields';
 import { DrawingHistory, ResolveDrawingDraft } from './DrawingHistory';
-import { DrawingInspector, DrawingToolOptions } from './DrawingInspector';
+import { DrawingNumericEntry } from './DrawingNumericEntry';
+import { DrawingToolOptions, DrawingToolSettings } from './DrawingToolSettings';
 import { DrawingLayers, layerName } from './DrawingLayers';
 import { workspaceCopy } from './workspace-copy';
 import { drawingSaveState, editorLayers, editorTools } from './workspace-props';
@@ -187,14 +188,21 @@ export function DrawingWorkspace(props: {
           <div class="drawing-workspace-detail">
             <p class="drawing-help">{help()}</p>
             <Show when={size() && props.state}>
+              <DrawingToolSettings
+                model={m}
+                tools={t}
+                copy={c()}
+                reason={toolReason(t.tool())}
+                toolOptions={false}
+              />
               <details class="drawing-details" open>
                 <summary>{c().details}</summary>
-                <DrawingInspector
+                <DrawingNumericEntry
                   model={m}
                   tools={t}
                   copy={c()}
                   reason={toolReason(t.tool())}
-                  toolOptions={false}
+                  label={c().numericEntry}
                 />
                 <fieldset disabled={m.busy()} class="drawing-layer-controls">
                   <DrawingHistory
