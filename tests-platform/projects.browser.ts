@@ -5,7 +5,7 @@ import { projectControls } from '../src/ui/account-access/projects/project-contr
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
 import { verifyCheckpointReview } from './checkpoint-review';
 import { drawingControl, verifyDrawingReview } from './drawing-review';
-import { verifyDetailDrawing, verifyDrawingInput } from './drawing-input';
+import { verifyDetailDrawing, verifyDrawingInput, verifyPointerStroke } from './drawing-input';
 import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
 import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } from './photo-review';
 import { dng } from './fixtures/images';
@@ -155,6 +155,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   expect(beforeReview[0]).toEqual([expect.objectContaining({ revision: expect.any(Number) })]);
   await drawingControl(page, 'mode.drawing').click();
   await verifyDrawingInput(page);
+  await verifyPointerStroke(page);
   await verifyDrawingReview(page, info);
   const afterDrawing = await revisions();
   expect(afterDrawing).not.toEqual(beforeReview);

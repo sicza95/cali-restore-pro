@@ -4,24 +4,32 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `main`, pushing directly per `AGENTS.md`. Convergence commit 4 is on `feat/drawing-workspace` with a PR, per open question 2.
+- **Branch:** `main`, pushing directly per `AGENTS.md`. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commits 1 to 3 are on `main` (commit 3 is `7f52584`); commit 4 is in review on `feat/drawing-workspace`.
-- **Suite status after commit 4 (branch):** `npm run check` passes. `npm test` 12/12. `npm run test:files` 21/21, which includes the drawing review flows in `projects.browser.ts`. `npm run build-storybook` and `npm run build` succeed. `npm run test:app` was not re-run since commit 1.
+- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 (pointer drawing as the primary path, numeric form behind the disclosure) is next and has no plan yet.
+- **Suite status after commit 5:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Owner reviews the commit 4 PR (screenshots at 1194, 834 and 390 px are in `test-results/encrypted-files/projects.browser.ts-*/drawing-*.png` after `npm run test:files`). After merge: commit 5 of the [editor convergence plan](../plan/editor-convergence.md) (screenshots in both orientations, axe pass, a pointer brush-stroke test, roadmap tick).
+Write the Phase 1 step 2 plan: make pointer/Pencil drawing the primary path inside `EditorWorkspace` and close the "Details" disclosure by default (open question 1). Start from the known gaps in the commit 4 log entry (portrait inspector height, 390 px footer, the "Coverage —" footer and disabled calibration button, nested folders).
 
 ## Open questions for the owner
 
 1. Numeric point form (kept inside a "Details" disclosure, open by default, in commit 4): keep it inside a "Details" disclosure as the accessible fallback (recommended), or drop it?
-2. Answered: commit 4 goes through a branch and PR.
-3. Is the 390 px phone layout a supported target, or only iPad and desktop?
+2. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 5: tests for the converged editor
+
+- Merged PR #14 (commit 4) after the owner's review.
+- `verifyPointerStroke` in `tests-platform/drawing-input.ts`: in stroke history mode, a mouse drag across the photo with the brush adds one mark to the selected layer, the undo button names it "Brush stroke", and undo removes it. `projects.browser.ts` runs it after `verifyDrawingInput`.
+- The axe pass on `.drawing-workspace` now runs at 1194, 834 and 390 px instead of once at 390 px. The screenshots at those widths came with commit 4.
+- Ticked Phase 1 item 1 in the quality baseline and marked the convergence plan done.
+- Verified: `npx playwright test --config playwright.files.config.ts projects.browser.ts` passes.
+- Not verified: `npm run test:app` (not re-run since commit 1), dark theme.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 4: drawing review through the shell
 

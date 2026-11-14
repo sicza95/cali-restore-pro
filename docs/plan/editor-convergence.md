@@ -1,6 +1,6 @@
 # Editor convergence — Phase 1, step 1
 
-14 November 2026 · Status: proposed, not started · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1
+14 November 2026 · Status: done (commits 1 to 5) · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1
 
 Goal: `EditorWorkspace` becomes the surface editor that the application ships, driven by the real drawing model. Storybook keeps rendering the same component with synthetic data, so design work done there reaches users.
 
