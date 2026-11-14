@@ -178,10 +178,12 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   ]) {
     await page.setViewportSize(viewport);
     await page.evaluate(() => window.scrollTo(0, 0));
-    const rail = (await page.locator('.drawing-rail').boundingBox())!;
-    const canvas = (await page.locator('.drawing-stage').boundingBox())!;
-    const inspector = (await page.locator('.drawing-inspector').boundingBox())!;
-    expect(rail.x + rail.width).toBeLessThan(canvas.x);
+    const rail = (await page.locator('.drawing-workspace .cr-tool-rail').boundingBox())!;
+    const canvas = (await page.locator('.drawing-workspace .cr-canvas-region').boundingBox())!;
+    const inspector = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
+    // The rail floats on the left edge of the canvas.
+    expect(rail.x).toBeGreaterThanOrEqual(canvas.x);
+    expect(rail.x + rail.width).toBeLessThan(canvas.x + canvas.width / 2);
     if (viewport.width === 1194) expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
     else expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
     for (const control of [
@@ -202,9 +204,9 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
       fullPage: true,
     });
   }
-  expect((await new AxeBuilder({ page }).include('.drawing-review').analyze()).violations).toEqual(
-    [],
-  );
+  expect(
+    (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
+  ).toEqual([]);
   await c('path.cancel').click();
   await page.setViewportSize({ width: 1194, height: 834 });
   await c('tool.shape').focus();

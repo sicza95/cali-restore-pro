@@ -1,6 +1,7 @@
 import type { JSX } from 'solid-js';
 import type { SaveState } from '../../controls/save-status/types';
-import type { Tool } from '../../controls/tool-rail/types';
+import type { Tool, ToolItem } from '../../controls/tool-rail/types';
+import type { IconName } from '../../icon/types';
 import type { EditorCopy, EditorLayer, LayerId } from '../types';
 
 export type EditorHistory = {
@@ -10,8 +11,11 @@ export type EditorHistory = {
   onRedo: () => void;
 };
 
-/** The shell holds no state: every value comes in as a prop and every change goes out as a call. */
-export interface EditorWorkspaceProps {
+/**
+ * The shell holds no state: every value comes in as a prop and every change goes out as a call.
+ * `T` is the tool id. Without `tools` the rail shows the review constant, so `T` must stay `Tool`.
+ */
+export interface EditorWorkspaceProps<T extends string = Tool> {
   /** Root element. Use a non-landmark when the page already has a `main`. */
   as?: 'main' | 'section' | 'div';
   title: string;
@@ -20,8 +24,16 @@ export interface EditorWorkspaceProps {
   activeLayer: LayerId;
   onSelectLayer: (layer: LayerId) => void;
   onToggleLayer: (layer: LayerId) => void;
-  tool: Tool;
-  onTool: (tool: Tool) => void;
+  tool: T;
+  onTool: (tool: T) => void;
+  /** The rail's tools; defaults to the review constant. */
+  tools?: readonly ToolItem<T>[];
+  /** Accessible name of the tool rail. */
+  toolsLabel?: string;
+  /** Why a tool cannot be selected now; a non-empty reason disables it. */
+  toolReason?: (tool: T) => string | undefined;
+  /** Each tool's `data-control-id`. */
+  toolControlId?: (tool: T) => string;
   history: EditorHistory;
   saveState: SaveState;
   copy?: Partial<EditorCopy>;
@@ -31,7 +43,8 @@ export interface EditorWorkspaceProps {
   onFocus: (focus: boolean) => void;
   /** Mask opacity in percent. */
   maskOpacity: number;
-  onMaskOpacity: (opacity: number) => void;
+  /** Without it the footer has no mask opacity control. */
+  onMaskOpacity?: (opacity: number) => void;
   zoom?: { value: string; label: string };
   onCalibrate?: () => void;
   onExport?: () => void;
@@ -43,4 +56,4 @@ export interface EditorWorkspaceProps {
   children?: JSX.Element;
 }
 
-export type ToolContextProps = { tool: Tool; layer?: string; children?: JSX.Element };
+export type ToolContextProps = { icon: IconName; layer?: string; children?: JSX.Element };

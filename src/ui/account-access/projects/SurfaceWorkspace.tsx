@@ -299,6 +299,9 @@ export function SurfaceWorkspace(props: {
             <SurfaceDrawing
               active={drawing()}
               copy={draw()}
+              language={props.language}
+              title={props.surface.name}
+              breadcrumb={[props.project.name, props.object.name]}
               vault={props.vault}
               project={props.project.id}
               photo={photo()?.id}

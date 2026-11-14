@@ -4,24 +4,39 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `main`, pushing directly per `AGENTS.md`.
+- **Branch:** `main`, pushing directly per `AGENTS.md`. Convergence commit 4 is on `feat/drawing-workspace` with a PR, per open question 2.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commits 1 to 3 of that plan are done.
-- **Suite status after commit 3:** `npm run check` passes. `npm test` 12/12. `npm run test:files` 21/21. `npm run build-storybook` and `npm run build` succeed. `npm run test:app` was 16 passed, 1 skipped after commit 1 and was not re-run; commits 2 and 3 change nothing the application renders.
+- **Active roadmap phase:** Phase 0 complete → Phase 1 step 1, planned in [editor convergence](../plan/editor-convergence.md). Commits 1 to 3 are on `main` (commit 3 is `7f52584`); commit 4 is in review on `feat/drawing-workspace`.
+- **Suite status after commit 4 (branch):** `npm run check` passes. `npm test` 12/12. `npm run test:files` 21/21, which includes the drawing review flows in `projects.browser.ts`. `npm run build-storybook` and `npm run build` succeed. `npm run test:app` was not re-run since commit 1.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Commit 4 of the [editor convergence plan](../plan/editor-convergence.md): render drawing review through `EditorWorkspace` with a new `DrawingWorkspace` adapter. `EditorWorkspace` does not yet forward a tool list, reasons or control ids to `ToolRail`, and its `tool` prop is still typed as the review `Tool`; commit 4 has to add that. Open question 2 (branch and PR for this commit) should be answered first.
+Owner reviews the commit 4 PR (screenshots at 1194, 834 and 390 px are in `test-results/encrypted-files/projects.browser.ts-*/drawing-*.png` after `npm run test:files`). After merge: commit 5 of the [editor convergence plan](../plan/editor-convergence.md) (screenshots in both orientations, axe pass, a pointer brush-stroke test, roadmap tick).
 
 ## Open questions for the owner
 
-1. Numeric point form: keep it inside a "Details" disclosure as the accessible fallback (recommended), or drop it?
-2. Land the convergence on `main` throughout, or put the commit that swaps the shipped drawing screen through a short-lived branch and PR (recommended)?
+1. Numeric point form (kept inside a "Details" disclosure, open by default, in commit 4): keep it inside a "Details" disclosure as the accessible fallback (recommended), or drop it?
+2. Answered: commit 4 goes through a branch and PR.
 3. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 4: drawing review through the shell
+
+- Committed and pushed commit 3 as `7f52584` (signed, verified on GitHub). Commit 4 is on `feat/drawing-workspace`.
+- `EditorWorkspace` is generic over the tool id and forwards `tools`, `toolsLabel`, `toolReason` and `toolControlId` to `ToolRail`. The tool chip takes its icon from the tool list. `onMaskOpacity` is optional; without it the footer has no opacity slider.
+- New `DrawingWorkspace` (`src/ui/editor/drawing-review/`) builds `createDrawingReview` and `createDrawingTools` as `DrawingReviewAdapter` does and maps them onto the shell; helpers in `workspace-props.ts`, shell strings in EN and HU in `workspace-copy.ts`, layout in `workspace.css`. `SurfaceDrawing` renders it; `SurfaceWorkspace` passes the surface name as title and project / object as breadcrumb. `DrawingReviewAdapter` is unused by the route and stays until step 4.
+- Placement: rail on the canvas; brush width and shape kind in the tool chip (`DrawingToolOptions`, split out of `DrawingInspector` behind `toolOptions={false}`, so control ids stay unique); point fields, history and layer management in a "Details" disclosure, open by default; reference-only, zoom and fit in the footer; feedback as a status notice; resolve-draft dialog as a shell child. Keyboard shortcuts and every `surface.draw.*` id are unchanged.
+- Save state: failed or recovery conflict → error, busy → saving, pending draft marks → draft, else saved.
+- Layer swatches now render from `EditorLayer.swatch` (`data-fill` and `--cr-swatch-color`); the sample id classes still apply, so Storybook looks the same.
+- New `src/ui/components.css` holds every component stylesheet; `ui.css` is now `base.css` plus that file. The app imports only `components.css`, because the app root has `.cr-root` and `base.css` turned account buttons' text to the ink colour (axe contrast failures on estimates, backups, reports and pattern review).
+- The app rail has eight tools, so at ≤640 px it scrolls instead of hiding tools five and later.
+- Test change: the layout check in `tests-platform/drawing-review.ts` now reads the shell's rail, canvas and inspector and expects the rail to float on the canvas's left edge; the axe pass covers `.drawing-workspace`. No other selector changed.
+- Deviations from the plan: no `PhotoStrip` in the footer (it is hard-wired to sample photos; the surface page already has a photo picker). Shell strings live in `workspace-copy.ts`, not in `drawingCopy`; only `details` was added there. The shell's zoom readout is not used, since the footer has the zoom field.
+- Verified: `npm run check`, `npm test` 12/12, `npm run test:files` 21/21, `npm run build-storybook`, `npm run build`. Screenshots at 1194, 834 and 390 px checked by eye.
+- Not verified / known: `npm run test:app` not re-run. Portrait inspector is 286 px tall, so the details form scrolls in a small box. At 390 px the footer is cramped. The inspector footer shows "Coverage —" and a disabled calibration button, which mean nothing here yet. Folders nested more than one level show only in the details list. Dark theme not checked. The shell header repeats the CaliRestore brand inside the account layout.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Convergence commit 3: ToolRail takes its tools
 

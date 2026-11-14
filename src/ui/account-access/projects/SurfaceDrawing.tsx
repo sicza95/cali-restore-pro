@@ -3,7 +3,7 @@ import { newPlanarSurface } from '../../../platform/projects/planar-state';
 import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
 import type { SurfaceJournal } from '../../../platform/projects/surface-journal';
 import type { LocalVault } from '../../../platform/vault/vault';
-import { DrawingReviewAdapter } from '../../editor/drawing-review/DrawingReviewAdapter';
+import { DrawingWorkspace } from '../../editor/drawing-review/DrawingWorkspace';
 import type { DrawingCopy } from '../../editor/drawing-review/copy';
 import { SurfacePhoto } from './SurfacePhoto';
 import type { SurfaceCopy } from './surface-copy';
@@ -17,6 +17,9 @@ export function SurfaceDrawing(props: {
   referenceOnly: boolean;
   state?: PlanarSurface;
   copy: DrawingCopy;
+  language: 'en' | 'hu';
+  title: string;
+  breadcrumb: readonly string[];
   view: SurfaceCopy;
   busy: boolean;
   journal?: SurfaceJournal;
@@ -45,10 +48,13 @@ export function SurfaceDrawing(props: {
   });
   const state = createMemo(() => props.state ?? main() ?? fallback());
   return (
-    <DrawingReviewAdapter
+    <DrawingWorkspace
       active={props.active}
       vault={props.vault}
       copy={props.copy}
+      language={props.language}
+      title={props.title}
+      breadcrumb={props.breadcrumb}
       state={state()}
       source={source()?.id === props.photo ? source() : undefined}
       referenceOnly={props.referenceOnly}
@@ -69,6 +75,6 @@ export function SurfaceDrawing(props: {
           />
         )}
       </Show>
-    </DrawingReviewAdapter>
+    </DrawingWorkspace>
   );
 }

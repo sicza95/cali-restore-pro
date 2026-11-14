@@ -1,0 +1,92 @@
+/* The drawing review inside the editor shell, on the surface route of the account layout. */
+.drawing-workspace {
+  --cr-editor-height: max(640px, calc(100dvh - 24px));
+}
+
+.drawing-workspace .cr-editor {
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-panel-radius);
+}
+
+.drawing-workspace :is(button, input, select, summary) {
+  min-inline-size: var(--cr-touch);
+  min-block-size: var(--cr-touch);
+}
+
+.drawing-workspace .cr-opacity-layer > .drawing-viewport {
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.drawing-workspace .drawing-photo img {
+  max-height: calc(var(--cr-editor-height) - 200px);
+}
+
+.drawing-workspace .cr-tool-context label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawing-workspace .cr-tool-context input[type='number'] {
+  inline-size: 5.5rem;
+}
+
+.drawing-workspace-detail,
+.drawing-details {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.drawing-details > summary {
+  line-height: var(--cr-touch);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawing-workspace-view {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.drawing-workspace-view label:has(input[type='number']) {
+  max-width: 10rem;
+}
+
+.drawing-workspace-feedback:not(:empty) {
+  position: absolute;
+  top: 76px;
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 8px 16px;
+  background: var(--cr-surface);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  box-shadow: var(--cr-shadow-floating);
+  transform: translateX(-50%);
+}
+
+.drawing-workspace-feedback:empty {
+  position: absolute;
+  margin: 0;
+}
+
+/* The application rail has eight tools. On a phone it scrolls instead of hiding the last four. */
+.drawing-workspace .cr-tool-rail {
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .drawing-workspace .cr-tool:nth-child(n + 5) {
+    display: grid;
+  }
+  .drawing-workspace .cr-tool-rail {
+    max-height: calc(100% - 20px);
+  }
+}

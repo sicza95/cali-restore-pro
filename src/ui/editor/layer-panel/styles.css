@@ -130,8 +130,21 @@
   flex: none;
   width: 13px;
   height: 13px;
-  border: 1px solid var(--cr-accent);
+  border: 1px solid var(--cr-swatch-color, var(--cr-accent));
   border-radius: 2px;
+}
+
+/* Swatches come from layer data; the id classes below keep the sample surface's dashed edge. */
+.cr-swatch[data-fill='solid'] {
+  background: var(--cr-swatch-color, var(--cr-accent));
+}
+
+.cr-swatch[data-fill='hatch'] {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--cr-swatch-color, var(--cr-accent)) 0 1.5px,
+    transparent 1.5px 4px
+  );
 }
 
 .cr-swatch--flaking {

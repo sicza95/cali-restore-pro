@@ -1,0 +1,258 @@
+import { createEffect, createMemo, createSignal, on, Show } from 'solid-js';
+import type { JSX } from 'solid-js';
+import { EditorWorkspace } from '../editor-workspace/EditorWorkspace';
+import { control, drawingTools, masterId } from './constants';
+import type { DrawingCopy } from './copy';
+import { createDrawingReview } from './createDrawingReview';
+import { createDrawingTools } from './createDrawingTools';
+import { DrawingCanvas } from './DrawingCanvas';
+import { DrawNumber, DrawToggle } from './DrawingFields';
+import { DrawingHistory, ResolveDrawingDraft } from './DrawingHistory';
+import { DrawingInspector, DrawingToolOptions } from './DrawingInspector';
+import { DrawingLayers, layerName } from './DrawingLayers';
+import { workspaceCopy } from './workspace-copy';
+import { drawingSaveState, editorLayers, editorTools } from './workspace-props';
+import { drawingFrame, drawingProjection } from '../../../platform/projects/drawing-region';
+import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
+import type { LocalVault } from '../../../platform/vault/vault';
+import type { SurfaceJournal } from '../../../platform/projects/surface-journal';
+import type { Tool } from './types';
+import '../../components.css';
+import './styles.css';
+import './workspace.css';
+
+/**
+ * The application's drawing review, rendered through the editor shell. The model, tools,
+ * canvas and every `surface.draw.*` control are the ones `DrawingReviewAdapter` uses.
+ */
+export function DrawingWorkspace(props: {
+  active: boolean;
+  vault: LocalVault;
+  copy: DrawingCopy;
+  language: 'en' | 'hu';
+  title: string;
+  breadcrumb: readonly string[];
+  state?: PlanarSurface;
+  source?: SourceFrame;
+  referenceOnly: boolean;
+  busy: boolean;
+  journal?: SurfaceJournal;
+  onSave: (journal: SurfaceJournal, state?: PlanarSurface) => Promise<boolean>;
+  children: JSX.Element;
+}) {
+  const c = () => props.copy;
+  const frame = createMemo(() =>
+    props.state && props.source && !props.referenceOnly
+      ? drawingFrame(props.state, props.source)
+      : {},
+  );
+  const projection = createMemo(
+    () => props.state && drawingProjection(frame(), props.state.source),
+  );
+  const region = () => (!frame().toCanonical || projection() ? frame().region : undefined);
+  const m = createDrawingReview({
+    state: () => props.state,
+    region,
+    journal: () => props.journal,
+    save: (journal, state) => props.onSave(journal, state),
+    busy: () => props.busy,
+  });
+  const [notice, setNotice] = createSignal<'changed' | 'committed' | 'discarded'>();
+  const t = createDrawingTools(m, setNotice);
+  const size = () => props.source;
+  const [original, setOriginal] = createSignal(false);
+  const [zoom, setZoom] = createSignal(100);
+  const [focus, setFocus] = createSignal(false);
+  createEffect(on(m.selected, () => setNotice(undefined), { defer: true }));
+  createEffect(on(() => props.source?.id, t.reset, { defer: true }));
+  const blocked = () =>
+    !size() || !props.state
+      ? c().unavailable
+      : !region()
+        ? c().alignmentRequired
+        : original()
+          ? c().showMasks
+          : m.busy()
+            ? c().saving
+            : m.blocked()
+              ? c().blocked
+              : '';
+  const toolReason = (tool: Tool) => {
+    if (tool === 'select' || tool === 'hand') return size() ? '' : c().unavailable;
+    if (tool === 'master') {
+      const master = m.layers().find(({ id }) => id === masterId)!;
+      if (region() && !original() && !m.busy())
+        return master.locked || !master.visible ? c().blocked : '';
+    }
+    if (blocked()) return blocked();
+    if (tool === 'nodes' && !m.draft() && !m.layer().marks.length) return c().noPaths;
+    return '';
+  };
+  function select(tool: Tool) {
+    if (!toolReason(tool)) {
+      t.activate(tool);
+      setNotice(undefined);
+    }
+  }
+  function toggleLayer(id: number) {
+    const layer = m.layers().find((row) => row.id === id);
+    if (layer && !m.busy()) void m.update(id, { visible: !layer.visible });
+  }
+  async function commitDraft() {
+    if (await m.commitDraft()) setNotice('committed');
+  }
+  async function discardDraft() {
+    if (await m.discardDraft()) setNotice('discarded');
+  }
+  async function resolveDraft(choice: 'commit' | 'discard' | 'cancel') {
+    if (await t.resolveDraft(choice)) setNotice(choice === 'commit' ? 'committed' : 'discarded');
+  }
+  function shortcut(event: KeyboardEvent) {
+    if (
+      event.defaultPrevented ||
+      event.altKey ||
+      t.resolve() ||
+      (event.target instanceof HTMLElement &&
+        event.target.closest('input, select, textarea, [contenteditable]'))
+    )
+      return;
+    const key = event.key.toUpperCase();
+    if (event.ctrlKey || event.metaKey) {
+      if (key === 'Z' || key === 'Y') {
+        event.preventDefault();
+        m.step(key === 'Y' || event.shiftKey);
+      }
+      return;
+    }
+    const tool = drawingTools.find((item) => item.shortcut === key);
+    if (tool) {
+      event.preventDefault();
+      select(tool.id);
+    }
+  }
+  const help = () => blocked() || (!m.layer().marks.length && !m.draft() ? c().noPaths : '');
+
+  return (
+    <div class="drawing-workspace" hidden={!props.active} onKeyDown={shortcut}>
+      <p class="drawing-transient">{c().draftLifetime}</p>
+      <EditorWorkspace<Tool>
+        as="section"
+        title={props.title}
+        breadcrumb={props.breadcrumb}
+        layers={editorLayers(m.layers(), c())}
+        activeLayer={String(m.selected())}
+        onSelectLayer={(id) => m.select(Number(id))}
+        onToggleLayer={(id) => toggleLayer(Number(id))}
+        tool={t.tool()}
+        onTool={select}
+        tools={editorTools(c())}
+        toolsLabel={c().rail}
+        toolReason={toolReason}
+        toolControlId={(tool) => control('tool.' + tool)}
+        history={{
+          canUndo: m.canStep(false),
+          canRedo: m.canStep(true),
+          onUndo: () => void m.step(false),
+          onRedo: () => void m.step(true),
+        }}
+        saveState={drawingSaveState(m, props.journal)}
+        copy={{
+          ...workspaceCopy(props.language),
+          perStrokeSave: m.manual() ? c().manual : c().perStroke,
+        }}
+        focus={focus()}
+        onFocus={setFocus}
+        maskOpacity={100}
+        canvas={
+          <DrawingCanvas
+            model={m}
+            tools={t}
+            size={size()}
+            source={props.state?.source}
+            state={props.state}
+            toCanonical={frame().toCanonical}
+            fromCanonical={projection()}
+            region={region()}
+            active={props.active}
+            canDraw={!blocked()}
+            original={original()}
+            zoom={zoom()}
+            onZoom={setZoom}
+          >
+            {props.children}
+          </DrawingCanvas>
+        }
+        toolOptions={<DrawingToolOptions tools={t} copy={c()} reason={toolReason(t.tool())} />}
+        inspectorDetail={
+          <div class="drawing-workspace-detail">
+            <p class="drawing-help">{help()}</p>
+            <Show when={size() && props.state}>
+              <details class="drawing-details" open>
+                <summary>{c().details}</summary>
+                <DrawingInspector
+                  model={m}
+                  tools={t}
+                  copy={c()}
+                  reason={toolReason(t.tool())}
+                  toolOptions={false}
+                />
+                <fieldset disabled={m.busy()} class="drawing-layer-controls">
+                  <DrawingHistory
+                    model={m}
+                    copy={c()}
+                    onCommit={commitDraft}
+                    onDiscard={discardDraft}
+                  />
+                  <DrawingLayers model={m} copy={c()} vault={props.vault} />
+                </fieldset>
+              </details>
+            </Show>
+          </div>
+        }
+        footerStart={
+          <div class="drawing-actions drawing-workspace-view">
+            <Show when={size()}>
+              <DrawToggle
+                name="view.original"
+                label={c().original}
+                checked={original()}
+                onValue={setOriginal}
+              />
+              <DrawNumber
+                name="view.zoom"
+                label={c().zoom}
+                min={100}
+                max={250}
+                value={zoom()}
+                onValue={setZoom}
+              />
+              <button
+                class="secondary"
+                type="button"
+                data-control-id={control('view.fit')}
+                onClick={() => setZoom(100)}
+              >
+                {c().fit}
+              </button>
+            </Show>
+          </div>
+        }
+      >
+        <p class="drawing-feedback drawing-workspace-feedback" role="status">
+          <Show when={m.failed()}>{c().saveFailed}</Show>
+          <Show when={!m.failed() && !m.busy() && notice()}>
+            {(message) => c()[message()] + ' · ' + layerName(m.layer(), c())}
+          </Show>
+        </p>
+        <Show when={t.resolve()}>
+          <ResolveDrawingDraft
+            copy={c()}
+            layer={layerName(m.layer(), c())}
+            canCommit={!!m.draft()?.pending.length && !m.blocked()}
+            onChoice={resolveDraft}
+          />
+        </Show>
+      </EditorWorkspace>
+    </div>
+  );
+}
