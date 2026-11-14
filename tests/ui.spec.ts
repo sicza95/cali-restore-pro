@@ -30,6 +30,32 @@ test('left tool rail supports explicit keyboard selection', async ({ page }) => 
   await expect(rail.getByRole('button', { name: 'Select', exact: true })).toBeFocused();
 });
 
+test('tool rail renders a supplied tool list and explains an unavailable tool', async ({
+  page,
+}) => {
+  await openStory(page, 'editor-tool-rail--custom-tools');
+  const rail = page.getByRole('toolbar', { name: 'Sample tools' });
+  await expect(rail.locator(':scope > *')).toHaveCount(4);
+  await expect(rail.getByRole('button')).toHaveCount(4);
+  const shape = rail.locator('button[data-control-id="story.tool.shape"]');
+  await expect(shape).not.toHaveAttribute('aria-disabled');
+  await shape.click();
+  await expect(page.getByText('Active tool: shape')).toBeVisible();
+  const nodes = rail.locator('button[data-control-id="story.tool.nodes"]');
+  await expect(nodes).toHaveAccessibleName('Edit points');
+  await expect(nodes).toHaveAttribute('aria-disabled', 'true');
+  await expect(nodes).toHaveAccessibleDescription('This layer has no paths yet.');
+  await expect(page.locator('[id="story.tool.nodes-reason"]')).toHaveText(
+    'This layer has no paths yet.',
+  );
+  await nodes.click({ force: true });
+  await expect(page.getByText('Active tool: shape')).toBeVisible();
+  await shape.press('ArrowDown');
+  await expect(nodes).toBeFocused();
+  await nodes.press('Space');
+  await expect(nodes).toHaveAttribute('aria-pressed', 'false');
+});
+
 test('layer visibility and selection are separate from the active drawing tool', async ({
   page,
 }) => {

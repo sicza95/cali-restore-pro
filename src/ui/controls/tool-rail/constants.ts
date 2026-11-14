@@ -10,8 +10,10 @@ export const tools = [
   { id: 'hand', label: 'Pan', shortcut: 'H', icon: 'hand' },
 ] as const;
 
+export const toolControlId = (id: string) => `editor.tool.${id}`;
+
 export const toolRailRegistry = tools.map(({ id }): ControlContract => ({
-  id: `editor.tool.${id}`,
+  id: toolControlId(id),
   labelKey: `editor.tool.${id}.label`,
   helpKey: `editor.tool.${id}.help`,
   command: `select-tool(${id})`,
