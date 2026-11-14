@@ -1,6 +1,6 @@
 # Quality baseline review
 
-14 November 2026 · Reviewer: Claude (first session) · Base commit `3c33d33`
+14 November 2026 · Reviewer: Claude (first session) · Base commit `3c33d33` · Re-checked the same evening against fresh screenshots from `d2f0e33` (see [Re-check on current main](#re-check-on-current-main))
 
 This review rates the repository as it stands after M-16 and sets the order of work to bring it to a consistent standard. Ratings are out of 10 and compare against a production-grade, single-team product, not against a prototype.
 
@@ -22,6 +22,44 @@ The single most important finding: **the polished iPad editor in Storybook (`src
 - Rendered the built Storybook at 1194 × 834 and 834 × 1194.
 - Viewed the Playwright screenshots of the real app from the last local run (`test-results/`, 14 Nov 16:11). **These predate `3c33d33` (18:09), which reworked the shell and project styles**, so some app-screen findings below may already be partly addressed. Re-check against a fresh run.
 - Not run here: Go tests, Docker stack, Playwright suites (no Docker or Go in the review environment).
+
+## Re-check on current main
+
+Run on the owner's Windows machine (Node 24.22.2, Chrome channel) at `d2f0e33`, which is `3c33d33` plus documentation only. The app suite ran against a freshly built, empty Compose project (`calirestore-qa-baseline`, removed afterwards), not the development stack.
+
+| Command              | Result                         | Notes                                                                                                                                                                                                                                                                                                                        |
+| -------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check`      | Pass                           | Typecheck, lint and format.                                                                                                                                                                                                                                                                                                  |
+| `npm test`           | 9 passed, 2 failed (11)        | Reproduced twice. The first test on each of the two workers times out in `openStory`, waiting 5 s for `.cr-root` while the Storybook dev server compiles its first story. With `--retries=1` both pass and are reported flaky. CI sets `retries: 1`, so it is masked there. A cold-start problem in the test, not in the UI. |
+| `npm run test:app`   | 14 passed, 2 failed, 1 skipped | `identity.spec.ts:38` and `settings.spec.ts:17` click "Sign out" and "Account profile" at 834 px, where `3c33d33` moved the navigation behind the Menu button. The tests were not updated with the shell. `invitations.spec.ts` skips without its `M06_*` session variables.                                                 |
+| `npm run test:files` | 21 passed                      | Not requested, but it is the suite that produces the project, photo, drawing, checkpoint, estimate and report screenshots this review is based on.                                                                                                                                                                           |
+
+Not run: `npm run test:sync`, `npm run test:estimates`, `npm run build-storybook`, Go tests, backup and smoke scripts.
+
+What the fresh screenshots change:
+
+| Finding                                      | Status after re-check                                                                                                                                                                                                                                                                                                              |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UX 1 · direct manipulation missing           | **Corrected. The original wording was wrong, not stale.** Drawing review has a tool rail (select, pan, brush, eraser, pen, shape, edit points, master) and `DrawingCanvas` handles pointer gestures for ink, points and pan. What holds is that the inspector leads with numeric point fields, so the form reads as the main path. |
+| UX 2 · internal data shown                   | Holds. Layer UUIDs and `0.00113388 ft²` in Surface measurements, "Retained commits · 13 / 30", "Encrypted input version · r1 … restoration-v1", and an ISO timestamp in the report preview.                                                                                                                                        |
+| UX 3 · developer language                    | Holds. "Geometry is not connected yet", "Estimate backup/restore is not connected", "Independent mask scope", "Committed phase layer" and "Check connection" are all still on screen.                                                                                                                                              |
+| UX 4 · everything visible at once            | Holds, slightly better: estimate review is now two columns and about 2,235 px tall at 1194 wide. Still no steps or disclosure.                                                                                                                                                                                                     |
+| UX 5 · inconsistent navigation               | Partly retired. The sidebar/Menu split is now one rule: sidebar from 1100 px, Menu drawer below it, and the compact Menu header on surface routes at every width (deliberate, to give the canvas room). Still open: the "Projects" page title above "Estimate review", and breadcrumbs that are bare underlined links.             |
+| UX 6 · small, passive canvas                 | Holds for photo review (Left / Right / Up / Down buttons, canvas about a third of the page). Drawing review in portrait gives the canvas most of the first screen.                                                                                                                                                                 |
+| UI · native controls                         | Holds. The file input is unstyled on Original files and in Preferences; selects use the browser default arrow.                                                                                                                                                                                                                     |
+| UI · weak button hierarchy                   | Partly addressed. Each panel now has one dark primary ("Apply mark", "Save estimate version", "Attach original"); secondary buttons are still many and equal in weight.                                                                                                                                                            |
+| UI · truncated field rows                    | Holds. "Object 1 / Surfac", "Current assessm" and "No mask assigne" in the estimate's three-column row.                                                                                                                                                                                                                            |
+| UI · sidebar floats mid-page                 | **Retired.** The sidebar is `position: sticky`; it only appears mid-page in full-page captures taken after scrolling. No change needed.                                                                                                                                                                                            |
+| UI · sparse admin page                       | Holds, minor.                                                                                                                                                                                                                                                                                                                      |
+| Storybook · portrait inspector and letterbox | Holds. In portrait, Cracks and Work phases are out of sight, the inspector's right column is mostly empty, and there is a band above the photo.                                                                                                                                                                                    |
+
+New findings from this run:
+
+1. The shell refresh shipped with two failing app tests (above). Either the tests open the Menu first at narrow widths, or they run those steps at landscape width.
+2. `openStory` in `tests/ui.spec.ts` needs a longer first-load timeout or a warm-up request, so `npm test` is green locally without retries.
+3. Photo review shows "The assessment changed outside this editor. Discard the old recovery draft to resume editing." as plain text under the pan buttons, with no warning treatment.
+
+Ratings are unchanged (code 7, architecture 7, UX 4, UI 5). The corrected UX 1 finding does not move the UX rating: the capability exists, but the screen does not yet present it as the primary way to work. It does make Phase 1 smaller than first estimated, because step 2 is mostly re-housing existing canvas drawing rather than building it.
 
 ## Code quality — 7 / 10
 
@@ -63,7 +101,7 @@ Weaknesses
 
 Based on the app screenshots (projects, photo, drawing, checkpoint, estimate, report, admin; landscape, portrait and 390 px).
 
-1. **Direct manipulation is missing.** Drawing a mask means typing polygon points as "New point horizontal (%)" and pressing "Add point". On an iPad-with-Pencil product, shapes must be drawn on the canvas; the form should be an accessibility fallback, not the primary path.
+1. **Direct manipulation is under-presented.** _(Corrected after the re-check; the first version said it was missing.)_ Pointer drawing exists on the drawing canvas, but the inspector leads with "New point horizontal (%)" and "Add point", so typing points reads as the primary path. On an iPad-with-Pencil product the canvas should lead and the form should be an accessibility fallback.
 2. **Internal data is shown to users.** Layer UUIDs (`630298c4-…`), raw floats (`0.00113388 ft²`), "Encrypted input version · r4 · restoration-v1", "Retained commits 13 / 30".
 3. **Developer language in copy.** "Committed phase layer", "Independent mask scope", "Geometry is not connected yet", "Estimate backup/restore is not connected", "Check connection". Users need task language; engineering status belongs in docs.
 4. **Everything is visible at once.** Estimate review is one 2,600 px column of phases, presets, scope, extras, adjustments and archives. Needs progressive disclosure (steps, collapsible sections, a summary-first layout).
@@ -75,7 +113,7 @@ What is good: states are explicit and honest (saved locally vs. synced, offline,
 ## UI — 5 / 10
 
 - **Storybook editor: ~8.** Calm dark/light themes, a clear left tool rail, opaque inspector, legible measurements, good use of the photo. Minor issues: in portrait the inspector is clipped (Cracks and Work phases scroll out of sight) while its right column is mostly empty, and the canvas has a large letterbox above the photo.
-- **App screens: ~4.** Native unstyled controls (file input "Choose file", default selects), many equal-weight grey buttons with weak hierarchy, cramped three-column field rows with truncated values ("Object 1 / Surfac…", "Current assessm…"), a sidebar whose items float vertically in the middle of a long page, sparse admin page with large empty areas.
+- **App screens: ~4.** Native unstyled controls (file input "Choose file", default selects), many equal-weight grey buttons with weak hierarchy, cramped three-column field rows with truncated values ("Object 1 / Surfac…", "Current assessm…"), sparse admin page with large empty areas.
 
 ## Roadmap to a good standard
 
@@ -84,12 +122,13 @@ Each step is meant to be one or a few signed conventional commits, with the hand
 ### Phase 0 — Working agreement (this session)
 
 - [x] `CLAUDE.md`, shared handoff (`docs/handoff/README.md`), this review.
-- [ ] Re-run Playwright on `3c33d33` and replace stale screenshots in this review where findings no longer hold.
+- [x] Re-run Playwright on current `main` and correct or retire findings that no longer hold (see [Re-check on current main](#re-check-on-current-main)).
+- [ ] Fix the two app tests broken by the shell refresh and the cold-start timeout in `tests/ui.spec.ts`.
 
 ### Phase 1 — Converge the editor (highest value)
 
 1. Make `EditorWorkspace` the application's surface editor: wire it to the real project store, layers, masks and history used by `drawing-review`.
-2. Pointer/Pencil drawing on the canvas for rectangle, polygon, brush and eraser; keep the numeric form as an accessible fallback behind a disclosure.
+2. Make the existing pointer/Pencil drawing the primary path inside `EditorWorkspace`; keep the numeric form as an accessible fallback behind a disclosure.
 3. Canvas-first layout: pan/zoom by gesture and wheel, inspector docks below in portrait, tool rail left.
 4. Retire the duplicate review components once parity tests pass.
 

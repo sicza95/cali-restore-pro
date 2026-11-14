@@ -18,9 +18,12 @@
 
 ## Commit signing
 
-Every commit must be GPG-signed and show as Verified on GitHub. The signing key lives only on the owner's Windows machine, so Claude does **not** run `git add`, `git commit` or `git push` from its Linux environment (it has no key, and git write operations there can leave stale `.lock` files on the shared folder).
+Every commit must be GPG-signed and show as Verified on GitHub. The signing key lives only on the owner's Windows machine.
 
-Instead Claude:
+- **Claude Code running on that Windows machine** (`commit.gpgsign=true`): when the owner asks for a commit, Claude commits with `git commit -S`, checks `git log --show-signature -1`, pushes, and confirms with `gh api repos/sicza95/cali-restore-pro/commits/<sha> --jq .commit.verification` that GitHub reports `verified: true`.
+- **Claude in the Linux VM** does **not** run `git add`, `git commit` or `git push` (it has no key, and git write operations there can leave stale `.lock` files on the shared folder).
+
+In the VM, Claude instead:
 
 - writes the changes into the working tree,
 - lists the files changed, and
@@ -37,7 +40,8 @@ Group work into coherent conventional commits; when one turn produces several, g
 
 ## Environment notes
 
-- Claude reaches the repo through a Linux VM mount of `C:\Users\sicza95\Projects\CaliRestore`. That VM has Node 22 (repo pins 24), no Docker and no Go, so `npm run typecheck` and `npm run lint` work there, but Go tests, the Compose stack and Playwright suites must be run by the owner (or by Codex) on Windows.
+- On the owner's Windows machine Claude has Node 24, Docker and Chrome, so every npm suite can run there. `npm run test:app` creates synthetic accounts: run it only against a fresh disposable Compose project, never the development stack. Start one with `COMPOSE_PROJECT_NAME=calirestore-qa-<name> APP_PORT=18093 MAIL_PORT=18094 APP_ORIGIN=http://localhost:18093 npm run dev:start`, test with `IDENTITY_SMOKE_DISPOSABLE=1 SMOKE_ORIGIN=http://localhost:18093 MAIL_SMOKE_ORIGIN=http://localhost:18094 npm run test:app`, then remove it with `docker compose -p calirestore-qa-<name> --profile dev down -v`.
+- Otherwise Claude reaches the repo through a Linux VM mount of `C:\Users\sicza95\Projects\CaliRestore`. That VM has Node 22 (repo pins 24), no Docker and no Go, so `npm run typecheck` and `npm run lint` work there, but Go tests, the Compose stack and Playwright suites must be run by the owner (or by Codex) on Windows.
 - Visual review: Claude can render `storybook-static/` and read Playwright screenshots under `test-results/`. Note their timestamp; they may predate the latest commit.
 - Scratch files go in `../.analysis/claude-tmp/` (outside the repo), never in the repo.
 
