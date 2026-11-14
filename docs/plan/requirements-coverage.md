@@ -146,7 +146,9 @@ M-12 adds [bounded image import and variant evidence](../m12-image-import.md). I
 
 [M-13 planar assessment evidence](../m13-planar-assessment.md) covers FRAME-01/03/04, CAL-01 through CAL-03, MASK-04, LAYER-02/04/05, MEAS-01 through MEAS-05 and ALIGN-01 through ALIGN-03. The versioned engine, surface controls, oracle cases and encrypted recovery provide Partial evidence. Drawing gestures, representative calibrated photographs, device qualification and downstream measurements remain open.
 
-[M-15 recovery and versions](../m15-surface-recovery.md) covers encrypted draft and redo recovery, checkpoint comparison and restoration, and durable pattern versions. Estimate links, sustained-device qualification and output integration remain open.
+[M-15 recovery and versions](../m15-surface-recovery.md) covers encrypted draft and redo recovery, checkpoint comparison and restoration, and durable pattern versions. M-16 follows with estimate links and output integration.
+
+[M-16 measured integration](../m16-measured-integration.md) adds committed phase measurement and checkpoint binding (EST-02, EST-05, EST-06, EST-09), selected-assessment draft data across all five formats (OUT-01 through OUT-03, OUT-05, OUT-06), and verified workbook cache and content boundaries (OUT-08 through OUT-12, PAT-02). These rows remain Partial pending the remaining product and device gates in the evidence.
 
 [M-14 mask authoring evidence](../m14-mask-authoring.md) adds canonical authoring and encrypted commits for SURF-02, FRAME-02, MASK-01 through MASK-04, MASK-07 through MASK-09, LAYER-01 through LAYER-05 and HIST-01/02. Physical iPad input and sustained load, encrypted draft and history recovery, and downstream measurements remain open.
 

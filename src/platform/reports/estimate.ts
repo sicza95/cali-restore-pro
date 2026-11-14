@@ -27,6 +27,10 @@ function itemization({ input, result }: EstimateSnapshot) {
       unit: phase.units,
       method: phase.price,
       rate: phase.rate[phase.price === 'area' ? phase.units : phase.price],
+      assessment:
+        phase.quantity?.source === 'committed' && phase.quantity.validity === 'valid'
+          ? (phase.quantity.assessment ?? 'current')
+          : undefined,
     };
   });
   return { phases, hours: result.hours, rounding: result.rounding, precision: result.precision };
@@ -57,9 +61,22 @@ export function reportEstimate(
 
 // M-09 stores totals for an entire estimate selection. A report may include the
 // whole quote or omit it. Trimming rows would make the issued totals misleading.
-export function coversEstimate(snapshot: EstimateSnapshot, surfaces: readonly { id: string }[]) {
+export function coversEstimate(
+  snapshot: EstimateSnapshot,
+  surfaces: readonly { id: string; version?: string; compare?: string }[],
+) {
   const selected = new Set(surfaces.map(({ id }) => id));
-  return snapshot.input.objects
+  const inScope = snapshot.input.objects
     .filter(({ id }) => snapshot.input.selected.includes(id))
     .every((object) => object.surfaces.every((id) => selected.has(id)));
+  return (
+    inScope &&
+    snapshot.result.phases.every(({ id }) => {
+      const { quantity, surface } = snapshot.input.phases.find((phase) => phase.id === id)!;
+      if (quantity?.source !== 'committed' || quantity.validity !== 'valid') return true;
+      const assessment = quantity.assessment ?? 'current';
+      const report = surfaces.find(({ id }) => id === surface);
+      return report?.version === assessment || report?.compare === assessment;
+    })
+  );
 }

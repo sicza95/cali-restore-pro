@@ -12,15 +12,14 @@ import type { Phase } from './estimate-model';
 import type { EstimateCopy } from '../../../platform/estimates/copy';
 import { phaseControl as id } from './estimate-controls';
 import { ReviewNumber, ReviewSelect, validDecimal } from './fields';
-import { changeFactor, changeUnit } from '../../../platform/estimates/units';
+import { changeFactor, changeUnit, convertArea } from '../../../platform/estimates/units';
 import { calculatePhase } from '../../../platform/estimates/calculate';
 import { quantityText } from '../../../platform/estimates/display';
-
-const measurements = ['missing', 'stale', 'ready'] as const;
 
 export function PhaseInputs(props: {
   copy: EstimateCopy;
   phase: Phase;
+  measuring: boolean;
   currency: string;
   update: (value: Partial<Phase>) => void;
 }) {
@@ -31,7 +30,10 @@ export function PhaseInputs(props: {
   const multiplier = () => p().factorDraft ?? p().multiplier;
   const result = () => {
     try {
-      return calculatePhase(p(), 2);
+      return calculatePhase(
+        props.measuring ? { ...p(), quantity: undefined, measurement: 'missing' } : p(),
+        2,
+      );
     } catch {
       return undefined;
     }
@@ -43,12 +45,23 @@ export function PhaseInputs(props: {
         <ReviewSelect
           id={id('measurement')}
           label={c().measurement}
-          value={p().measurement}
-          options={measurements}
+          value={props.measuring ? 'computing' : p().measurement}
+          options={['computing', 'missing', 'stale', 'ready']}
           text={(key) => c()[key]}
-          change={(measurement) => update({ measurement })}
+          disabled
+          change={() => undefined}
         />
-        <Show when={p().measurement === 'stale'}>
+        <Show when={!props.measuring && p().quantity?.validity === 'valid'}>
+          <p class="review-note" data-measured-phase-area>
+            {c().measuredArea} ·{' '}
+            {quantityText(convertArea(p().quantity!.area!, 'm²', p().units).round(18))} {p().units}
+          </p>
+        </Show>
+        <Show
+          when={
+            !props.measuring && p().measurement === 'stale' && p().quantity?.validity === 'valid'
+          }
+        >
           <button
             type="button"
             class="secondary"
@@ -77,7 +90,15 @@ export function PhaseInputs(props: {
           value={p().mode}
           options={modes}
           text={(key) => c()[key]}
-          change={(mode) => update({ mode, factorDraft: undefined })}
+          change={(mode) =>
+            update({
+              mode,
+              factorDraft: undefined,
+              ...(mode === 'productivity' && p().measurement === 'stale'
+                ? { measurement: 'ready' }
+                : {}),
+            })
+          }
         />
       </div>
       <div class="review-fields">

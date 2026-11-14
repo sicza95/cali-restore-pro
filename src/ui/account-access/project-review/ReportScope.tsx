@@ -2,8 +2,8 @@ import { For, Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { ReportCopy } from '../../../platform/reports/copy';
 import { reportControl as id } from './report-controls';
-import { defaultSelection, versions } from '../../../platform/reports/types';
 import type { Selection } from '../../../platform/reports/types';
+import { surfaceSelection } from './report-model';
 import { ReviewCheck, ReviewSelect } from './fields';
 
 export function ReportScope(props: {
@@ -31,7 +31,13 @@ export function ReportScope(props: {
             <Show when={!props.excluded.includes(object.id)}>
               <For each={object.surfaces}>
                 {(surface) => {
-                  const selected = () => props.surfaces[surface.id] ?? defaultSelection;
+                  const selected = () => surfaceSelection(surface, props.surfaces);
+                  const versions = () => selected().versions;
+                  const name = (key: string) =>
+                    key === 'current'
+                      ? c().current
+                      : (surface.checkpoints?.find(({ id }) => id === key)?.name ??
+                        c().missingCheckpoint);
                   const change = (patch: Partial<Selection>) => props.change(surface.id, patch);
                   const references = () =>
                     surface.images.filter((image) => image.role === 'reference');
@@ -50,8 +56,12 @@ export function ReportScope(props: {
                             id={id('version')}
                             label={c().version}
                             value={selected().version}
-                            options={versions}
-                            text={(key) => c()[key]}
+                            options={
+                              versions().includes(selected().version)
+                                ? versions()
+                                : [...versions(), selected().version]
+                            }
+                            text={name}
                             change={(version) =>
                               change({
                                 version,
@@ -65,9 +75,13 @@ export function ReportScope(props: {
                             value={selected().compare}
                             options={[
                               '',
-                              ...versions.filter((version) => version !== selected().version),
+                              ...new Set(
+                                [...versions(), selected().compare].filter(
+                                  (version) => version && version !== selected().version,
+                                ),
+                              ),
                             ]}
-                            text={(key) => (key ? c()[key] : c().noCompare)}
+                            text={(key) => (key ? name(key) : c().noCompare)}
                             change={(compare) => change({ compare })}
                           />
                         </div>

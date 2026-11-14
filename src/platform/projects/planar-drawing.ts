@@ -43,7 +43,7 @@ function bounded(shape: MultiPolygon) {
 }
 
 // Legacy masks can contain overlapping rings with any signed winding multiplicity.
-function legacy(mask: Mask): MultiPolygon {
+export function nonzeroPolygons(mask: Mask): MultiPolygon {
   let bands = new Map<number, MultiPolygon>();
   for (const ring of mask) {
     let remainder = polygon(ring);
@@ -131,10 +131,10 @@ function footprint(mark: DrawingMark): MultiPolygon {
 
 export function checkpointCoverage(state: PlanarSurface) {
   const crop = polygon(rect(state.frame.input.crop));
-  const master = state.master ? legacy(state.master) : crop;
+  const master = state.master ? nonzeroPolygons(state.master) : crop;
   const damage = state.layers
     .filter(({ kind }) => kind === 'damage')
-    .map(({ mask }) => legacy(mask));
+    .map(({ mask }) => nonzeroPolygons(mask));
   return damage.length
     ? bounded(clipping.intersection(crop, master, clipping.union(damage[0]!, ...damage.slice(1))))
     : [];
@@ -157,7 +157,7 @@ export function drawMask(layer: DrawingLayer, source: SourceFrame): Mask | undef
     (layer.kind === 'master' && layer.marks[0]?.operation === 'subtract'
       ? [rect(extent(source))]
       : []);
-  let mask = legacy(initial);
+  let mask = nonzeroPolygons(initial);
   for (const mark of layer.marks) {
     const domain = polygon(mark.region);
     const stamp = clipping.intersection(footprint(mark), domain);

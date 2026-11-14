@@ -22,6 +22,7 @@ import { ReviewCheck, ReviewSelect, validDecimal } from './fields';
 import { WorkPhases } from './WorkPhases';
 import { PresetInputs } from './PresetInputs';
 import { quantityText } from '../../../platform/estimates/display';
+import { usePhaseMeasurements } from './usePhaseMeasurements';
 
 export function EstimateReview(props: {
   vault: LocalVault;
@@ -32,6 +33,7 @@ export function EstimateReview(props: {
   const c = () => estimateCopy[props.language];
   const project = () => props.project;
   const model = createPhases(() => (project().settings.units === 'imperial' ? 'ft²' : 'm²'));
+  const measuring = usePhaseMeasurements(project, () => props.vault, model);
   const [selection, setSelection] = createSignal<'whole' | 'selected'>('whole');
   const [objects, setObjects] = createSignal<string[]>([]);
   const [extras, setExtras] = createSignal<Extra[]>([]);
@@ -46,7 +48,6 @@ export function EstimateReview(props: {
   const [status, setStatus] = createSignal('');
   const [priceCurrency, setPriceCurrency] = createSignal(project().settings.currency);
   const [version, setVersion] = createSignal('');
-  const currency = () => project().settings.currency;
   const scoped = () =>
     project().objects.filter((object) => selection() === 'whole' || objects().includes(object.id));
   const selectedPhases = () =>
@@ -69,7 +70,7 @@ export function EstimateReview(props: {
     schema: 1,
     project: project().id,
     revision: project().revision,
-    currency: currency(),
+    currency: project().settings.currency,
     priceCurrency: priceCurrency(),
     objects: project().objects.map((o) => ({
       id: o.id,
@@ -77,7 +78,13 @@ export function EstimateReview(props: {
       surfaces: o.surfaces.map((s) => s.id),
     })),
     selected: scoped().map((o) => o.id),
-    phases: JSON.parse(JSON.stringify(model.rows)) as Phase[],
+    phases: JSON.parse(
+      JSON.stringify(
+        model.rows.map((phase) =>
+          measuring() ? { ...phase, measurement: 'missing', quantity: undefined } : phase,
+        ),
+      ),
+    ) as Phase[],
     extras: extras(),
     adjustments: adjustments(),
     tax: { enabled: taxed(), rate: tax() },
@@ -116,6 +123,7 @@ export function EstimateReview(props: {
   const valid = () =>
     ready() &&
     !busy() &&
+    !measuring() &&
     !!result() &&
     scoped().length > 0 &&
     (selectedPhases().length > 0 || selectedExtras().length > 0) &&
@@ -156,21 +164,27 @@ export function EstimateReview(props: {
         {c().transient} {c().recoveryLimit}
       </p>
       <p role="status">{status()}</p>
-      <Show when={priceCurrency() !== currency()}>
+      <Show when={priceCurrency() !== project().settings.currency}>
         <p role="alert">{c().reprice}</p>
         <button
           type="button"
           onClick={() => {
             for (const phase of model.rows) model.update(phase.id, { rate: {}, material: '' });
             setExtras((rows) => rows.map((row) => ({ ...row, rate: {} })));
-            setPriceCurrency(currency());
+            setPriceCurrency(project().settings.currency);
           }}
         >
           {c().newPrices}
         </button>
       </Show>
       <div class="review-grid">
-        <WorkPhases copy={c()} project={project()} model={model} navigate={props.navigate} />
+        <WorkPhases
+          copy={c()}
+          project={project()}
+          model={model}
+          navigate={props.navigate}
+          measuring={measuring()}
+        />
         <div class="review-flow">
           <Show when={model.current()}>
             {(phase) => (
@@ -178,7 +192,7 @@ export function EstimateReview(props: {
                 vault={props.vault}
                 language={props.language}
                 phase={phase()}
-                currency={currency()}
+                currency={project().settings.currency}
                 update={(next) => model.update(phase().id, next)}
               />
             )}
@@ -186,7 +200,7 @@ export function EstimateReview(props: {
           <section class="project-pane">
             <h3>{c().selection}</h3>
             <p>
-              {c().currency} · <strong>{currency()}</strong>
+              {c().currency} · <strong>{project().settings.currency}</strong>
             </p>
             <ReviewSelect
               id={id('selection')}
@@ -230,7 +244,6 @@ export function EstimateReview(props: {
                 )}
               </For>
             </dl>
-            <p class="review-note">{c().unavailable}</p>
             <label>
               {c().assumptions}
               <textarea
@@ -344,7 +357,7 @@ export function EstimateReview(props: {
           copy={c()}
           rows={extras()}
           objects={project().objects}
-          currency={currency()}
+          currency={project().settings.currency}
           add={() =>
             setExtras((rows) => [
               ...rows,

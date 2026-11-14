@@ -16,9 +16,8 @@ const phases = [
   'restore',
   'scopeSurface',
   'scopeLink',
-  'draw',
-  'clone',
-  'cloneFrom',
+  'assessment',
+  'mask',
   'measurement',
   'acknowledge',
   'mode',
@@ -65,19 +64,17 @@ export const estimateControls: readonly ControlContract[] = [
   ...phases.map((key): ControlContract => ({
     id: phaseControl(key),
     labelKey: key === 'newName' ? 'add' : key === 'scopeLink' ? 'scopeSurface' : key,
-    helpKey: key === 'draw' || key === 'clone' ? 'maskHelp' : 'transient',
+    helpKey: key === 'mask' || key === 'scopeLink' ? 'maskHelp' : 'transient',
     command: key === 'scopeLink' ? 'Open authorized opaque surface' : 'Review work phase ' + key,
     permission: 'Unlocked account-local project author',
     prerequisite: 'Active phase and applicable scope, input mode or pricing method',
-    valueSource: 'Encrypted project hierarchy and explicitly saved estimate versions',
-    behavior: ['draw', 'clone', 'cloneFrom', 'measurement', 'acknowledge'].includes(key)
-      ? 'review'
-      : 'functional',
+    valueSource: 'Encrypted project hierarchy, committed geometry and saved estimate versions',
+    behavior: 'functional',
     owner:
       key === 'scopeLink'
         ? 'M-05'
-        : key === 'draw' || key === 'clone' || key === 'cloneFrom'
-          ? 'M-14'
+        : ['assessment', 'mask', 'measurement', 'acknowledge'].includes(key)
+          ? 'M-16'
           : 'M-09',
     composition: 'Estimate review · Work phases',
     unavailable: {

@@ -164,7 +164,7 @@ export function createDrawingReview(options: {
     const id = nextId();
     const parent = from ? from.parent : current.kind === 'folder' ? current.id : current.parent;
     const rows = parent ? changed(parent, { expanded: true }) : layers();
-    const created = newLayer(id, kind, parent);
+    const created = { ...newLayer(id, kind, parent), key: crypto.randomUUID() };
     if (
       await persistRows(
         [
