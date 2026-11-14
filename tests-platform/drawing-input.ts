@@ -118,3 +118,30 @@ export async function verifyDetailDrawing(page: Page) {
   await expect(row).toContainText('3 · Mark');
   await c('mode.photo').click();
 }
+
+export async function verifyPointerStroke(page: Page) {
+  const c = (key: string) => drawingControl(page, key);
+  const selected = page.locator(
+    '[data-control-id="surface.draw.layer.select"][aria-pressed="true"]',
+  );
+  const marks = async () => Number((await selected.textContent())?.match(/(\d+) · Mark/)?.[1]);
+  await c('tool.brush').click();
+  await expect(c('history.mode')).toHaveValue('stroke');
+  const before = await marks();
+  expect(before).not.toBeNaN();
+
+  await c('view.canvas').scrollIntoViewIfNeeded();
+  const box = (await page.locator('.drawing-photo img').boundingBox())!;
+  const at = (x: number, y: number) => [box.x + x * box.width, box.y + y * box.height] as const;
+  await page.mouse.move(...at(0.3, 0.6));
+  await page.mouse.down();
+  await page.mouse.move(...at(0.45, 0.55), { steps: 6 });
+  await page.mouse.move(...at(0.6, 0.65), { steps: 6 });
+  await page.mouse.up();
+
+  await expect.poll(marks).toBe(before + 1);
+  await expect(c('history.undo')).toHaveAccessibleName(/^Undo · Brush stroke · /);
+  await c('history.undo').click();
+  await expect.poll(marks).toBe(before);
+  await c('tool.select').click();
+}

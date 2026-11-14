@@ -203,10 +203,11 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
       path: info.outputPath('drawing-' + viewport.width + '.png'),
       fullPage: true,
     });
+    // Both iPad orientations and the phone width must pass axe on the converged editor.
+    expect(
+      (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
+    ).toEqual([]);
   }
-  expect(
-    (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
-  ).toEqual([]);
   await c('path.cancel').click();
   await page.setViewportSize({ width: 1194, height: 834 });
   await c('tool.shape').focus();
