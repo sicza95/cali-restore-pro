@@ -4,7 +4,9 @@ import { Button } from '../../controls/button/Button';
 import { IconButton } from '../../controls/icon-button/IconButton';
 import { RangeControl } from '../../controls/range-control/RangeControl';
 import { SaveStatus } from '../../controls/save-status/SaveStatus';
+import { tools as reviewTools } from '../../controls/tool-rail/constants';
 import { ToolRail } from '../../controls/tool-rail/ToolRail';
+import type { Tool, ToolItem } from '../../controls/tool-rail/types';
 import { Icon } from '../../icon/Icon';
 import { editorCopy } from '../constants';
 import { LayerPanel } from '../layer-panel/LayerPanel';
@@ -16,7 +18,7 @@ function ToolContext(props: ToolContextProps) {
   const options = children(() => props.children);
   return (
     <div class="cr-tool-context cr-glass">
-      <Icon name={props.tool} size={18} />
+      <Icon name={props.icon} size={18} />
       <span>{props.layer}</span>
       <Show when={options()}>
         <span class="cr-context-divider" />
@@ -27,8 +29,10 @@ function ToolContext(props: ToolContextProps) {
 }
 
 /** The editor layout. It is controlled: adapters own the state, the canvas and persistence. */
-export function EditorWorkspace(props: EditorWorkspaceProps) {
+export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceProps<T>) {
   const copy = createMemo<EditorCopy>(() => ({ ...editorCopy, ...props.copy }));
+  const tools = () => (props.tools ?? reviewTools) as readonly ToolItem<T>[];
+  const toolIcon = () => tools().find((item) => item.id === props.tool)?.icon ?? 'select';
   const activeName = () => props.layers.find((item) => item.id === props.activeLayer)?.name;
 
   return (
@@ -101,10 +105,17 @@ export function EditorWorkspace(props: EditorWorkspaceProps) {
             {props.canvas}
           </div>
           <Show when={!props.empty}>
-            <ToolRail active={props.tool} onChange={(tool) => props.onTool(tool)} />
+            <ToolRail
+              tools={tools()}
+              label={props.toolsLabel}
+              active={props.tool}
+              onChange={(tool) => props.onTool(tool)}
+              disabledReason={props.toolReason}
+              controlId={props.toolControlId}
+            />
           </Show>
           <Show when={!props.empty}>
-            <ToolContext tool={props.tool} layer={activeName()}>
+            <ToolContext icon={toolIcon()} layer={activeName()}>
               {props.toolOptions}
             </ToolContext>
           </Show>
@@ -126,14 +137,18 @@ export function EditorWorkspace(props: EditorWorkspaceProps) {
         <footer class="cr-editor-footer">
           {props.footerStart}
           <div class="cr-footer-context">
-            <RangeControl
-              label={copy().maskOpacity}
-              min={10}
-              max={80}
-              value={props.maskOpacity}
-              unit="%"
-              onChange={(opacity) => props.onMaskOpacity(opacity)}
-            />
+            <Show when={props.onMaskOpacity}>
+              {(onMaskOpacity) => (
+                <RangeControl
+                  label={copy().maskOpacity}
+                  min={10}
+                  max={80}
+                  value={props.maskOpacity}
+                  unit="%"
+                  onChange={(opacity) => onMaskOpacity()(opacity)}
+                />
+              )}
+            </Show>
             <span class="cr-commit-label">
               <span class="cr-live-dot" />
               {copy().perStrokeSave}

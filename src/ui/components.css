@@ -1,0 +1,22 @@
+/* Component styles without the page base, for hosts that style their own page. */
+@import './controls/button/styles.css';
+@import './controls/icon-button/styles.css';
+@import './styles/glass.css';
+@import './controls/tool-rail/styles.css';
+@import './controls/save-status/styles.css';
+@import './controls/range-control/styles.css';
+@import './editor/editor-workspace/styles.css';
+@import './editor/photo-canvas/styles.css';
+@import './editor/editor-workspace/tool-context.css';
+@import './editor/layer-panel/styles.css';
+@import './editor/editor-workspace/footer.css';
+@import './editor/photo-strip/styles.css';
+@import './editor/editor-workspace/footer-context.css';
+@import './editor/calibration-dialog/styles.css';
+@import './controls/field/styles.css';
+@import './editor/calibration-dialog/actions.css';
+@import './editor/editor-workspace/notice.css';
+@import './controls/switch/styles.css';
+@import './editor/photo-canvas/empty.css';
+@import './editor/layer-panel/empty.css';
+@import './editor/editor-workspace/responsive.css';

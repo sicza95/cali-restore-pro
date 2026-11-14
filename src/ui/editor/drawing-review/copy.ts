@@ -53,6 +53,7 @@ const messages = {
   zoom: ['Drawing zoom (%)', 'Rajz nagyítása (%)'],
   fit: ['Fit reference', 'Referencia igazítása'],
   tool: ['Tool inspector', 'Eszközbeállítások'],
+  details: ['Details', 'Részletek'],
   layers: ['Layers and masks', 'Rétegek és maszkok'],
   blocked: [
     'Choose a visible, unlocked mask to draw.',

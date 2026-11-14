@@ -11,6 +11,8 @@ export function DrawingInspector(props: {
   tools: DrawingTools;
   copy: DrawingCopy;
   reason: string;
+  /** False when the host shows brush width and shape kind itself, through `DrawingToolOptions`. */
+  toolOptions?: boolean;
 }) {
   const m = untrack(() => props.model);
   const t = untrack(() => props.tools);
@@ -19,6 +21,7 @@ export function DrawingInspector(props: {
   const shape = () => t.tool() === 'shape';
   const corners = () => shape() && t.shape() !== 'polygon';
   const setBrush = (changes: Partial<BrushOptions>) => t.setBrush({ ...t.brush(), ...changes });
+  const options = () => props.toolOptions !== false;
   const inputCoordinates = () => (
     <div class="drawing-fields">
       <DrawNumber
@@ -47,14 +50,9 @@ export function DrawingInspector(props: {
       <Show when={t.brushing() || t.sketching()}>
         <Show when={!props.reason} fallback={<p role="status">{props.reason}</p>}>
           <Show when={t.brushing()}>
-            <DrawNumber
-              name="brush.width"
-              label={c().width}
-              value={t.brush().width}
-              min={0.1}
-              max={20}
-              onValue={(width) => setBrush({ width })}
-            />
+            <Show when={options()}>
+              <BrushWidth tools={t} copy={c()} />
+            </Show>
             <DrawToggle
               name="brush.pressure"
               label={c().pressure}
@@ -104,22 +102,8 @@ export function DrawingInspector(props: {
               fallback={
                 <>
                   <p>{shape() ? c().shapeHelp : c().pathHelp}</p>
-                  <Show when={shape()}>
-                    <label>
-                      {c().shape}
-                      <select
-                        data-control-id={control('shape.kind')}
-                        value={t.shape()}
-                        onChange={(e) => {
-                          t.setShape(e.currentTarget.value as Shape);
-                          t.reset();
-                        }}
-                      >
-                        <For each={['rectangle', 'ellipse', 'polygon'] as const}>
-                          {(key) => <option value={key}>{c()[key]}</option>}
-                        </For>
-                      </select>
-                    </label>
+                  <Show when={shape() && options()}>
+                    <ShapeKind tools={t} copy={c()} />
                   </Show>
                   <label>
                     {c().operation}
@@ -270,5 +254,57 @@ export function DrawingInspector(props: {
         </Show>
       </Show>
     </section>
+  );
+}
+
+type OptionProps = { tools: DrawingTools; copy: DrawingCopy };
+
+function BrushWidth(props: OptionProps) {
+  const t = untrack(() => props.tools);
+  return (
+    <DrawNumber
+      name="brush.width"
+      label={props.copy.width}
+      value={t.brush().width}
+      min={0.1}
+      max={20}
+      onValue={(width) => t.setBrush({ ...t.brush(), width })}
+    />
+  );
+}
+
+function ShapeKind(props: OptionProps) {
+  const t = untrack(() => props.tools);
+  return (
+    <label>
+      {props.copy.shape}
+      <select
+        data-control-id={control('shape.kind')}
+        value={t.shape()}
+        onChange={(e) => {
+          t.setShape(e.currentTarget.value as Shape);
+          t.reset();
+        }}
+      >
+        <For each={['rectangle', 'ellipse', 'polygon'] as const}>
+          {(key) => <option value={key}>{props.copy[key]}</option>}
+        </For>
+      </select>
+    </label>
+  );
+}
+
+/** Brush width or shape kind for the active tool, for the editor shell's tool chip. */
+export function DrawingToolOptions(props: OptionProps & { reason: string }) {
+  const t = untrack(() => props.tools);
+  return (
+    <Show when={!props.reason}>
+      <Show when={t.brushing()}>
+        <BrushWidth tools={t} copy={props.copy} />
+      </Show>
+      <Show when={t.tool() === 'shape'}>
+        <ShapeKind tools={t} copy={props.copy} />
+      </Show>
+    </Show>
   );
 }

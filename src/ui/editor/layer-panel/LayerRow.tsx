@@ -25,7 +25,12 @@ export function LayerRow(props: LayerRowProps) {
         onClick={() => props.onSelect(props.id)}
       >
         <span class="cr-layer-name">
-          <span class={`cr-swatch cr-swatch--${props.id}`} aria-hidden="true" />
+          <span
+            class={`cr-swatch cr-swatch--${props.id}`}
+            data-fill={layer()?.swatch.fill}
+            style={{ '--cr-swatch-color': layer()?.swatch.color }}
+            aria-hidden="true"
+          />
           {name()}
         </span>
         <Show when={layer()?.area !== undefined}>
