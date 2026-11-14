@@ -1,48 +1,66 @@
 import { For, Show, createSignal, createUniqueId } from 'solid-js';
 import { Button } from '../../controls/button/Button';
-import { IconButton } from '../../controls/icon-button/IconButton';
 import { moveFocus } from '../../shared/moveFocus';
 import { Icon } from '../../icon/Icon';
 import { Area } from '../area/Area';
-import { sampleAssessment } from './constants';
-import { sampleLayers } from '../constants';
+import type { LayerId } from '../types';
+import { LayerMeasurements } from './LayerMeasurements';
+import { LayerRow } from './LayerRow';
 import type { LayerPanelProps } from './types';
+import { coverage, findLayer, layerIds, masterLayer } from './utils';
 
 export function LayerPanel(props: LayerPanelProps) {
   const [tab, setTab] = createSignal<'layers' | 'measurements'>('layers');
-  const [expanded, setExpanded] = createSignal(true);
+  const [collapsed, setCollapsed] = createSignal<ReadonlySet<LayerId>>(new Set());
   const id = createUniqueId();
 
-  const layerRow = (layer: (typeof sampleLayers)[number]) => (
-    <div class="cr-layer-row" data-selected={props.active === layer.id}>
-      <IconButton
-        variant="ghost"
-        icon={props.visible.has(layer.id) ? 'eye' : 'eyeOff'}
-        label={`${props.visible.has(layer.id) ? 'Hide' : 'Show'} ${layer.name}`}
-        aria-pressed={props.visible.has(layer.id)}
-        onClick={() => props.onToggleVisible(layer.id)}
-      />
+  const toggleFolder = (folder: LayerId) => {
+    const next = new Set(collapsed());
+    if (!next.delete(folder)) next.add(folder);
+    setCollapsed(next);
+  };
+  const folders = () => layerIds(props.layers, (layer) => layer.kind === 'folder');
+  const share = () => (props.empty ? undefined : coverage(props.layers));
+  const row = (layer: LayerId) => (
+    <LayerRow
+      id={layer}
+      copy={props.copy}
+      layers={props.layers}
+      active={props.active}
+      onSelect={(next) => props.onSelect(next)}
+      onToggleVisible={(next) => props.onToggleVisible(next)}
+    />
+  );
+  const group = (folder: LayerId) => (
+    <section class="cr-layer-group" aria-label={findLayer(props.layers, folder)?.name}>
       <button
-        class="cr-layer-select"
+        class="cr-group-header"
         type="button"
-        aria-pressed={props.active === layer.id}
-        onClick={() => props.onSelect(layer.id)}
+        aria-expanded={!collapsed().has(folder)}
+        aria-controls={`${id}-${folder}`}
+        onClick={() => toggleFolder(folder)}
       >
-        <span class="cr-layer-name">
-          <span class={`cr-swatch cr-swatch--${layer.id}`} aria-hidden="true" />
-          {layer.name}
+        <Icon name="chevron" size={16} class={collapsed().has(folder) ? '' : 'cr-chevron-open'} />
+        <span>
+          {findLayer(props.layers, folder)?.name}
+          <small>{props.copy.uniqueCoverage}</small>
         </span>
-        <Area value={layer.area} />
+        <Show when={findLayer(props.layers, folder)?.area !== undefined}>
+          <Area value={findLayer(props.layers, folder)?.area ?? 0} />
+        </Show>
       </button>
-    </div>
+      <div id={`${id}-${folder}`} hidden={collapsed().has(folder)}>
+        <For each={layerIds(props.layers, (layer) => layer.parent === folder)}>{row}</For>
+      </div>
+    </section>
   );
 
   return (
-    <aside class="cr-inspector" aria-label="Surface inspector">
+    <aside class="cr-inspector" aria-label={props.copy.inspector}>
       <div
         class="cr-inspector-tabs"
         role="tablist"
-        aria-label="Inspector"
+        aria-label={props.copy.inspectorTabs}
         onKeyDown={(event) => moveFocus(event, event.currentTarget, '[role=tab]')}
       >
         <For each={['layers', 'measurements'] as const}>
@@ -56,7 +74,7 @@ export function LayerPanel(props: LayerPanelProps) {
               tabIndex={tab() === name ? 0 : -1}
               onClick={() => setTab(name)}
             >
-              {name === 'layers' ? 'Layers' : 'Measurements'}
+              {props.copy[name]}
             </button>
           )}
         </For>
@@ -73,114 +91,75 @@ export function LayerPanel(props: LayerPanelProps) {
           fallback={
             <div class="cr-inspector-empty">
               <Icon name="layers" size={24} />
-              <h2>No assessment yet</h2>
-              <p class="cr-note">Add an overview photo to define the surface.</p>
+              <h2>{props.copy.emptyTitle}</h2>
+              <p class="cr-note">{props.copy.emptyNote}</p>
             </div>
           }
         >
           <Show
             when={tab() === 'layers'}
-            fallback={
-              <section class="cr-measurements">
-                <h2>Surface quantities</h2>
-                <dl class="cr-facts">
-                  <div>
-                    <dt>Assessed surface</dt>
-                    <dd>
-                      <Area value={sampleAssessment.surface} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Paint loss · unique</dt>
-                    <dd>
-                      <Area value={sampleAssessment.uniquePaintLoss} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Coverage</dt>
-                    <dd class="cr-number">
-                      {(
-                        (sampleAssessment.uniquePaintLoss / sampleAssessment.surface) *
-                        100
-                      ).toFixed(1)}
-                      %
-                    </dd>
-                  </div>
-                </dl>
-                <p class="cr-note">Unique coverage counts overlapping damage once.</p>
-                <h3>Work phases</h3>
-                <dl class="cr-facts">
-                  <div>
-                    <dt>Cleaning</dt>
-                    <dd>
-                      <Area value={0.9} />
-                    </dd>
-                  </div>
-                </dl>
-                <p class="cr-note">Treatment areas are measured separately.</p>
-              </section>
-            }
+            fallback={<LayerMeasurements copy={props.copy} layers={props.layers} />}
           >
-            <div class="cr-boundary">
-              <span>
-                <Icon name="frame" size={17} />
-                Master boundary
-              </span>
-              <Area value={sampleAssessment.surface} />
-            </div>
-            <section class="cr-layer-group" aria-label="Paint loss">
-              <button
-                class="cr-group-header"
-                type="button"
-                aria-expanded={expanded()}
-                aria-controls={`${id}-damage`}
-                onClick={() => setExpanded(!expanded())}
-              >
-                <Icon name="chevron" size={16} class={expanded() ? 'cr-chevron-open' : ''} />
-                <span>
-                  Paint loss<small>Unique coverage</small>
-                </span>
-                <Area value={sampleAssessment.uniquePaintLoss} />
-              </button>
-              <div id={`${id}-damage`} hidden={!expanded()}>
-                <For
-                  each={sampleLayers.filter(
-                    (layer) => layer.id === 'flaking' || layer.id === 'lacunae',
-                  )}
-                >
-                  {layerRow}
-                </For>
-              </div>
-            </section>
-            <For each={sampleLayers.filter((layer) => layer.id === 'cracks')}>{layerRow}</For>
-            <section class="cr-layer-group cr-phase-group" aria-label="Work phases">
-              <h2>Work phases</h2>
-              <For each={sampleLayers.filter((layer) => layer.kind === 'phase')}>{layerRow}</For>
-            </section>
+            <Show when={masterLayer(props.layers)}>
+              {(master) => (
+                <div class="cr-boundary">
+                  <span>
+                    <Icon name="frame" size={17} />
+                    {master().name}
+                  </span>
+                  <Show when={master().area !== undefined}>
+                    <Area value={master().area ?? 0} />
+                  </Show>
+                </div>
+              )}
+            </Show>
+            <For
+              each={layerIds(
+                props.layers,
+                (layer) => !layer.parent && (layer.kind === 'folder' || layer.kind === 'damage'),
+              )}
+            >
+              {(layer) => (
+                <Show when={folders().includes(layer)} fallback={row(layer)}>
+                  {group(layer)}
+                </Show>
+              )}
+            </For>
+            <Show when={layerIds(props.layers, (layer) => layer.kind === 'phase').length > 0}>
+              <section class="cr-layer-group cr-phase-group" aria-label={props.copy.workPhases}>
+                <h2>{props.copy.workPhases}</h2>
+                <For each={layerIds(props.layers, (layer) => layer.kind === 'phase')}>{row}</For>
+              </section>
+            </Show>
+            {props.detail}
           </Show>
         </Show>
       </div>
       <div class="cr-inspector-footer">
         <div class="cr-summary">
-          <span>Paint loss</span>
+          <span>
+            {folders().length === 1
+              ? findLayer(props.layers, folders()[0])?.name
+              : props.copy.coverage}
+          </span>
           <strong>
-            {props.empty ? '—' : '13.0'}
-            <Show when={!props.empty}>
+            {share()?.toFixed(1) ?? '—'}
+            <Show when={share() !== undefined}>
               <span>%</span>
             </Show>
           </strong>
         </div>
         <div class="cr-coverage-track" aria-hidden="true">
-          <span style={{ width: props.empty ? '0%' : '13%' }} />
+          <span style={{ width: `${Number((share() ?? 0).toFixed(1))}%` }} />
         </div>
         <Button
           variant="ghost"
           icon="measure"
-          disabled={props.empty}
-          title={props.empty ? 'Add a reference photo first' : undefined}
-          onClick={props.onCalibrate}
+          disabled={props.empty || !props.onCalibrate}
+          title={props.empty ? props.copy.calibrationUnavailable : undefined}
+          onClick={() => props.onCalibrate?.()}
         >
-          Calibration & units
+          {props.copy.calibration}
         </Button>
       </div>
     </aside>
