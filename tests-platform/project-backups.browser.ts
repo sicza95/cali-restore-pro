@@ -36,9 +36,19 @@ test('download and restore an encrypted project through the controls in a fresh 
     mimeType: 'image/x-adobe-dng',
     buffer: dng,
   });
-  await page.getByRole('combobox', { name: 'Image role', exact: true }).selectOption('reference');
   await page.getByRole('button', { name: 'Attach original', exact: true }).click();
   await expect(page.getByText('plaster-detail.dng')).toBeVisible();
+  const originalPath = new URL(page.url()).pathname;
+  await page.getByRole('link', { name: 'Open surface', exact: true }).click();
+  const control = (key: string) => page.locator('[data-control-id="surface.review.' + key + '"]');
+  await expect(control('calibrate')).toHaveAttribute('aria-disabled', 'false');
+  await control('calibrate').click();
+  await control('unit').selectOption('m');
+  await control('width').fill('2');
+  await control('height').fill('3');
+  await control('apply').click();
+  await expect(page.getByRole('region', { name: 'Surface measurements' })).toContainText('6 m²');
+  await page.locator('[data-control-id="surface.project"]').click();
   await page.getByText('Export encrypted backup', { exact: true }).click();
   await page.getByRole('button', { name: 'Prepare backup' }).click();
   const key = page.getByRole('textbox', { name: 'Backup key', exact: true });
@@ -73,10 +83,13 @@ test('download and restore an encrypted project through the controls in a fresh 
     await expect(target.getByText('plaster-detail.dng')).toBeVisible();
     await expect(
       target.getByRole('listitem').getByRole('combobox', { name: 'Image role' }),
-    ).toHaveValue('reference');
+    ).toHaveValue('mapping');
     await target.getByRole('link', { name: 'Open surface', exact: true }).click();
     await expect(target.locator('.surface-canvas img')).toHaveJSProperty('naturalWidth', 48);
-    expect(new URL(target.url()).pathname).not.toBe(new URL(page.url()).pathname);
+    await expect(target.getByRole('region', { name: 'Surface measurements' })).toContainText(
+      '6 m²',
+    );
+    expect(new URL(target.url()).pathname).not.toContain(originalPath);
   } finally {
     await fresh.close();
   }

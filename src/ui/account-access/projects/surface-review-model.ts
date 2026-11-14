@@ -1,4 +1,5 @@
-import { fields, lineKeys, pairKeys, toolFields } from './surface-review-controls';
+import type { Matrix } from '../../../platform/projects/planar-types';
+import { fields, lineKeys, toolFields } from './surface-review-controls';
 import type { ReviewTool } from './surface-review-controls';
 
 export const nudge = {
@@ -68,8 +69,9 @@ export function validateDraft(
           100)
     );
   }
-  if (key === 'align' && draft.manualPairs) {
+  if (key === 'align') {
     return (
+      draft.manualPairs &&
       validSegment(draft.pairOne) &&
       validSegment(draft.pairTwo) &&
       distinct(draft.pairOne.start, draft.pairTwo.start) &&
@@ -85,24 +87,35 @@ export function validateDraft(
   );
 }
 
-function alignmentOffset(draft: SurfaceDraft | undefined, axis: keyof Point) {
-  if (!draft || draft.referenceOnly) return 0;
-  const offset = Number(axis === 'x' ? draft.offsetX : draft.offsetY);
-  if (!draft.manualPairs) return offset;
-  const pairs = pairKeys.map(
-    (pair) => Number(draft[pair].end[axis]) - Number(draft[pair].start[axis]),
+export function photoMatrixStyle([a, b, c, d, e, f, g, h, i]: Matrix, sx: number, sy: number) {
+  return (
+    'matrix3d(' +
+    [
+      a,
+      (d * sy) / sx,
+      0,
+      g / sx,
+      (b * sx) / sy,
+      e,
+      0,
+      h / sy,
+      0,
+      0,
+      1,
+      0,
+      c * sx,
+      f * sy,
+      0,
+      i,
+    ].join(',') +
+    ')'
   );
-  return (pairs[0]! + pairs[1]!) / 2 + offset;
 }
 
 export function surfacePhotoStyle(
   viewport: { x: number; y: number; zoom: number; rotate: number },
-  review?: Partial<Record<ReviewTool, SurfaceDraft>>,
+  preparation?: SurfaceDraft,
 ) {
-  const preparation = review?.prepare;
-  const alignment = review?.align;
-  const angle = viewport.rotate + Number(preparation?.rotation ?? 0);
-  const tilt = preparation?.rectify ? 0 : (preparation?.perspective ?? 0);
   const crop = preparation
     ? [
         preparation.cropY,
@@ -115,10 +128,7 @@ export function surfacePhotoStyle(
     transform: [
       `translate(${viewport.x}px, ${viewport.y}px)`,
       `scale(${viewport.zoom / 100})`,
-      `rotate(${angle}deg)`,
-      `perspective(800px) rotateY(${tilt}deg)`,
-      `skewX(${preparation?.skew ?? 0}deg) scaleX(${preparation?.flip ? -1 : 1})`,
-      `translate(${alignmentOffset(alignment, 'x')}%, ${alignmentOffset(alignment, 'y')}%)`,
+      `rotate(${viewport.rotate}deg)`,
     ].join(' '),
     'clip-path': crop && `inset(${crop.join('% ')}%)`,
   };

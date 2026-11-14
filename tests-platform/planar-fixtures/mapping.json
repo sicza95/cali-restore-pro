@@ -1,0 +1,38 @@
+{
+  "id": "FX-05-synthetic",
+  "oracle": "p01-rational-v1",
+  "detailToGlobal": [
+    ["2", "0", "10"],
+    ["0", "2", "20"],
+    ["0", "0", "1"]
+  ],
+  "fitPoints": [
+    ["0", "0"],
+    ["1", "0"],
+    ["0", "1"],
+    ["1", "1"]
+  ],
+  "holdoutPoints": [
+    ["1/4", "1/3"],
+    ["3/4", "2/3"]
+  ],
+  "holdoutExpected": [
+    ["21/2", "62/3"],
+    ["23/2", "64/3"]
+  ],
+  "acceptedDetailRegion": ["0", "0", "1", "1"],
+  "referenceOnlyCanAuthor": false,
+  "mainPerspective": [
+    ["1", "0", "0"],
+    ["0", "1", "0"],
+    ["1/10", "0", "1"]
+  ],
+  "unitSquareExpectedTransformedArea": "105/121",
+  "invariants": [
+    "detail realignment preserves global geometry and quantities",
+    "partial detail region never clips global measured area",
+    "main transform composes every mapping; calibration carried or explicitly invalidated",
+    "polynomial control-point perspective transform is not assumed exact"
+  ],
+  "photographicAccuracy": "not run; no representative calibrated overview/detail pair yet"
+}

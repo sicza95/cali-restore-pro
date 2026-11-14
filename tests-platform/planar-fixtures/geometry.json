@@ -1,0 +1,242 @@
+{
+  "oracle": "p01-rational-v1",
+  "fillRule": "nonzero",
+  "coordinateUnit": "cm",
+  "straightAreaToleranceNormalized": "1/1000000000",
+  "cases": [
+    {
+      "id": "G-01",
+      "kind": "rect-union",
+      "rectangles": [
+        ["0", "0", "5", "2"],
+        ["7/2", "0", "17/2", "2"]
+      ],
+      "expected": {
+        "layerAreas": ["10", "10"],
+        "intersection": "3",
+        "union": "17",
+        "components": 1,
+        "holes": 0
+      }
+    },
+    {
+      "id": "G-02",
+      "kind": "master-crop",
+      "master": ["0", "0", "10", "10"],
+      "crop": ["0", "0", "8", "10"],
+      "damage": [
+        ["0", "0", "2", "10"],
+        ["7", "0", "9", "2"]
+      ],
+      "expected": {
+        "master": "100",
+        "assessed": "80",
+        "damage": "22",
+        "percent": "55/2",
+        "uncroppedDamage": "24"
+      }
+    },
+    {
+      "id": "G-03",
+      "kind": "hole-island",
+      "rectangles": [
+        ["0", "0", "1", "1"],
+        ["1/5", "1/5", "4/5", "4/5"],
+        ["2/5", "2/5", "3/5", "3/5"]
+      ],
+      "expected": {
+        "area": "17/25",
+        "components": 2,
+        "holes": 1
+      },
+      "predicate": "(outer - hole) union island"
+    },
+    {
+      "id": "G-04",
+      "kind": "micro-hole-gap",
+      "rectangles": [
+        ["0", "0", "1", "1"],
+        ["1/2", "1/2", "5001/10000", "5001/10000"]
+      ],
+      "markedMinimumFeature": "1/10000",
+      "boundaryBudget": "1/1000000",
+      "expected": {
+        "area": "99999999/100000000",
+        "components": 1,
+        "holes": 1
+      }
+    },
+    {
+      "id": "G-05",
+      "kind": "cubic-arch",
+      "controlPoints": [
+        ["0", "0"],
+        ["0", "1"],
+        ["1", "1"],
+        ["1", "0"]
+      ],
+      "close": "straight",
+      "markedMinimumFeature": "1/1000",
+      "boundaryBudget": "1/100000",
+      "areaErrorBound": "80001/1000000000",
+      "expected": {
+        "area": "3/5",
+        "components": 1,
+        "holes": 0
+      },
+      "boundMethod": "simple-boundary tube bound: perimeter <= 4; 2*4*delta + pi*delta^2 < 0.000080001"
+    },
+    {
+      "id": "G-06",
+      "kind": "triangle",
+      "points": [
+        ["0", "0"],
+        ["1", "0"],
+        ["0", "1"]
+      ],
+      "expected": {
+        "area": "1/2"
+      }
+    },
+    {
+      "id": "G-07",
+      "kind": "nonzero-multiplicity",
+      "points": [
+        ["0", "0"],
+        ["1", "0"],
+        ["1", "1"],
+        ["0", "1"],
+        ["0", "0"],
+        ["1", "0"],
+        ["1", "1"],
+        ["0", "1"]
+      ],
+      "expected": {
+        "filledArea": "1",
+        "signedTraversalArea": "2",
+        "components": 1,
+        "holes": 0
+      }
+    },
+    {
+      "id": "G-08",
+      "kind": "narrow-gap",
+      "rectangles": [
+        ["0", "0", "1/2", "1"],
+        ["5001/10000", "0", "1", "1"]
+      ],
+      "markedMinimumFeature": "1/10000",
+      "boundaryBudget": "1/1000000",
+      "expected": {
+        "area": "9999/10000",
+        "components": 2,
+        "holes": 0
+      }
+    }
+  ],
+  "metamorphic": {
+    "scales": ["1/1000000", "1", "1000000"],
+    "translations": [
+      ["0", "0"],
+      ["1000000", "-1000000"]
+    ],
+    "areaLaw": "area scales by s^2; translation invariant; normalize before tolerance comparison"
+  },
+  "calibration": [
+    {
+      "id": "CAL-01",
+      "method": "known-dimensions",
+      "analysisPixels": [1600, 1200],
+      "physicalMetres": ["1", "1/2"],
+      "coveredFraction": "1/5",
+      "expectedAreaM2": "1/10"
+    },
+    {
+      "id": "CAL-02",
+      "method": "known-spans",
+      "horizontalPixels": "500",
+      "horizontalMetres": "1/20",
+      "verticalPixels": "400",
+      "verticalMetres": "1/25",
+      "coveredPixels2": "10000",
+      "expectedAreaM2": "1/10000"
+    },
+    {
+      "id": "CAL-03",
+      "method": "known-spans",
+      "horizontalPixels": "100",
+      "horizontalMetres": "1/10",
+      "verticalPixels": "100",
+      "verticalMetres": "1/5",
+      "coveredPixels2": "10000",
+      "expectedAreaM2": "1/50"
+    },
+    {
+      "id": "CAL-04",
+      "method": "known-spans",
+      "horizontalPixels": "100",
+      "horizontalMetres": "1/10",
+      "verticalMetres": null,
+      "expectedStatus": "unavailable"
+    }
+  ],
+  "statusCases": [
+    {
+      "id": "S-01",
+      "scale": "valid",
+      "assessed": "0",
+      "damage": "0",
+      "areaStatus": "valid",
+      "area": "0",
+      "percentStatus": "unavailable",
+      "percent": null
+    },
+    {
+      "id": "S-02",
+      "scale": "missing",
+      "assessed": "100",
+      "damage": "25",
+      "areaStatus": "unavailable",
+      "area": null,
+      "percentStatus": "valid",
+      "percent": "25"
+    },
+    {
+      "id": "S-03",
+      "scale": "valid",
+      "assessed": "100",
+      "damage": "0",
+      "areaStatus": "valid",
+      "area": "0",
+      "percentStatus": "valid",
+      "percent": "0"
+    },
+    {
+      "id": "S-04",
+      "scale": "valid",
+      "revision": "newer-than-result",
+      "areaStatus": "stale",
+      "finalClaimAllowed": false
+    },
+    {
+      "id": "S-05",
+      "scale": "valid",
+      "job": "running",
+      "areaStatus": "pending",
+      "finalClaimAllowed": false
+    },
+    {
+      "id": "S-06",
+      "scale": "invalid",
+      "areaStatus": "invalid",
+      "finalClaimAllowed": false
+    },
+    {
+      "id": "S-07",
+      "scale": "valid",
+      "job": "error",
+      "areaStatus": "failed",
+      "finalClaimAllowed": false
+    }
+  ]
+}

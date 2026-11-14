@@ -16,18 +16,19 @@ export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
   await c('view.fit').press('Enter');
   await expect(frame).toHaveAttribute('style', /translate\(0px, 0px\)/);
   await c('review.perspective').fill('20');
-  await expect(frame).toHaveAttribute('style', /rotateY\(20deg\)/);
+  const tilted = await frame.getAttribute('style');
+  expect(tilted).toContain('matrix3d');
   await c('review.rectify').check();
   await expect(frame.locator('rect')).toBeVisible();
   await expect(frame.locator('rect')).toHaveAttribute('width', '72');
-  await expect(frame).toHaveAttribute('style', /rotateY\(0deg\)/);
+  await expect.poll(() => frame.getAttribute('style')).not.toBe(tilted);
 
   const language = page.locator('[data-control-id="app.nav.language"]');
   for (const lang of ['en', 'hu']) {
     await language.selectOption(lang);
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await expect(c('review.rectify')).toHaveAccessibleName(
-      lang === 'en' ? 'Show rectification target' : 'A helyesbítés célképének mutatása',
+      lang === 'en' ? 'Correct perspective tilt' : 'A perspektíva dőlésének helyesbítése',
     );
     for (const colorScheme of ['light', 'dark'] as const) {
       await page.emulateMedia({ colorScheme });
