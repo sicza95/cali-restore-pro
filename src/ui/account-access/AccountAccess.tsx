@@ -13,6 +13,7 @@ import { Preferences } from './settings/preferences/Preferences';
 import { PrivateLibraries } from './settings/preferences/PrivateLibraries';
 import { Profile } from './settings/profile/Profile';
 import './settings/styles.css';
+import './access-form/styles.css';
 
 export function AccountAccess() {
   const model = createAccountAccess();
@@ -21,10 +22,12 @@ export function AccountAccess() {
   const protectedView = isAccountDestination(view) ? view : undefined;
   const publicView = !isAccountDestination(view) && view !== 'notFound' ? view : undefined;
   return (
-    <div class="account-shell">
+    <div class="account-shell" classList={{ 'account-shell--public': !!publicView }}>
       <AccountNavigation model={model} />
       <main class="account-content">
-        <h1>{c()[view]}</h1>
+        <Show when={!publicView}>
+          <h1>{c()[view]}</h1>
+        </Show>
         <Show when={message()}>
           {(key) => (
             <p class="account-message" role={failed() ? 'alert' : 'status'} data-error={failed()}>
@@ -56,7 +59,14 @@ export function AccountAccess() {
         <Switch>
           <Match when={publicView}>
             {(form) => (
-              <AccessForm view={form()} linkToken={linkToken} submit={submit} t={t} busy={busy} />
+              <AccessForm
+                view={form()}
+                language={lang()}
+                linkToken={linkToken}
+                submit={submit}
+                t={t}
+                busy={busy}
+              />
             )}
           </Match>
           <Match when={view === 'notFound'}>
@@ -145,10 +155,11 @@ export function AccountAccess() {
             )}
           </Match>
         </Switch>
-        <footer>
-          <p>{t('upcoming')}</p>
+        <footer class="account-footer">
           <section aria-label={t('platform')}>
-            <span role="status">{t(connection())}</span>
+            <span class="account-connection" data-state={connection()} role="status">
+              {t(connection())}
+            </span>
             <button
               data-control-id="app.service.retry"
               class="secondary"

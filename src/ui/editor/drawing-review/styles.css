@@ -7,13 +7,28 @@
 }
 .surface-mode {
   margin-block-end: 12px;
+  border-bottom: 1px solid var(--cr-rule);
 }
 .surface-mode button,
 .drawing-rail button,
 .drawing-layer-select {
   border: 1px solid transparent;
 }
-.surface-mode button[aria-pressed='true'],
+.surface-mode button.secondary {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--cr-muted);
+}
+.surface-mode button.secondary:hover {
+  color: var(--cr-ink);
+  background: var(--cr-hover);
+}
+.surface-mode button.secondary[aria-pressed='true'] {
+  border-bottom-color: var(--cr-accent);
+  color: var(--cr-ink);
+}
 .drawing-rail button[aria-pressed='true'],
 .drawing-layer-select[aria-pressed='true'] {
   background: var(--cr-selected);
@@ -63,10 +78,11 @@
   position: relative;
   display: grid;
   place-items: center;
-  min-height: clamp(250px, 45vh, 520px);
+  min-height: clamp(280px, 55vh, 660px);
   overflow: hidden;
   background: var(--cr-canvas);
   border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-panel-radius);
 }
 .drawing-viewport p {
   padding: 12px;
@@ -83,7 +99,7 @@
 .drawing-photo img {
   display: block;
   max-width: 100%;
-  max-height: clamp(250px, 52vh, 620px);
+  max-height: clamp(280px, 64vh, 760px);
   pointer-events: none;
 }
 .drawing-overlay {
@@ -172,7 +188,8 @@
 .drawing-panel {
   padding: 12px;
   border: 1px solid var(--cr-rule);
-  background: var(--cr-surface);
+  background: var(--cr-ground);
+  border-radius: var(--cr-panel-radius);
 }
 .drawing-panel :is(h3, p) {
   margin: 0;

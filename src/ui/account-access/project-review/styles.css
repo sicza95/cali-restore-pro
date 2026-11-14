@@ -17,8 +17,33 @@
 }
 .project-review-nav a[aria-current='page'] {
   font-weight: 700;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.25em;
+  border-bottom-color: var(--cr-accent);
+  color: var(--cr-ink);
+}
+.project-review-nav {
+  border-bottom: 1px solid var(--cr-rule);
+  margin-block: 8px 16px;
+}
+.project-review-nav a {
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  color: var(--cr-muted);
+}
+.project-review-nav a:hover {
+  color: var(--cr-ink);
+}
+.review-breadcrumbs a {
+  color: var(--cr-muted);
+  font-size: 14px;
+}
+.project-review > header > h2 {
+  font-size: clamp(24px, 3vw, 36px);
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+.project-review .report-paper {
+  background: var(--cr-surface);
+  border-radius: var(--cr-panel-radius);
 }
 .estimate-review .project-pane > form.review-fields > button:last-child {
   grid-column: auto;

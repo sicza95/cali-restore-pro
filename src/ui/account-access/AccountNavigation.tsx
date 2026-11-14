@@ -1,4 +1,6 @@
 import { createSignal, For, Show } from 'solid-js';
+import { Icon } from '../icon/Icon';
+import type { IconName } from '../icon/types';
 import type { createAccountAccess } from './createAccountAccess';
 import { accountDestinations } from './routes';
 import { navigationText } from './navigation-copy';
@@ -8,6 +10,21 @@ import {
   menuControl,
   signOutControl,
 } from './navigation-controls';
+
+const destinationIcons: Record<(typeof accountNavigationControls)[number]['labelKey'], IconName> = {
+  projects: 'folder',
+  invitations: 'envelope',
+  profile: 'account',
+  security: 'lock',
+  preferences: 'settings',
+  unlock: 'lock',
+  'devices/approve': 'check',
+  offline: 'photo',
+  admin: 'layers',
+  login: 'account',
+  register: 'plus',
+  libraries: 'layers',
+};
 
 export function AccountNavigation(props: { model: ReturnType<typeof createAccountAccess> }) {
   const [expanded, setExpanded] = createSignal(false);
@@ -21,16 +38,10 @@ export function AccountNavigation(props: { model: ReturnType<typeof createAccoun
   return (
     <aside class="account-nav">
       <a class="product-name" href={props.model.account() ? accountDestinations.projects : '/'}>
-        <svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
-          <path
-            d="M25 8a11 11 0 1 0 0 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="4"
-            stroke-linecap="round"
-          />
-        </svg>
-        CaliRestore Pro
+        <Icon name="brand" size={26} />
+        <span>
+          CaliRestore <strong>Pro</strong>
+        </span>
       </a>
       <button
         class="secondary account-nav-toggle"
@@ -39,6 +50,7 @@ export function AccountNavigation(props: { model: ReturnType<typeof createAccoun
         aria-expanded={expanded()}
         onClick={() => setExpanded(!expanded())}
       >
+        <Icon name={expanded() ? 'close' : 'menu'} size={18} />
         {c().menu}
       </button>
       <nav id="app-navigation" aria-label={c().account} data-expanded={expanded()}>
@@ -49,17 +61,19 @@ export function AccountNavigation(props: { model: ReturnType<typeof createAccoun
               data-control-id={control.id}
               aria-current={props.model.view === control.labelKey ? 'page' : undefined}
             >
+              <Icon name={destinationIcons[control.labelKey]} size={18} />
               {c()[control.labelKey]}
             </a>
           )}
         </For>
         <Show when={props.model.account()}>
           <button
-            class="secondary"
+            class="secondary account-sign-out"
             data-control-id={signOutControl.id}
             disabled={props.model.busy()}
             onClick={() => props.model.signOut()}
           >
+            <Icon name="exit" size={18} />
             {c().logout}
           </button>
         </Show>

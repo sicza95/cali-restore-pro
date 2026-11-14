@@ -1,5 +1,9 @@
 export const paths = {
-  brand: 'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5',
+  brand: 'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5M8 16v-4a4 4 0 0 1 8 0v4H8Z',
+  envelope: 'M3 5h18v14H3zM3 6l9 7 9-7',
+  account: 'M16 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM4 21v-2a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v2',
+  exit: 'M11 4H4v16h7m4-12 4 4-4 4m-6-4h10',
+  menu: 'M4 7h16M4 12h16M4 17h16',
   back: 'm14 6-6 6 6 6',
   brush: 'm14 4 6 6M9 15 20 4a2 2 0 0 0-3-3L6 12m3 3c1 4-3 7-7 6 2-1 0-4 2-6 1-1 3-1 5 0Z',
   eraser: 'm4 13 9-9a2 2 0 0 1 3 0l4 4a2 2 0 0 1 0 3l-9 9H7l-3-3a3 3 0 0 1 0-4Zm5-5 8 8M11 20h10',

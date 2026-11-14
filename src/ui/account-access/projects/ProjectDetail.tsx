@@ -64,7 +64,6 @@ export function ProjectDetail(props: {
           {props.project.archived ? c().restore : c().archive}
         </button>
       </div>
-      {props.sharing}
       <Show when={!props.project.archived}>
         <div class="project-detail">
           <section class="project-pane">
@@ -109,7 +108,7 @@ export function ProjectDetail(props: {
               </label>
             </div>
             <a
-              class="project-back"
+              class="project-back project-open-surface"
               data-control-id="project.surface"
               href={projectHref(props.project.id, surface().id)}
               onClick={(event) =>
@@ -262,6 +261,7 @@ export function ProjectDetail(props: {
           )}
         </Show>
       </Show>
+      {props.sharing}
     </>
   );
 }

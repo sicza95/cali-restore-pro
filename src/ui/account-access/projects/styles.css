@@ -1,6 +1,19 @@
 .project-workspace {
   min-width: 0;
 }
+.project-create {
+  padding: 18px;
+  background: var(--cr-ground);
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-panel-radius);
+  margin: 12px 0 20px;
+}
+.project-filters {
+  margin-bottom: 16px;
+}
+.project-filters label:has(input[type='search']) {
+  flex-grow: 2;
+}
 .project-fields,
 .project-heading,
 .project-register li {
@@ -42,6 +55,7 @@
   gap: 16px;
   padding: 16px;
   border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-panel-radius);
   background: var(--cr-surface);
   min-width: 0;
 }
@@ -50,11 +64,11 @@
 }
 .project-register {
   list-style: none;
-  margin: 12px 0 0;
+  margin: 12px 0 24px;
   padding: 0;
 }
 .project-register li {
-  padding: 8px 0;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--cr-rule);
   align-items: center;
   overflow-wrap: anywhere;
@@ -68,6 +82,67 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--cr-touch);
+}
+.project-register a {
+  gap: 12px;
+  text-decoration: none;
+}
+.project-register a:hover strong {
+  text-decoration: underline;
+}
+.project-open-surface {
+  width: fit-content;
+  padding: 8px 14px;
+  border-radius: var(--cr-radius);
+  background: var(--cr-primary);
+  color: var(--cr-primary-ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+.project-open-surface:hover {
+  background: var(--cr-hover);
+  color: var(--cr-ink);
+}
+.project-register a > svg,
+.project-empty > svg {
+  flex: none;
+  color: var(--cr-accent);
+}
+.project-open-arrow {
+  margin-inline-start: auto;
+}
+.project-counts,
+.project-empty p {
+  display: block;
+  margin: 0;
+  color: var(--cr-muted);
+  font-size: 13px;
+}
+.project-register li.project-empty {
+  display: flex;
+  gap: 16px;
+  min-height: 120px;
+  padding: 20px;
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-panel-radius);
+  background: var(--cr-ground);
+}
+.project-register li.project-empty > svg {
+  flex: none;
+}
+.project-register time,
+.project-register small {
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .project-register li:not(.project-empty) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+  }
+  .project-register :is(a, .project-counts) {
+    grid-column: 1 / -1;
+  }
 }
 .project-register small {
   display: block;

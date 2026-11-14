@@ -4,7 +4,6 @@ import {
   createResource,
   createMemo,
   createSignal,
-  For,
   Match,
   onCleanup,
   Show,
@@ -15,6 +14,7 @@ import { localProjects, newProject } from '../../../platform/projects/projects';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
+import { ProjectRegister } from './ProjectRegister';
 import type { createAccountAccess } from '../createAccountAccess';
 import { ProjectInvitations } from '../invitations/ProjectInvitations';
 import { projectSnapshot } from '../../../platform/projects/shared-project';
@@ -122,7 +122,7 @@ export function ProjectWorkspace(props: {
   }
   return (
     <section class="project-workspace" aria-label={c().hierarchy}>
-      <Show when={!route()?.review}>
+      <Show when={!route()?.review && !route()?.surface}>
         <a class="project-back" data-control-id="projects.offline" href="/offline-originals">
           {c().offlineShelf}
         </a>
@@ -160,25 +160,27 @@ export function ProjectWorkspace(props: {
           when={route()?.project}
           fallback={
             <>
-              <NameForm
-                controlId="projects.create"
-                label={c().name}
-                action={c().add}
-                disabled={busy()}
-                onSubmit={(name) =>
-                  run(async () => {
-                    const project = newProject(
-                      name,
-                      c().firstObject,
-                      c().firstSurface,
-                      loadPreferences(props.model.account()!.id).currency,
-                    );
-                    await save(project);
-                    navigate(projectHref(project.id));
-                  })
-                }
-              />
-              <div class="project-fields">
+              <div class="project-create">
+                <NameForm
+                  controlId="projects.create"
+                  label={c().name}
+                  action={c().add}
+                  disabled={busy()}
+                  onSubmit={(name) =>
+                    run(async () => {
+                      const project = newProject(
+                        name,
+                        c().firstObject,
+                        c().firstSurface,
+                        loadPreferences(props.model.account()!.id).currency,
+                      );
+                      await save(project);
+                      navigate(projectHref(project.id));
+                    })
+                  }
+                />
+              </div>
+              <div class="project-fields project-filters">
                 <label>
                   {c().search}
                   <input
@@ -209,27 +211,13 @@ export function ProjectWorkspace(props: {
                   {c().archived}
                 </label>
               </div>
-              <ul class="project-register">
-                <For each={visible()} fallback={<li>{c().empty}</li>}>
-                  {(project) => (
-                    <li>
-                      <a
-                        data-control-id="projects.open"
-                        href={projectHref(project.id)}
-                        onClick={(event) => followProjectLink(event, navigate)}
-                      >
-                        {project.name}
-                      </a>
-                      <small>{rowSync(project)}</small>
-                      <time dateTime={new Date(project.updatedAt).toISOString()}>
-                        {new Intl.DateTimeFormat(props.language, { dateStyle: 'medium' }).format(
-                          project.updatedAt,
-                        )}
-                      </time>
-                    </li>
-                  )}
-                </For>
-              </ul>
+              <ProjectRegister
+                projects={visible()}
+                language={props.language}
+                showStart={!archived() && !query().trim()}
+                status={rowSync}
+                navigate={navigate}
+              />
               <ReceiveProjectKey
                 language={props.language}
                 busy={busy()}
