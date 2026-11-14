@@ -12,7 +12,7 @@ export const drawingTools = [
 ] as const satisfies ReadonlyArray<{ id: Tool; icon: string; shortcut: string }>;
 
 export const control = (key: string) => 'surface.draw.' + key;
-export const historyLimit = 30;
+export { historyLimit } from '../../../platform/projects/surface-journal';
 export const pointLimit = 512;
 export const masterId = 1;
 export const brushDefaults: BrushOptions = {

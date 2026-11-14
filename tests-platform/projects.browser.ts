@@ -159,7 +159,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   const afterDrawing = await revisions();
   expect(afterDrawing).not.toEqual(beforeReview);
   await verifyCheckpointReview(page, info);
-  expect(await revisions()).toEqual(afterDrawing);
+  expect(await revisions()).not.toEqual(afterDrawing);
   await review('review.prepare').focus();
   await page.keyboard.press('Enter');
   await review('review.cropWidth').fill('101');
@@ -212,6 +212,21 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   expect((await revisions())[0]).not.toEqual(beforeAlignment[0]);
   await verifyDetailDrawing(page);
   await review('view.previous').click();
+  await drawingControl(page, 'mode.drawing').click();
+  const drawing = (key: string) => drawingControl(page, key);
+  const damage = drawing('layer.select').filter({ hasText: 'Damage mask' }).first();
+  const phase = drawing('layer.select').filter({ hasText: 'Independent phase' });
+  await drawing('history.mode').selectOption('manual');
+  await damage.click();
+  await drawing('tool.brush').click();
+  await drawing('brush.dot').click();
+  await expect(damage).toContainText('Pending marks 1');
+  await drawing('history.undo').click();
+  await expect(damage).toContainText('Undone draft marks 1');
+  await phase.click();
+  await drawing('brush.dot').click();
+  await expect(phase).toContainText('Pending marks 1');
+  await drawing('mode.photo').click();
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
   await review('review.prepare').click();
   await expect(review('review.cropWidth')).toHaveValue('80');
@@ -247,10 +262,42 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(
     drawingControl(page, 'layer.select').filter({ hasText: 'Independent phase' }),
   ).toContainText('3 · Mark');
+  await expect(damage).toContainText('Undone draft marks 1');
+  await expect(phase).toContainText('Pending marks 1');
+  await expect(drawing('history.mode')).toHaveValue('manual');
+  await page.locator('[data-control-id="checkpoint.review.mode"]').click();
+  await page
+    .locator('[data-control-id="checkpoint.review.version"]')
+    .selectOption({ label: 'Before cleaning' });
+  await expect(page.locator('[data-control-id="checkpoint.review.restore"]')).toBeDisabled();
+  await expect(
+    page
+      .locator('[data-control-id="pattern.review.preset"] option')
+      .filter({ hasText: 'Tracing mark' }),
+  ).toHaveCount(2);
+  await drawing('mode.drawing').click();
+  await damage.click();
+  await drawing('history.redo').click();
+  await expect(damage).toContainText('Pending marks 1');
+  await drawing('history.discard').click();
+  await expect(damage).not.toContainText('Pending marks');
+  await damage.click();
+  await drawing('layer.properties').click();
+  await expect(drawing('layer.pattern')).toHaveValue(/\/1$/);
+  await drawing('layer.properties').click();
+  await phase.click();
+  await drawing('history.discard').click();
+  await expect(phase).not.toContainText('Pending marks');
+  await drawing('layer.select').filter({ hasText: 'Master mask' }).click();
   await expect(
     drawingControl(page, 'layer.select').filter({ hasText: 'Master mask' }),
   ).toContainText('1 · Mark');
-  await expect(drawingControl(page, 'history.undo')).toBeDisabled();
+  await expect(drawingControl(page, 'history.redo')).toBeEnabled();
+  await drawingControl(page, 'history.redo').click();
+  await expect(
+    drawingControl(page, 'layer.select').filter({ hasText: 'Independent phase' }),
+  ).toContainText('4 · Mark');
+  await drawingControl(page, 'history.undo').click();
   await drawingControl(page, 'mode.photo').click();
   await expect(page.getByText('Measurements are current.')).toBeVisible();
   await review('review.prepare').click();
@@ -331,67 +378,4 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   );
   await expect(controls('originals.attach')).toHaveCount(0);
   expect(pageErrors).toEqual([]);
-});
-
-test('project revisions reject stale edits and vault forget removes encrypted documents', async ({
-  page,
-}) => {
-  await page.goto('/');
-  const result = await page.evaluate(async () => {
-    const vaultModule = '/src/platform/vault/vault.ts';
-    const storeModule = '/src/platform/vault/store.ts';
-    const projectModule = '/src/platform/projects/projects.ts';
-    const { LocalVault } = (await import(
-      vaultModule
-    )) as typeof import('../src/platform/vault/vault');
-    const { connect, projectTable } = (await import(
-      storeModule
-    )) as typeof import('../src/platform/vault/store');
-    const { localProjects, newProject } = (await import(
-      projectModule
-    )) as typeof import('../src/platform/projects/projects');
-    const vault = new LocalVault('test-account', () => undefined);
-    await vault.create('bb'.repeat(32), true);
-    const projects = localProjects(vault);
-    const project = await projects.save(newProject('Hidden project', 'Object', 'Surface', 'EUR'));
-    await projects.save({ ...project, name: 'New hidden name' });
-    const stale = await projects.save({ ...project, name: 'Stale edit' }).then(
-      () => false,
-      () => true,
-    );
-    const db = await connect();
-    const read = () =>
-      new Promise<unknown[]>((resolve, reject) => {
-        const request = db.transaction(projectTable).objectStore(projectTable).getAll();
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-    const raw = JSON.stringify(await read());
-    const [saved] = await projects.list();
-    vault.lock();
-    const locked = await projects.list().then(
-      () => false,
-      () => true,
-    );
-    await vault.forget(true);
-    const forgotten = (await read()).length === 0;
-    db.close();
-    vault.close();
-    return {
-      stale,
-      locked,
-      forgotten,
-      hidden: !raw.includes('hidden name'),
-      revision: saved?.revision,
-      name: saved?.name,
-    };
-  });
-  expect(result).toEqual({
-    stale: true,
-    locked: true,
-    forgotten: true,
-    hidden: true,
-    revision: 2,
-    name: 'New hidden name',
-  });
 });

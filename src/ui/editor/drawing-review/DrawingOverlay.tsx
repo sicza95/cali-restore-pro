@@ -12,6 +12,7 @@ import type { DrawingReview } from './createDrawingReview';
 import type { DrawingTools } from './createDrawingTools';
 import { storedLayers, storedMark } from './drawing-document';
 import { pathData } from './geometry';
+import { TilePattern } from '../checkpoint-review/TilePattern';
 import type { Layer, Point } from './types';
 
 function MaskPaint(props: { layer: Layer; path: string; width: number }) {
@@ -20,18 +21,25 @@ function MaskPaint(props: { layer: Layer; path: string; width: number }) {
   return (
     <g opacity={props.layer.opacity / 100}>
       <defs>
-        <pattern
-          id={id}
-          width={props.width * 0.02}
-          height={props.width * 0.02}
-          patternUnits="userSpaceOnUse"
+        <Show
+          when={props.layer.pattern}
+          fallback={
+            <pattern
+              id={id}
+              width={props.width * 0.02}
+              height={props.width * 0.02}
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d={`M0 0L${props.width * 0.02} ${props.width * 0.02}`}
+                stroke={color()}
+                stroke-width={props.width * 0.005}
+              />
+            </pattern>
+          }
         >
-          <path
-            d={`M0 0L${props.width * 0.02} ${props.width * 0.02}`}
-            stroke={color()}
-            stroke-width={props.width * 0.005}
-          />
-        </pattern>
+          {(pattern) => <TilePattern id={id} tile={pattern().tile} scale={props.width / 1200} />}
+        </Show>
       </defs>
       <path
         d={props.path}

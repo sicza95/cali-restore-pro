@@ -1,4 +1,5 @@
 const maxText = 64 * 1024;
+export const maxLocalDocument = 768 * 1024;
 export const maxFile = 600_000;
 const encode = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
@@ -11,6 +12,8 @@ type Purpose =
   | `encrypted-estimates:${string}`
   | `encrypted-reports:${string}`
   | `encrypted-estimate-presets:${string}`
+  | `encrypted-pattern-presets:${string}`
+  | `surface-journal:${string}`
   | `project:${string}`
   | `sync:${string}`
   | `pin:${string}`;
@@ -35,8 +38,8 @@ const base64 = (bytes: Uint8Array) =>
   btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(''));
 const unbase64 = (value: string) => Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
 
-export function parseEnvelope(file: string): Envelope {
-  if (file.length > maxFile) throw new Error('File too large');
+export function parseEnvelope(file: string, limit = maxFile): Envelope {
+  if (file.length > limit) throw new Error('File too large');
   const value: unknown = JSON.parse(file);
   if (
     !value ||
@@ -81,8 +84,15 @@ async function parameters(
   };
 }
 
+const documentLimit = (purpose: Purpose) =>
+  purpose.startsWith('project:') ||
+  purpose.startsWith('surface-journal:') ||
+  purpose.startsWith('encrypted-pattern-presets:')
+    ? maxLocalDocument
+    : maxText;
+
 export async function seal(root: CryptoKey, account: string, purpose: Purpose, text: string) {
-  if (text.length > maxText) throw new Error('Text too large');
+  if (text.length > documentLimit(purpose)) throw new Error('Text too large');
   const salt = crypto.getRandomValues(new Uint8Array(32));
   const { key, algorithm } = await parameters(root, account, purpose, salt);
   const ciphertext = await crypto.subtle.encrypt(
@@ -98,10 +108,14 @@ export async function seal(root: CryptoKey, account: string, purpose: Purpose, t
 }
 
 export async function open(root: CryptoKey, account: string, purpose: Purpose, envelope: Envelope) {
-  const parsed = parseEnvelope(JSON.stringify(envelope));
+  const limit = documentLimit(purpose);
+  const parsed = parseEnvelope(
+    JSON.stringify(envelope),
+    limit === maxText ? maxFile : limit * 8 + 256,
+  );
   const { key, algorithm } = await parameters(root, account, purpose, unbase64(parsed.salt));
   const bytes = await crypto.subtle.decrypt(algorithm, key, unbase64(parsed.ciphertext));
   const text: unknown = JSON.parse(decode.decode(bytes));
-  if (typeof text !== 'string' || text.length > maxText) throw new Error('Invalid snapshot');
+  if (typeof text !== 'string' || text.length > limit) throw new Error('Invalid snapshot');
   return text;
 }

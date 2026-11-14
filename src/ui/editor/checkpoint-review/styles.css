@@ -115,3 +115,14 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.pattern-motif {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.pattern-motif .checkpoint-map {
+  aspect-ratio: 1;
+  width: min(100%, 144px);
+  touch-action: none;
+}

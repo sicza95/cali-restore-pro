@@ -1,10 +1,25 @@
 const messages = {
+  recoveryError: [
+    'The encrypted drawing recovery could not be opened.',
+    'A titkosított rajzvázlat nem nyitható meg.',
+  ],
+  recoveryConflict: [
+    'The assessment changed outside this editor. Discard the old recovery draft to resume editing.',
+    'A felmérés a szerkesztőn kívül módosult. A szerkesztés folytatásához vesse el a régi vázlatot.',
+  ],
+  recoveryRetry: ['Retry recovery', 'Helyreállítás újrapróbálása'],
+  pattern: ['Pattern version', 'Mintaverzió'],
+  noPattern: ['Default hatch', 'Alapértelmezett sraffozás'],
+  patternFailed: ['The pattern library could not be opened.', 'A mintakönyvtár nem nyitható meg.'],
+  layerChange: ['Layer change', 'Réteg módosítása'],
+  checkpointChange: ['Checkpoint restore', 'Ellenőrzőpont visszaállítása'],
+  photoChange: ['Photo settings', 'Fotóbeállítások'],
   mode: ['Surface workspace', 'Felület munkaterülete'],
   photoMode: ['Photo review', 'Fotó ellenőrzése'],
   drawingMode: ['Drawing review', 'Rajz ellenőrzése'],
   draftLifetime: [
-    'Committed masks are saved to this surface. Uncommitted drafts and undo history last while the surface stays open.',
-    'A rögzített maszkokat a felület tárolja. A vázlatok és a visszavonási előzmények a felület bezárásáig érhetők el.',
+    'Committed masks are saved to this surface. Completed drafts and recent history reopen on this device.',
+    'A rögzített maszkokat a felület tárolja. A kész vázlatok és a legutóbbi előzmények ezen az eszközön újra megnyithatók.',
   ],
   alignmentRequired: [
     'Drawing requires an accepted mapping region on this photo.',

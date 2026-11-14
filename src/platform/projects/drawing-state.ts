@@ -1,3 +1,4 @@
+import { assertPattern } from './patterns';
 import { assertMask } from './planar-mask';
 import { replaceMasks } from './planar-state';
 import { drawMask } from './planar-drawing';
@@ -84,6 +85,7 @@ export function assertDrawing(layers: DrawingLayer[]) {
       if (ancestors.has(parent)) throw new Error('Invalid drawing tree');
       ancestors.add(parent);
     }
+    if (row.pattern) assertPattern(row.pattern);
     if (row.base) assertMask(row.base);
     for (const mark of row.marks) {
       assertMask([mark.region]);

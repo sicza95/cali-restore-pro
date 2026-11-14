@@ -1,0 +1,38 @@
+.checkpoint-figure {
+  min-width: 0;
+  margin: 0;
+}
+.checkpoint-image {
+  position: relative;
+  overflow: hidden;
+  background: var(--cr-canvas);
+}
+.checkpoint-image-plane,
+.checkpoint-image-plane > svg,
+.checkpoint-image-plane .surface-photo-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.checkpoint-image-plane .surface-photo-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.checkpoint-image-plane > svg {
+  pointer-events: none;
+}
+.checkpoint-image-plane .checkpoint-mask {
+  fill-opacity: 0.45;
+  stroke: none;
+}
+.checkpoint-image-plane .checkpoint-added {
+  fill-opacity: 0.72;
+}
+.checkpoint-view-fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}

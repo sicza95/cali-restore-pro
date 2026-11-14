@@ -126,6 +126,7 @@ export const drawingControls: readonly ControlContract[] = [
       ['layer.locked', 'locked', 'Protect a mask from mark changes'],
       ['layer.opacity', 'opacity', 'Change overlay opacity'],
       ['layer.color', 'color', 'Change overlay color'],
+      ['layer.pattern', 'pattern', 'Copy a saved pattern version onto the selected layer'],
       ['layer.fill', 'fill', 'Change overlay fill or hatch'],
       ['layer.outline', 'outline', 'Toggle overlay outline'],
       ['layer.clone', 'clone', 'Copy committed mask marks into an independent review mask'],
@@ -135,9 +136,9 @@ export const drawingControls: readonly ControlContract[] = [
     ],
   ),
   ...register(
-    'M-14',
+    'M-15',
     'Supported reference and eligible draft or history entry',
-    'Layer-owned drafts and bounded review history',
+    'Encrypted layer-owned drafts and bounded surface history',
     'resolveHelp',
     'Show available history and affected layer; require resolution before editing points',
     [

@@ -1,113 +1,57 @@
-import { createSignal, createUniqueId, For, Show } from 'solid-js';
+import { createResource, createSignal, For, Show } from 'solid-js';
+import {
+  bounds,
+  defaults,
+  kinds,
+  patternKey,
+  patternLibrary,
+  validTile,
+} from '../../../platform/projects/patterns';
+import type { PatternVersion, Tile } from '../../../platform/projects/patterns';
+import type { LocalVault } from '../../../platform/vault/vault';
+import { TilePreview } from './TilePattern';
+import { PatternMotif } from './PatternMotif';
 import type { Language } from '../../account-access/types';
 import { checkpointCopy } from './copy';
 import './styles.css';
 
-const kinds = ['lines', 'dots', 'grid', 'hatch', 'shapes', 'motif'] as const;
-const bounds = { spacing: [8, 64], angle: [0, 180], size: [2, 24], weight: [1, 6] } as const;
-type Tile = {
-  kind: (typeof kinds)[number];
-  spacing: number;
-  angle: number;
-  size: number;
-  weight: number;
-  color: string;
-  motif: string;
-};
-const defaults: Tile = {
-  kind: 'lines',
-  spacing: 24,
-  angle: 30,
-  size: 7,
-  weight: 2,
-  color: '#316783',
-  motif: '',
-};
 const control = (key: string) => 'pattern.review.' + key;
 
-function TilePreview(props: { tile: Tile; mono: boolean; label: string }) {
-  const id = createUniqueId();
-  const p = () => props.tile;
-  const ink = () => (props.mono ? 'currentColor' : p().color);
-  const path = () =>
-    ({
-      lines: 'M0 0H64',
-      grid: 'M0 0H64 M0 0V64',
-      hatch: 'M0 0L64 64 M0 64L64 0',
-      dots: '',
-      shapes: '',
-      motif: '',
-    })[p().kind];
-  return (
-    <svg viewBox="0 0 320 100" class="checkpoint-map" role="img" aria-label={props.label}>
-      <defs>
-        <pattern
-          id={id}
-          patternUnits="userSpaceOnUse"
-          width={p().spacing}
-          height={p().spacing}
-          patternTransform={`rotate(${p().angle})`}
-        >
-          <Show
-            when={p().kind === 'hatch'}
-            fallback={<path d={path()} stroke={ink()} stroke-width={p().weight} />}
-          >
-            <path
-              d={`M0 0l${p().spacing} ${p().spacing} M0 ${p().spacing}l${p().spacing} -${p().spacing}`}
-              stroke={ink()}
-              stroke-width={p().weight}
-            />
-          </Show>
-          <Show when={p().kind === 'dots'}>
-            <circle cx={p().spacing / 2} cy={p().spacing / 2} r={p().size / 2} fill={ink()} />
-          </Show>
-          <Show when={p().kind === 'shapes'}>
-            <rect
-              x="2"
-              y="2"
-              width={p().size}
-              height={p().size}
-              fill="none"
-              stroke={ink()}
-              stroke-width={p().weight}
-            />
-          </Show>
-          <Show when={p().kind === 'motif'}>
-            <text x="2" y={p().size} font-size={String(p().size)} fill={ink()}>
-              {p().motif}
-            </text>
-          </Show>
-        </pattern>
-      </defs>
-      <rect width="320" height="100" fill={`url(#${id})`} />
-    </svg>
-  );
-}
-
-export function PatternReview(props: { language: Language; library?: boolean }) {
+export function PatternReview(props: { language: Language; library?: boolean; vault: LocalVault }) {
   const c = () => checkpointCopy[props.language];
   const [tile, setTile] = createSignal(defaults);
   const [mono, setMono] = createSignal(false);
   const [name, setName] = createSignal('');
   const [selected, setSelected] = createSignal('');
-  const [presets, setPresets] = createSignal<
-    { id: string; name: string; version: number; tile: Tile }[]
-  >([]);
+  const library = () => patternLibrary(props.vault);
+  const [rows, { refetch }] = createResource(() => library().list());
+  const [saving, setSaving] = createSignal(false);
+  const [failed, setFailed] = createSignal(false);
+  const presets = (): PatternVersion[] => (rows.error ? [] : (rows() ?? []));
   const [applied, setApplied] = createSignal<{ tile: Tile; mono: boolean }>();
-  const valid = () => tile().kind !== 'motif' || !!tile().motif.trim();
-
-  function save() {
+  const valid = () => validTile(tile());
+  async function save() {
     const title = name().trim();
-    if (!valid() || !title) return;
-    const id = crypto.randomUUID();
-    const version = 1 + presets().filter((entry) => entry.name === title).length;
-    setPresets((previous) => [...previous, { id, name: title, version, tile: tile() }]);
-    setSelected(id);
+    if (!valid() || !title || saving()) return;
+    setSaving(true);
+    setFailed(false);
+    try {
+      const next = await library().save(title, tile());
+      await refetch();
+      setSelected(patternKey(next));
+    } catch {
+      setFailed(true);
+      void refetch();
+    } finally {
+      setSaving(false);
+    }
   }
   return (
     <section class="project-pane review-pattern">
       <h3>{c().patterns}</h3>
-      <p class="review-note">{props.library ? c().personal : c().transient}</p>
+      <Show when={props.library}>
+        <p class="review-note">{c().personal}</p>
+      </Show>
       <Show when={!props.library}>
         <a class="project-back" data-control-id={control('library')} href="/settings/libraries">
           {c().openLibrary}
@@ -160,6 +104,14 @@ export function PatternReview(props: { language: Language; library?: boolean }) 
             />
           </label>
         </Show>
+        <Show when={tile().kind === 'custom'}>
+          <PatternMotif
+            points={tile().points ?? []}
+            onChange={(points) => setTile({ ...tile(), points })}
+            label={c().custom}
+            clear={c().clearMotif}
+          />
+        </Show>
         <label class="review-check">
           <input
             data-control-id={control('mono')}
@@ -178,8 +130,8 @@ export function PatternReview(props: { language: Language; library?: boolean }) 
             disabled={!presets().length}
             value={selected()}
             onChange={(e) => {
-              const next = presets().find((entry) => entry.id === e.currentTarget.value);
-              setSelected(next?.id ?? '');
+              const next = presets().find((entry) => patternKey(entry) === e.currentTarget.value);
+              setSelected(next ? patternKey(next) : '');
               if (next) {
                 setTile(next.tile);
                 setName(next.name);
@@ -189,7 +141,7 @@ export function PatternReview(props: { language: Language; library?: boolean }) 
             <option value="">{presets().length ? '—' : c().empty}</option>
             <For each={presets()}>
               {(entry) => (
-                <option value={entry.id}>
+                <option value={patternKey(entry)} selected={selected() === patternKey(entry)}>
                   {entry.name} · v{entry.version}
                 </option>
               )}
@@ -210,7 +162,7 @@ export function PatternReview(props: { language: Language; library?: boolean }) 
         <button
           type="button"
           data-control-id={control('save')}
-          disabled={!valid() || !name().trim()}
+          disabled={!valid() || !name().trim() || saving() || rows.loading}
           onClick={save}
         >
           {c().save}
@@ -225,6 +177,9 @@ export function PatternReview(props: { language: Language; library?: boolean }) 
           {c().apply}
         </button>
       </div>
+      <Show when={failed() || rows.error}>
+        <p role="alert">{c().patternError}</p>
+      </Show>
       <Show when={applied()}>
         {(snapshot) => (
           <div role="status">

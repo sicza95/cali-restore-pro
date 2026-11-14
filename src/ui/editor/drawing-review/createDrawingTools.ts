@@ -55,9 +55,9 @@ export function createDrawingTools(review: DrawingReview, notify: (notice: 'chan
   }
   async function resolveDraft(choice: 'commit' | 'discard' | 'cancel') {
     if (choice === 'commit' && !(await review.commitDraft())) return false;
+    if (choice === 'discard' && !(await review.discardDraft())) return false;
     setResolve(false);
     if (choice === 'cancel') return false;
-    if (choice === 'discard') review.discardDraft();
     if (review.layer().marks.length) activate('nodes');
     return true;
   }

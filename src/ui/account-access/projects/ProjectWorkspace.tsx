@@ -1,4 +1,4 @@
-import type { PendingAttachment } from '../../../platform/vault/project-store';
+import type { JournalWrite, PendingAttachment } from '../../../platform/vault/project-store';
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
 import {
   createResource,
@@ -112,8 +112,12 @@ export function ProjectWorkspace(props: {
   function update(next: SavedProject) {
     mutate((data) => ({ rows: [...(data?.rows ?? []).filter((p) => p.id !== next.id), next] }));
   }
-  async function save(project: SavedProject, attachment?: PendingAttachment) {
-    update(await local.save(project, attachment));
+  async function save(
+    project: SavedProject,
+    attachment?: PendingAttachment,
+    journal?: JournalWrite,
+  ) {
+    update(await local.save(project, attachment, journal));
     void sync.refresh();
   }
   return (

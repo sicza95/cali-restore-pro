@@ -1,0 +1,41 @@
+import { checkpointCopy } from '../../editor/checkpoint-review/copy';
+
+export const surfaceCheckpointCopy = {
+  en: {
+    ...checkpointCopy.en,
+    current: 'Current assessment',
+    create: 'Save checkpoint',
+    restore: 'Restore checkpoint',
+    confirm: 'Restore assessment',
+    previous: 'Before restoration',
+    restored: 'Assessment restored. The previous assessment is available as a checkpoint.',
+    restoreHelp: 'The current assessment will be saved as a checkpoint before restoration.',
+    pending: 'Commit or discard the drawing drafts before restoring.',
+    unavailable: 'Save an assessment on a mapping photo to create a checkpoint.',
+    full: 'The surface has reached its checkpoint limit.',
+    incompatible: 'This checkpoint uses a different mapping original.',
+    cropChanged: 'Crop or preparation differs.',
+    calibrationChanged: 'Calibration differs.',
+    panX: 'Horizontal pan',
+    panY: 'Vertical pan',
+  },
+  hu: {
+    ...checkpointCopy.hu,
+    current: 'Jelenlegi felmérés',
+    create: 'Ellenőrzőpont mentése',
+    restore: 'Ellenőrzőpont visszaállítása',
+    confirm: 'Felmérés visszaállítása',
+    previous: 'Visszaállítás előtti felmérés',
+    restored: 'A felmérés visszaállt. Az előző felmérés ellenőrzőpontként érhető el.',
+    restoreHelp: 'A jelenlegi felmérés ellenőrzőpontként mentésre kerül a visszaállítás előtt.',
+    pending: 'Visszaállítás előtt rögzítse vagy vesse el a rajzvázlatokat.',
+    unavailable: 'Ellenőrzőpont létrehozásához mentsen egy felmérést a térképezési fotón.',
+    full: 'A felület elérte az ellenőrzőpontok maximális számát.',
+    incompatible: 'Ez az ellenőrzőpont másik térképezési fotót használ.',
+    cropChanged: 'A kivágás vagy az előkészítés eltér.',
+    calibrationChanged: 'A kalibráció eltér.',
+    panX: 'Vízszintes mozgatás',
+    panY: 'Függőleges mozgatás',
+  },
+};
+export type SurfaceCheckpointCopy = (typeof surfaceCheckpointCopy)['en'];

@@ -1,4 +1,4 @@
-import type { PendingAttachment } from '../../../platform/vault/project-store';
+import type { JournalWrite, PendingAttachment } from '../../../platform/vault/project-store';
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js';
 import type {
   SavedProject,
@@ -11,7 +11,9 @@ import { updateSurfaceImages } from '../../../platform/projects/surface-attachme
 import type { PlanarSurface } from '../../../platform/projects/planar-types';
 import { SurfaceMeasurements } from './SurfaceMeasurements';
 import type { Language } from '../types';
-import { CheckpointReview } from '../../editor/checkpoint-review/CheckpointReview';
+import { createSurfaceJournal } from './createSurfaceJournal';
+import { photoHistory, recordHistory } from '../../../platform/projects/surface-journal';
+import { SurfaceCheckpoints } from './SurfaceCheckpoints';
 import { checkpointCopy } from '../../editor/checkpoint-review/copy';
 import { control as drawingControl } from '../../editor/drawing-review/constants';
 import { drawingCopy } from '../../editor/drawing-review/copy';
@@ -31,7 +33,11 @@ export function SurfaceWorkspace(props: {
   language: Language;
   busy: boolean;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
-  onSave: (project: SavedProject, attachment?: PendingAttachment) => Promise<void>;
+  onSave: (
+    project: SavedProject,
+    attachment?: PendingAttachment,
+    journal?: JournalWrite,
+  ) => Promise<void>;
   onNavigate: (href: string) => void;
 }) {
   const c = () => projectCopy[props.language];
@@ -63,7 +69,11 @@ export function SurfaceWorkspace(props: {
   const reviewKey = createMemo(() => [photo()?.id, role(), reference()?.id].join('/'));
   const move = (offset: number) => setSelected(images()[index() + offset]?.id);
   const href = () => projectHref(props.project.id);
-  const saveSurface = (changes: Partial<Surface>, attachment?: PendingAttachment) =>
+  const saveSurface = (
+    changes: Partial<Surface>,
+    attachment?: PendingAttachment,
+    journal?: JournalWrite,
+  ) =>
     props.onSave(
       {
         ...props.project,
@@ -79,17 +89,48 @@ export function SurfaceWorkspace(props: {
         ),
       },
       attachment,
+      journal,
     );
-  const saveAssessment = (state: PlanarSurface) => {
-    const assessments = props.surface.assessments ?? [];
-    // Project commands here run as deferred event callbacks.
+  const withAssessment = (state: PlanarSurface) => ({
+    assessments: [
+      ...(props.surface.assessments ?? []).filter((entry) => entry.source.id !== state.source.id),
+      state,
+    ],
+  });
+  const recovery = createSurfaceJournal({
+    vault: () => props.vault,
+    ref: (source) => ({ project: props.project.id, surface: props.surface.id, source }),
+    source: () => reference()?.id,
+    assessment,
+    projectRevision: () => props.project.revision,
+    run: (task) => props.onRun(task),
+    saveAssessment: (state, write) => saveSurface(withAssessment(state), undefined, write),
+  });
+  // Project commands execute from user events under the shared save guard.
+  const savePhoto = (state: PlanarSurface, previous: PlanarSurface) => {
+    if (state === previous) return Promise.resolve(true);
     // eslint-disable-next-line solid/reactivity
-    return props.onRun(() =>
-      saveSurface({
-        assessments: [...assessments.filter((entry) => entry.source.id !== state.source.id), state],
-      }),
-    );
+    if (!reference()) return props.onRun(() => saveSurface(withAssessment(state)));
+    const journal = recovery.journal();
+    if (!journal || journal.conflict) return Promise.resolve(false);
+    return recovery.save(recordHistory(journal, photoHistory(previous, state)), state);
   };
+  const saveCheckpoints: Parameters<typeof SurfaceCheckpoints>[0]['create'] = (checkpoints) =>
+    // eslint-disable-next-line solid/reactivity
+    props.onRun(() => saveSurface({ checkpoints }));
+  const restoreCheckpoint: Parameters<typeof SurfaceCheckpoints>[0]['restore'] = (
+    state,
+    checkpoints,
+  ) =>
+    recovery.save(
+      recordHistory(recovery.journal()!, {
+        action: 'checkpointChange',
+        checkpoint: { before: assessment()!, after: state },
+      }),
+      state,
+      // eslint-disable-next-line solid/reactivity
+      (next, write) => saveSurface({ ...withAssessment(next), checkpoints }, undefined, write),
+    );
   const saveImages = (images: Attachment[], attachment?: PendingAttachment) =>
     saveSurface(updateSurfaceImages(props.surface, images), attachment);
   return (
@@ -232,12 +273,26 @@ export function SurfaceWorkspace(props: {
                   ? props.surface.assessments?.find((entry) => entry.source.id === photo()?.id)
                   : undefined)
               }
-              busy={props.busy}
-              onSave={saveAssessment}
+              busy={
+                props.busy ||
+                (!!reference() && (!recovery.journal() || !!recovery.journal()?.conflict))
+              }
+              onSave={savePhoto}
             />
           )}
         </Show>
       </div>
+      <Show when={reference() && (recovery.failed() || recovery.journal()?.conflict)}>
+        <p role="alert">{recovery.failed() ? draw().recoveryError : draw().recoveryConflict}</p>
+        <button
+          class="secondary"
+          disabled={props.busy}
+          type="button"
+          onClick={() => (recovery.failed() ? recovery.refetch() : recovery.discardConflict())}
+        >
+          {recovery.failed() ? draw().recoveryRetry : draw().discard}
+        </button>
+      </Show>
       <Show when={drawingStarted()}>
         <Show when={reference()?.id ?? 'empty'} keyed>
           {(key) => (
@@ -252,14 +307,26 @@ export function SurfaceWorkspace(props: {
               state={assessment()}
               view={view()}
               busy={props.busy}
-              onSave={saveAssessment}
+              journal={recovery.journal()}
+              onSave={recovery.save}
             />
           )}
         </Show>
       </Show>
       <Show when={checkpointStarted()}>
         <div hidden={mode() !== 'checkpoint'}>
-          <CheckpointReview language={props.language} imperial={imperial()} />
+          <SurfaceCheckpoints
+            language={props.language}
+            imperial={imperial()}
+            vault={props.vault}
+            project={props.project.id}
+            state={assessment()}
+            checkpoints={props.surface.checkpoints ?? []}
+            busy={props.busy || !recovery.journal() || !!recovery.journal()?.conflict}
+            restoreBlocked={!!recovery.journal()?.drafts.length}
+            create={saveCheckpoints}
+            restore={restoreCheckpoint}
+          />
         </div>
       </Show>
       <Show
@@ -286,6 +353,7 @@ export function SurfaceWorkspace(props: {
         copy={c()}
         vault={props.vault}
         busy={props.busy}
+        pendingSource={recovery.journal()?.drafts.length ? reference()?.id : undefined}
         onRun={props.onRun}
         onSave={saveImages}
       />

@@ -4,11 +4,18 @@ import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
 import { DrawNumber, DrawToggle } from './DrawingFields';
 import { Icon } from '../../icon/Icon';
+import { LayerPattern } from './LayerPattern';
+import type { LocalVault } from '../../../platform/vault/vault';
 import type { Layer, LayerKind } from './types';
 
-export const layerName = (layer: Layer, copy: DrawingCopy) => layer.name || copy[layer.kind];
+export const layerName = (layer: Pick<Layer, 'name' | 'kind'>, copy: DrawingCopy) =>
+  layer.name || copy[layer.kind];
 
-export function DrawingLayers(props: { model: DrawingReview; copy: DrawingCopy }) {
+export function DrawingLayers(props: {
+  model: DrawingReview;
+  copy: DrawingCopy;
+  vault: LocalVault;
+}) {
   const m = untrack(() => props.model);
   const c = () => props.copy;
   const [kind, setKind] = createSignal<LayerKind>('damage');
@@ -213,6 +220,14 @@ export function DrawingLayers(props: { model: DrawingReview; copy: DrawingCopy }
                       <option value="none">{c().none}</option>
                     </select>
                   </label>
+                  <LayerPattern
+                    vault={props.vault}
+                    value={layer().pattern}
+                    copy={c()}
+                    onValue={(pattern) =>
+                      m.update(id, pattern ? { pattern, fill: 'hatch' } : { pattern })
+                    }
+                  />
                   <DrawToggle
                     name="layer.outline"
                     label={c().outline}

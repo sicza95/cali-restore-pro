@@ -1,3 +1,4 @@
+import type { AssessmentCheckpoint } from './assessment-checkpoints';
 import type { PlanarSurface } from './planar-types';
 export type Units = 'metric' | 'imperial';
 export type ImageRole = 'mapping' | 'reference';
@@ -8,6 +9,7 @@ export type Surface = {
   units: Units | null;
   images: Attachment[];
   assessments?: PlanarSurface[];
+  checkpoints?: AssessmentCheckpoint[];
 };
 export type RestorationObject = {
   id: string;
