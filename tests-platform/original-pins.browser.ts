@@ -125,10 +125,12 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
     offlinePath,
   );
   await page.close();
-  await context.setOffline(true);
   page = await context.newPage();
+  await context.setOffline(true);
+  await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   const shell = await page.goto(origin + offlinePath);
   expect(shell?.fromServiceWorker()).toBe(true);
+  await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.getByText('Vault locked', { exact: true })).toBeVisible();
   await expect(page.getByText(name)).toHaveCount(0);
@@ -151,9 +153,9 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   const before = requests;
   revoked = true;
   await shelf().getByRole('button', { name: 'Prepare a copy' }).click();
-  const download = page.waitForEvent('download');
-  await shelf().getByRole('link', { name: 'Download prepared copy' }).click();
-  const file = await download;
+  const prepared = shelf().getByRole('link', { name: 'Download prepared copy' });
+  await expect(prepared).toBeVisible();
+  const [file] = await Promise.all([page.waitForEvent('download'), prepared.click()]);
   expect(file.suggestedFilename()).toBe(name);
   expect(await readFile(await file.path())).toEqual(source);
   expect(requests).toBe(before);
