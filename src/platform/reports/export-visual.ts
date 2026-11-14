@@ -1,5 +1,7 @@
 import { reportBlocks } from './export-rows';
-import type { MapShape } from './export-rows';
+import type { AssessmentMap } from './assessment-map';
+import { mapSvg } from './map-svg';
+import { paintMap } from './map-canvas';
 import { reportCopy } from './copy';
 import type { Draft } from './types';
 import { cleanLogo, pngWithDensity } from './export-png';
@@ -14,16 +16,13 @@ const font = 'Arial, sans-serif';
 const ink = '#202429';
 const muted = '#4b555e';
 type Text = { text: string; x: number; y: number; size: number; bold: boolean; color: string };
-type Drawing = Text | { map: MapShape; y: number } | { logo: true; y: number };
-type Rect = [number, number, number, number, string];
-
-function rectangles({ map, y }: { map: MapShape; y: number }): Rect[] {
-  return [
-    [margin + 10, y + 9, map.width, 78, '#dbd1bc'],
-    [margin + map.left, y + 27, map.mask, 40, '#9c4138'],
-  ];
-}
-
+type Drawing =
+  | Text
+  | { map: AssessmentMap; y: number }
+  | { photo: string; y: number }
+  | { logo: true; y: number };
+const mapHeight = 220;
+const photoHeight = 150;
 function fontStyle(size: number, bold: boolean) {
   return (bold ? 'bold ' : '') + size + 'px ' + font;
 }
@@ -111,14 +110,20 @@ function scene(draft: Draft, hasLogo: boolean, paged: boolean) {
         );
       });
     const height =
-      heading.length * lineHeight(13) + rows.length * lineHeight(11) + (block.map ? 96 : 0);
+      heading.length * lineHeight(13) + rows.length * lineHeight(11) + (block.map ? mapHeight : 0);
     if (paged) space(height <= pageHeight - margin - bodyStart ? height : 64);
     addLines(heading, 13, true);
     addLines(rows, 11, false);
     if (block.map) {
-      space(96);
+      space(mapHeight);
       page.push({ map: block.map, y });
-      y += 96;
+      y += mapHeight;
+    }
+    for (const photo of block.photos ?? []) {
+      space(photoHeight + 26);
+      addText(photo.label, 11, true, ink);
+      page.push({ photo: photo.url, y });
+      y += photoHeight + 8;
     }
     y += 17;
   }
@@ -126,17 +131,14 @@ function scene(draft: Draft, hasLogo: boolean, paged: boolean) {
 }
 
 function renderSvg(draft: Draft, drawings: Drawing[], height: number, logo?: string) {
-  const marks = drawings.map((mark) => {
+  const marks = drawings.map((mark, index) => {
     if ('text' in mark)
       return `<text x="${mark.x}" y="${mark.y}" font-size="${mark.size}" font-weight="${mark.bold ? 700 : 400}" fill="${mark.color}">${xml(mark.text)}</text>`;
     if ('logo' in mark)
       return `<image x="${margin}" y="${mark.y}" width="120" height="50" preserveAspectRatio="xMinYMin meet" href="${logo}"/>`;
-    return rectangles(mark)
-      .map(
-        ([x, y, width, height, color]) =>
-          `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${color}"/>`,
-      )
-      .join('');
+    if ('photo' in mark)
+      return `<image x="${margin}" y="${mark.y}" width="${bodyWidth}" height="${photoHeight}" preserveAspectRatio="xMinYMid meet" href="${mark.photo}"/>`;
+    return mapSvg(mark.map, 'map-' + index, margin, mark.y, bodyWidth, mapHeight);
   });
   return new Blob(
     [
@@ -149,7 +151,7 @@ function renderSvg(draft: Draft, drawings: Drawing[], height: number, logo?: str
   );
 }
 
-function raster(drawings: Drawing[], height: number, dpi: number, logo?: ImageBitmap) {
+async function raster(drawings: Drawing[], height: number, dpi: number, logo?: ImageBitmap) {
   const scale = dpi / 72;
   const widthPx = Math.ceil(pageWidth * scale);
   const heightPx = Math.ceil(height * scale);
@@ -169,9 +171,24 @@ function raster(drawings: Drawing[], height: number, dpi: number, logo?: ImageBi
       const ratio = Math.min(120 / logo.width, 50 / logo.height);
       ctx.drawImage(logo, margin, mark.y, ratio * logo.width, ratio * logo.height);
     } else if ('map' in mark) {
-      for (const [x, y, width, height, color] of rectangles(mark)) {
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, width, height);
+      paintMap(ctx, mark.map, margin, mark.y, bodyWidth, mapHeight);
+    } else if ('photo' in mark) {
+      const bytes = Uint8Array.from(
+        atob(mark.photo.slice('data:image/jpeg;base64,'.length)),
+        (ch) => ch.charCodeAt(0),
+      );
+      const image = await createImageBitmap(new Blob([bytes], { type: 'image/jpeg' }));
+      try {
+        const ratio = Math.min(bodyWidth / image.width, photoHeight / image.height);
+        ctx.drawImage(
+          image,
+          margin,
+          mark.y + (photoHeight - image.height * ratio) / 2,
+          image.width * ratio,
+          image.height * ratio,
+        );
+      } finally {
+        image.close();
       }
     }
   }
@@ -186,7 +203,7 @@ export async function visualExport(draft: Draft) {
     const dpi = Number(draft.resolution ?? '300');
     if (![150, 300, 600].includes(dpi)) throw new Error('Resolution unavailable');
     if (draft.format === 'PNG') {
-      const canvas = raster(pages[0]!, height, dpi, logo?.bitmap);
+      const canvas = await raster(pages[0]!, height, dpi, logo?.bitmap);
       try {
         return await pngWithDensity(await canvas.convertToBlob({ type: 'image/png' }), dpi);
       } finally {
@@ -199,7 +216,7 @@ export async function visualExport(draft: Draft) {
       pageWidth,
       pageHeight,
       async (index) => {
-        const canvas = raster(pages[index]!, pageHeight, dpi, logo?.bitmap);
+        const canvas = await raster(pages[index]!, pageHeight, dpi, logo?.bitmap);
         try {
           return {
             width: canvas.width,

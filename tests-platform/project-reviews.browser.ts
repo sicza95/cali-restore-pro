@@ -124,12 +124,8 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await phase('newName').press('Enter');
   await expect(phase('name')).toHaveValue('Surface cleaning');
   await phase('scopeSurface').selectOption({ label: 'Object 1 / Surface 1' });
-  await phase('draw').tap();
-  await expect(page.getByText(/^Independent scope draft/)).toBeVisible();
   await phase('split').click();
   await expect(phase('name')).toHaveValue('Surface cleaning · Split');
-  await phase('cloneFrom').selectOption({ label: 'Surface cleaning' });
-  await phase('clone').tap();
   await phase('earlier').click();
   await expect(phase('phase').locator('option').first()).toHaveText('Surface cleaning · Split');
   await phase('combineWith').selectOption({ label: 'Surface cleaning' });
@@ -157,9 +153,8 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(phase('adjustHours')).toBeEnabled();
   await phase('keepHours').tap();
   await expect(phase('time')).toHaveValue('4');
-  await phase('measurement').selectOption('stale');
-  await phase('acknowledge').tap();
-  await expect(phase('measurement')).toHaveValue('ready');
+  await expect(phase('measurement')).toBeDisabled();
+  await expect(phase('measurement')).toHaveValue('missing');
   await phase('mode').selectOption('productivity');
   await expect(phase('hoursOutput')).toHaveValue('—');
   await phase('productivity').fill('2');
@@ -221,21 +216,18 @@ test('owner reviews work phases, scoped inputs and independent report output thr
 
   await nav('reports').tap();
   await expect(page).toHaveURL(path + '/reports');
-  await report('version').nth(1).selectOption('followup');
   await expect(report('version').first()).toHaveValue('current');
   await report('preview').tap();
   const inherited = page.getByRole('dialog');
   await expect(inherited).toContainText('Measurement unavailable for this version.');
-  await expect(inherited).toContainText('Output area units · m²');
-  await expect(inherited).toContainText('Output area units · ft²');
-  await expect(inherited.getByRole('img', { name: 'Illustrative map' })).toHaveCount(1);
+  await expect(inherited).toContainText('m²');
+  await expect(inherited).toContainText('ft²');
+  await expect(inherited.getByRole('img', { name: 'Assessment map' })).toHaveCount(0);
   await report('cancel').tap();
   await report('includeObject').nth(1).uncheck();
   await report('includeSurface').uncheck();
   await expect(report('preview')).toBeDisabled();
   await report('includeSurface').check();
-  await report('version').selectOption('baseline');
-  await report('compare').selectOption('followup');
   await report('references').click();
   await report('reference').check();
   await report('language').selectOption('hu');
@@ -266,8 +258,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(draft).toHaveAccessibleName('Restaurálási jelentés');
   await expect(draft.locator('article')).toHaveAttribute('lang', 'hu');
   await expect(draft).toContainText('Numerikus pillanatkép');
-  await expect(draft).toContainText('64,58 ft²');
-  await expect(draft).toContainText('Összehasonlítás');
+  await expect(draft).toContainText('Ehhez a verzióhoz nincs mérés.');
   await expect(draft).toContainText('Chapel Studio');
   await expect(draft).toContainText('Referenciafotó 1');
   await expect(draft).not.toContainText('North wall');
@@ -329,7 +320,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(report('units')).toHaveValue('ft²');
   await expect(report('language')).toHaveValue('en');
   await expect(report('studio')).toHaveValue('Chapel Studio');
-  await expect(report('compare')).toHaveValue('followup');
+  await expect(report('compare')).toHaveValue('');
   await page.getByRole('button', { name: 'Lock vault' }).click();
   await expect(report('preview')).toHaveCount(0);
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();

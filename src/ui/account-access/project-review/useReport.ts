@@ -8,7 +8,7 @@ import type { Branding, Draft, ReportSettings } from '../../../platform/reports/
 import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { loadPreferences } from '../settings/preferences/utils';
-import { selectedSurfaces } from './report-model';
+import { prepareSurfaces, selectedSurfaces } from './report-model';
 
 export function useReport(props: { project: SavedProject; vault: LocalVault; account: string }) {
   const defaults = untrack(() => loadPreferences(props.account));
@@ -43,8 +43,10 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
   let revision = 0;
   let mounted = true;
   let attempt = 0;
+  let controller: AbortController | undefined;
   onCleanup(() => {
     mounted = false;
+    controller?.abort();
   });
 
   async function open() {
@@ -118,6 +120,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
   function cancel() {
     if (!preparing()) return;
     attempt++;
+    controller?.abort();
     setPreparing(false);
     setBusy(false);
   }
@@ -125,10 +128,14 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
   async function preview(show: (draft: Draft) => void) {
     if (!ready() || busy()) return;
     const selection = readSettings();
-    const { name, revision, updatedAt } = props.project;
-    const surfaces = selectedSurfaces(props.project, selection);
+    const project = structuredClone(unwrap(props.project));
+    const { name, revision, updatedAt } = project;
+    const surfaces = selectedSurfaces(project, selection);
     if (!surfaces.length) return;
     const token = ++attempt;
+    const job = new AbortController();
+    controller = job;
+    const signal = AbortSignal.any([job.signal, props.vault.accessSignal()]);
     setPreparing(true);
     setBusy(true);
     setStatus(undefined);
@@ -145,6 +152,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       workbook: selection.format === 'XLSX' ? 'snapshot' : undefined,
     };
     try {
+      await prepareSurfaces(project, selection, surfaces, props.vault, signal);
       if (selection.finances !== 'none') {
         const saved = await estimates.load(projectId);
         const snapshot = saved?.document.snapshots.find(
@@ -171,6 +179,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
         }
       }
       if (mounted && token === attempt) {
+        signal.throwIfAborted();
         if (props.project.revision !== revision) throw new Error('Project changed');
         show(draft);
       }

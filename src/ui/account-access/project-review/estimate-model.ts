@@ -87,7 +87,10 @@ export function createPhases(defaultUnit: () => EstimateUnit) {
         ...copyPhase(phase),
         id: crypto.randomUUID(),
         name,
-        scope: phase.scope ? crypto.randomUUID() : '',
+        scope: '',
+        scopeSource: undefined,
+        quantity: undefined,
+        measurement: 'missing',
       }),
     split: (phase: Phase, name: string) =>
       insert({ ...newPhase(name, phase.units), surface: phase.surface }),

@@ -39,6 +39,11 @@ export function workbookEstimate(snapshot: EstimateSnapshot, surfaces: PreviewSu
         name: phase.name,
         unit: phase.units,
         area,
+        assessment: surface.assessments?.find(({ id }) => id === quantity?.assessment)?.name,
+        currentAssessment:
+          quantity?.source === 'committed' &&
+          quantity.validity === 'valid' &&
+          (quantity.assessment ?? 'current') === 'current',
         mode: phase.mode,
         time: phase.mode === 'time' ? number(phase.time) : null,
         productivity:

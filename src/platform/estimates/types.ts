@@ -8,6 +8,7 @@ export type Measurement = {
   scope: string;
   revision: string;
   calibration: string | null;
+  assessment?: string;
   source: 'fixture' | 'committed';
   validity: 'valid' | 'missing' | 'stale' | 'computing' | 'failed';
   area: string | null;
@@ -20,6 +21,8 @@ export type Phase = {
   archived: boolean;
   surface: string;
   scope: string;
+  scopeSource?: string;
+  assessment?: string;
   measurement: 'missing' | 'stale' | 'ready';
   quantity?: Measurement;
   mode: 'time' | 'productivity';

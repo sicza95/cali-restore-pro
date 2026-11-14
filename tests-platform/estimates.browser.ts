@@ -262,12 +262,11 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await report('cancel').click();
   await report('finances').selectOption('full');
   await report('workbook').selectOption('editable');
-  await report('version').selectOption('baseline');
   await report('preview').click();
   await expect(preview).toContainText('630');
   await expect(preview).toContainText('40 HUF/h');
   await expect(preview).not.toContainText('88 HUF/h');
-  await expect(preview).toContainText('Illustrative checkpoint');
+  await expect(preview).toContainText('Measurement unavailable for this version.');
   await expect(preview).toContainText('Editable estimate');
   for (const viewport of [
     { width: 1194, height: 834 },

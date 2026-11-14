@@ -1,9 +1,9 @@
 import { For, Show } from 'solid-js';
-import { checkpointFixtures } from '../../../platform/checkpoints/fixtures';
+import { assessmentBlock } from '../../../platform/reports/assessment-rows';
+import { mapSvg } from '../../../platform/reports/map-svg';
 import { reportCopy } from '../../../platform/reports/copy';
 import type { ReportCopy } from '../../../platform/reports/copy';
 import type { Draft, PreviewSurface, Version } from '../../../platform/reports/types';
-import { convertArea } from '../../../platform/estimates/units';
 import { ReportEstimatePreview } from './ReportEstimatePreview';
 
 function ReportVersion(props: {
@@ -13,67 +13,47 @@ function ReportVersion(props: {
   comparison?: boolean;
   copy: ReportCopy;
 }) {
-  const c = () => props.copy;
-  const sample = () =>
-    props.version === 'current' ? undefined : checkpointFixtures[props.version];
-  const unit = () => props.surface.unit;
-  const area = (value: number) =>
-    new Intl.NumberFormat(props.draft.language, { maximumFractionDigits: 2 }).format(
-      Number(convertArea(String(value), 'm²', unit()).round(2)),
-    ) +
-    ' ' +
-    unit();
+  const block = () =>
+    assessmentBlock(props.draft, props.surface, props.version, !!props.comparison);
+  const number = () =>
+    new Intl.NumberFormat(props.draft.language, { maximumSignificantDigits: 15 });
   return (
     <section class="report-version">
       <h5>
-        {props.comparison ? c().comparison + ' · ' : ''}
-        {c()[props.version]}
+        {props.comparison ? props.copy.comparison + ' · ' : ''}
+        {block().name}
       </h5>
-      <p>{sample() ? c().sample : c().missing}</p>
-      <Show when={props.draft.content.map}>
-        <Show when={sample()} fallback={<p>{c().mapMissing}</p>}>
-          {(fixture) => (
-            <svg
-              class="checkpoint-map report-map"
-              viewBox="0 0 160 96"
-              role="img"
-              aria-label={c().sampleMap}
-            >
-              <rect class="checkpoint-wall" x="10" y="9" width={1.4 * fixture().crop} height="78" />
-              <rect
-                class="checkpoint-mask"
-                x={fixture().left}
-                y="27"
-                width={fixture().width}
-                height="40"
-              />
-            </svg>
+      <Show when={block().map}>
+        {(map) => (
+          <img
+            class="checkpoint-map report-map"
+            alt={props.copy.assessmentMap}
+            src={
+              'data:image/svg+xml,' +
+              encodeURIComponent(mapSvg(map(), 'preview-map', 0, 0, map().width, map().height))
+            }
+          />
+        )}
+      </Show>
+      <dl class="review-facts">
+        <For each={block().rows}>
+          {([, label, value, unit]) => (
+            <>
+              <dt>{label}</dt>
+              <dd>
+                {typeof value === 'number' ? number().format(value) : (value ?? '—')}
+                {value != null && unit ? ' ' + unit : ''}
+              </dd>
+            </>
           )}
-        </Show>
-      </Show>
-      <Show when={props.draft.content.legend}>
-        <p>{sample() ? c().sampleLegend : c().legendMissing}</p>
-      </Show>
-      <Show when={props.draft.content.table || props.draft.content.detail}>
-        <dl class="review-facts">
-          <Show when={props.draft.content.table}>
-            <dt>{c().area}</dt>
-            <dd>{sample() ? area(sample()!.area) : '—'}</dd>
-            <dt>{c().unique}</dt>
-            <dd>{sample() ? area(sample()!.unique) : '—'}</dd>
-            <dt>{c().category}</dt>
-            <dd>{sample() ? area(sample()!.category) : '—'}</dd>
-          </Show>
-          <Show when={props.draft.content.detail}>
-            <dt>{c().flaking}</dt>
-            <dd>{sample() ? area(sample()!.layer) : '—'}</dd>
-          </Show>
-        </dl>
-      </Show>
+        </For>
+      </dl>
+      <For each={block().photos}>
+        {(photo) => <img class="checkpoint-map report-map" src={photo.url} alt={photo.label} />}
+      </For>
     </section>
   );
 }
-
 export function ReportPreview(props: { draft: Draft }) {
   const draft = () => props.draft;
   const c = () => reportCopy[draft().language];
@@ -143,18 +123,6 @@ export function ReportPreview(props: { draft: Draft }) {
                 )}
               </Show>
             </div>
-            <Show when={surface.references.length}>
-              <h5>{c().references}</h5>
-              <ul>
-                <For each={surface.references}>
-                  {(photo) => (
-                    <li>
-                      {c().reference} {photo} · {c().refPending}
-                    </li>
-                  )}
-                </For>
-              </ul>
-            </Show>
           </section>
         )}
       </For>

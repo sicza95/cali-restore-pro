@@ -21,7 +21,7 @@ export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[
   const precision = estimate.precision;
   const phases: Sheet = {
     name: names.phases,
-    widths: [12, 24, 24, 29, 12, 15, 24, 16, 16, 16, 16, 17, 16, 16, 16, 16, 24, 24],
+    widths: [12, 24, 24, 29, 12, 15, 24, 16, 16, 16, 16, 17, 16, 16, 16, 16, 24, 24, 28],
     rows: [
       [
         object + ' #',
@@ -42,6 +42,7 @@ export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[
         e.subtotal,
         e.productivityOutput,
         hu ? 'Alap termelékenység' : 'Baseline productivity',
+        c.version,
       ],
       ...estimate.phases.map((row, i) => {
         const n = i + 2;
@@ -71,6 +72,7 @@ export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[
           ),
           formula(effective, row.effective),
           formula(baseline, row.baseline),
+          row.currentAssessment ? c.current : (row.assessment ?? ''),
         ];
       }),
     ],

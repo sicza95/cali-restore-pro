@@ -12,8 +12,8 @@ const draft: Draft = {
       id: 'surface-a',
       name: 'Selected panel',
       object: 'Panel',
-      version: 'baseline',
-      compare: 'followup',
+      version: 'current',
+      compare: 'saved',
       unit: 'ft²',
       references: [2],
     },
@@ -98,7 +98,9 @@ function zipParts(bytes: Buffer) {
   return parts;
 }
 
-test('encodes scoped fixture payloads and cancels without publishing', async ({ page }, info) => {
+test('encodes scoped measured assessments and cancels without publishing', async ({
+  page,
+}, info) => {
   await page.route('**/report-encoder-test', (route) =>
     route.fulfill({
       contentType: 'text/html',
@@ -121,6 +123,27 @@ test('encodes scoped fixture payloads and cancels without publishing', async ({ 
       const { workbookEstimate } = (await load(
         '/src/platform/reports/workbook-estimate.ts',
       )) as typeof import('../src/platform/reports/workbook-estimate');
+      const { measuredAssessments } = (await load(
+        '/tests-platform/fixtures/measured-assessment.ts',
+      )) as typeof import('./fixtures/measured-assessment');
+      const { prepareAssessment } = (await load(
+        '/src/platform/reports/prepare-assessment.ts',
+      )) as typeof import('../src/platform/reports/prepare-assessment');
+      const { current, checkpoint } = measuredAssessments('source-private-id');
+      const surface = {
+        id: 'surface-a',
+        name: 'Selected panel',
+        units: null,
+        assessments: [current],
+        checkpoints: [{ ...checkpoint, id: 'saved' }],
+        images: [{ id: current.source.id, role: 'mapping' as const }],
+      };
+      const signal = new AbortController().signal;
+      draft.surfaces[0]!.assessments = [];
+      for (const version of ['current', 'saved'])
+        draft.surfaces[0]!.assessments.push(
+          await prepareAssessment(surface, version, draft.project.revision, draft, signal),
+        );
       const issued = snapshot(estimate, 1, true);
       const source = { scope: 'estimate-full' as const, snapshot: issued };
       const summary = reportEstimate(source, 'summary', draft.project.revision);
@@ -132,7 +155,6 @@ test('encodes scoped fixture payloads and cancels without publishing', async ({ 
       const sourceMarker = 'HIDDEN_LOGO_METADATA';
       draft.branding!.logo =
         'data:image/png;base64,' + btoa(String.fromCharCode(...logo) + sourceMarker);
-      const signal = new AbortController().signal;
       async function produce(next: Draft) {
         const blob = await exportReport(next, signal);
         return {
@@ -232,8 +254,8 @@ test('encodes scoped fixture payloads and cancels without publishing', async ({ 
         'parsererror, script, foreignObject, style, a, use, [onload]',
       ).length,
       logo: dom.querySelector('image')?.getAttribute('href'),
-      maps: Array.from(dom.querySelectorAll('rect[fill="#9c4138"]'), (item) =>
-        item.getAttribute('width'),
+      maps: Array.from(dom.querySelectorAll('path[fill="#9c4138"]'), (item) =>
+        item.getAttribute('d'),
       ),
     };
   }, svg);
@@ -242,24 +264,30 @@ test('encodes scoped fixture payloads and cancels without publishing', async ({ 
   expect(
     Buffer.from(structure.logo!.split(',')[1]!, 'base64').includes('HIDDEN_LOGO_METADATA'),
   ).toBe(false);
-  expect(structure.maps).toEqual(['45', '40']);
+  expect(structure.maps).toHaveLength(2);
+  expect(structure.maps[0]).not.toEqual(structure.maps[1]);
+  expect(svg.match(/<circle /g)).toHaveLength(2);
+  expect(svg).not.toContain('#abcdef');
+  expect(svg).not.toContain('source-private-id');
   expect(structure.text).toContain('Őrzött fal');
-  expect(structure.text).toContain('64,58 ft²');
+  expect(structure.text).toContain('Initial on-site survey');
   expect(structure.text).toContain('Ehhez a verzióhoz nincs mérés.');
   expect(structure.text).toContain('Referenciafotó 2');
   expect(structure.text).not.toContain('Jelmagyarázat');
   expect(structure.text).not.toContain('Festékpergés');
 
   const csv = Buffer.from(files.csv.bytes).toString();
-  expect(csv).toContain('szemléltető');
-  expect(csv).toContain('"Terület",64.58,"ft²"');
+  expect(csv.split('\r\n')[0]).toMatch(/,""$/);
+  expect(csv).toContain('Szemléltető');
+  expect(csv).toContain('"Terület",86.1112833336778,"ft²"');
+  expect(csv).toContain('"Egyedi érintett terület",21.5278208334194,"ft²"');
   expect(csv).toContain('"Becsült végösszeg",378,"EUR"');
   expect(csv).toContain('"\' =1+1 ""quoted""\nSecond line');
   expect(csv).not.toContain('Jelmagyarázat');
 
   const xlsx = zipParts(Buffer.from(files.xlsx.bytes));
   expect(xlsx.size).toBe(5);
-  expect(xlsx.get('xl/worksheets/sheet1.xml')).toContain('<v>64.58</v>');
+  expect(xlsx.get('xl/worksheets/sheet1.xml')).toContain('<v>86.1112833336778</v>');
   expect(xlsx.get('xl/worksheets/sheet1.xml')).toContain('<v>378</v>');
   expect(xlsx.get('xl/worksheets/sheet1.xml')).not.toContain('<f>');
   const workbook = zipParts(Buffer.from(files.editable.bytes));

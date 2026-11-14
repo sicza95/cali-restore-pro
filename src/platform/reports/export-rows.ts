@@ -1,13 +1,17 @@
-import { convertArea } from '../estimates/units';
-import { checkpointFixtures } from '../checkpoints/fixtures';
+import { assessmentBlock } from './assessment-rows';
+import type { AssessmentMap } from './assessment-map';
 import { reportCopy } from './copy';
 import { estimateCopy } from '../estimates/copy';
 import type { Draft } from './types';
 
 export type Cell = string | number | null;
 export type Row = [section: string, item: string, value: Cell, unit?: string];
-export type MapShape = { width: number; left: number; mask: number };
-export type Block = { heading: string; rows: Row[]; map?: MapShape };
+export type Block = {
+  heading: string;
+  rows: Row[];
+  map?: AssessmentMap;
+  photos?: { label: string; url: string }[];
+};
 const value = (text: string | null | undefined) =>
   text == null ? null : Number(text.replace(',', '.'));
 
@@ -35,47 +39,8 @@ export function reportBlocks(draft: Draft): Block[] {
     },
   ];
   for (const surface of draft.surfaces) {
-    const section = surface.object + ' / ' + surface.name;
-    for (const [index, version] of [surface.version, surface.compare].entries()) {
-      if (!version) continue;
-      const sample = version === 'current' ? undefined : checkpointFixtures[version];
-      const heading = section + ' · ' + (index ? c.comparison + ' · ' : '') + c[version];
-      const rows: Row[] = [
-        [heading, c.status, sample ? c.sample : c.missing],
-        [heading, c.units, surface.unit],
-      ];
-      function area(label: string, amount: number | undefined) {
-        rows.push([
-          heading,
-          label,
-          amount === undefined
-            ? null
-            : Number(convertArea(String(amount), 'm²', surface.unit).round(2)),
-          surface.unit,
-        ]);
-      }
-      if (draft.content.map) rows.push([heading, c.map, sample ? c.sampleMap : c.mapMissing]);
-      if (draft.content.legend)
-        rows.push([heading, c.legend, sample ? c.sampleLegend : c.legendMissing]);
-      if (draft.content.table) {
-        area(c.area, sample?.area);
-        area(c.unique, sample?.unique);
-        area(c.category, sample?.category);
-      }
-      if (draft.content.detail) area(c.flaking, sample?.layer);
-      if (!index) {
-        for (const ordinal of surface.references)
-          rows.push([heading, c.reference + ' ' + ordinal, c.refPending]);
-      }
-      blocks.push({
-        heading,
-        rows,
-        map:
-          draft.content.map && sample
-            ? { width: 1.4 * sample.crop, left: sample.left, mask: sample.width }
-            : undefined,
-      });
-    }
+    blocks.push(assessmentBlock(draft, surface, surface.version, false));
+    if (surface.compare) blocks.push(assessmentBlock(draft, surface, surface.compare, true));
   }
   if (draft.notes.trim()) blocks.push({ heading: c.notes, rows: [[c.notes, '', draft.notes]] });
   if (draft.estimateState)
@@ -126,9 +91,14 @@ export function reportBlocks(draft: Draft): Block[] {
         const surface = draft.surfaces.find(({ id }) => id === phase.surface);
         const heading = [surface?.object, surface?.name, phase.name].filter(Boolean).join(' / ');
         const currency = summary.currency;
+        const assessment =
+          phase.assessment === 'current'
+            ? c.current
+            : surface?.assessments?.find(({ id }) => id === phase.assessment)?.name;
         blocks.push({
           heading,
           rows: [
+            ...(assessment ? [[heading, c.version, assessment] satisfies Row] : []),
             [heading, e.hours, value(phase.hours), 'h'],
             [
               heading,
@@ -155,7 +125,7 @@ export function reportBlocks(draft: Draft): Block[] {
 export function reportTable(draft: Draft): Cell[][] {
   const c = reportCopy[draft.language];
   return [
-    [c.title, '', c.exportNote],
+    [c.title, '', c.exportNote, ''],
     [c.section, c.item, c.value, c.unit],
     ...reportBlocks(draft).flatMap(({ rows }) =>
       rows.map(([section, item, value, unit]) => [section, item, value, unit ?? '']),

@@ -4,6 +4,10 @@ import { followProjectLink, projectHref } from '../projects/project-route';
 import type { EstimateCopy } from '../../../platform/estimates/copy';
 import { phaseControl as id } from './estimate-controls';
 import { ReviewSelect } from './fields';
+import {
+  assessmentVersions,
+  selectAssessment,
+} from '../../../platform/projects/assessment-selection';
 import { PhaseInputs } from './PhaseInputs';
 import type { Phase, PhaseModel } from './estimate-model';
 
@@ -12,18 +16,16 @@ function PhaseDetails(props: {
   model: PhaseModel;
   phase: Phase;
   project: SavedProject;
+  measuring: boolean;
   navigate: (href: string) => void;
 }) {
   const c = () => props.copy;
   const p = () => props.phase;
   const m = untrack(() => props.model);
   const [combine, setCombine] = createSignal('');
-  const [clone, setClone] = createSignal('');
   const others = () =>
     m.active().filter((row) => row.id !== p().id && row.surface && row.surface === p().surface);
-  const cloneSources = () => others().filter((row) => row.scope);
   const selected = () => others().find((row) => row.id === combine());
-  const cloneSource = () => cloneSources().find((row) => row.id === clone());
   const order = () => m.active().findIndex((row) => row.id === p().id);
   const surfaces = () =>
     props.project.objects.flatMap((object) =>
@@ -32,6 +34,21 @@ function PhaseDetails(props: {
         label: object.name + ' / ' + surface.name,
       })),
     );
+  const surface = () =>
+    props.project.objects.flatMap((object) => object.surfaces).find(({ id }) => id === p().surface);
+  const assessment = () => p().assessment ?? 'current';
+  const versions = () => (surface() ? assessmentVersions(surface()!) : ['current']);
+  const state = () => surface() && selectAssessment(surface()!, assessment())?.state;
+  const layers = () =>
+    state()?.layers.filter(
+      ({ kind, id }) =>
+        kind === 'phase' &&
+        !others().some(
+          (row) => row.scope === id && (!row.scopeSource || row.scopeSource === state()?.source.id),
+        ),
+    ) ?? [];
+  const layerName = (key: string) =>
+    state()?.drawing?.find((row) => (row.key ?? String(row.id)) === key)?.name || key;
   const href = () => projectHref(props.project.id, p().surface);
   const update = (change: Partial<Phase>) => m.update(p().id, change);
   return (
@@ -130,37 +147,56 @@ function PhaseDetails(props: {
           value={p().surface}
           options={['', ...surfaces().map(({ id }) => id)]}
           text={(key) => surfaces().find(({ id }) => id === key)?.label ?? c().chooseSurface}
-          change={(surface) => update({ surface, scope: '', measurement: 'missing' })}
+          change={(surface) =>
+            update({
+              surface,
+              scope: '',
+              scopeSource: undefined,
+              assessment: undefined,
+              quantity: undefined,
+              measurement: 'missing',
+            })
+          }
         />
         <ReviewSelect
-          id={id('cloneFrom')}
-          label={c().cloneFrom}
-          value={cloneSource()?.id ?? ''}
-          options={['', ...cloneSources().map((row) => row.id)]}
-          disabled={!cloneSources().length}
-          text={(key) => cloneSources().find((row) => row.id === key)?.name ?? '—'}
-          change={setClone}
+          id={id('assessment')}
+          label={c().assessment}
+          value={assessment()}
+          disabled={!surface()}
+          options={[...new Set([...versions(), assessment()])]}
+          text={(key) =>
+            key === 'current'
+              ? c().currentAssessment
+              : (surface()?.checkpoints?.find(({ id }) => id === key)?.name ??
+                c().missingCheckpoint)
+          }
+          change={(assessment) => update({ assessment })}
+        />
+        <ReviewSelect
+          id={id('mask')}
+          label={c().mask}
+          value={p().scope}
+          disabled={!surface()}
+          options={[...new Set(['', ...layers().map(({ id }) => id), p().scope])]}
+          text={(key) =>
+            key
+              ? layers().some(({ id }) => id === key) &&
+                (!p().scopeSource || p().scopeSource === state()?.source.id)
+                ? layerName(key)
+                : c().missingMask
+              : c().noMask
+          }
+          change={(scope) =>
+            update({
+              scope,
+              scopeSource: scope ? state()?.source.id : undefined,
+              quantity: undefined,
+              measurement: 'missing',
+            })
+          }
         />
       </div>
       <div class="review-actions">
-        <button
-          type="button"
-          class="secondary"
-          data-control-id={id('draw')}
-          disabled={!p().surface}
-          onClick={() => update({ scope: crypto.randomUUID(), measurement: 'missing' })}
-        >
-          {c().draw}
-        </button>
-        <button
-          type="button"
-          class="secondary"
-          data-control-id={id('clone')}
-          disabled={!cloneSource()}
-          onClick={() => update({ scope: crypto.randomUUID(), measurement: 'missing' })}
-        >
-          {c().clone}
-        </button>
         <Show when={p().surface}>
           <a
             class="project-back"
@@ -172,12 +208,11 @@ function PhaseDetails(props: {
           </a>
         </Show>
       </div>
-      <p role="status">
-        {p().scope ? c().independent : c().noMask} · {c().maskHelp}
-      </p>
+      <p class="review-note">{c().maskHelp}</p>
       <PhaseInputs
         copy={c()}
         phase={p()}
+        measuring={props.measuring}
         currency={props.project.settings.currency}
         update={update}
       />
@@ -188,6 +223,7 @@ function PhaseDetails(props: {
 export function WorkPhases(props: {
   copy: EstimateCopy;
   project: SavedProject;
+  measuring: boolean;
   model: PhaseModel;
   navigate: (href: string) => void;
 }) {
@@ -241,6 +277,7 @@ export function WorkPhases(props: {
               model={m}
               copy={c()}
               project={props.project}
+              measuring={props.measuring}
               navigate={props.navigate}
             />
           )}
@@ -258,7 +295,26 @@ export function WorkPhases(props: {
                   class="secondary"
                   data-control-id={id('restore')}
                   onClick={() => {
-                    m.update(phase.id, { archived: false });
+                    const taken = m
+                      .active()
+                      .some(
+                        (row) =>
+                          phase.scope &&
+                          row.surface === phase.surface &&
+                          row.scope === phase.scope &&
+                          row.scopeSource === phase.scopeSource,
+                      );
+                    m.update(phase.id, {
+                      archived: false,
+                      ...(taken
+                        ? {
+                            scope: '',
+                            scopeSource: undefined,
+                            quantity: undefined,
+                            measurement: 'missing' as const,
+                          }
+                        : {}),
+                    });
                     m.select(phase.id);
                   }}
                 >

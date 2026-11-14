@@ -1,13 +1,13 @@
 import type { AreaUnit } from '../estimates/types';
 import type { ReportEstimate } from './estimate';
 import type { WorkbookEstimate } from './workbook-estimate';
+import type { AssessmentMap } from './assessment-map';
 
-export const versions = ['current', 'baseline', 'followup'] as const;
 export const contentKeys = ['map', 'legend', 'table', 'detail'] as const;
 export const formats = ['PDF', 'SVG', 'PNG', 'CSV', 'XLSX'] as const;
 export const resolutions = ['150', '300', '600'] as const;
 export const brandingSources = ['omit', 'defaults', 'override'] as const;
-export type Version = (typeof versions)[number];
+export type Version = string;
 export type Format = (typeof formats)[number];
 export type Selection = {
   included: boolean;
@@ -60,6 +60,25 @@ export type PreviewSurface = {
   compare: Selection['compare'];
   unit: AreaUnit;
   references: number[];
+  assessments?: ReportAssessment[];
+  photos?: { ordinal: number; url: string }[];
+};
+
+export type ReportAssessment = {
+  id: Version;
+  name?: string;
+  date?: number;
+  revision?: number;
+  frame?: number;
+  calibration?: number;
+  policy?: string;
+  area?: number | null;
+  unique?: number | null;
+  coverage?: number | null;
+  categories: { name: string; area: number | null }[];
+  layers: { name: string; area: number | null }[];
+  legend: string[];
+  map?: AssessmentMap;
 };
 
 export type Draft = Pick<
