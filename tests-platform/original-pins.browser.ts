@@ -130,6 +130,17 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   const shell = await page.goto(origin + offlinePath);
   expect(shell?.fromServiceWorker()).toBe(true);
+  // Chromium headless shell can reset the page's connectivity signal on a
+  // service-worker navigation. Reapply it to the loaded page before unlocking.
+  const session = await context.newCDPSession(page);
+  const showOffline = (offline: boolean) =>
+    session.send('Network.overrideNetworkState', {
+      offline,
+      latency: 0,
+      downloadThroughput: -1,
+      uploadThroughput: -1,
+    });
+  await showOffline(true);
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.getByText('Vault locked', { exact: true })).toBeVisible();
@@ -165,6 +176,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
     (response) => response.url().endsWith(path) && response.status() === 404,
   );
   await context.setOffline(false);
+  await showOffline(false);
   await denial;
   await expect(shelf().getByText(name)).toHaveCount(0);
   await expect(shelf().getByRole('link', { name: 'Download prepared copy' })).toHaveCount(0);
