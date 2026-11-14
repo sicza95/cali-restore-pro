@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { showAppNavigation } from './app-navigation';
 
 test('auth routes, localization, missing and invalid links remain accessible', async ({
   page,
@@ -174,6 +175,7 @@ test('real registration, mail, verification, sessions and credential recovery', 
   await page.getByRole('button', { name: 'Sign out all sessions', exact: true }).click();
   await expect(page.getByText('Sign in to open this page.')).toBeVisible();
   await signIn(password, newEmail);
+  await showAppNavigation(page);
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByText('Sign in to open this page.')).toBeVisible();
   // Public error assertions never log bearer tokens or mail body content.

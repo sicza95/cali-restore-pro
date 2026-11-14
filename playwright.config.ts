@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  globalSetup: './tests/warm-up.ts',
   fullyParallel: true,
   workers: 2,
   retries: process.env.CI ? 1 : 0,
