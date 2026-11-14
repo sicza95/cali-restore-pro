@@ -21,8 +21,9 @@ export function DrawingHistory(props: {
     }
     const item = redo ? m.redoEntry() : m.undoEntry();
     if (!item) return action;
-    const layer = m.layers().find(({ id }) => id === item.layer)!;
-    return `${action} · ${c()[item.action]} · ${layerName(layer, c())}`;
+    return [action, c()[item.action], item.layer && layerName(item.layer, c())]
+      .filter(Boolean)
+      .join(' · ');
   };
   return (
     <section class="drawing-panel drawing-history" aria-label={c().history}>
@@ -91,11 +92,8 @@ export function DrawingHistory(props: {
           {(item) => (
             <>
               {' '}
-              · {c()[item().action]} ·{' '}
-              {layerName(
-                m.layers().find(({ id }) => id === item().layer)!,
-                c(),
-              )}
+              · {c()[item().action]}
+              {item().layer && ' · ' + layerName(item().layer!, c())}
             </>
           )}
         </Show>
@@ -104,7 +102,10 @@ export function DrawingHistory(props: {
         when={
           !m.draft() &&
           [m.undoEntry(), m.redoEntry()].some(
-            (item) => item && m.layers().some(({ id, locked }) => id === item.layer && locked),
+            (item) =>
+              item?.layer &&
+              item.action !== 'layerChange' &&
+              m.layers().some(({ id, locked }) => id === item.layer?.id && locked),
           )
         }
       >

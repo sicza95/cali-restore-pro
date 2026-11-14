@@ -140,8 +140,9 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('layer.locked').check();
   await expect(c('tool.nodes')).toBeDisabled();
   await expect(c('point.mark')).toHaveCount(0);
-  await expect(c('history.undo')).toBeDisabled();
-  await c('layer.locked').uncheck();
+  await expect(c('history.undo')).toHaveAccessibleName('Undo · Layer change · Work phase mask');
+  await c('history.undo').click();
+  await expect(c('layer.locked')).not.toBeChecked();
   await c('layer.clone').click();
   await expect(c('layer.select').filter({ hasText: 'Work phase mask' })).toHaveCount(2);
   await c('layer.name').fill('Independent phase');

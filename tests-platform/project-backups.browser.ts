@@ -48,6 +48,14 @@ test('download and restore an encrypted project through the controls in a fresh 
   await control('height').fill('3');
   await control('apply').click();
   await expect(page.getByRole('region', { name: 'Surface measurements' })).toContainText('6 m²');
+  const checkpoint = (p: Page, key: string) =>
+    p.locator('[data-control-id="checkpoint.review.' + key + '"]');
+  await checkpoint(page, 'mode').click();
+  await checkpoint(page, 'name').fill('Baseline assessment');
+  await checkpoint(page, 'create').click();
+  await expect(
+    checkpoint(page, 'version').locator('option').filter({ hasText: 'Baseline assessment' }),
+  ).toHaveCount(1);
   await page.locator('[data-control-id="surface.project"]').click();
   await page.getByText('Export encrypted backup', { exact: true }).click();
   await page.getByRole('button', { name: 'Prepare backup' }).click();
@@ -89,6 +97,12 @@ test('download and restore an encrypted project through the controls in a fresh 
     await expect(target.getByRole('region', { name: 'Surface measurements' })).toContainText(
       '6 m²',
     );
+    await checkpoint(target, 'mode').click();
+    await checkpoint(target, 'version').selectOption({ label: 'Baseline assessment' });
+    await expect(
+      target.getByRole('figure', { name: 'Baseline assessment' }).getByRole('img'),
+    ).toHaveJSProperty('naturalWidth', 48);
+    await expect(target.locator('.review-facts dd').first()).toHaveText('6 m²');
     expect(new URL(target.url()).pathname).not.toContain(originalPath);
   } finally {
     await fresh.close();

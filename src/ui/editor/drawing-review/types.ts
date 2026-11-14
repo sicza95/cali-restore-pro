@@ -1,3 +1,4 @@
+import type { PatternVersion } from '../../../platform/projects/patterns';
 import type { Mask, Ring } from '../../../platform/projects/planar-types';
 
 export type Point = { x: number; y: number; handle?: { x: number; y: number }; pressure?: number };
@@ -29,19 +30,13 @@ export type Layer = {
   color: string;
   fill: 'solid' | 'hatch' | 'none';
   outline: boolean;
+  pattern?: PatternVersion;
   marks: Mark[];
   base?: Mask;
   key?: string;
 };
 
 export type Draft = { pending: Mark[]; undone: Mark[] };
-export type HistoryEntry = {
-  layer: number;
-  action: MarkAction;
-  before: Mark[];
-  after: Mark[];
-};
-
 export type BrushOptions = {
   width: number;
   pressure: boolean;

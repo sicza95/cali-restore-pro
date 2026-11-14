@@ -2,7 +2,8 @@ import clipping from 'polygon-clipping';
 import type { MultiPolygon, Pair, Ring as ClipRing } from 'polygon-clipping';
 import { assertMask, flattenCenterline, maxEdges } from './planar-mask';
 import { extent, rect } from './planar-transform';
-import type { Mask, Point, Ring, SourceFrame } from './planar-types';
+import type { PatternVersion } from './patterns';
+import type { Mask, PlanarSurface, Point, Ring, SourceFrame } from './planar-types';
 
 export type DrawingPoint = { at: Point; handle?: Point; pressure?: number };
 export type DrawingMark = {
@@ -27,6 +28,7 @@ export type DrawingLayer = {
   color: string;
   fill: 'solid' | 'hatch' | 'none';
   outline: boolean;
+  pattern?: PatternVersion;
   base?: Mask;
   marks: DrawingMark[];
 };
@@ -125,6 +127,21 @@ function footprint(mark: DrawingMark): MultiPolygon {
   return bounded(
     clipping.union([], ...ends.slice(1).map((end, i) => polygon(hull([...ends[i]!, ...end])))),
   );
+}
+
+export function checkpointCoverage(state: PlanarSurface) {
+  const crop = polygon(rect(state.frame.input.crop));
+  const master = state.master ? legacy(state.master) : crop;
+  const damage = state.layers
+    .filter(({ kind }) => kind === 'damage')
+    .map(({ mask }) => legacy(mask));
+  return damage.length
+    ? bounded(clipping.intersection(crop, master, clipping.union(damage[0]!, ...damage.slice(1))))
+    : [];
+}
+
+export function checkpointDifference(a: MultiPolygon, b: MultiPolygon) {
+  return { added: bounded(clipping.difference(a, b)), removed: bounded(clipping.difference(b, a)) };
 }
 
 export function markFootprint(mark: DrawingMark): Mask {

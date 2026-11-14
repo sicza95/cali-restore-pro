@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
 import { checkpointControls } from '../src/ui/editor/checkpoint-review/registry';
 
@@ -17,57 +18,77 @@ export async function verifyCheckpointReview(page: Page, info: TestInfo) {
   await expect(checkpoint('version').getByRole('option', { name: 'Before cleaning' })).toHaveCount(
     1,
   );
-  await checkpoint('compare').selectOption('baseline');
+  const draw = (key: string) => page.locator('[data-control-id="surface.draw.' + key + '"]');
+  await draw('mode.drawing').click();
+  const damage = draw('layer.select').filter({ hasText: 'Damage mask' }).first();
+  const master = draw('layer.select').filter({ hasText: 'Master mask' });
+  await master.click();
+  await draw('tool.eraser').click();
+  await draw('brush.width').fill('15');
+  await draw('brush.width').blur();
+  await draw('place.x').fill('50');
+  await draw('place.y').fill('50');
+  await draw('place.y').blur();
+  await draw('brush.dot').click();
+  await expect(master).toContainText('2 · Mark');
+  await checkpoint('mode').click();
+  await checkpoint('compare').selectOption({ label: 'Before cleaning' });
   await expect(checkpoint('secondZoom')).toBeDisabled();
   await checkpoint('zoom').press('ArrowRight');
   await expect(checkpoint('secondZoom')).toHaveValue('101');
   await checkpoint('linked').uncheck();
   await expect(checkpoint('secondZoom')).toBeEnabled();
   await checkpoint('overlay').check();
-  await expect(page.locator('.checkpoint-added')).toBeVisible();
-  await expect(page.getByText('Change from comparison', { exact: false }).first()).toBeVisible();
-  await checkpoint('state').selectOption('stale');
-  await expect(page.getByText('Stale · Illustrative calibration')).toBeVisible();
-  await expect(page.getByText('Change from comparison', { exact: false })).toHaveCount(0);
-  await checkpoint('state').selectOption('missing');
-  await expect(page.getByText('Missing · Calibration required')).toBeVisible();
-  await expect(page.locator('.review-facts dd').nth(1)).toHaveText('—');
-  for (const state of ['computing', 'error']) {
-    await checkpoint('state').selectOption(state);
-    await expect(page.locator('.review-facts dd').nth(1)).toHaveText('—');
-  }
-  await checkpoint('state').selectOption('ready');
-  await expect(checkpoint('unit')).toHaveValue('ft²');
-  await checkpoint('unit').selectOption('m²');
-  await expect(page.locator('.review-facts dd').nth(1)).toContainText('5.8 m²');
-  await checkpoint('version').selectOption('baseline');
+  await expect(page.locator('.checkpoint-removed')).toHaveAttribute('d', /^M/);
+  await expect(page.getByText('Calibration required', { exact: true })).toBeVisible();
+  await expect(page.locator('.review-facts dd').first()).toContainText('—');
+  await expect(checkpoint('unit')).toHaveValue('ft');
+  await checkpoint('unit').selectOption('m');
+  await checkpoint('version').selectOption({ label: 'Before cleaning' });
   await checkpoint('restore').tap();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(checkpoint('restore')).toBeFocused();
   await checkpoint('restore').tap();
   await checkpoint('cancel').click();
-  await expect(checkpoint('version')).toHaveValue('baseline');
   await checkpoint('restore').tap();
   await checkpoint('confirm').click();
   await expect(checkpoint('version')).toHaveValue('current');
-  await expect(page.locator('.review-facts dd').nth(1)).toHaveText('6 m²');
-  await expect(checkpoint('compare').getByRole('option', { name: 'Previous review' })).toHaveCount(
-    1,
-  );
-  await checkpoint('compare').selectOption({ label: 'Previous review' });
+  await expect(
+    checkpoint('compare').getByRole('option', { name: 'Before restoration' }),
+  ).toHaveCount(1);
+  await checkpoint('compare').selectOption({ label: 'Before restoration' });
+  await expect(page.locator('.checkpoint-added')).toHaveAttribute('d', /^M/);
+  await draw('mode.drawing').click();
+  await expect(master).toContainText('1 · Mark');
+  await expect(draw('history.undo')).toHaveAccessibleName('Undo · Checkpoint restore');
+  await draw('history.undo').click();
+  await expect(master).toContainText('2 · Mark');
+  await draw('history.redo').click();
+  await expect(master).toContainText('1 · Mark');
+  await checkpoint('mode').click();
   await pattern('kind').selectOption('motif');
   await expect(pattern('apply')).toBeDisabled();
   await pattern('motif').fill('CR');
   await pattern('presetName').fill('Tracing mark');
   await pattern('save').click();
+  await expect(pattern('preset')).toHaveValue(/\/1$/);
   await pattern('angle').press('ArrowRight');
   await pattern('save').click();
   await pattern('preset').selectOption({ label: 'Tracing mark · v1' });
+  await draw('mode.drawing').click();
+  await damage.click();
+  const properties = draw('layer.properties');
+  if (!(await draw('layer.pattern').isVisible())) await properties.click();
+  await draw('layer.pattern').selectOption({ label: 'Tracing mark · v1' });
+  await expect(draw('layer.pattern')).toHaveValue(/\/1$/);
+  await expect(page.locator('.drawing-overlay pattern text').first()).toHaveText('CR');
+  await draw('layer.properties').click();
+  await checkpoint('mode').click();
   await expect(pattern('angle')).toHaveValue('30');
   await pattern('mono').check();
   await pattern('apply').click();
-  await expect(page.getByText('Applied to the review legend.')).toBeVisible();
+  await expect(page.getByText('Pattern legend preview.')).toBeVisible();
   await expect(pattern('library')).toHaveAttribute('href', '/settings/libraries');
   for (const viewport of [
     { width: 1194, height: 834 },
@@ -92,6 +113,7 @@ export async function verifyCheckpointReview(page: Page, info: TestInfo) {
       fullPage: true,
     });
   }
+  expect((await new AxeBuilder({ page }).include('.review-flow').analyze()).violations).toEqual([]);
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.getByRole('button', { name: 'Photo review', exact: true }).click();
 }

@@ -1,6 +1,6 @@
 import { createMemo, createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { detailMapping } from '../../../platform/projects/planar-alignment';
-import { photoFrame, sameSource } from '../../../platform/projects/planar-state';
+import { newPlanarSurface, photoFrame, sameSource } from '../../../platform/projects/planar-state';
 import { preparationMatrix } from '../../../platform/projects/planar-transform';
 import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
 import { commitAssessment, preparation, savedDraft } from './surface-assessment';
@@ -29,7 +29,7 @@ export function SurfaceReviewAdapter(props: {
   unit: 'cm' | 'in';
   state?: PlanarSurface;
   busy: boolean;
-  onSave: (state: PlanarSurface) => Promise<boolean>;
+  onSave: (state: PlanarSurface, previous: PlanarSurface) => Promise<boolean>;
 }) {
   const [size, setSize] = createSignal<SourceFrame>();
   const matcher = untrack(() => surfaceMatcher(props.vault, props.project));
@@ -353,7 +353,9 @@ export function SurfaceReviewAdapter(props: {
                   disabled={!valid() || props.busy || matcher.status() === 'matching'}
                   onClick={async () => {
                     const next = candidate();
-                    if (next && (await props.onSave(next))) {
+                    const reference = referenceSource();
+                    const previous = props.state ?? (reference && newPlanarSurface(reference));
+                    if (next && previous && (await props.onSave(next, previous))) {
                       setNotice('applied');
                       close();
                     }

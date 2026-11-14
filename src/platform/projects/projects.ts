@@ -1,6 +1,7 @@
+import { assertCheckpoints } from './assessment-checkpoints';
 import { assertPlanarState } from './planar-state';
 import { assertDrawing } from './drawing-state';
-import type { PendingAttachment } from '../vault/project-store';
+import type { JournalWrite, PendingAttachment } from '../vault/project-store';
 import type { LocalVault } from '../vault/vault';
 import type { Project, RestorationObject, SavedProject, Surface } from './types';
 
@@ -58,6 +59,7 @@ export function validateProject(project: Project, id: string) {
       )
         throw new Error('Invalid surface assessments');
       const attachments = new Set(surface.images.map((image) => image.id));
+      if (surface.checkpoints !== undefined) assertCheckpoints(surface.checkpoints, attachments);
       for (const entry of assessments) {
         assertPlanarState(entry);
         if (entry.drawing !== undefined) assertDrawing(entry.drawing);
@@ -83,7 +85,11 @@ export function localProjects(vault: LocalVault) {
         revision,
       }));
     },
-    async save({ revision, ...value }: SavedProject, attachment?: PendingAttachment) {
+    async save(
+      { revision, ...value }: SavedProject,
+      attachment?: PendingAttachment,
+      journal?: JournalWrite,
+    ) {
       const next = validateProject({ ...value, updatedAt: Date.now() }, value.id);
       if (
         attachment &&
@@ -96,7 +102,9 @@ export function localProjects(vault: LocalVault) {
         throw new Error('Missing image attachment');
       return {
         ...next,
-        revision: await vault.projects().save(next.id, revision, JSON.stringify(next), attachment),
+        revision: await vault
+          .projects()
+          .save(next.id, revision, JSON.stringify(next), attachment, journal),
       };
     },
   };

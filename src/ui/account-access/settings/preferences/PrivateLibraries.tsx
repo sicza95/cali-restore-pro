@@ -117,7 +117,7 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
           </a>
         </div>
       </section>
-      <PatternReview language={props.language} library />
+      <PatternReview language={props.language} vault={props.vault} library />
     </>
   );
 }

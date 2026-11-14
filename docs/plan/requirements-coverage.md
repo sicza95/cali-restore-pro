@@ -16,9 +16,9 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | PROJ-06     | Must     | Restoration projects contain one or more objects                    | M-05  | M-05       | Passed  |
 | PROJ-07     | Must     | Explicit offline selections and protected local work                | M-07  | M-16       | Partial |
 | PROJ-08     | Must     | Uncapped initial counts with one active surface                     | M-05  | M-16       | Partial |
-| CHECK-01    | Must     | Optional user-named assessment checkpoints                          | M-05  | M-15       | Planned |
-| CHECK-02    | Must     | Linked checkpoint comparison with coverage/area changes             | M-08  | M-15       | Planned |
-| CHECK-03    | Must     | Recoverable checkpoint restoration                                  | M-08  | M-15       | Planned |
+| CHECK-01    | Must     | Optional user-named assessment checkpoints                          | M-05  | M-15       | Partial |
+| CHECK-02    | Must     | Linked checkpoint comparison with coverage/area changes             | M-08  | M-15       | Passed  |
+| CHECK-03    | Must     | Recoverable checkpoint restoration                                  | M-08  | M-15       | Passed  |
 | SURF-01     | Must     | Objects contain named, separately assessed surfaces                 | M-05  | M-13       | Partial |
 | SURF-02     | Must     | Shared surface mapping from aligned images                          | M-14  | M-16       | Partial |
 | IMG-04      | Must     | Mapping and reference-only image roles                              | M-05  | M-13       | Partial |
@@ -41,18 +41,18 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | MASK-03     | Must     | Point and curve editing for every mask                              | M-08  | M-14       | Partial |
 | MASK-04     | Must     | Vector mask source of truth with derived display caches             | M-05  | M-13       | Partial |
 | MASK-05     | Must     | Source-dependent fine detail without a fixed physical minimum       | M-08  | M-16       | Planned |
-| MASK-06     | Must     | Lightweight encrypted recovery of layer-owned painting drafts       | M-03  | M-15       | Planned |
+| MASK-06     | Must     | Lightweight encrypted recovery of layer-owned painting drafts       | M-03  | M-15       | Passed  |
 | MASK-07     | Must     | Constant-width defaults with optional pressure-sensitive width      | M-08  | M-16       | Partial |
 | MASK-08     | Must     | Optional adjustable stroke stabilization                            | M-08  | M-16       | Partial |
 | MASK-09     | Must     | Surface-relative brush and eraser size                              | M-08  | M-16       | Partial |
 | LAYER-01    | Must     | Layer CRUD, rename, ordering, visibility, lock, opacity             | M-05  | M-14       | Partial |
 | LAYER-02    | Must     | Preserve master/crop measurement with non-destructive drawing       | M-05  | M-13       | Partial |
-| LAYER-03    | Must     | Fill, colour, pattern and outline                                   | M-08  | M-15       | Partial |
+| LAYER-03    | Must     | Fill, colour, pattern and outline                                   | M-08  | M-15       | Passed  |
 | LAYER-04    | Must     | Folder-like damage categories with per-layer and union totals       | M-05  | M-13       | Partial |
 | LAYER-05    | Must     | Optional nested folders with unique descendant totals               | M-05  | M-13       | Partial |
-| HIST-01     | Must     | Chronological, bounded surface-wide undo/redo                       | M-08  | M-15       | Partial |
+| HIST-01     | Must     | Chronological, bounded surface-wide undo/redo                       | M-08  | M-15       | Passed  |
 | HIST-02     | Must     | Multitouch Undo/Redo with a shared rapid-tap window                 | M-14  | M-16       | Partial |
-| HIST-03     | Must     | Bounded encrypted local history across reopening                    | M-03  | M-15       | Planned |
+| HIST-03     | Must     | Bounded encrypted local history across reopening                    | M-03  | M-15       | Partial |
 | MEAS-01     | Must     | Trustworthy per-layer coverage and area                             | M-08  | M-13       | Partial |
 | MEAS-02     | Must     | Explicit measurement states                                         | M-08  | M-13       | Partial |
 | MEAS-03     | Must     | Flat-surface measurement with an extensible method boundary         | M-05  | M-13       | Partial |
@@ -90,8 +90,8 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | SHARE-08    | Later    | Owner-controlled older-checkpoint access                            | M-03  | M-16       | Partial |
 | SHARE-09    | Later    | Account-bound accepted invitations with identity-change review      | M-01  | M-06       | Planned |
 | SHARE-10    | Later    | Read-only quote-level estimate summary                              | M-06  | M-16       | Planned |
-| PAT-01      | Later    | Visual repeating-tile pattern editor                                | M-08  | M-15       | Planned |
-| PAT-02      | Later    | Reusable versioned patterns with consistent output                  | M-05  | M-16       | Planned |
+| PAT-01      | Later    | Visual repeating-tile pattern editor                                | M-08  | M-15       | Passed  |
+| PAT-02      | Later    | Reusable versioned patterns with consistent output                  | M-05  | M-16       | Partial |
 | EST-01      | Later    | User phase/productivity profiles and layer/detail overrides         | M-09  | M-16       | Partial |
 | EST-02      | Later    | Itemized estimate snapshots                                         | M-09  | M-16       | Partial |
 | EST-03      | Later    | User-defined work breakdown with editable starter phases            | M-09  | M-16       | Partial |
@@ -145,6 +145,8 @@ M-04 adds [encrypted original storage and transfer](../m04-encrypted-files.md). 
 M-12 adds [bounded image import and variant evidence](../m12-image-import.md). IMG-01/02/03/05 now have client validation, recoverable encrypted working assets, normalized orientation and color, cancellation, camera-preview spot checks and desktop 8K ingest evidence. Physical iPad/Safari, broad camera coverage and sustained editing qualification remain open.
 
 [M-13 planar assessment evidence](../m13-planar-assessment.md) covers FRAME-01/03/04, CAL-01 through CAL-03, MASK-04, LAYER-02/04/05, MEAS-01 through MEAS-05 and ALIGN-01 through ALIGN-03. The versioned engine, surface controls, oracle cases and encrypted recovery provide Partial evidence. Drawing gestures, representative calibrated photographs, device qualification and downstream measurements remain open.
+
+[M-15 recovery and versions](../m15-surface-recovery.md) covers encrypted draft and redo recovery, checkpoint comparison and restoration, and durable pattern versions. Estimate links, sustained-device qualification and output integration remain open.
 
 [M-14 mask authoring evidence](../m14-mask-authoring.md) adds canonical authoring and encrypted commits for SURF-02, FRAME-02, MASK-01 through MASK-04, MASK-07 through MASK-09, LAYER-01 through LAYER-05 and HIST-01/02. Physical iPad input and sustained load, encrypted draft and history recovery, and downstream measurements remain open.
 

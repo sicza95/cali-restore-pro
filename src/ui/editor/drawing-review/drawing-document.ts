@@ -35,20 +35,24 @@ export function storedLayers(layers: Layer[], source: SourceFrame): DrawingLayer
   }));
 }
 
+export function restoreMark(mark: DrawingMark, source: SourceFrame): Mark {
+  return {
+    ...mark,
+    width: (mark.width / source.width) * 100,
+    points: mark.points.map(({ at, handle, pressure }) => ({
+      ...asPercent(at, source),
+      handle: handle && asPercent(handle, source),
+      pressure,
+    })),
+  };
+}
+
 export function restoreLayers(state: PlanarSurface | undefined): Layer[] {
   if (!state) return [newLayer(masterId, 'master')];
   if (state.drawing)
     return state.drawing.map((layer) => ({
       ...layer,
-      marks: layer.marks.map((mark) => ({
-        ...mark,
-        width: (mark.width / state.source.width) * 100,
-        points: mark.points.map(({ at, handle, pressure }) => ({
-          ...asPercent(at, state.source),
-          handle: handle && asPercent(handle, state.source),
-          pressure,
-        })),
-      })),
+      marks: layer.marks.map((mark) => restoreMark(mark, state.source)),
     }));
   const rows = [...state.categories, ...state.layers];
   const ids = new Map(rows.map((row, index) => [row.id, masterId + index + 1]));

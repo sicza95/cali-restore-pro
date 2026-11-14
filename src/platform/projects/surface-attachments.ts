@@ -1,3 +1,4 @@
+import type { PlanarSurface } from './planar-types';
 import type { Attachment, Surface } from './types';
 
 export function updateSurfaceImages(surface: Surface, images: Attachment[]): Partial<Surface> {
@@ -20,18 +21,23 @@ export function remapSurfaceImages(surface: Surface, ids: ReadonlyMap<string, st
     if (!id) throw new Error('Missing restored photo');
     return { ...entry, id };
   };
+  const remapAssessment = (entry: PlanarSurface): PlanarSurface => ({
+    ...entry,
+    source: remap(entry.source),
+    frame: { ...entry.frame, source: remap(entry.frame.source) },
+    details: entry.details.map((detail) => ({ ...detail, source: remap(detail.source) })),
+    alignments: entry.alignments.map((alignment) => ({
+      ...alignment,
+      source: remap(alignment.source),
+    })),
+  });
   return {
     ...surface,
     images: surface.images.map(remap),
-    assessments: surface.assessments?.map((entry) => ({
-      ...entry,
-      source: remap(entry.source),
-      frame: { ...entry.frame, source: remap(entry.frame.source) },
-      details: entry.details.map((detail) => ({ ...detail, source: remap(detail.source) })),
-      alignments: entry.alignments.map((alignment) => ({
-        ...alignment,
-        source: remap(alignment.source),
-      })),
+    assessments: surface.assessments?.map(remapAssessment),
+    checkpoints: surface.checkpoints?.map((checkpoint) => ({
+      ...checkpoint,
+      assessment: remapAssessment(checkpoint.assessment),
     })),
   };
 }

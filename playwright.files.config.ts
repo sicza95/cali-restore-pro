@@ -11,6 +11,7 @@ export default defineConfig({
     'original-pins.browser.ts',
     'project-backups.browser.ts',
     'projects.browser.ts',
+    'surface-journal.browser.ts',
     'planar-reference.browser.ts',
     'drawing-geometry.browser.ts',
     'project-reviews.browser.ts',

@@ -13,17 +13,21 @@ import { DrawingInspector } from './DrawingInspector';
 import { DrawingLayers, layerName } from './DrawingLayers';
 import { drawingFrame, drawingProjection } from '../../../platform/projects/drawing-region';
 import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
+import type { LocalVault } from '../../../platform/vault/vault';
+import type { SurfaceJournal } from '../../../platform/projects/surface-journal';
 import type { Tool } from './types';
 import './styles.css';
 
 export function DrawingReviewAdapter(props: {
   active: boolean;
+  vault: LocalVault;
   copy: DrawingCopy;
   state?: PlanarSurface;
   source?: SourceFrame;
   referenceOnly: boolean;
   busy: boolean;
-  onSave: (state: PlanarSurface) => Promise<boolean>;
+  journal?: SurfaceJournal;
+  onSave: (journal: SurfaceJournal, state?: PlanarSurface) => Promise<boolean>;
   children: JSX.Element;
 }) {
   const c = () => props.copy;
@@ -39,7 +43,8 @@ export function DrawingReviewAdapter(props: {
   const m = createDrawingReview({
     state: () => props.state,
     region,
-    save: (state) => props.onSave(state),
+    journal: () => props.journal,
+    save: (journal, state) => props.onSave(journal, state),
     busy: () => props.busy,
   });
   const [notice, setNotice] = createSignal<'changed' | 'committed' | 'discarded'>();
@@ -80,6 +85,9 @@ export function DrawingReviewAdapter(props: {
   }
   async function commitDraft() {
     if (await m.commitDraft()) setNotice('committed');
+  }
+  async function discardDraft() {
+    if (await m.discardDraft()) setNotice('discarded');
   }
   async function resolveDraft(choice: 'commit' | 'discard' | 'cancel') {
     if (await t.resolveDraft(choice)) setNotice(choice === 'commit' ? 'committed' : 'discarded');
@@ -210,12 +218,9 @@ export function DrawingReviewAdapter(props: {
                   model={m}
                   copy={c()}
                   onCommit={commitDraft}
-                  onDiscard={() => {
-                    m.discardDraft();
-                    setNotice('discarded');
-                  }}
+                  onDiscard={discardDraft}
                 />
-                <DrawingLayers model={m} copy={c()} />
+                <DrawingLayers model={m} copy={c()} vault={props.vault} />
               </fieldset>
             </div>
           </aside>

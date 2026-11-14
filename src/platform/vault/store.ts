@@ -10,6 +10,8 @@ export const vaultTable = 'accounts';
 export const fileTable = 'encrypted-files';
 export const projectTable = 'encrypted-projects';
 export const estimateTable = 'encrypted-estimates';
+export const journalTable = 'encrypted-surface-journals';
+export const patternTable = 'encrypted-pattern-presets';
 export const reportTable = 'encrypted-reports';
 export const presetTable = 'encrypted-estimate-presets';
 export const revisionSyncTable = 'revision-sync';
@@ -18,7 +20,7 @@ export const accountRange = (account: string) => IDBKeyRange.bound([account], [a
 
 export async function connect() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('calirestore-vault', 7);
+    const request = indexedDB.open('calirestore-vault', 8);
     request.onupgradeneeded = (event) => {
       if (event.oldVersion < 1) request.result.createObjectStore(vaultTable);
       if (event.oldVersion < 2) request.result.createObjectStore(fileTable);
@@ -30,6 +32,10 @@ export async function connect() {
         request.result.createObjectStore(presetTable);
       }
       if (event.oldVersion < 7) request.result.createObjectStore(reportTable);
+      if (event.oldVersion < 8) {
+        request.result.createObjectStore(journalTable);
+        request.result.createObjectStore(patternTable);
+      }
     };
     request.onblocked = () => reject(new Error('Close older vault tabs and retry'));
     request.onerror = () => reject(request.error);
@@ -71,6 +77,8 @@ export async function commitVault(
           estimateTable,
           presetTable,
           reportTable,
+          journalTable,
+          patternTable,
         ],
         'readwrite',
         {
@@ -95,6 +103,8 @@ export async function commitVault(
           tx.objectStore(estimateTable).delete(accountRange(account));
           tx.objectStore(presetTable).delete(accountRange(account));
           tx.objectStore(reportTable).delete(accountRange(account));
+          tx.objectStore(journalTable).delete(accountRange(account));
+          tx.objectStore(patternTable).delete(accountRange(account));
         }
       };
     });

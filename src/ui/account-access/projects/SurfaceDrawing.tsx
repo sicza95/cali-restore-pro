@@ -1,6 +1,7 @@
 import { createMemo, createResource, createSignal, Show } from 'solid-js';
 import { newPlanarSurface } from '../../../platform/projects/planar-state';
 import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
+import type { SurfaceJournal } from '../../../platform/projects/surface-journal';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { DrawingReviewAdapter } from '../../editor/drawing-review/DrawingReviewAdapter';
 import type { DrawingCopy } from '../../editor/drawing-review/copy';
@@ -18,7 +19,8 @@ export function SurfaceDrawing(props: {
   copy: DrawingCopy;
   view: SurfaceCopy;
   busy: boolean;
-  onSave: (state: PlanarSurface) => Promise<boolean>;
+  journal?: SurfaceJournal;
+  onSave: (journal: SurfaceJournal, state?: PlanarSurface) => Promise<boolean>;
 }) {
   const [fallback] = createResource(
     () => !props.state && props.photo !== props.reference && props.reference,
@@ -45,11 +47,13 @@ export function SurfaceDrawing(props: {
   return (
     <DrawingReviewAdapter
       active={props.active}
+      vault={props.vault}
       copy={props.copy}
       state={state()}
       source={source()?.id === props.photo ? source() : undefined}
       referenceOnly={props.referenceOnly}
       busy={props.busy}
+      journal={props.journal}
       onSave={props.onSave}
     >
       <Show when={props.photo} keyed fallback={<p>{props.copy.unavailable}</p>}>

@@ -1,4 +1,5 @@
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
+import { checkpointSources } from '../../../platform/projects/assessment-checkpoints';
 import type { PendingAttachment } from '../../../platform/vault/project-store';
 import { createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { ImageImportError } from '../../../platform/images/types';
@@ -13,6 +14,7 @@ export function ProjectOriginals(props: {
   copy: Copy;
   vault: LocalVault;
   busy: boolean;
+  pendingSource?: string;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
   onSave: (images: Attachment[], attachment?: PendingAttachment) => Promise<void>;
 }) {
@@ -99,6 +101,11 @@ export function ProjectOriginals(props: {
         <For each={props.surface.images} fallback={<li>{props.copy.noFiles}</li>}>
           {(image) => {
             const ref = { project: props.project, id: image.id };
+            const draftSource = () => props.pendingSource === image.id;
+            const checkpointPhoto = () =>
+              props.surface.checkpoints?.some(({ assessment }) =>
+                checkpointSources(assessment).some(({ id }) => id === image.id),
+              );
             const [metadata] = createResource(() => files.metadata(ref).catch(() => null));
             return (
               <li>
@@ -117,7 +124,7 @@ export function ProjectOriginals(props: {
                   <RoleField
                     copy={props.copy}
                     value={image.role}
-                    disabled={props.busy}
+                    disabled={props.busy || draftSource()}
                     change={(role) =>
                       void props.onRun(() =>
                         props.onSave(
@@ -130,7 +137,14 @@ export function ProjectOriginals(props: {
                 <button
                   data-control-id="originals.remove"
                   class="secondary"
-                  disabled={props.busy}
+                  disabled={props.busy || checkpointPhoto() || draftSource()}
+                  title={
+                    draftSource()
+                      ? props.copy.draftPhoto
+                      : checkpointPhoto()
+                        ? props.copy.checkpointPhoto
+                        : undefined
+                  }
                   onClick={() =>
                     void props.onRun(async () => {
                       await props.onSave(props.surface.images.filter((a) => a.id !== image.id));

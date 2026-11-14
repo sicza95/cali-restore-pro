@@ -5,18 +5,23 @@ const checkpoints = {
   mode: 'Open surface checkpoint and measurement review',
   version: 'Select primary review checkpoint',
   compare: 'Select comparison checkpoint',
-  linked: 'Link comparison magnification',
+  linked: 'Link comparison pan and magnification',
   zoom: 'Adjust primary magnification',
   secondZoom: 'Adjust unlinked comparison magnification',
-  overlay: 'Show sample addition and removal overlay',
+  overlay: 'Show added and removed damage coverage',
   name: 'Enter checkpoint name',
-  create: 'Capture current sample as a named review checkpoint',
+  create: 'Capture the committed assessment as a named checkpoint',
   restore: 'Open restore confirmation',
-  confirm: 'Restore sample in review and keep previous current',
+  confirm: 'Restore the selected assessment and preserve the previous current',
   cancel: 'Close restore confirmation',
-  state: 'Select illustrative measurement validity',
+  panX: 'Pan the primary assessment horizontally',
+  panY: 'Pan the primary assessment vertically',
+  'panX.second': 'Pan the comparison assessment horizontally',
+  'panY.second': 'Pan the comparison assessment vertically',
   unit: 'Change review area display units',
-} satisfies Partial<Record<keyof CheckpointCopy, string>>;
+} satisfies Partial<
+  Record<keyof CheckpointCopy | 'panX' | 'panY' | 'panX.second' | 'panY.second', string>
+>;
 const patterns = {
   kind: 'Select tile starter',
   motif: 'Edit a short text motif',
@@ -28,7 +33,7 @@ const patterns = {
   mono: 'Switch to monochrome legend',
   preset: 'Select named review preset version',
   presetName: 'Name review preset',
-  save: 'Keep a preset version for this session',
+  save: 'Save an encrypted personal pattern version',
   apply: 'Preview the selected pattern in the legend',
 } satisfies Partial<Record<keyof CheckpointCopy, string>>;
 
@@ -36,13 +41,13 @@ export const checkpointControls: readonly ControlContract[] = [
   ...Object.entries(checkpoints).map(([key, command]): ControlContract => ({
     id: 'checkpoint.review.' + key,
     labelKey: key,
-    helpKey: 'transient',
+    helpKey: 'restoreHelp',
     command,
     permission: 'Authorized local project and unlocked vault',
     prerequisite: 'Selected surface. Compare, zoom and restore require a matching selection.',
-    valueSource: 'Explicit checkpoint fixtures and surface-local review state',
-    behavior: 'review',
-    owner: key === 'unit' || key === 'state' ? 'M-13' : 'M-15',
+    valueSource: 'Encrypted assessment checkpoints and measured coverage',
+    behavior: 'functional',
+    owner: 'M-15',
     composition: 'Surface checkpoint review',
     unavailable: {
       failure: 'Show validation or measurement state',
@@ -53,17 +58,17 @@ export const checkpointControls: readonly ControlContract[] = [
   ...Object.entries(patterns).map(([key, command]): ControlContract => ({
     id: 'pattern.review.' + key,
     labelKey: key,
-    helpKey: 'transient',
+    helpKey: 'personal',
     command,
     permission: 'Unlocked vault and authorized surface or personal library',
     prerequisite: 'Pattern review; named preset required to save and a motif when applicable',
-    valueSource: 'In-memory pattern review values',
-    behavior: 'review',
+    valueSource: 'Encrypted personal presets and current tile editor',
+    behavior: 'functional',
     owner: 'M-15',
     composition: 'Surface pattern review and settings library',
     unavailable: {
       failure: 'Disable invalid motif or unnamed preset',
-      empty: 'Show no review presets',
+      empty: 'Show no saved patterns',
       locked: 'Clear review',
     },
   })),
