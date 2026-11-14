@@ -150,8 +150,9 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await page.setViewportSize({ width: 834, height: 1194 });
   const before = requests;
   revoked = true;
+  await shelf().getByRole('button', { name: 'Prepare a copy' }).click();
   const download = page.waitForEvent('download');
-  await shelf().getByRole('button', { name: 'Save a copy' }).click();
+  await shelf().getByRole('link', { name: 'Download prepared copy' }).click();
   const file = await download;
   expect(file.suggestedFilename()).toBe(name);
   expect(await readFile(await file.path())).toEqual(source);
@@ -164,11 +165,12 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await context.setOffline(false);
   await denial;
   await expect(shelf().getByText(name)).toHaveCount(0);
+  await expect(shelf().getByRole('link', { name: 'Download prepared copy' })).toHaveCount(0);
   await expect(shelf().getByRole('status')).toHaveText(
     'Removed offline copies you can no longer access.',
   );
   await context.setOffline(true);
   await unlock();
   await expect(shelf().getByText('No originals are pinned on this browser.')).toBeVisible();
-  await expect(shelf().getByRole('button', { name: 'Save a copy' })).toHaveCount(0);
+  await expect(shelf().getByRole('button', { name: 'Prepare a copy' })).toHaveCount(0);
 });

@@ -36,12 +36,15 @@ export function ReportReview(props: {
   const current = () => draft()?.project.revision === props.project.revision;
   const download = useReportDownload(() => props.vault, current);
   let dialog!: HTMLDialogElement;
+  let previewOpener: HTMLButtonElement | undefined;
   const selected = () => selectedSurfaces(props.project, settings);
   const canEditWorkbook = () =>
     settings.finances === 'full' && issued().some(({ id }) => id === settings.estimate);
 
-  function preview() {
+  function preview(event: MouseEvent & { currentTarget: HTMLButtonElement }) {
+    const opener = event.currentTarget;
     void model.preview((value) => {
+      previewOpener = opener;
       setDraft(value);
       dialog.showModal();
     });
@@ -240,6 +243,8 @@ export function ReportReview(props: {
         onClose={() => {
           download.cancel();
           setDraft(undefined);
+          if (previewOpener?.isConnected) previewOpener.focus();
+          previewOpener = undefined;
         }}
       >
         <div
