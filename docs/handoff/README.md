@@ -4,23 +4,37 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `main` at `2787ff5` (Verified). Step 4 landed by fast-forwarding `main` to the [PR #17](https://github.com/sicza95/cali-restore-pro/pull/17) head, which GitHub marks merged. The remote `refactor/retire-drawing-adapter` and `feat/canvas-first-layout` branches are deleted (both were already in `main`).
-- **Target devices:** iPad and desktop only (owner decision, 2026-11-15). Phone widths are not supported for now.
-- **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
-- **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 is done and on `main`. Phase 2 (UX and copy) step 1, the [copy audit](../plan/copy-audit.md), is done on `copy/task-language` and in review.
+- **Branch:** `main` at the orchestrator's handoff commit on top of `f088345` (all Verified). PRs #19, #20 and #21 landed by fast-forward and GitHub marks them merged. PRs #22, #23 and #24 were replayed unchanged (`git range-diff` identical) and re-signed as one chain in [PR #25](https://github.com/sicza95/cali-restore-pro/pull/25), which landed by fast-forward; #22 to #24 are closed with a pointer to #25.
+- **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
+- **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
+- **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
+- **Active roadmap phase:** Phase 2 items 1 and 2 done; Phase 3 items 1 and 5 done; Phase 4 done. Left: Phase 2 items 3 to 5, Phase 3 items 2, 3, 4 and 6.
+- **CI:** one workflow `ci.yml` with four parallel jobs: Frontend checks, Unit tests (Vitest), Go tests, Platform E2E.
 - **Suite status:** see the latest log entry.
-- **Not run:** `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
+- **Not run:** `test:sync`, `test:estimates` (locally, this batch), backup scripts.
 
 ## Next step
 
-Owner reviews and merges [PR #19](https://github.com/sicza95/cali-restore-pro/pull/19), the copy audit, by fast-forwarding `main` to its head. It now includes the trash names change from PR #18 (closed). Then plan Phase 2 item 2 (number and unit formatting).
+Phase 3 item 2 (one router module and an app context) before Phase 2 item 4 (one app shell), since the shell sits on the router. Phase 2 item 3 (estimate review as summary + steps) can run beside it.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (orchestrator on the owner's Windows machine) · Roadmap batch: formatting, CI, Vitest, Go split, docs
+
+- Merged [PR #19](https://github.com/sicza95/cali-restore-pro/pull/19) (copy audit) at the owner's request, then ran five side sessions in their own worktrees, each ending in a signed PR:
+  - [PR #20](https://github.com/sicza95/cali-restore-pro/pull/20): one CI workflow with parallel jobs (Phase 4 item 1). Merged.
+  - [PR #21](https://github.com/sicza95/cali-restore-pro/pull/21): shared number and unit formatter (`Intl.NumberFormat`, EN and HU) on every screen with areas, money, hours or percentages, and a guard against raw floats (Phase 2 item 2). Merged.
+  - [PR #22](https://github.com/sicza95/cali-restore-pro/pull/22): `internal/identity` split into 9 domain packages, no behaviour change, Go tests green at every commit (Phase 3 item 5).
+  - [PR #23](https://github.com/sicza95/cali-restore-pro/pull/23): `docs/m*.md` moved to `docs/milestones/` with an index, new `docs/architecture.md` and `docs/adr/` (template + 0001 to 0005) (Phase 4 item 2).
+  - [PR #24](https://github.com/sicza95/cali-restore-pro/pull/24): Vitest, 182 tests for `src/platform` (estimates, geometry, vault crypto, revision queue) and a parallel CI job (Phase 3 item 1). No bugs found; the revision queue sends drafts in project-ID order, one per project.
+- #22 to #24 were replayed onto `main` after #21 and re-signed as [PR #25](https://github.com/sicza95/cali-restore-pro/pull/25), because force-pushing the PR branches was blocked.
+- Verified: all four CI jobs green on #25 (the whole chain); every commit Verified. Side sessions also ran `npm run check`, `npm test`, `npm run test:files`, `npm run test:unit`, `go test ./...` and `test:app` (Go split) locally.
+- Not run: `test:sync`, `test:estimates` on the combined chain.
+- Not done: the remote branches of merged PRs are not deleted (deleting them was blocked).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 8: done, PR opened
 

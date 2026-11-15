@@ -137,21 +137,21 @@ Each step is meant to be one or a few signed conventional commits, with the hand
 Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths (390 px) are not supported for now, so no Phase 2 item adds phone layouts. The existing 390 px test checks stay until the owner decides to remove them.
 
 1. [x] Copy audit: replace engineering terms with task language, move "not connected yet" notes to docs, hide IDs. Done in the eight commits of the [copy audit](../plan/copy-audit.md): a [glossary](../copy-glossary.md) in EN and HU, task language on the estimate, editor, report and footer, the backup limit moved to the backup panel (with a fix for its misleading error), no internal ids, a translated save status, and `copy-guard.ts` checking ten screens. The UX rating stays at 4 until the estimate page and app shell (items 3 and 4) land; findings 4 to 6 still hold.
-2. Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals.
+2. [x] Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals. Done in [PR #21](https://github.com/sicza95/cali-restore-pro/pull/21) ([plan](../plan/number-format.md)).
 3. Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue).
 4. One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs.
 5. Styled file picker, select and button hierarchy (one primary per view).
 
 ### Phase 3 — Code structure
 
-1. Add Vitest for `src/platform/**` with test vectors for estimates, geometry, vault crypto and revision queue; run it in CI.
+1. [x] Add Vitest for `src/platform/**` with test vectors for estimates, geometry, vault crypto and revision queue; run it in CI. Done in [PR #24](https://github.com/sicza95/cali-restore-pro/pull/24), landed via #25: 182 tests, CI job "Unit tests (Vitest)".
 2. Introduce one router module (typed routes, guards, deep links) and an app context replacing the prop-drilled `model`.
 3. Central i18n catalogue with typed keys and a missing-translation check.
 4. Rename `src/ui/account-access/` into feature folders (`account/`, `projects/`, `estimates/`, `reports/`, `sharing/`).
-5. Split Go `internal/identity` into domain packages without behaviour changes; keep tests green at each step.
+5. [x] Split Go `internal/identity` into domain packages without behaviour changes; keep tests green at each step. Done in [PR #22](https://github.com/sicza95/cali-restore-pro/pull/22), landed via #25: nine domain packages.
 6. Replace hard-coded colours with tokens; remove file-level lint disables.
 
 ### Phase 4 — Delivery hygiene
 
-1. Merge the two CI workflows into one with parallel jobs (frontend checks, Go tests, platform E2E).
-2. Consolidate `docs/m*.md` under `docs/milestones/` and add a one-page architecture overview with ADRs for future decisions.
+1. [x] Merge the two CI workflows into one with parallel jobs (frontend checks, Go tests, platform E2E). Done in [PR #20](https://github.com/sicza95/cali-restore-pro/pull/20): `ci.yml`.
+2. [x] Consolidate `docs/m*.md` under `docs/milestones/` and add a one-page architecture overview with ADRs for future decisions. Done in [PR #23](https://github.com/sicza95/cali-restore-pro/pull/23), landed via #25: [milestones](../milestones/), [overview](../architecture.md), [ADRs](../adr/).
