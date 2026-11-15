@@ -5,6 +5,7 @@ import solid from 'eslint-plugin-solid/configs/typescript';
 export default tseslint.config(
   {
     ignores: [
+      '.claude/**',
       'dist/**',
       'src/platform/api/**',
       'storybook-static/**',
