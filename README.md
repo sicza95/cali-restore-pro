@@ -40,7 +40,7 @@ Local Playwright tests use installed Chrome. CI installs its pinned Chromium ver
 
 ## Structure
 
-See the [source layout conventions](docs/source-layout.md) for module boundaries and file size.
+See the [architecture overview](docs/architecture.md) for how the parts fit, the [decision records](docs/adr/README.md) for why, and the [source layout conventions](docs/source-layout.md) for module boundaries and file size. [Milestone records](docs/milestones/README.md) hold delivery evidence.
 
 ```text
 .storybook/       Storybook configuration and review controls
