@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/mailer"
 )
 
 func TestPostgresLifecycle(t *testing.T) {
@@ -30,14 +32,14 @@ func TestPostgresLifecycle(t *testing.T) {
 		}
 	}
 	query := func(sql string, args ...any) { t.Helper(); _, err := admin.Exec(ctx, sql, args...); must(err) }
-	latest := func(purpose string) mailPayload {
+	latest := func(purpose string) mailer.Payload {
 		t.Helper()
 		var sealed []byte
 		must(admin.QueryRow(ctx, `SELECT payload FROM mail_outbox WHERE payload IS NOT NULL ORDER BY created_at DESC,id DESC LIMIT 1`).Scan(&sealed))
 		n := s.mailCipher.NonceSize()
 		plain, err := s.mailCipher.Open(nil, sealed[:n], sealed[n:], []byte("calirestore-mail-v1"))
 		must(err)
-		var p mailPayload
+		var p mailer.Payload
 		must(json.Unmarshal(plain, &p))
 		if p.Purpose != purpose {
 			t.Fatalf("purpose %s", p.Purpose)
@@ -106,7 +108,7 @@ func TestPostgresLifecycle(t *testing.T) {
 		n := s.mailCipher.NonceSize()
 		plain, e := s.mailCipher.Open(nil, sealed[:n], sealed[n:], []byte("calirestore-mail-v1"))
 		must(e)
-		var p mailPayload
+		var p mailer.Payload
 		must(json.Unmarshal(plain, &p))
 		if p.Purpose == "email" {
 			emailToken = p.Token
@@ -213,7 +215,7 @@ func TestMailKeyAndTemplates(t *testing.T) {
 	}
 	for _, lang := range []string{"en", "hu"} {
 		for _, purpose := range []string{"verify", "reset", "email", "security"} {
-			subject, body := MailText(mailPayload{Language: lang, Purpose: purpose}, "https://example.test")
+			subject, body := mailer.Text(mailer.Payload{Language: lang, Purpose: purpose}, "https://example.test")
 			if subject == "" || body == "" || strings.Contains(body, "token=") {
 				t.Fatal("template")
 			}

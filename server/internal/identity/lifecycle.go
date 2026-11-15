@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
+	"github.com/sicza95/cali-restore-pro/server/internal/mailer"
 )
 
 var ErrLink = errors.New("invalid, expired or used link")
@@ -48,13 +49,11 @@ func (s *Service) hash(ctx context.Context, password string) (string, error) {
 	return passhash.Hash(password)
 }
 
-type mailPayload struct{ To, Language, Purpose, Token string }
-
 func (s *Service) enqueue(ctx context.Context, tx pgx.Tx, account, to, lang, purpose, raw string, expiry time.Time) error {
 	if s.mailCipher == nil {
 		return errors.New("mail not configured")
 	}
-	plain, err := json.Marshal(mailPayload{to, language(lang), purpose, raw})
+	plain, err := json.Marshal(mailer.Payload{To: to, Language: language(lang), Purpose: purpose, Token: raw})
 	if err != nil {
 		return err
 	}
