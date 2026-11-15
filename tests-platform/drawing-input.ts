@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { drawingControl } from './drawing-review';
+import { drawingControl, openDetails } from './drawing-review';
 
 export async function verifyDrawingInput(page: Page) {
   const c = (key: string) => drawingControl(page, key);
@@ -9,6 +9,7 @@ export async function verifyDrawingInput(page: Page) {
   await c('layer.add').click();
   await expect(selected).toContainText('Damage mask');
   await c('tool.brush').click();
+  await openDetails(page);
   await c('history.mode').selectOption('manual');
   await c('brush.pressure').check();
   await c('brush.finger').check();

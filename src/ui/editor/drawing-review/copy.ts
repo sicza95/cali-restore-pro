@@ -55,6 +55,9 @@ const messages = {
   tool: ['Tool inspector', 'Eszközbeállítások'],
   details: ['Details', 'Részletek'],
   numericEntry: ['Enter by number', 'Megadás számokkal'],
+  coordinates: ['Coordinates', 'Koordináták'],
+  drawHelp: ['Draw on the photo, or', 'Rajzoljon a fotón, vagy'],
+  enterByNumber: ['enter points by number', 'adja meg a pontokat számokkal'],
   layers: ['Layers and masks', 'Rétegek és maszkok'],
   blocked: [
     'Choose a visible, unlocked mask to draw.',

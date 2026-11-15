@@ -196,33 +196,40 @@ export function LayerPanel(props: LayerPanelProps) {
           </Show>
         </Show>
       </div>
-      <div class="cr-inspector-footer">
-        <div class="cr-summary">
-          <span>
-            {folders().length === 1
-              ? findLayer(props.layers, folders()[0])?.name
-              : props.copy.coverage}
-          </span>
-          <strong>
-            {share()?.toFixed(1) ?? '—'}
-            <Show when={share() !== undefined}>
-              <span>%</span>
-            </Show>
-          </strong>
+      {/* Hidden when nothing in it applies: no measured areas and no calibration to open. */}
+      <Show
+        when={
+          props.empty || props.onCalibrate || props.layers.some((layer) => layer.area !== undefined)
+        }
+      >
+        <div class="cr-inspector-footer">
+          <div class="cr-summary">
+            <span>
+              {folders().length === 1
+                ? findLayer(props.layers, folders()[0])?.name
+                : props.copy.coverage}
+            </span>
+            <strong>
+              {share()?.toFixed(1) ?? '—'}
+              <Show when={share() !== undefined}>
+                <span>%</span>
+              </Show>
+            </strong>
+          </div>
+          <div class="cr-coverage-track" aria-hidden="true">
+            <span style={{ width: `${Number((share() ?? 0).toFixed(1))}%` }} />
+          </div>
+          <Button
+            variant="ghost"
+            icon="measure"
+            disabled={props.empty || !props.onCalibrate}
+            title={props.empty ? props.copy.calibrationUnavailable : undefined}
+            onClick={() => props.onCalibrate?.()}
+          >
+            {props.copy.calibration}
+          </Button>
         </div>
-        <div class="cr-coverage-track" aria-hidden="true">
-          <span style={{ width: `${Number((share() ?? 0).toFixed(1))}%` }} />
-        </div>
-        <Button
-          variant="ghost"
-          icon="measure"
-          disabled={props.empty || !props.onCalibrate}
-          title={props.empty ? props.copy.calibrationUnavailable : undefined}
-          onClick={() => props.onCalibrate?.()}
-        >
-          {props.copy.calibration}
-        </Button>
-      </div>
+      </Show>
     </aside>
   );
 }

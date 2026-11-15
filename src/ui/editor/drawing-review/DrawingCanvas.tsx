@@ -36,6 +36,8 @@ export function DrawingCanvas(props: {
   active: boolean;
   zoom: number;
   onZoom: (zoom: number) => void;
+  /** Id of the help that says how to draw here. */
+  describedBy?: string;
   children: JSX.Element;
 }) {
   const t = untrack(() => props.tools);
@@ -258,6 +260,7 @@ export function DrawingCanvas(props: {
       class="drawing-viewport"
       data-control-id={control('view.canvas')}
       tabIndex={-1}
+      aria-describedby={props.describedBy}
       classList={{
         'drawing-pannable': t.tool() === 'hand' && zoom() > 1,
         'drawing-markable': props.canDraw && (t.brushing() || t.sketching()),

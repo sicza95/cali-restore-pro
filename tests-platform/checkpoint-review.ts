@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
 import { checkpointControls } from '../src/ui/editor/checkpoint-review/registry';
+import { openDetails } from './drawing-review';
 
 export async function verifyCheckpointReview(page: Page, info: TestInfo) {
   const control = (id: string) => {
@@ -26,6 +27,7 @@ export async function verifyCheckpointReview(page: Page, info: TestInfo) {
   await draw('tool.eraser').click();
   await draw('brush.width').fill('15');
   await draw('brush.width').blur();
+  await openDetails(page);
   await draw('place.x').fill('50');
   await draw('place.y').fill('50');
   await draw('place.y').blur();
