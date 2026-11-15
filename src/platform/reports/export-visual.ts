@@ -1,3 +1,4 @@
+import { parseLanguage } from '../i18n/language';
 import { cellText } from './cell-text';
 import { reportBlocks } from './export-rows';
 import type { AssessmentMap } from './assessment-map';
@@ -140,7 +141,7 @@ function renderSvg(draft: Draft, drawings: Drawing[], height: number, logo?: str
   });
   return new Blob(
     [
-      `<svg xmlns="http://www.w3.org/2000/svg" xml:lang="${draft.language === 'hu' ? 'hu' : 'en'}" width="${pageWidth}" height="${height}" viewBox="0 0 ${pageWidth} ${height}" font-family="${font}">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" xml:lang="${parseLanguage(draft.language)}" width="${pageWidth}" height="${height}" viewBox="0 0 ${pageWidth} ${height}" font-family="${font}">`,
       '<rect width="100%" height="100%" fill="#ffffff"/>',
       ...marks,
       '</svg>',

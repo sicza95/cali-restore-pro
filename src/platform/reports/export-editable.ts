@@ -1,5 +1,6 @@
 import { estimateCopy } from '../estimates/copy';
 import { reportCopy } from './copy';
+import { exportCopy } from './export-copy';
 import type { Draft } from './types';
 import type { WorkbookEstimate } from './workbook-estimate';
 import type { Formula, Sheet } from './export-xlsx';
@@ -9,14 +10,14 @@ const formula = (expression: string, cache: number | null): Formula => ({ expres
 export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[] {
   const e = estimateCopy[draft.language];
   const c = reportCopy[draft.language];
-  const hu = draft.language === 'hu';
-  const object = hu ? 'Tárgy' : 'Object';
-  const phase = hu ? 'Munkafázis' : 'Phase';
+  const x = exportCopy[draft.language];
+  const object = x.object;
+  const phase = x.phase;
   const names = {
-    estimate: hu ? 'Becslés' : 'Estimate',
+    estimate: x.estimateSheet,
     phases: e.phases,
     extras: e.extras,
-    adjustments: hu ? 'Korrekciók' : 'Adjustments',
+    adjustments: x.adjustmentsSheet,
   };
   const precision = estimate.precision;
   const phases: Sheet = {
@@ -41,7 +42,7 @@ export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[
         c.workPrice,
         e.subtotal,
         e.productivityOutput,
-        hu ? 'Alap termelékenység' : 'Baseline productivity',
+        x.baselineProductivity,
         c.version,
       ],
       ...estimate.phases.map((row, i) => {

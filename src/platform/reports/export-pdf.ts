@@ -1,3 +1,4 @@
+import { parseLanguage } from '../i18n/language';
 export async function printablePdf(
   count: number,
   language: 'en' | 'hu',
@@ -21,7 +22,7 @@ export async function printablePdf(
     append(id + ' 0 obj\n', ...items, '\nendobj\n');
   }
   append('%PDF-1.4\n');
-  object(`<< /Type /Catalog /Pages 2 0 R /Lang (${language === 'hu' ? 'hu' : 'en'}) >>`);
+  object(`<< /Type /Catalog /Pages 2 0 R /Lang (${parseLanguage(language)}) >>`);
   const pages = Array.from({ length: count }, (_, i) => 3 + i * 3 + ' 0 R');
   object(`<< /Type /Pages /Count ${count} /Kids [${pages.join(' ')}] >>`);
   for (let i = 0; i < count; i++) {

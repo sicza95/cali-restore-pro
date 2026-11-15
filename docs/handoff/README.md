@@ -15,13 +15,20 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Phase 3 item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete. Follow-up #57: the generated report files (`src/platform/reports/export-*.ts`) still pick their language inline.
+Phase 3 item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Report exports use the catalogue (#57)
+
+- New `src/platform/reports/export-copy.ts` (workbook sheet names and headings). `export-editable.ts` and `export.worker.ts` read it; the PDF `/Lang` and SVG `xml:lang` use `parseLanguage`. The inline-language guard in `src/platform/i18n/guard.test.ts` now covers `src/platform/reports/` too.
+- New `export-editable.test.ts` pins the EN and HU sheet names and headings (nothing covered them before); they match the old strings.
+- Verified: `npm run check`, `test:unit` (209), `test:files` (22, includes the XLSX and PDF downloads), `test:estimates` (8).
+- Not run: `npm test`, `test:sync`, `test:app` (no UI change).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Central i18n catalogue (#30)
 

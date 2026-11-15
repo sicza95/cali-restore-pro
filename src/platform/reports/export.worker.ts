@@ -1,3 +1,4 @@
+import { exportCopy } from './export-copy';
 import { reportTable } from './export-rows';
 import { reportCopy } from './copy';
 import { visualExport } from './export-visual';
@@ -28,7 +29,7 @@ async function encode(draft: Draft) {
   if (draft.format === 'XLSX') {
     const sheets = [
       {
-        name: draft.language === 'hu' ? 'Jelentés' : 'Report',
+        name: exportCopy[draft.language].reportSheet,
         rows: reportTable(draft),
         widths: [50, 36, 54, 20],
       },
