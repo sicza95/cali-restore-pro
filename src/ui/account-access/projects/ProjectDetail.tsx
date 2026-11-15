@@ -248,6 +248,7 @@ export function ProjectDetail(props: {
         <Show when={surface().id} keyed>
           {(id) => (
             <ProjectOriginals
+              language={props.language}
               project={props.project.id}
               surface={object().surfaces.find((s) => s.id === id)!}
               copy={c()}

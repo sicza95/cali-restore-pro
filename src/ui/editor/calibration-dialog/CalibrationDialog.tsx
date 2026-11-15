@@ -2,6 +2,7 @@ import { createSignal, createUniqueId, onCleanup, onMount } from 'solid-js';
 import { Button } from '../../controls/button/Button';
 import { IconButton } from '../../controls/icon-button/IconButton';
 import { Field } from '../../controls/field/Field';
+import { formatArea } from '../../../platform/format/number';
 import { isPositiveLength } from './utils';
 import type { CalibrationDialogProps } from './types';
 
@@ -83,7 +84,7 @@ export function CalibrationDialog(props: CalibrationDialogProps) {
           <span>Plane area</span>
           <output>
             {isPositiveLength(width()) && isPositiveLength(height())
-              ? `${((Number(width()) * Number(height())) / 10000).toFixed(2)} m²`
+              ? formatArea((Number(width()) * Number(height())) / 10000, 'm²', 'en')
               : '—'}
           </output>
         </div>

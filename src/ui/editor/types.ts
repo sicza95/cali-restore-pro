@@ -21,6 +21,8 @@ export type EditorLayer = {
 
 /** Every string the editor shell and its inspector render themselves. */
 export type EditorCopy = {
+  /** Language for numbers and units; English when not given. */
+  language?: 'en' | 'hu';
   editor: string;
   workspaceActions: string;
   undo: string;

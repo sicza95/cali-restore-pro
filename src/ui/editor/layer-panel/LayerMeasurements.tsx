@@ -1,3 +1,4 @@
+import { formatPercent } from '../../../platform/format/number';
 import { For, Show } from 'solid-js';
 import { Area } from '../area/Area';
 import type { LayerMeasurementsProps } from './types';
@@ -8,7 +9,7 @@ export function LayerMeasurements(props: LayerMeasurementsProps) {
     <div>
       <dt>{label(findLayer(props.layers, id)?.name ?? '')}</dt>
       <dd>
-        <Area value={findLayer(props.layers, id)?.area ?? 0} />
+        <Area value={findLayer(props.layers, id)?.area ?? 0} language={props.copy.language} />
       </dd>
     </div>
   );
@@ -22,7 +23,7 @@ export function LayerMeasurements(props: LayerMeasurementsProps) {
             <div>
               <dt>{props.copy.assessedSurface}</dt>
               <dd>
-                <Area value={surface} />
+                <Area value={surface} language={props.copy.language} />
               </dd>
             </div>
           )}
@@ -34,7 +35,7 @@ export function LayerMeasurements(props: LayerMeasurementsProps) {
           {(share) => (
             <div>
               <dt>{props.copy.coverage}</dt>
-              <dd class="cr-number">{share.toFixed(1)}%</dd>
+              <dd class="cr-number">{formatPercent(share, props.copy.language ?? 'en')}</dd>
             </div>
           )}
         </Show>
