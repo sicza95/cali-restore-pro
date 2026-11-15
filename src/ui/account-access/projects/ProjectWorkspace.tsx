@@ -239,7 +239,10 @@ export function ProjectWorkspace(props: {
                   navigate(projectHref(project.id));
                 }}
               />
-              <ProjectLifecycle model={props.model} />
+              <ProjectLifecycle
+                model={props.model}
+                localName={(id) => projects()?.rows.find((project) => project.id === id)?.name}
+              />
             </>
           }
         >
