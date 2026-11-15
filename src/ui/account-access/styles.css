@@ -84,6 +84,55 @@ select {
   border-radius: var(--cr-radius);
   font: inherit;
 }
+/* Selects: one chevron in token colours instead of the browser arrow. */
+select {
+  appearance: none;
+  padding-inline-end: 40px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--cr-muted) 50%),
+    linear-gradient(135deg, var(--cr-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 21px) calc(50% + 1px),
+    calc(100% - 16px) calc(50% + 1px);
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+:is(input, select, textarea):hover:enabled {
+  border-color: var(--cr-muted);
+}
+select:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+/* File picker: the native input, with its button styled as a secondary button. */
+input[type='file'] {
+  padding: 5px;
+  color: var(--cr-muted);
+  font-size: 14px;
+  border-style: dashed;
+  cursor: pointer;
+}
+input[type='file']::file-selector-button {
+  min-height: 32px;
+  margin-inline-end: 12px;
+  padding: 6px 14px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--cr-ink);
+  background: var(--cr-raised);
+  border: 0;
+  border-radius: calc(var(--cr-radius) - 2px);
+  cursor: pointer;
+}
+input[type='file']:hover:enabled::file-selector-button {
+  background: var(--cr-hover);
+}
+input[type='file']:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
 /* Secondary is the default; each view marks its one main action with class="primary". */
 button {
   min-height: var(--cr-touch);
