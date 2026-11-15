@@ -1,20 +1,24 @@
-import { createContext, createSignal, untrack, useContext } from 'solid-js';
+import { createContext, createMemo, createSignal, onCleanup, untrack, useContext } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { createAccountAccess } from '../account-access/createAccountAccess';
 import { createRouter } from '../router/createRouter';
 
 /**
- * Display names of records the URL points at (projects, surfaces), keyed by ID. They are local
- * vault data, so the screen that loads them publishes them for the shell's breadcrumbs and title.
+ * Display names of records the URL points at (projects, surfaces), keyed by ID, for the shell's
+ * breadcrumbs and title. They are local vault data, so only a screen holding the unlocked vault
+ * provides them, and they last only as long as that screen: when it unmounts (vault locked,
+ * signed out, another account) the names leave the shell too.
  */
 function createNames() {
-  const [names, setNames] = createSignal<Readonly<Record<string, string>>>({});
-  const publish = (entries: Record<string, string>) => {
-    const current = names();
-    if (Object.entries(entries).some(([id, name]) => current[id] !== name))
-      setNames({ ...current, ...entries });
+  type Source = () => Readonly<Record<string, string>>;
+  const [sources, setSources] = createSignal<readonly Source[]>([]);
+  const names = createMemo(() => Object.assign({}, ...sources().map((source) => source())));
+  /** Call inside a component; the names go away when it is cleaned up. */
+  const provideNames = (source: Source) => {
+    setSources((list) => [...list, source]);
+    onCleanup(() => setSources((list) => list.filter((entry) => entry !== source)));
   };
-  return { names, publishNames: publish };
+  return { names: names as () => Readonly<Record<string, string>>, provideNames };
 }
 
 /** Account session, language, requests, the router and record names, shared by every screen. */
