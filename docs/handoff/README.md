@@ -4,22 +4,30 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `feat/canvas-first-layout` (step 3, all seven commits pushed; open for review as [PR #16](https://github.com/sicza95/cali-restore-pro/pull/16)). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
+- **Branch:** `main` at `de28868`. Step 3 landed by fast-forwarding `main` to the [PR #16](https://github.com/sicza95/cali-restore-pro/pull/16) head; `pr-assets/step3` is deleted. The remote `feat/canvas-first-layout` branch still exists (not deleted). Before that, steps 2 and 3 each went through one branch and one PR.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is done on `feat/canvas-first-layout` and ticked in the baseline; it reaches `main` when its PR is fast-forward merged. PR screenshots live on the orphan branch `pr-assets/step3` (delete it after merge).
+- **Active roadmap phase:** Phase 1 steps 1 to 3 are done, on `main` and ticked in the quality baseline. Step 4 ([retire the duplicate review components](../plan/editor-retire-adapter.md)) is planned; the owner accepted decisions 1 and 2 (branch `refactor/retire-drawing-adapter` with one PR; remove dead registry ids, giving the reason).
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Owner reviews and merges the step 3 PR. After merging: fast-forward `main` to the PR head, delete `pr-assets/step3`, then plan Phase 1 step 4 (retire the duplicate review components).
+Push the plan commit to `main` (owner). Then step 4 commit 1, the parity test, on `refactor/retire-drawing-adapter`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 merged, step 4 planned
+
+- Reviewed PR #16. Both CI workflows passed, all ten commits are Verified, and it fast-forwards cleanly. Merged at the owner's request by pushing `de28868` to `main`; GitHub marked the PR merged.
+- Deleted `pr-assets/step3`; deleted the local `feat/canvas-first-layout` branch.
+- Wrote [step 4's plan](../plan/editor-retire-adapter.md). `DrawingReviewAdapter` has no importers. Four CSS rule groups plus two more classes serve only it. `DrawingLayers` (`list`), `DrawingHistory` (`controls`) and `DrawingToolSettings` (`actions`, `toolOptions`, `numeric`) keep props only for a second host. No test checks that every registered `surface.draw.*` id renders.
+- Verified: nothing run (docs only; no code changed).
+- Owner accepted decisions 1 and 2. The plan, the handoff and the process notes are committed on `main`, not pushed.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3: inspector scroll fixed on the PR branch
 
