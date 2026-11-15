@@ -19,6 +19,14 @@ export async function openDetails(page: Page) {
   await expect(details).toHaveAttribute('open', '');
 }
 
+/** Closes "Enter by number" when it is open, so the pointer path is the only one on screen. */
+export async function closeDetails(page: Page) {
+  const details = page.locator('.drawing-workspace details.drawing-details');
+  if (await details.evaluate((element) => (element as HTMLDetailsElement).open))
+    await details.locator('> summary').click();
+  await expect(details).not.toHaveAttribute('open', '');
+}
+
 export async function verifyDrawingReview(page: Page, info: TestInfo) {
   const c = (key: string) => drawingControl(page, key);
   const layer = (name: string) => c('layer.select').filter({ hasText: name });
@@ -189,6 +197,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
+    await closeDetails(page);
     await page.evaluate(() => window.scrollTo(0, 0));
     const rail = (await page.locator('.drawing-workspace .cr-tool-rail').boundingBox())!;
     const canvas = (await page.locator('.drawing-workspace .cr-canvas-region').boundingBox())!;
@@ -198,27 +207,31 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     expect(rail.x + rail.width).toBeLessThan(canvas.x + canvas.width / 2);
     if (viewport.width === 1194) expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
     else expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
-    for (const control of [
-      'tool.shape',
-      'path.apply',
-      'path.cancel',
-      'history.undo',
-      'layer.add',
-      'point.x',
-    ]) {
-      const target = (await c(control).boundingBox())!;
-      expect(target.height).toBeGreaterThanOrEqual(44);
-      expect(target.width).toBeGreaterThanOrEqual(44);
-    }
+    const touchTargets = async (controls: string[]) => {
+      for (const control of controls) {
+        const target = (await c(control).boundingBox())!;
+        expect(target.height, control).toBeGreaterThanOrEqual(44);
+        expect(target.width, control).toBeGreaterThanOrEqual(44);
+      }
+    };
+    // Apply and Cancel sit in the canvas chip and undo in the shell header, outside "Details".
+    await touchTargets(['tool.shape', 'path.apply', 'path.cancel', 'history.undo', 'layer.add']);
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
-    await page.screenshot({
-      path: info.outputPath('drawing-' + viewport.width + '.png'),
-      fullPage: true,
-    });
-    // Both iPad orientations and the phone width must pass axe on the converged editor.
-    expect(
-      (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
-    ).toEqual([]);
+    // Both iPad orientations and the phone width must pass axe with "Details" closed and open.
+    for (const state of ['closed', 'open'] as const) {
+      if (state === 'open') {
+        await openDetails(page);
+        await touchTargets(['point.x']);
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
+      await page.screenshot({
+        path: info.outputPath(`drawing-${viewport.width}-${state}.png`),
+        fullPage: true,
+      });
+      expect(
+        (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
+      ).toEqual([]);
+    }
   }
   await c('path.cancel').click();
   await page.setViewportSize({ width: 1194, height: 834 });

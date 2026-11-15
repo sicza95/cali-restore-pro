@@ -36,6 +36,10 @@
   .cr-inspector-body {
     grid-row: 2;
   }
+  /* Without a footer (see LayerPanel) the body takes the footer's column too. */
+  .cr-inspector-body:last-child {
+    grid-column: 1 / -1;
+  }
   .cr-inspector-footer {
     grid-column: 2;
     grid-row: 2;

@@ -128,7 +128,7 @@ Each step is meant to be one or a few signed conventional commits, with the hand
 ### Phase 1 — Converge the editor (highest value)
 
 1. [x] Make `EditorWorkspace` the application's surface editor: wire it to the real project store, layers, masks and history used by `drawing-review`. Done in the five commits of [editor convergence](../plan/editor-convergence.md); `projects.browser.ts` covers the converged editor at 1194, 834 and 390 px with screenshots, an axe pass at each width and a pointer brush stroke.
-2. Make the existing pointer/Pencil drawing the primary path inside `EditorWorkspace`; keep the numeric form as an accessible fallback behind a disclosure.
+2. [x] Make the existing pointer/Pencil drawing the primary path inside `EditorWorkspace`; keep the numeric form as an accessible fallback behind a disclosure. Done in the six commits of [pointer drawing first](../plan/editor-pointer-first.md): Apply, Cancel and a point count in the canvas chip with Enter and Escape, one layer list, drafts and descriptive undo outside the disclosure, and "Enter by number" closed by default. `projects.browser.ts` covers pen, Escape and rectangle input with the disclosure closed, plus screenshots and axe at 1194, 834 and 390 px closed and open.
 3. Canvas-first layout: pan/zoom by gesture and wheel, inspector docks below in portrait, tool rail left.
 4. Retire the duplicate review components once parity tests pass.
 

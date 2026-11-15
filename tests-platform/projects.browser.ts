@@ -5,7 +5,12 @@ import { projectControls } from '../src/ui/account-access/projects/project-contr
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
 import { verifyCheckpointReview } from './checkpoint-review';
 import { drawingControl, openDetails, verifyDrawingReview } from './drawing-review';
-import { verifyDetailDrawing, verifyDrawingInput, verifyPointerStroke } from './drawing-input';
+import {
+  verifyDetailDrawing,
+  verifyDrawingInput,
+  verifyPointerPath,
+  verifyPointerStroke,
+} from './drawing-input';
 import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
 import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } from './photo-review';
 import { dng } from './fixtures/images';
@@ -154,8 +159,14 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   const beforeReview = await revisions();
   expect(beforeReview[0]).toEqual([expect.objectContaining({ revision: expect.any(Number) })]);
   await drawingControl(page, 'mode.drawing').click();
+  // The numeric form is a fallback: "Enter by number" starts closed.
+  await expect(page.locator('.drawing-workspace details.drawing-details')).not.toHaveAttribute(
+    'open',
+    '',
+  );
   await verifyDrawingInput(page);
   await verifyPointerStroke(page);
+  await verifyPointerPath(page);
   await verifyDrawingReview(page, info);
   const afterDrawing = await revisions();
   expect(afterDrawing).not.toEqual(beforeReview);

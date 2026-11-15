@@ -7,19 +7,29 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`, commits 2 to 5 (Apply and Cancel in the chip, one layer list, drafts and history outside Details, Details closed by default) are on `feat/pointer-drawing-first`; the owner accepted decisions 1 to 3 as recommended.
+- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. Step 2 commit 1 is on `main`; commits 2 to 6 are on `feat/pointer-drawing-first`, pushed, with no PR yet.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-On `feat/pointer-drawing-first`, write commit 6 of [pointer drawing first](../plan/editor-pointer-first.md): `verifyPointerPath` (pen taps and Apply, Escape, shape drag), first-load assertion that "Enter by number" is closed, touch targets for the chip's Apply and the header undo, and screenshots and axe at 1194, 834 and 390 px with the disclosure closed and open. Tick Phase 1 item 2 in the quality baseline, then open the PR for commits 2 to 6.
+Open the PR for `feat/pointer-drawing-first` (step 2 commits 2 to 6) with the closed and open screenshots at 1194, 834 and 390 px, and merge after the owner's review. Then plan Phase 1 step 3 (canvas-first layout: gesture and wheel zoom, portrait inspector height, the cramped 390 px footer).
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 6: tests for pointer-first drawing
+
+- New `verifyPointerPath` in `tests-platform/drawing-input.ts`, run after `verifyPointerStroke` with "Enter by number" closed. Pen: Apply is disabled at "0 points"; three taps show "3 points", and Apply in the chip adds a mark (undone again). Three more taps and Enter on the canvas add a mark. Two taps and Escape return to "0 points". Shape: two rectangle corner taps and Apply add a mark. The pen and Enter/Escape checks added to `verifyPointerStroke` in commit 2 moved here.
+- `projects.browser.ts` asserts the disclosure is closed on first load with a photo. New `closeDetails(page)` helper next to `openDetails`.
+- The viewport loop in `verifyDrawingReview` checks touch targets for Apply and Cancel in the chip and the header undo with the disclosure closed, then `point.x` with it open. It saves `drawing-<width>-closed.png` and `drawing-<width>-open.png` and runs axe in both states at 1194, 834 and 390 px.
+- Fixed a commit 5 regression found in the 834 px screenshot: at 960 px and below, the inspector body only used the left column once the footer was hidden. `.cr-inspector-body:last-child` now spans both.
+- The plan's "drag a rectangle" became two corner taps, because the canvas places shape points by tap. The plan now has an "As built" section listing every departure. Ticked Phase 1 item 2 in the quality baseline and marked the plan done.
+- Verified: `npm run check`, `npm test` (12), `npm run test:files` (21), `npm run build-storybook`. Looked at the closed screenshots at all three widths and the open one at 834 px.
+- Not verified: `test:app`, dark theme in the app, tab order by hand, physical Pencil.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 5: close Details by default
 

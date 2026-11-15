@@ -1,6 +1,6 @@
 # Pointer drawing first — Phase 1, step 2
 
-14 November 2026 · Status: accepted, in progress · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1 item 2 · Follows [editor convergence](editor-convergence.md)
+14 November 2026 · Status: done (commits 1 to 6) · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1 item 2 · Follows [editor convergence](editor-convergence.md)
 
 Goal: on the surface editor, a conservator with a Pencil or a mouse draws, edits and commits masks on the photo without opening anything. The numeric point form stays as the keyboard and assistive-technology path, inside a "Details" disclosure that is closed by default.
 
@@ -69,6 +69,15 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
 - **Two primary buttons.** Apply sits on the canvas and Commit in the inspector, and they never show at once in a single panel; this matches the baseline's "one primary per view" goal.
 - **400-line limit.** `DrawingWorkspace.tsx` is at 258 lines. The help line and session state for "Details" go in a small `DrawingDetails.tsx` if it grows past 330.
 - **Keyboard users.** Moving Apply into the chip changes tab order: rail → chip → inspector. That is the reading order on screen, but check it with the keyboard in both orientations.
+
+## As built
+
+Where the commits differ from the plan above:
+
+- **Commit 2:** Apply and Cancel show in the chip whenever pen or shape is active (or the node tool has a mark), with Apply disabled until the sketch is valid, not only once a point exists. Enter applies from the canvas or the active tool's button only. The canvas takes focus on pointerdown so the keys reach it.
+- **Commit 3:** `LayerPanel`'s grouped layout could not hold the drawing's layers (selectable master and folders, stacking order, phases inside folders), so it gained an opt-in `tree` mode. Storybook keeps the grouped layout.
+- **Commit 5:** the `openDetails` test helper moved here from commit 6, because closing the disclosure would otherwise break `test:files`.
+- **Commit 6:** the shape check taps two rectangle corners. The canvas places shape points by tap, and a drag places one point where it ends, so "drag a rectangle" would have needed new input handling. Also fixed: at 960 px and below, the inspector body now spans the column the hidden footer left empty.
 
 ## Out of scope for step 2
 
