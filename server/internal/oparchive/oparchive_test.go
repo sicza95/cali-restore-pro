@@ -1,4 +1,4 @@
-package identity
+package oparchive
 
 import (
 	"context"
@@ -13,10 +13,6 @@ import (
 func TestPostgresOperationalArchiveExpiry(t *testing.T) {
 	admin, app := testdb.New(t)
 	ctx := context.Background()
-	s, err := New(app)
-	if err != nil {
-		t.Fatal(err)
-	}
 	root := t.TempDir()
 	current := "a0000000-0000-4000-8000-000000000001"
 	expired := "a0000000-0000-4000-8000-000000000002"
@@ -32,7 +28,7 @@ func TestPostgresOperationalArchiveExpiry(t *testing.T) {
 		}
 	}
 	for range 2 {
-		if err := s.ExpireOperationalArchives(ctx, root); err != nil {
+		if err := Expire(ctx, app, root); err != nil {
 			t.Fatal(err)
 		}
 	}
