@@ -69,15 +69,13 @@ export function DrawingDraftBar(props: DraftProps) {
 }
 
 /**
- * Save mode, retained history and, unless the host shows them (`controls={false}`), the draft's
- * Commit and Discard and the undo and redo pair.
+ * Save mode and retained history. The draft's Commit and Discard sit in `DrawingDraftBar`, and the
+ * undo and redo pair in the editor shell's header.
  */
-export function DrawingHistory(props: DraftProps & { controls?: boolean }) {
+export function DrawingHistory(props: { model: DrawingReview; copy: DrawingCopy }) {
   const m = untrack(() => props.model);
   const c = () => props.copy;
   const entry = () => m.undoEntry() ?? m.redoEntry();
-  const controls = () => props.controls !== false;
-  const undoName = (redo: boolean) => historyLabel(m, c(), redo);
   return (
     <section class="drawing-panel drawing-history" aria-label={c().history}>
       <h3>{c().history}</h3>
@@ -92,35 +90,6 @@ export function DrawingHistory(props: DraftProps & { controls?: boolean }) {
           <option value="manual">{c().manual}</option>
         </select>
       </label>
-      <Show when={controls() && m.draft()}>
-        <DraftActions {...props} />
-      </Show>
-      <Show when={controls()}>
-        <div class="drawing-actions">
-          <button
-            class="secondary"
-            type="button"
-            data-control-id={control('history.undo')}
-            disabled={!m.canStep(false)}
-            aria-label={undoName(false)}
-            title={undoName(false)}
-            onClick={() => m.step(false)}
-          >
-            {c().undo}
-          </button>
-          <button
-            class="secondary"
-            type="button"
-            data-control-id={control('history.redo')}
-            disabled={!m.canStep(true)}
-            aria-label={undoName(true)}
-            title={undoName(true)}
-            onClick={() => m.step(true)}
-          >
-            {c().redo}
-          </button>
-        </div>
-      </Show>
       <p class="drawing-help" aria-live="polite">
         {c().retained} · {m.past().length + m.future().length} / {historyLimit}
         <Show when={entry()} fallback={<> · {c().historyEmpty}</>}>

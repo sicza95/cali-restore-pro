@@ -1,9 +1,8 @@
-import { createMemo, createSignal, For, Show, untrack } from 'solid-js';
+import { createSignal, For, Show, untrack } from 'solid-js';
 import { control, masterId } from './constants';
 import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
 import { DrawNumber, DrawToggle } from './DrawingFields';
-import { Icon } from '../../icon/Icon';
 import { LayerPattern } from './LayerPattern';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Layer, LayerKind } from './types';
@@ -42,89 +41,21 @@ export function toggleFolder(model: DrawingReview, id: number) {
 }
 
 /**
- * Layer list, add row and the selected layer's properties. Without `list`, the host lists the
- * layers itself (the editor shell's `LayerPanel`) and this renders only the add row and properties.
+ * The add row and the selected layer's properties. The editor shell's `LayerPanel` lists the layers.
  */
 export function DrawingLayers(props: {
   model: DrawingReview;
   copy: DrawingCopy;
   vault: LocalVault;
-  list?: boolean;
 }) {
   const m = untrack(() => props.model);
   const c = () => props.copy;
   const [kind, setKind] = createSignal<LayerKind>('damage');
   const layer = m.layer;
-  const visibleRows = createMemo(() => {
-    const append = (parent: number, depth: number): { id: number; depth: number }[] =>
-      m
-        .layers()
-        .filter((item) => item.parent === parent)
-        .flatMap((item) => [
-          { id: item.id, depth },
-          ...(item.kind === 'folder' && item.expanded ? append(item.id, depth + 1) : []),
-        ]);
-    return append(0, 0);
-  });
   const cannotDelete = () =>
     layer().id === masterId || m.layers().some((item) => item.parent === layer().id);
   return (
     <section class="drawing-panel" aria-label={c().layers}>
-      <Show when={props.list !== false}>
-        <h3>{c().layers}</h3>
-        <ul class="drawing-layers">
-          <For each={visibleRows().map(({ id }) => id)}>
-            {(id) => {
-              const row = () => m.layers().find((item) => item.id === id)!;
-              const name = () => layerName(row(), c());
-              return (
-                <li
-                  style={{ '--drawing-depth': visibleRows().find((item) => item.id === id)?.depth }}
-                >
-                  <button
-                    class="secondary drawing-layer-select"
-                    type="button"
-                    data-control-id={control('layer.select')}
-                    aria-pressed={m.selected() === id}
-                    onClick={() => m.select(id)}
-                  >
-                    <strong>{name()}</strong>
-                    <small>{layerMeta(m, row(), c())}</small>
-                  </button>
-                  <Show
-                    when={row().kind === 'folder'}
-                    fallback={
-                      <button
-                        class="secondary drawing-icon"
-                        data-control-id={control('layer.visibility')}
-                        type="button"
-                        aria-label={name() + ' · ' + c().visibility}
-                        aria-pressed={row().visible}
-                        title={c().visibility}
-                        onClick={() => m.update(id, { visible: !row().visible })}
-                      >
-                        <Icon name={row().visible ? 'eye' : 'eyeOff'} size={18} />
-                      </button>
-                    }
-                  >
-                    <button
-                      class="secondary drawing-icon"
-                      type="button"
-                      data-control-id={control('layer.expand')}
-                      aria-label={name() + ' · ' + (row().expanded ? c().collapse : c().expand)}
-                      aria-expanded={row().expanded}
-                      title={row().expanded ? c().collapse : c().expand}
-                      onClick={() => toggleFolder(m, id)}
-                    >
-                      <Icon name={row().expanded ? 'minus' : 'plus'} size={18} />
-                    </button>
-                  </Show>
-                </li>
-              );
-            }}
-          </For>
-        </ul>
-      </Show>
       <div class="drawing-actions drawing-add">
         <label>
           {c().kind}

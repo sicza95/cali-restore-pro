@@ -224,9 +224,7 @@ export function DrawingWorkspace(props: {
             {props.children}
           </DrawingCanvas>
         }
-        toolOptions={
-          <DrawingToolOptions tools={t} copy={c()} reason={toolReason(t.tool())} actions />
-        }
+        toolOptions={<DrawingToolOptions tools={t} copy={c()} reason={toolReason(t.tool())} />}
         inspectorLead={
           <Show when={size() && props.state}>
             <fieldset disabled={m.busy()} class="drawing-layer-controls">
@@ -249,7 +247,7 @@ export function DrawingWorkspace(props: {
           <div class="drawing-workspace-detail">
             <Show when={size() && props.state}>
               <fieldset disabled={m.busy()} class="drawing-layer-controls">
-                <DrawingLayers model={m} copy={c()} vault={props.vault} list={false} />
+                <DrawingLayers model={m} copy={c()} vault={props.vault} />
               </fieldset>
             </Show>
             <p class="drawing-help">{help()}</p>
@@ -259,9 +257,6 @@ export function DrawingWorkspace(props: {
                 tools={t}
                 copy={c()}
                 reason={toolReason(t.tool())}
-                toolOptions={false}
-                actions={false}
-                level={2}
                 help={{ id: helpId, onNumeric: () => details && openDetails(details) }}
               />
               <DrawingDetails
@@ -288,13 +283,7 @@ export function DrawingWorkspace(props: {
                   />
                 </div>
                 <fieldset disabled={m.busy()} class="drawing-layer-controls">
-                  <DrawingHistory
-                    model={m}
-                    copy={c()}
-                    onCommit={commitDraft}
-                    onDiscard={discardDraft}
-                    controls={false}
-                  />
+                  <DrawingHistory model={m} copy={c()} />
                 </fieldset>
               </DrawingDetails>
             </Show>

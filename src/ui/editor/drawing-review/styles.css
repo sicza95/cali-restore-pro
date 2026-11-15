@@ -9,8 +9,7 @@
   margin-block-end: 12px;
   border-bottom: 1px solid var(--cr-rule);
 }
-.surface-mode button,
-.drawing-layer-select {
+.surface-mode button {
   border: 1px solid transparent;
 }
 .surface-mode button.secondary {
@@ -28,12 +27,7 @@
   border-bottom-color: var(--cr-accent);
   color: var(--cr-ink);
 }
-.drawing-layer-select[aria-pressed='true'] {
-  background: var(--cr-selected);
-  border-color: var(--cr-accent);
-}
 .drawing-transient {
-  grid-area: label;
   margin: 0;
   padding-block: 2px 6px;
   color: var(--cr-muted);
@@ -165,31 +159,6 @@
   inline-size: var(--cr-touch);
   margin: 0;
   accent-color: var(--cr-accent);
-}
-.drawing-layers {
-  list-style: none;
-  display: grid;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-}
-.drawing-layers li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--cr-touch);
-  align-items: center;
-  gap: 4px;
-  padding-inline-start: min(calc(var(--drawing-depth) * 12px), 28%);
-}
-.drawing-layer-select {
-  display: grid;
-  gap: 2px;
-  text-align: start;
-  padding: 5px 8px;
-  overflow-wrap: anywhere;
-}
-.drawing-layer-select small {
-  font-weight: 500;
-  color: var(--cr-muted);
 }
 .drawing-panel summary {
   line-height: var(--cr-touch);
