@@ -6,10 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
 
 func TestPostgresOperationalArchiveExpiry(t *testing.T) {
-	admin, app := identityDB(t)
+	admin, app := testdb.New(t)
 	ctx := context.Background()
 	s, err := New(app)
 	if err != nil {

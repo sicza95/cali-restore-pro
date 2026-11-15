@@ -48,8 +48,8 @@ interface boundary, which would be a design change rather than a move.
 4. `sessiontoken` leaf.
 5. `mailer` leaf.
 6. `objectstore` leaf.
-7. `oparchive` (worker call in `cmd/calirestore` changes to the new package).
-8. `testdb` helper (tests only).
+7. `testdb` helper (tests only; the next moves need it).
+8. `oparchive` (worker call in `cmd/calirestore` changes to the new package).
 9. `projects`: move the hosted-project, sharing and deletion files and their tests. `identity`
    exports the seam they need (errors, `Failure`, session lookup, recent-credential check,
    mutation lock, mail enqueue, password check for recovery, the route guard, cookie helpers).

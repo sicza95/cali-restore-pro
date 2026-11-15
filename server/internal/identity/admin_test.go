@@ -9,10 +9,11 @@ import (
 	"testing"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
+	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
 
 func TestAdminHTTP(t *testing.T) {
-	root, app := identityDB(t)
+	root, app := testdb.New(t)
 	ctx := context.Background()
 	service, err := New(app)
 	if err != nil {
