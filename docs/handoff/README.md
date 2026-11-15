@@ -14,7 +14,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Owner reviews and merges the copy audit PR (fast-forward `main` to its head). Owner also decides on [PR #18](https://github.com/sicza95/cali-restore-pro/pull/18) (trash shows real project names), which targets `copy/task-language`.
+Owner reviews and merges [PR #19](https://github.com/sicza95/cali-restore-pro/pull/19), the copy audit, by fast-forwarding `main` to its head. It now includes the trash names change from PR #18 (closed). Then plan Phase 2 item 2 (number and unit formatting).
 
 ## Open questions for the owner
 
@@ -26,8 +26,9 @@ Owner reviews and merges the copy audit PR (fast-forward `main` to its head). Ow
 
 - Pushed commit 7 (`55d8068`); Verified.
 - Ticked Phase 2 item 1 in the quality baseline. UX finding 3 is retired, finding 2 partly (raw floats remain until item 2). The UX rating stays at 4.
-- Opened the copy audit PR into `main` with before and after screenshots (orphan branch `pr-assets/copy-audit`).
-- Verified: `npm run check` (docs only).
+- Opened [PR #19](https://github.com/sicza95/cali-restore-pro/pull/19) into `main` with before and after screenshots (orphan branch `pr-assets/copy-audit`).
+- At the owner's request, folded PR #18 into the branch: cherry-picked its commit, re-signed as `53567b2`, and closed PR #18 with a pointer to #19.
+- Verified: `npm run check`, `npm run test:files` (22 passed, including the new `project-trash.browser.ts`), `npm test` (12 passed).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 7: guard test
 
