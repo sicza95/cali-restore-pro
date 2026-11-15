@@ -4,7 +4,8 @@ import { drawingControl } from './drawing-review';
 /**
  * Wheel, trackpad (Ctrl + wheel) and keyboard zoom on the drawing canvas: Ctrl + wheel zooms
  * around the pointer, a plain wheel is left to the page at fit and pans when zoomed in, and the
- * `+`, `-` and `0` keys zoom from the focused canvas up to 800 %.
+ * `+`, `-` and `0` keys zoom from the focused canvas up to 800 %. The footer's zoom out and in
+ * buttons step around the middle of the canvas, and the readout names the zoom.
  */
 export async function verifyCanvasZoom(page: Page) {
   const c = (key: string) => drawingControl(page, key);
@@ -47,6 +48,29 @@ export async function verifyCanvasZoom(page: Page) {
   await expect.poll(async () => (await photo.boundingBox())!.y).toBeLessThan(zoomed.y);
   expect(await cancelled()).toBe(true);
   expect(await zoom()).toBeCloseTo(125, 2);
+
+  // Footer buttons zoom one step around the middle of the canvas; the readout names the zoom.
+  const stage = (await c('view.canvas').boundingBox())!;
+  const middle = { x: stage.x + stage.width / 2, y: stage.y + stage.height / 2 };
+  const before = (await photo.boundingBox())!;
+  const at = {
+    x: (middle.x - before.x) / before.width,
+    y: (middle.y - before.y) / before.height,
+  };
+  await expect(c('view.fit')).toHaveAccessibleName('Fit · 125 %');
+  await c('view.zoomIn').click();
+  await expect.poll(zoom).toBeCloseTo(156.25, 2);
+  await expect(c('view.fit')).toHaveText('156 %');
+  const after = (await photo.boundingBox())!;
+  expect(Math.abs(after.x + at.x * after.width - middle.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(after.y + at.y * after.height - middle.y)).toBeLessThanOrEqual(1);
+  await c('view.zoomOut').click();
+  await expect.poll(zoom).toBeCloseTo(125, 2);
+  await c('view.zoomOut').click();
+  await expect.poll(zoom).toBe(100);
+  await expect(c('view.zoomOut')).toBeDisabled();
+  await c('view.zoomIn').click();
+  await expect.poll(zoom).toBeCloseTo(125, 2);
 
   await c('view.canvas').focus();
   await page.keyboard.press('+');
