@@ -4,22 +4,32 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `main`, pushing directly per `AGENTS.md`. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
+- **Branch:** `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`; the owner accepted decisions 1 to 3 as recommended.
+- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`, commit 2 (Apply and Cancel in the chip) is on `feat/pointer-drawing-first`; the owner accepted decisions 1 to 3 as recommended.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Open one branch for commits 2 to 6 of [pointer drawing first](../plan/editor-pointer-first.md) and start commit 2: `path.apply` and `path.cancel` move into the tool chip with a live point count, Enter applies and Escape cancels on the canvas or rail. Check the chip at 834 and 390 px.
+On `feat/pointer-drawing-first`, start commit 3 of [pointer drawing first](../plan/editor-pointer-first.md): one layer list with counts and actions (`EditorLayer.meta` and `expanded`, `LayerPanel` row ids and nesting, `DrawingLayers` drops its own list).
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 2: apply and cancel from the canvas
+
+- New `DrawingSketchActions.tsx` holds Apply, Cancel and an optional live point count ("3 points" / "3 pont", `aria-live="polite"`). In `DrawingWorkspace` they sit in the tool chip through `DrawingToolOptions actions`, and `DrawingToolSettings actions={false}` drops them from the inspector; `DrawingReviewAdapter` keeps them in its inspector. Control ids are unchanged and each is still rendered once.
+- The chip shows the actions whenever pen or shape is active (or the node tool has a mark), with Apply disabled until the sketch is valid, rather than only once a point exists: existing tests expect a disabled Apply right after choosing the shape tool, and the keyboard path needs Apply after "Add point".
+- Enter applies and Escape cancels when focus is on the canvas or on the active tool's rail button (not other rail buttons, so Enter still switches tools). The canvas (`view.canvas`) is now `tabindex="-1"` and takes focus on pointerdown, because the cancelled pointerdown otherwise leaves focus where it was.
+- The chip wraps (`flex-wrap`, max width of the canvas). At 640 px and below it starts right of the rail (it was partly covered at 390 px) and hides the layer name; the shell's layer name span gained the `cr-context-layer` class for that.
+- `verifyPointerStroke` now also taps three pen points, sees "3 points", presses Enter and sees the mark count rise, then taps two points, presses Escape and sees "0 points".
+- Verified: `npm run check`, `npm test` (12), `npm run test:files` (21), `npm run build-storybook`; looked at the fresh drawing screenshots at 834 and 390 px (390 wraps to three rows, nothing clipped).
+- Not verified: `test:app`, tab order by hand, dark theme screenshots.
 
 ### 2026-11-14 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 1: split the drawing inspector
 

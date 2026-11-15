@@ -19,7 +19,7 @@ function ToolContext(props: ToolContextProps) {
   return (
     <div class="cr-tool-context cr-glass">
       <Icon name={props.icon} size={18} />
-      <span>{props.layer}</span>
+      <span class="cr-context-layer">{props.layer}</span>
       <Show when={options()}>
         <span class="cr-context-divider" />
         {options()}

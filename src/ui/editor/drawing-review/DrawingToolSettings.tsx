@@ -5,11 +5,12 @@ import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
 import type { DrawingTools } from './createDrawingTools';
 import { DrawNumber, DrawToggle } from './DrawingFields';
+import { DrawingSketchActions, sketchActive } from './DrawingSketchActions';
 import type { BrushOptions, Operation, Shape } from './types';
 
 /**
  * The active tool's heading, help and settings: brush behaviour, path operation, the node tool's
- * mark picker, close path and the sketch's Apply and Cancel. Numeric entry renders separately,
+ * mark picker, close path and, unless the host shows them, the sketch's Apply and Cancel. Numeric entry renders separately,
  * through `DrawingNumericEntry`, or in the `numeric` slot where it sits between the two.
  */
 export function DrawingToolSettings(props: {
@@ -19,6 +20,8 @@ export function DrawingToolSettings(props: {
   reason: string;
   /** False when the host shows brush width and shape kind itself, through `DrawingToolOptions`. */
   toolOptions?: boolean;
+  /** False when the host shows Apply and Cancel itself, through `DrawingToolOptions`. */
+  actions?: boolean;
   /** Rendered after the tool's settings and before close path and Apply. */
   numeric?: JSX.Element;
 }) {
@@ -127,7 +130,7 @@ export function DrawingToolSettings(props: {
             </Show>
           </Show>
           {props.numeric}
-          <Show when={t.sketching() && (!nodes() || t.sketch().mark)}>
+          <Show when={sketchActive(t, props.reason)}>
             <Show when={!shape() && (t.sketch().points.length >= 3 || t.sketch().closed)}>
               <DrawToggle
                 name="path.close"
@@ -136,25 +139,9 @@ export function DrawingToolSettings(props: {
                 onValue={(closed) => t.setSketch({ ...t.sketch(), closed })}
               />
             </Show>
-            <div class="drawing-actions">
-              <button
-                type="button"
-                data-control-id={control('path.apply')}
-                disabled={!t.valid()}
-                onClick={t.apply}
-              >
-                {nodes() ? c().applyPoints : c().apply}
-              </button>
-              <button
-                class="secondary"
-                type="button"
-                data-control-id={control('path.cancel')}
-                disabled={!t.sketch().points.length}
-                onClick={t.reset}
-              >
-                {c().cancel}
-              </button>
-            </div>
+            <Show when={props.actions !== false}>
+              <DrawingSketchActions tools={t} copy={c()} />
+            </Show>
             <p class="drawing-help">{c().noSketch}</p>
           </Show>
         </Show>
@@ -200,8 +187,11 @@ function ShapeKind(props: OptionProps) {
   );
 }
 
-/** Brush width or shape kind for the active tool, for the editor shell's tool chip. */
-export function DrawingToolOptions(props: OptionProps & { reason: string }) {
+/**
+ * Brush width or shape kind for the active tool, for the editor shell's tool chip. With
+ * `actions`, the chip also holds the sketch's point count, Apply and Cancel.
+ */
+export function DrawingToolOptions(props: OptionProps & { reason: string; actions?: boolean }) {
   const t = untrack(() => props.tools);
   return (
     <Show when={!props.reason}>
@@ -210,6 +200,9 @@ export function DrawingToolOptions(props: OptionProps & { reason: string }) {
       </Show>
       <Show when={t.tool() === 'shape'}>
         <ShapeKind tools={t} copy={props.copy} />
+      </Show>
+      <Show when={props.actions && sketchActive(t, props.reason)}>
+        <DrawingSketchActions tools={t} copy={props.copy} count />
       </Show>
     </Show>
   );

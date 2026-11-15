@@ -9,6 +9,7 @@ import { DrawingCanvas } from './DrawingCanvas';
 import { DrawNumber, DrawToggle } from './DrawingFields';
 import { DrawingHistory, ResolveDrawingDraft } from './DrawingHistory';
 import { DrawingNumericEntry } from './DrawingNumericEntry';
+import { sketchActive } from './DrawingSketchActions';
 import { DrawingToolOptions, DrawingToolSettings } from './DrawingToolSettings';
 import { DrawingLayers, layerName } from './DrawingLayers';
 import { workspaceCopy } from './workspace-copy';
@@ -117,6 +118,7 @@ export function DrawingWorkspace(props: {
         event.target.closest('input, select, textarea, [contenteditable]'))
     )
       return;
+    if (sketchKey(event)) return;
     const key = event.key.toUpperCase();
     if (event.ctrlKey || event.metaKey) {
       if (key === 'Z' || key === 'Y') {
@@ -130,6 +132,21 @@ export function DrawingWorkspace(props: {
       event.preventDefault();
       select(tool.id);
     }
+  }
+  /** Enter applies and Escape cancels the sketch from the canvas or the active tool's button. */
+  function sketchKey(event: KeyboardEvent) {
+    if (event.key !== 'Enter' && event.key !== 'Escape') return false;
+    const target = event.target instanceof HTMLElement ? event.target : undefined;
+    const from =
+      target?.closest('.drawing-viewport') ||
+      target?.closest('.cr-tool-rail [aria-pressed="true"]');
+    if (!from || event.shiftKey || event.ctrlKey || event.metaKey) return false;
+    if (!sketchActive(t, toolReason(t.tool()))) return false;
+    if (event.key === 'Enter' ? !t.valid() : !t.sketch().points.length) return false;
+    event.preventDefault();
+    if (event.key === 'Enter') t.apply();
+    else t.reset();
+    return true;
   }
   const help = () => blocked() || (!m.layer().marks.length && !m.draft() ? c().noPaths : '');
 
@@ -183,7 +200,9 @@ export function DrawingWorkspace(props: {
             {props.children}
           </DrawingCanvas>
         }
-        toolOptions={<DrawingToolOptions tools={t} copy={c()} reason={toolReason(t.tool())} />}
+        toolOptions={
+          <DrawingToolOptions tools={t} copy={c()} reason={toolReason(t.tool())} actions />
+        }
         inspectorDetail={
           <div class="drawing-workspace-detail">
             <p class="drawing-help">{help()}</p>
@@ -194,6 +213,7 @@ export function DrawingWorkspace(props: {
                 copy={c()}
                 reason={toolReason(t.tool())}
                 toolOptions={false}
+                actions={false}
               />
               <details class="drawing-details" open>
                 <summary>{c().details}</summary>

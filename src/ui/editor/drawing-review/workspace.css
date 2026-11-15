@@ -30,6 +30,34 @@
   gap: 8px;
 }
 
+.drawing-workspace .cr-tool-context {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  max-width: calc(100% - 36px);
+  padding-block: 3px;
+}
+
+.drawing-workspace .drawing-sketch-actions {
+  align-items: center;
+}
+
+.drawing-sketch-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  /* Clear the 58 px rail at left: 10px so the wrapped chip is never covered. */
+  .drawing-workspace .cr-tool-context {
+    left: 78px;
+    bottom: 10px;
+    max-width: calc(100% - 88px);
+  }
+  .drawing-workspace .cr-context-layer {
+    display: none;
+  }
+}
+
 .drawing-workspace .cr-tool-context input[type='number'] {
   inline-size: 5.5rem;
 }

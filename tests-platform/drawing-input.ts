@@ -143,5 +143,27 @@ export async function verifyPointerStroke(page: Page) {
   await expect(c('history.undo')).toHaveAccessibleName(/^Undo · Brush stroke · /);
   await c('history.undo').click();
   await expect.poll(marks).toBe(before);
+
+  // Pen taps on the photo; Enter on the canvas applies the path and Escape cancels the next one.
+  const count = page.locator('.cr-tool-context .drawing-sketch-count');
+  await c('tool.pen').click();
+  for (const [x, y] of [
+    [0.3, 0.3],
+    [0.6, 0.35],
+    [0.45, 0.7],
+  ] as const)
+    await page.mouse.click(...at(x, y));
+  await expect(count).toHaveText('3 points');
+  await expect(c('view.canvas')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect.poll(marks).toBe(before + 1);
+  await c('history.undo').click();
+  await expect.poll(marks).toBe(before);
+  await page.mouse.click(...at(0.3, 0.3));
+  await page.mouse.click(...at(0.6, 0.35));
+  await expect(count).toHaveText('2 points');
+  await page.keyboard.press('Escape');
+  await expect(count).toHaveText('0 points');
+  await expect.poll(marks).toBe(before);
   await c('tool.select').click();
 }
