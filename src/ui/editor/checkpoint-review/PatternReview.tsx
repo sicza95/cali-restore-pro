@@ -159,8 +159,9 @@ export function PatternReview(props: { language: Language; library?: boolean; va
         </label>
       </div>
       <div class="review-actions">
+        {/* The view's primary on the libraries page; under checkpoints, Save checkpoint is. */}
         <button
-          class="primary"
+          class={props.library ? 'primary' : undefined}
           type="button"
           data-control-id={control('save')}
           disabled={!valid() || !name().trim() || saving() || rows.loading}
