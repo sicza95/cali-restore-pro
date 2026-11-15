@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 type revisionKeyTransfer struct {
@@ -61,7 +62,7 @@ func (h *HTTP) revisionKeyRoutes(route func(string, bool, http.HandlerFunc)) {
 	handle := func(w http.ResponseWriter, r *http.Request) {
 		project, id, account := r.PathValue("project"), r.PathValue("transfer"), r.Header.Get("X-Sync-Account")
 		if !httpjson.UUID(project) || !httpjson.UUID(id) || !httpjson.UUID(account) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		var key revisionKeyTransfer
@@ -72,13 +73,13 @@ func (h *HTTP) revisionKeyRoutes(route func(string, bool, http.HandlerFunc)) {
 			}
 			if !httpjson.UUID(key.Recipient) || !httpjson.UUID(key.Epoch) || !httpjson.UUID(key.SyncEpoch) ||
 				len(key.Salt) != 32 || len(key.Ciphertext) != 82 {
-				failure(w, ErrInvalid)
+				identity.Failure(w, identity.ErrInvalid)
 				return
 			}
 		}
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			if a.account != account {
-				return ErrForbidden
+				return identity.ErrForbidden
 			}
 			if write {
 				return a.putRevisionKey(r.Context(), project, id, key)

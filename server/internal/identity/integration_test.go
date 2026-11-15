@@ -281,7 +281,7 @@ func TestPostgresIdentity(t *testing.T) {
 	t.Run("durable rate and bounded hashing limits", func(t *testing.T) {
 		mustExec(`DELETE FROM auth_rate_limits`)
 		for range 10 {
-			if err := s.rate(ctx, "limited@example.test"); err != nil {
+			if err := s.Rate(ctx, "limited@example.test"); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -289,7 +289,7 @@ func TestPostgresIdentity(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := restarted.rate(ctx, "limited@example.test"); !errors.Is(err, ErrLimited) {
+		if err := restarted.Rate(ctx, "limited@example.test"); !errors.Is(err, ErrLimited) {
 			t.Fatal("restart bypassed rate", err)
 		}
 		mustExec(`DELETE FROM auth_rate_limits`)
@@ -305,7 +305,7 @@ func TestPostgresIdentity(t *testing.T) {
 		var wg sync.WaitGroup
 		for range 20 {
 			wg.Go(func() {
-				if err := s.rate(ctx, "race@example.test"); err == nil {
+				if err := s.Rate(ctx, "race@example.test"); err == nil {
 					successes.Add(1)
 				} else if !errors.Is(err, ErrLimited) {
 					t.Error(err)
@@ -328,11 +328,11 @@ func TestPostgresIdentity(t *testing.T) {
 		}
 		mustExec(`DELETE FROM auth_rate_limits`)
 		for i := range 120 {
-			if err := s.rate(ctx, fmt.Sprintf("global-%d@example.test", i)); err != nil {
+			if err := s.Rate(ctx, fmt.Sprintf("global-%d@example.test", i)); err != nil {
 				t.Fatal(err)
 			}
 		}
-		if err := s.rate(ctx, "global-over@example.test"); !errors.Is(err, ErrLimited) {
+		if err := s.Rate(ctx, "global-over@example.test"); !errors.Is(err, ErrLimited) {
 			t.Fatal("global budget bypass", err)
 		}
 	})

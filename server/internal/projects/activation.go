@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 func validSharingPoint(text string) bool {
@@ -54,7 +55,7 @@ func (a fileAccess) activateInvitation(ctx context.Context, project, id, recipie
 		return err
 	}
 	if tag.RowsAffected() != 1 {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	if err := a.linkOriginals(ctx, project, id, files); err != nil {
 		return err
@@ -77,7 +78,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			return
 		}
 		if !validSharingPoint(body.PublicKey) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
@@ -88,12 +89,12 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			var key string
 			err := a.tx.QueryRow(ctx, `SELECT public_key FROM sharing_identities WHERE account_id=$1`, a.account).Scan(&key)
 			if err == nil && key != body.PublicKey {
-				return ErrConflict
+				return identity.ErrConflict
 			}
 			return err
 		})
 		if err != nil {
-			failure(w, err)
+			identity.Failure(w, err)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -113,26 +114,26 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 		case "", "fixture-v1":
 			body.Format = "fixture-v1"
 			if len(body.FileIDs) > 0 {
-				failure(w, ErrInvalid)
+				identity.Failure(w, identity.ErrInvalid)
 				return
 			}
 		case "project-v1":
 			maxBytes = 64*1024 + 16
 		default:
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		if len(body.FileIDs) > 64 || !validScopeEnvelopes(body.Scopes) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		if len(body.SourceIDs) > 64 || body.Epoch != "" && !httpjson.UUID(body.Epoch) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		for _, file := range append(append([]string(nil), body.FileIDs...), body.SourceIDs...) {
 			if !httpjson.UUID(file) {
-				failure(w, ErrInvalid)
+				identity.Failure(w, identity.ErrInvalid)
 				return
 			}
 		}
@@ -141,13 +142,13 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 		if !httpjson.UUID(project) || !httpjson.UUID(id) || !validSharingPoint(body.RecipientKey) ||
 			!validSharingPoint(body.Encapsulation) || err != nil || len(ciphertext) < 16 ||
 			len(ciphertext) > maxBytes || base64.StdEncoding.EncodeToString(ciphertext) != body.Ciphertext {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		err = h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			if r.Pattern == "POST /api/v1/hosted-projects/{project}/invitations/{invitation}/rotate-originals" {
 				if len(body.Scopes) != 0 {
-					return ErrInvalid
+					return identity.ErrInvalid
 				}
 				return a.rotateOriginals(r.Context(), project, id, body.RecipientKey, body.invitationGrant, body.originalGrant)
 			}
@@ -165,7 +166,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 	read := func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("invitation")
 		if !httpjson.UUID(id) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		var grant receivedInvitation

@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 var (
@@ -58,7 +59,7 @@ func (a fileAccess) projectRevision(ctx context.Context, project string, next *r
 		return state, nil
 	}
 	if host == nil {
-		return state, ErrForbidden
+		return state, identity.ErrForbidden
 	}
 	if next.Epoch != state.Epoch {
 		return state, errRevisionEpoch
@@ -76,7 +77,7 @@ func (a fileAccess) projectRevision(ctx context.Context, project string, next *r
 		return state, err
 	}
 	if !enabled {
-		return state, ErrForbidden
+		return state, identity.ErrForbidden
 	}
 	expected := *next.Expected
 	if head.Revision != expected {
@@ -110,7 +111,7 @@ func (h *HTTP) revisionRoutes(route func(string, bool, http.HandlerFunc)) {
 	handle := func(w http.ResponseWriter, r *http.Request) {
 		project, account := r.PathValue("project"), r.Header.Get("X-Sync-Account")
 		if !httpjson.UUID(project) || !httpjson.UUID(account) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		var next *revisionWrite
@@ -121,14 +122,14 @@ func (h *HTTP) revisionRoutes(route func(string, bool, http.HandlerFunc)) {
 			}
 			if next.Expected == nil || *next.Expected < 0 || *next.Expected >= 2147483647 ||
 				!httpjson.UUID(next.Epoch) || len(next.Salt) != 32 || len(next.Ciphertext) < 16 || len(next.Ciphertext) > 65552 {
-				failure(w, ErrInvalid)
+				identity.Failure(w, identity.ErrInvalid)
 				return
 			}
 		}
 		var state revisionState
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
 			if a.account != account {
-				return ErrForbidden
+				return identity.ErrForbidden
 			}
 			var err error
 			state, err = a.projectRevision(r.Context(), project, next)

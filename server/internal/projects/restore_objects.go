@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
@@ -47,7 +48,7 @@ func (s *Service) VerifyRestoredObjects(ctx context.Context, root string) error 
 	objects := objectstore.Store{Root: root}
 	for _, file := range files {
 		if !httpjson.UUID(file.ID) {
-			return ErrInvalid
+			return identity.ErrInvalid
 		}
 		shape := fileShape{SourceBytes: file.SourceBytes, ManifestBytes: file.ManifestBytes}
 		if err := verifyRestoredFile(ctx, s, objects, file.ID, shape); err != nil {

@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"crypto/sha256"
@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
@@ -23,7 +24,7 @@ func fileFailure(w http.ResponseWriter, err error) {
 	case errors.Is(err, errOriginalRotationPending):
 		httpjson.Respond(w, 409, map[string]string{"error": "original_rotation_pending"})
 	default:
-		failure(w, err)
+		identity.Failure(w, err)
 	}
 }
 
@@ -39,7 +40,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 			invitation := r.PathValue("invitation")
 			if invitation != "" && (!httpjson.UUID(invitation) || !httpjson.UUID(id)) ||
 				invitation == "" && (!httpjson.UUID(project) || id != "" && !httpjson.UUID(id)) {
-				failure(w, ErrInvalid)
+				identity.Failure(w, identity.ErrInvalid)
 				return
 			}
 			select {
@@ -87,7 +88,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 			return nil, err
 		}
 		if !a.hosting || a.quota == 0 {
-			return nil, ErrForbidden
+			return nil, identity.ErrForbidden
 		}
 		tag, err := a.tx.Exec(r.Context(), `WITH created AS (
  INSERT INTO hosted_projects(id,host_id) SELECT $1::uuid,$2::uuid WHERE NOT EXISTS (SELECT 1 FROM project_deletions WHERE id=$1)
@@ -105,7 +106,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 			return nil, nil
 		}
 		if !shape.valid() {
-			return nil, ErrInvalid
+			return nil, identity.ErrInvalid
 		}
 		record, err := a.reserve(r.Context(), project, id, shape)
 		return func() { httpjson.Respond(w, 200, record) }, err
@@ -168,15 +169,15 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 			return nil, err
 		}
 		if r.Header.Get("Content-Type") != "application/octet-stream" {
-			return nil, ErrInvalid
+			return nil, identity.ErrInvalid
 		}
 		body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, int64(size)))
 		if err != nil || len(body) != size {
-			return nil, ErrInvalid
+			return nil, identity.ErrInvalid
 		}
 		hash := sha256.Sum256(body)
 		if r.Header.Get("X-Ciphertext-SHA256") != hex.EncodeToString(hash[:]) {
-			return nil, ErrInvalid
+			return nil, identity.ErrInvalid
 		}
 		return empty(w), a.putPart(r.Context(), objects, id, part, body)
 	})
@@ -207,7 +208,7 @@ func requestedPart(r *http.Request, a fileAccess, project, id string) (fileRecor
 	value := r.PathValue("part")
 	part, err := strconv.Atoi(value)
 	if err != nil || strconv.Itoa(part) != value || part < 0 || part > 256 {
-		return fileRecord{}, 0, 0, ErrInvalid
+		return fileRecord{}, 0, 0, identity.ErrInvalid
 	}
 	f, err := a.record(r.Context(), project, id)
 	if err != nil {

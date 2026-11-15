@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
@@ -16,10 +17,11 @@ import (
 func TestPostgresProjectRevisions(t *testing.T) {
 	admin, app := testdb.New(t)
 	ctx := context.Background()
-	s, err := New(app)
+	ids, err := identity.New(app)
 	if err != nil {
 		t.Fatal(err)
 	}
+	s := New(app, ids)
 	account := func(email string) (id, raw string) {
 		t.Helper()
 		err := admin.QueryRow(ctx, `INSERT INTO accounts(email,password_hash,state,role,server_features,quota_mib)
@@ -39,9 +41,11 @@ func TestPostgresProjectRevisions(t *testing.T) {
 	const project = "c0ffee00-0000-4000-8000-000000000007"
 	const path = "/api/v1/hosted-projects/" + project
 	const origin = "https://test.example"
-	h := NewHTTP(s, origin, false)
+	auth := identity.NewHTTP(ids, origin, false)
+	h := NewHTTP(auth, s)
 	h.EnableFiles(t.TempDir())
 	mux := http.NewServeMux()
+	auth.Register(mux)
 	h.Register(mux)
 	call := func(method, suffix, id, raw string, value any, status int) *httptest.ResponseRecorder {
 		t.Helper()
@@ -54,7 +58,7 @@ func TestPostgresProjectRevisions(t *testing.T) {
 		r.Header.Set("Origin", origin)
 		r.Header.Set("X-CSRF-Token", sessiontoken.CSRF(raw))
 		r.Header.Set("X-Sync-Account", id)
-		r.AddCookie(&http.Cookie{Name: h.cookieName, Value: raw})
+		r.AddCookie(&http.Cookie{Name: auth.CookieName(), Value: raw})
 		w := httptest.NewRecorder()
 		mux.ServeHTTP(w, r)
 		if w.Code != status {

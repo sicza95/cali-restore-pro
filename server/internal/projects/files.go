@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
@@ -63,7 +64,7 @@ func (s *Service) withFiles(ctx context.Context, raw string, fn func(fileAccess)
 
 func (s *Service) withFileLock(ctx context.Context, raw, lock string, fn func(fileAccess) error) error {
 	if !sessiontoken.Valid(raw) {
-		return ErrUnauthorized
+		return identity.ErrUnauthorized
 	}
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -74,7 +75,7 @@ func (s *Service) withFileLock(ctx context.Context, raw, lock string, fn func(fi
 		return err
 	}
 	if lock == lifecycleWriteLock {
-		if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", mutationLock); err != nil {
+		if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", identity.MutationLock); err != nil {
 			return err
 		}
 	}
@@ -86,7 +87,7 @@ func (s *Service) withFileLock(ctx context.Context, raw, lock string, fn func(fi
  FROM accounts a JOIN sessions s ON s.account_id=a.id WHERE s.token_digest=$1 FOR NO KEY UPDATE OF a`, sessiontoken.Digest(raw)).
 		Scan(&a.account, &state, &a.hosting, &a.quota)
 	if errors.Is(err, pgx.ErrNoRows) || err == nil && state != "active" {
-		return ErrUnauthorized
+		return identity.ErrUnauthorized
 	}
 	if err != nil {
 		return err
@@ -95,7 +96,7 @@ func (s *Service) withFileLock(ctx context.Context, raw, lock string, fn func(fi
 	var locked int
 	err = tx.QueryRow(ctx, `SELECT 1 FROM sessions WHERE token_digest=$1 AND account_id=$2 FOR SHARE`, sessiontoken.Digest(raw), a.account).Scan(&locked)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrUnauthorized
+		return identity.ErrUnauthorized
 	}
 	if err != nil {
 		return err
@@ -175,7 +176,7 @@ func (a fileAccess) reserve(ctx context.Context, project, id string, shape fileS
 		return f, err
 	}
 	if !a.hosting {
-		return f, ErrForbidden
+		return f, identity.ErrForbidden
 	}
 	used, err := a.usage(ctx)
 	if err != nil {
@@ -193,7 +194,7 @@ func (a fileAccess) reserve(ctx context.Context, project, id string, shape fileS
 
 func (a fileAccess) checkGrowth(ctx context.Context) error {
 	if !a.hosting {
-		return ErrForbidden
+		return identity.ErrForbidden
 	}
 	used, err := a.usage(ctx)
 	if err == nil && used > a.quota {
@@ -281,7 +282,7 @@ func (s *Service) CleanExpiredFiles(ctx context.Context, root string) error {
 		return err
 	}
 	if !httpjson.UUID(id) {
-		return ErrInvalid
+		return identity.ErrInvalid
 	}
 	if err := os.RemoveAll(filepath.Join(root, id)); err != nil {
 		return err

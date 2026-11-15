@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
@@ -16,10 +17,11 @@ import (
 func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 	admin, app := testdb.New(t)
 	ctx := context.Background()
-	s, err := New(app)
+	ids, err := identity.New(app)
 	if err != nil {
 		t.Fatal(err)
 	}
+	s := New(app, ids)
 	exec := func(sql string, args ...any) {
 		t.Helper()
 		if _, err := admin.Exec(ctx, sql, args...); err != nil {
@@ -61,7 +63,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 			return err
 		})
 	}
-	if err := removeAccount(hostSession, host, false); !errors.Is(err, ErrConflict) {
+	if err := removeAccount(hostSession, host, false); !errors.Is(err, identity.ErrConflict) {
 		t.Fatalf("hosting continuity: %v", err)
 	}
 	status, err := change(hostSession, "delete")
@@ -78,13 +80,13 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 	if err := removeAccount(departingSession, departing, false); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.Current(ctx, departingSession); !errors.Is(err, ErrUnauthorized) {
+	if _, err := ids.Current(ctx, departingSession); !errors.Is(err, identity.ErrUnauthorized) {
 		t.Fatalf("departing session still active: %v", err)
 	}
 	if err := s.recoverAccount(ctx, "deletion-departing@example.test", testdb.Password); err != nil {
 		t.Fatal(err)
 	}
-	resumed, err := s.Login(ctx, "deletion-departing@example.test", testdb.Password, "")
+	resumed, err := ids.Login(ctx, "deletion-departing@example.test", testdb.Password, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +94,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 		t.Fatalf("recovery rejoined project: %v", err)
 	}
 	exec("UPDATE accounts SET server_features=false WHERE id=$1", host)
-	if _, err := change(hostSession, "recover"); !errors.Is(err, ErrConflict) {
+	if _, err := change(hostSession, "recover"); !errors.Is(err, identity.ErrConflict) {
 		t.Fatalf("ineligible host recovered project: %v", err)
 	}
 	exec("UPDATE accounts SET server_features=true WHERE id=$1", host)
@@ -102,7 +104,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 	if _, err := change(hostSession, "purge"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := change(hostSession, "recover"); !errors.Is(err, ErrConflict) {
+	if _, err := change(hostSession, "recover"); !errors.Is(err, identity.ErrConflict) {
 		t.Fatalf("early purge still recoverable: %v", err)
 	}
 	root := t.TempDir()
@@ -130,7 +132,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 		t.Fatal(err)
 	}
 	exec("UPDATE account_deletions SET recover_until=clock_timestamp()-interval '1 second' WHERE id=$1", host)
-	if err := s.recoverAccount(ctx, "deletion-host@example.test", testdb.Password); !errors.Is(err, ErrCredentials) {
+	if err := s.recoverAccount(ctx, "deletion-host@example.test", testdb.Password); !errors.Is(err, identity.ErrCredentials) {
 		t.Fatalf("expired account recovered: %v", err)
 	}
 	if err := s.PurgeDeleted(ctx, root); err != nil {

@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
@@ -16,10 +17,11 @@ import (
 func TestPostgresForcedAccountDeletion(t *testing.T) {
 	admin, app := testdb.New(t)
 	ctx := context.Background()
-	s, err := New(app)
+	ids, err := identity.New(app)
 	if err != nil {
 		t.Fatal(err)
 	}
+	s := New(app, ids)
 	exec := func(query string, args ...any) {
 		t.Helper()
 		if _, err := admin.Exec(ctx, query, args...); err != nil {
@@ -79,15 +81,17 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 			return err
 		})
 	}
-	if err := remove(departing, false, false); !errors.Is(err, ErrConflict) {
+	if err := remove(departing, false, false); !errors.Is(err, identity.ErrConflict) {
 		t.Fatalf("voluntary continuity guard: %v", err)
 	}
-	if err := remove(operator, false, true); !errors.Is(err, ErrConflict) {
+	if err := remove(operator, false, true); !errors.Is(err, identity.ErrConflict) {
 		t.Fatalf("last superuser guard: %v", err)
 	}
 	const origin = "http://localhost"
 	mux := http.NewServeMux()
-	NewHTTP(s, origin, false).Register(mux)
+	auth := identity.NewHTTP(ids, origin, false)
+	auth.Register(mux)
+	NewHTTP(auth, s).Register(mux)
 	post := func(path, raw string, expected int) {
 		t.Helper()
 		req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{"confirm":true,"force":true}`))
@@ -109,7 +113,7 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 	post(path, op, http.StatusForbidden)
 	exec("UPDATE sessions SET verified_at=clock_timestamp() WHERE account_id=$1", operator)
 	post(path, op, http.StatusOK)
-	if _, err := s.Current(ctx, departingSession); !errors.Is(err, ErrUnauthorized) {
+	if _, err := ids.Current(ctx, departingSession); !errors.Is(err, identity.ErrUnauthorized) {
 		t.Fatalf("departing session: %v", err)
 	}
 	assert("SELECT host_id IS NULL FROM hosted_projects WHERE id=$1", shared)
@@ -133,7 +137,7 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 		return s.withFiles(ctx, coOwner, func(a fileAccess) error { return a.proposeHostingTransfer(ctx, shared, survivor) })
 	}
 	exec("UPDATE accounts SET server_features=false WHERE id=$1", survivor)
-	if err := claim(); !errors.Is(err, ErrForbidden) {
+	if err := claim(); !errors.Is(err, identity.ErrForbidden) {
 		t.Fatalf("ineligible owner claimed hosting: %v", err)
 	}
 	exec("UPDATE accounts SET server_features=true WHERE id=$1", survivor)

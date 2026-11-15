@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 type checkpointGrant struct {
@@ -43,7 +44,7 @@ func (h *HTTP) checkpointRoutes(route func(string, bool, http.HandlerFunc)) {
 func (h *HTTP) listCheckpoints(w http.ResponseWriter, r *http.Request) {
 	project, id := r.PathValue("project"), r.PathValue("invitation")
 	if !httpjson.UUID(id) || (project != "" && !httpjson.UUID(project)) {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	ids := []string{}
@@ -71,7 +72,7 @@ func (h *HTTP) listCheckpoints(w http.ResponseWriter, r *http.Request) {
 func (h *HTTP) openCheckpoint(w http.ResponseWriter, r *http.Request) {
 	id, checkpoint := r.PathValue("invitation"), r.PathValue("checkpoint")
 	if !httpjson.UUID(id) || !httpjson.UUID(checkpoint) {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	grant := struct {
@@ -97,7 +98,7 @@ func (h *HTTP) openCheckpoint(w http.ResponseWriter, r *http.Request) {
 func (h *HTTP) changeCheckpoint(w http.ResponseWriter, r *http.Request) {
 	project, id, checkpoint := r.PathValue("project"), r.PathValue("invitation"), r.PathValue("checkpoint")
 	if !httpjson.UUID(project) || !httpjson.UUID(id) || !httpjson.UUID(checkpoint) {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	var grant *checkpointGrant
@@ -109,7 +110,7 @@ func (h *HTTP) changeCheckpoint(w http.ResponseWriter, r *http.Request) {
 		bytes, err := base64.StdEncoding.Strict().DecodeString(grant.Ciphertext)
 		if !validSharingPoint(grant.RecipientKey) || !validSharingPoint(grant.Encapsulation) ||
 			err != nil || len(bytes) < 16 || len(bytes) > 1536 || base64.StdEncoding.EncodeToString(bytes) != grant.Ciphertext {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 	}
@@ -137,13 +138,13 @@ func (a fileAccess) setCheckpoint(ctx context.Context, project, id, checkpoint s
 		return err
 	}
 	if recipientKey != grant.RecipientKey {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	tag, err := a.tx.Exec(ctx, `INSERT INTO invitation_checkpoint_grants(invitation_id,checkpoint_id,sender_id,encapsulation,ciphertext)
  SELECT $1,$2,$3,$4,$5 WHERE (SELECT count(*) FROM invitation_checkpoint_grants WHERE invitation_id=$1)<64
  ON CONFLICT DO NOTHING`, id, checkpoint, a.account, grant.Encapsulation, grant.Ciphertext)
 	if err == nil && tag.RowsAffected() == 0 {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	return err
 }
