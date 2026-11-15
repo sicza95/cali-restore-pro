@@ -1,6 +1,8 @@
 import { createMemo, createSignal, For, Show } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
 import type { DeletionStatus } from '../../platform/api/types.gen';
+import { deletionCopy } from '../settings/profile/deletion-copy';
+import { lifecycleCopy } from './lifecycle-copy';
 
 export function ProjectLifecycle(props: {
   project?: string;
@@ -10,7 +12,7 @@ export function ProjectLifecycle(props: {
   const app = useApp();
   const [trash, setTrash] = createSignal<DeletionStatus[]>();
   const [notice, setNotice] = createSignal<DeletionStatus>();
-  const hu = () => app.lang() === 'hu';
+  const l = () => lifecycleCopy[app.lang()];
   const refresh = async () => {
     setTrash(await app.read<DeletionStatus[]>('/hosted-project-trash'));
   };
@@ -33,8 +35,7 @@ export function ProjectLifecycle(props: {
   const labels = createMemo(() => {
     let unknown = 0;
     return (trash() ?? []).map(
-      (entry) =>
-        props.localName?.(entry.id) || (hu() ? 'Törölt projekt ' : 'Deleted project ') + ++unknown,
+      (entry) => props.localName?.(entry.id) || l().unknownProject(++unknown),
     );
   });
   const someUnknown = () => (trash() ?? []).some((entry) => !props.localName?.(entry.id));
@@ -43,21 +44,12 @@ export function ProjectLifecycle(props: {
       new Date(iso),
     );
   const deadlines = (entry: DeletionStatus) =>
-    (hu() ? 'Helyreállítási határidő ' : 'Live recovery deadline ') +
-    date(entry.recoverUntil) +
-    (hu() ? '. Szervermentések lejárata legkésőbb ' : '. Operational backups expire by ') +
-    date(entry.backupExpiresAt) +
-    '.';
+    `${deletionCopy[app.lang()].recoverUntil} ${date(entry.recoverUntil)}. ` +
+    `${deletionCopy[app.lang()].backupsExpire} ${date(entry.backupExpiresAt)}.`;
   return (
     <details class="project-pane">
       <summary data-control-id="project.trash.open">
-        {props.project
-          ? hu()
-            ? 'Szerverprojekt törlése'
-            : 'Delete hosted project'
-          : hu()
-            ? 'Törölt szerverprojektek'
-            : 'Hosted project trash'}
+        {props.project ? l().deleteTitle : l().trashTitle}
       </summary>
       <Show
         when={props.project}
@@ -69,15 +61,12 @@ export function ProjectLifecycle(props: {
               disabled={app.busy()}
               onClick={() => void refresh()}
             >
-              {hu() ? 'Kuka frissítése' : 'Refresh trash'}
+              {l().refresh}
             </button>
             <Show when={trash()}>
               {(entries) => (
                 <ul class="project-register">
-                  <For
-                    each={entries()}
-                    fallback={<li>{hu() ? 'A kuka üres.' : 'Trash is empty.'}</li>}
-                  >
+                  <For each={entries()} fallback={<li>{l().empty}</li>}>
                     {(entry, index) => (
                       <li>
                         <div>
@@ -89,24 +78,17 @@ export function ProjectLifecycle(props: {
                             disabled={app.busy() || Date.parse(entry.recoverUntil) <= Date.now()}
                             onClick={() => void change(entry.id, 'recover')}
                           >
-                            {hu() ? 'Helyreállítás' : 'Recover'}
+                            {l().recover}
                           </button>
                           <button
                             data-control-id="project.trash.purge"
                             class="secondary"
                             disabled={app.busy() || Date.parse(entry.recoverUntil) <= Date.now()}
                             onClick={() => {
-                              if (
-                                window.confirm(
-                                  hu()
-                                    ? 'Kihagyja a helyreállítási időszakot?'
-                                    : 'Skip live recovery and queue purge?',
-                                )
-                              )
-                                void change(entry.id, 'purge');
+                              if (window.confirm(l().confirmPurge)) void change(entry.id, 'purge');
                             }}
                           >
-                            {hu() ? 'Végleges törlés' : 'Queue live purge'}
+                            {l().purge}
                           </button>
                         </div>
                       </li>
@@ -116,11 +98,7 @@ export function ProjectLifecycle(props: {
               )}
             </Show>
             <Show when={someUnknown()}>
-              <p>
-                {hu()
-                  ? 'Az ezen az eszközön nem tárolt projektek sorszámot kapnak.'
-                  : 'Projects that aren’t on this device are numbered.'}
-              </p>
+              <p>{l().numbered}</p>
             </Show>
           </>
         }
@@ -133,23 +111,17 @@ export function ProjectLifecycle(props: {
               void change(project(), action);
             }}
           >
-            <p>
-              {hu()
-                ? 'A szerverprojekt 30 napig helyreállítható. A helyi másolatok és a saját exportált mentések megmaradnak.'
-                : 'The hosted project can be recovered for 30 days. Local copies and your exported backups remain available.'}
-            </p>
+            <p>{l().deleteHelp}</p>
             <label class="confirmation">
               <input type="checkbox" required />
-              {hu()
-                ? 'Megerősítem a szerverprojekt törlését.'
-                : 'I confirm deletion of the hosted project.'}
+              {l().confirmDelete}
             </label>
             <label class="confirmation">
               <input type="checkbox" name="purge" />
-              {hu() ? 'A helyreállítási időszak kihagyása' : 'Skip live recovery and queue purge'}
+              {l().skipRecovery}
             </label>
             <button data-control-id="project.trash.delete" class="secondary" disabled={app.busy()}>
-              {hu() ? 'Törlés' : 'Delete hosted project'}
+              {l().delete}
             </button>
           </form>
         )}

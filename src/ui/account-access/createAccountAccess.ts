@@ -6,7 +6,8 @@ import {
 import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/offline-account';
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
-import { copy, sessionEndingActions } from './constants';
+import { sessionEndingActions } from './constants';
+import { accountCopy as copy } from './copy';
 import { authErrorMessage, authFormBody } from './utils';
 import { signInDestination } from '../router/routes';
 import type { Router } from '../router/createRouter';

@@ -6,6 +6,7 @@ import { estimateUnits } from '../estimates/estimate-model';
 import { ReviewCheck, ReviewSelect } from '../project-review/fields';
 import { reportControl as id } from './report-controls';
 import { reportCopy } from '../../platform/reports/copy';
+import { languageNames, languages } from '../../platform/i18n/language';
 import { contentKeys, defaultSelection, formats, resolutions } from '../../platform/reports/types';
 import { selectedSurfaces } from './report-model';
 import type { Draft } from '../../platform/reports/types';
@@ -165,8 +166,8 @@ export function ReportReview(props: {
                   id={id('language')}
                   label={c().language}
                   value={settings.language}
-                  options={['en', 'hu']}
-                  text={(key) => (key === 'en' ? 'English' : 'Magyar')}
+                  options={languages}
+                  text={(key) => languageNames[key]}
                   change={(value) => set('language', value)}
                 />
                 <ReviewSelect

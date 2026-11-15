@@ -8,6 +8,7 @@ description: How to change user-facing wording in CaliRestore Pro (EN and HU) wi
 Living skill: edit it when the process changes, and note why in `docs/handoff/process-notes.md`.
 
 1. **Words**: follow [`docs/copy-glossary.md`](../../../docs/copy-glossary.md). Change EN and HU together; a new idea that isn't in the glossary goes in it first.
+   New strings go in a `copy.ts` or `*-copy.ts` module declared with `defineCopy` (`src/platform/i18n/define.ts`), never inline in a component or as a `language === 'hu'` choice. `npm run test:unit` checks parity and banned terms.
 2. **Before editing**, list every old string you will change, in EN **and** HU, and search `tests` and `tests-platform` for each one (`grep -rnF -f old.txt`). Tests look up Hungarian headings too, and some use regex fragments (`getByText(/^Committed masks…/)`) that a whole-string search misses: also search for the old leading words.
    Write swap scripts with the Write tool, not a Bash heredoc (the tool mangles quotes and backslashes).
 3. **Lookups**: prefer `data-control-id`. A `getByRole(…, { name })` or `getByText` matches substrings, so a shorter new name can match two elements: add `exact: true`.

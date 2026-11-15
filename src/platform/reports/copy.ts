@@ -1,5 +1,4 @@
-type Language = 'en' | 'hu';
-
+import { defineCopy } from '../i18n/define';
 const en = {
   save: 'Save report draft',
   saved: 'Report draft saved on this device.',
@@ -223,4 +222,4 @@ const hu: typeof en = {
   refPending: 'Kijelölt referenciafotó. A kép nem érhető el ebben a piszkozatban.',
 };
 export type ReportCopy = typeof en;
-export const reportCopy: Record<Language, ReportCopy> = { en, hu };
+export const reportCopy = defineCopy({ en, hu });

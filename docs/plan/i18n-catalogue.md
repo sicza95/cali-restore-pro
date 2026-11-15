@@ -1,6 +1,6 @@
 # Central i18n catalogue — Phase 3, item 3
 
-15 November 2026 · Status: in progress · Issue: #30 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 3 item 3 and code finding 4
+15 November 2026 · Status: done · Issue: #30 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 3 item 3 and code finding 4
 
 Goal: every EN and HU string sits in a copy module whose keys are typed, Hungarian can't miss or add a key without `npm run check` failing, and components never choose a language inline. No new library, and no change to any text on screen.
 
@@ -37,3 +37,11 @@ Found on `main` at `597db2f`, after the feature-folder move (#29):
 ## Verification
 
 `npm run check`, `test:unit` (with a temporary missing HU key to see it fail), `npm test`, `test:files`, `test:estimates`, `test:sync`, `test:app`, `build-storybook`. No screenshots should change; compare a few in EN and HU.
+
+## Outcome
+
+- `src/platform/i18n/`: `language.ts`, `define.ts` (`defineCopy`, `defineCopyPairs`), `banned-terms.ts` and two unit tests (parity and banned terms over every catalogue; where copy may live and no inline language choice in `src/ui`).
+- 13 existing copy modules wrapped; inline copy moved into new modules: `account-access/copy.ts`, `settings/settings-copy.ts` (was `settings/constants.ts`), `settings/profile/deletion-copy.ts`, `settings/preferences/library-copy.ts`, `projects/{backup,key-transfer,lifecycle}-copy.ts`, `sharing/{pin,offline-page}-copy.ts`, `estimates/preset-copy.ts`.
+- Every inline ternary is gone. The language picker and report language list use `languages` and `languageNames`.
+- Negative run: removing one HU key from `sync-copy.ts` failed `typecheck` (TS2741) and `test:unit` (`hu.review: missing`).
+- The banned-terms test found five HU strings the screen guard never reached: _pillanatkép_ in three sharing strings and _rögzített_ ("pinned") twice on the offline originals page. They now read _másolat_ and _offline elérhető_; both are in the glossary.

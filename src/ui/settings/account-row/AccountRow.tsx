@@ -2,7 +2,7 @@ import { AccountDeletion } from '../profile/AccountDeletion';
 import { useApp } from '../../app-context/AppContext';
 import { For, Show } from 'solid-js';
 import { ConfirmField } from '../../account/confirm-field/ConfirmField';
-import { settingsCopy } from '../constants';
+import { settingsCopy } from '../settings-copy';
 import type { AdminAccount } from '../types';
 
 export function AccountRow(props: { account: AdminAccount; refresh: () => void }) {

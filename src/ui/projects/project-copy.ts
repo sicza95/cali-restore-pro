@@ -1,4 +1,5 @@
-export const projectCopy = {
+import { defineCopy } from '../../platform/i18n/define';
+export const projectCopy = defineCopy({
   en: {
     local: 'Saved on this device',
     surfaceLocal: 'Project data saved on this device',
@@ -120,4 +121,4 @@ export const projectCopy = {
     },
     refresh: 'Projektek újratöltése',
   },
-};
+});

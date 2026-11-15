@@ -1,4 +1,5 @@
-export const syncCopy = {
+import { defineCopy } from '../../platform/i18n/define';
+export const syncCopy = defineCopy({
   en: {
     title: 'Cloud sync',
     disabled: 'Sync is off for this project.',
@@ -34,4 +35,4 @@ export const syncCopy = {
     keepLocal: 'Az eszközön lévő másolat közzététele',
     keepCloud: 'Felhőmásolat használata',
   },
-};
+});

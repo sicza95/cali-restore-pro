@@ -1,3 +1,4 @@
+import { defineCopy } from '../../../platform/i18n/define';
 const en = {
   heading: 'Local content vault',
   help: 'Try encrypted storage with sample text only. Account sign-in and vault unlock are separate.',
@@ -34,7 +35,7 @@ const en = {
   working: 'Working…',
 };
 
-export const vaultCopy: Record<'en' | 'hu', typeof en> = {
+export const vaultCopy = defineCopy({
   en,
   hu: {
     heading: 'Helyi tartalomtár',
@@ -72,4 +73,4 @@ export const vaultCopy: Record<'en' | 'hu', typeof en> = {
     forgetDone: 'A tartalomtár törölve ebből a böngészőből.',
     working: 'Feldolgozás…',
   },
-};
+});

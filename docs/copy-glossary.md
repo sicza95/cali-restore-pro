@@ -37,6 +37,8 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 | on this iPad (any device name)                         | on this device                       | ezen az iPaden                                             | ezen az eszközön                           |
 | Photo review, Drawing review, Checkpoint review (tabs) | Photo setup, Drawing, Checkpoints    | Fotó ellenőrzése, Rajz ellenőrzése, Ellenőrzőpont-előnézet | Fotó beállítása, Rajzolás, Ellenőrzőpontok |
 | draft batch                                            | several marks                        | vázlatköteg                                                | több rajzjel                               |
+| (shared) snapshot                                      | snapshot (EN keeps it)               | pillanatkép                                                | másolat (Projektmásolat megosztása)        |
+| pinned (offline originals)                             | available offline                    | rögzített (it reads as "committed")                        | offline elérhető                           |
 
 ## Words that stay
 
@@ -47,4 +49,4 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 
 ## Guard
 
-The banned terms above are checked in rendered text by `tests-platform/copy-guard.ts` (copy audit commit 7). English terms are matched as whole words, case-insensitively. Hungarian terms are matched as phrases, because _előnézet_ alone is allowed. A UUID pattern and revision numbers (`r4`) are checked as well. Text in an open dialog is skipped (rule 5). It runs on the screens the copy audit covered, not yet on account, vault or admin screens. Add a term to both this table and the guard.
+The banned terms above live in `src/platform/i18n/banned-terms.ts` and are checked twice: in every catalogue string by `npm run test:unit` (`src/platform/i18n/catalogue.test.ts`, since the [i18n catalogue](plan/i18n-catalogue.md)), and in rendered text by `tests-platform/copy-guard.ts` (copy audit commit 7). English terms are matched as whole words, case-insensitively. Hungarian terms are matched as phrases, because _előnézet_ alone is allowed. A UUID pattern and revision numbers (`r4`) are checked as well. Text in an open dialog is skipped (rule 5). It runs on the screens the copy audit covered, not yet on account, vault or admin screens. Add a term to both this table and `banned-terms.ts`.

@@ -6,6 +6,7 @@ import {
   menuControl,
   signOutControl,
 } from '../account-access/navigation-controls';
+import { languageNames, languages, parseLanguage } from '../../platform/i18n/language';
 import { useApp } from '../app-context/AppContext';
 import { Icon } from '../icon/Icon';
 import type { IconName } from '../icon/types';
@@ -153,14 +154,15 @@ export function AppNavigation(props: { mode: NavigationMode }) {
           data-control-id={languageControl.id}
           value={app.lang()}
           aria-describedby="app-language-help"
-          onChange={(e) => app.selectLanguage(e.currentTarget.value === 'hu' ? 'hu' : 'en')}
+          onChange={(e) => app.selectLanguage(parseLanguage(e.currentTarget.value))}
         >
-          <option value="en" selected={app.lang() === 'en'}>
-            {rail() ? 'EN' : 'English'}
-          </option>
-          <option value="hu" selected={app.lang() === 'hu'}>
-            {rail() ? 'HU' : 'Magyar'}
-          </option>
+          <For each={languages}>
+            {(code) => (
+              <option value={code} selected={app.lang() === code}>
+                {rail() ? code.toUpperCase() : languageNames[code]}
+              </option>
+            )}
+          </For>
         </select>
       </label>
       <span class="account-visually-hidden" id="app-language-help">

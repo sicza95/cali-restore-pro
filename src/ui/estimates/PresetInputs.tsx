@@ -4,6 +4,7 @@ import type { Phase, Preset } from '../../platform/estimates/types';
 import { applyPreset, presetRepository } from '../../platform/estimates/persistence';
 import { formatArea, formatRate } from '../../platform/format/number';
 import type { Language } from '../account-access/types';
+import { presetCopy } from './preset-copy';
 
 /** "HUF 40/h" for a rate, "2.5 m²/h" for a productivity. */
 function presetValue(preset: Preset, language: Language) {
@@ -23,26 +24,7 @@ export function PresetInputs(props: {
   const [presets, { refetch }] = createResource(() => presetRepository(props.vault).list());
   const [name, setName] = createSignal('');
   const [status, setStatus] = createSignal('');
-  const c = () =>
-    props.language === 'hu'
-      ? {
-          title: 'Privát sablonok',
-          name: 'Sablon neve',
-          rate: 'Díj mentése',
-          speed: 'Teljesítmény mentése',
-          apply: 'Alkalmazás',
-          saved: 'Sablon mentve',
-          failed: 'Érvénytelen vagy ütköző sablon',
-        }
-      : {
-          title: 'Private presets',
-          name: 'Preset name',
-          rate: 'Save rate preset',
-          speed: 'Save productivity preset',
-          apply: 'Apply',
-          saved: 'Preset saved',
-          failed: 'Invalid or conflicting preset',
-        };
+  const c = () => presetCopy[props.language];
   const latest = () =>
     (presets() ?? []).filter(
       (p, _, all) => !p.archived && !all.some((v) => v.id === p.id && v.version > p.version),

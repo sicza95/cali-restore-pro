@@ -8,20 +8,30 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
-- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1, 2, 4 and 5 done; Phase 4 done. Left: Phase 3 items 3 (i18n, #30) and 6 (colour tokens, #31).
+- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1 to 5 done; Phase 4 done. Left: Phase 3 item 6 (colour tokens, #31).
 - **CI:** one workflow `ci.yml` with four parallel jobs: Frontend checks, Unit tests (Vitest), Go tests, Platform E2E.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:sync`, `test:estimates` (locally, this batch), backup scripts.
 
 ## Next step
 
-Phase 3 item 3, the i18n catalogue (#30), now that copy sits in its feature folders; then item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
+Phase 3 item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete. Follow-up: the generated report files (`src/platform/reports/export-*.ts`) still pick their language inline; they follow the draft language and are outside `src/ui`.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Central i18n catalogue (#30)
+
+- Plan: [`docs/plan/i18n-catalogue.md`](../plan/i18n-catalogue.md), pushed first (`db59e77`).
+- New `src/platform/i18n/`: `Language`, `languages`, `languageNames`, `parseLanguage`; `defineCopy({ en, hu })` (type: HU must have exactly EN's keys, same function parameters, nested shapes) and `defineCopyPairs`; `banned-terms.ts`, now shared with `tests-platform/copy-guard.ts`.
+- Every EN/HU catalogue is declared with `defineCopy` in a `copy.ts` / `*-copy.ts` module. Inline copy moved out of `ProjectBackup`, `ProjectKeyTransfer`, `OfflineOriginals(Page)`, `PrivateLibraries`, `PresetInputs`, `account-access/constants.ts` and `settings/constants.ts` (now `settings-copy.ts`). All inline `language === 'hu'` choices in `src/ui` are gone, including `ProjectLifecycle` and `AccountDeletion` (new `lifecycle-copy.ts`, `deletion-copy.ts`).
+- `test:unit` now checks: EN/HU parity over every catalogue, glossary banned terms in every catalogue string, copy only in copy modules, and no inline language comparison in `src/ui`. Negative run: one HU key removed → `typecheck` TS2741 and `test:unit` fail.
+- The banned-terms check found five HU strings no screen guard reached; reworded (_pillanatkép_ → _másolat_ in sharing, _rögzített_ → _offline elérhető_ on the offline originals page) and added to the glossary. No other text changed.
+- Verified: `npm run check`, `test:unit` (207), `npm test` (16), `test:files` (22), `test:estimates` (8), `test:sync` (2), `test:app` (16 passed, 1 skipped) on disposable `calirestore-qa-i18n` (removed with volumes), `build-storybook`. Looked at `estimate-1194` and `estimate-hu`: unchanged.
+- Not run: Go tests (no Go change), physical iPad.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · 390 px checks removed, feature folders
 

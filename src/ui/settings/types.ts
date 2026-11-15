@@ -1,4 +1,4 @@
-import type { settingsCopy } from './constants';
+import type { settingsCopy } from './settings-copy';
 export type SettingsKey = keyof typeof settingsCopy.en;
 export type Role = 'member' | 'administrator' | 'superuser';
 export type State = 'active' | 'suspended' | 'pending_verification' | 'pending_deletion';

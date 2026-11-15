@@ -1,6 +1,7 @@
+import { defineCopy } from '../../platform/i18n/define';
 type LayerKind = 'master' | 'damage' | 'phase' | 'folder';
 
-export const surfaceCopy = {
+export const surfaceCopy = defineCopy({
   en: {
     photo: 'Photo',
     previous: 'Previous photo',
@@ -191,5 +192,5 @@ export const surfaceCopy = {
         kind
       ] + (kind === 'master' ? '' : ` ${n}`),
   },
-};
+});
 export type SurfaceCopy = (typeof surfaceCopy)['en'];

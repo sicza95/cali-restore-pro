@@ -1,8 +1,9 @@
+import { parseLanguage } from '../../platform/i18n/language';
 import type { Language } from './types';
 
 export function storedLanguage(): Language {
   try {
-    return localStorage.getItem('cr-language') === 'hu' ? 'hu' : 'en';
+    return parseLanguage(localStorage.getItem('cr-language'));
   } catch {
     return 'en';
   }

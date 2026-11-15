@@ -1,35 +1,7 @@
 import { createSignal, For, onCleanup, onMount, Show } from 'solid-js';
 import type { LocalVault } from '../../platform/vault/vault';
 import type { Language } from '../account-access/types';
-
-export const pinCopy = {
-  en: {
-    heading: 'Offline originals',
-    pin: 'Make available offline',
-    ready: 'Available offline',
-    open: 'Prepare a copy',
-    download: 'Download prepared copy',
-    remove: 'Remove offline copy',
-    cancel: 'Cancel pin',
-    progress: 'Saving encrypted original',
-    checking: 'Checking access to offline originals…',
-    revoked: 'Removed offline copies you can no longer access.',
-    failed: 'Could not complete the offline originals action. Try again.',
-  },
-  hu: {
-    heading: 'Offline eredeti fájlok',
-    pin: 'Elérhetővé tétel offline',
-    ready: 'Offline elérhető',
-    open: 'Másolat előkészítése',
-    download: 'Az előkészített másolat letöltése',
-    remove: 'Offline másolat eltávolítása',
-    cancel: 'Mentés megszakítása',
-    progress: 'Titkosított eredeti mentése',
-    checking: 'Offline eredetik hozzáférésének ellenőrzése…',
-    revoked: 'A már nem hozzáférhető offline másolatokat eltávolítottuk.',
-    failed: 'A művelet nem fejeződött be. Próbálja újra.',
-  },
-};
+import { pinCopy } from './pin-copy';
 
 export function saveOriginal({ name, blob }: { name: string; blob: Blob }) {
   const url = URL.createObjectURL(blob);
