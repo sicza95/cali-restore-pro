@@ -155,7 +155,19 @@ export function LayerPanel(props: LayerPanelProps) {
       </div>
       <div
         id={`${id}-panel`}
-        ref={(element) => (body = element)}
+        ref={(element) => {
+          body = element;
+          // A disclosure closing inside the body shrinks it and can leave the scroll past the
+          // layer list. `toggle` doesn't bubble, so listen in the capture phase.
+          element.addEventListener(
+            'toggle',
+            (event) => {
+              if (event.target instanceof HTMLDetailsElement && !event.target.open)
+                requestAnimationFrame(reveal);
+            },
+            true,
+          );
+        }}
         class="cr-inspector-body"
         role="tabpanel"
         aria-labelledby={`${id}-${tab()}`}

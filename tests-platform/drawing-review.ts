@@ -261,13 +261,14 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
       // Portrait: the grip switches the inspector to its tall height and back.
       await closeDetails(page);
       await touchTargets(['view.inspector']);
-      // Switching height brings the selected layer row into view inside the inspector body.
+      // Closing "Enter by number" and switching height bring the selected layer row into view.
       const rowInView = () =>
         selected().evaluate((row) => {
           const body = row.closest('.cr-inspector-body')!.getBoundingClientRect();
           const item = row.getBoundingClientRect();
           return item.top >= body.top - 1 && item.bottom <= body.bottom + 1;
         });
+      await expect.poll(rowInView).toBe(true);
       const short = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
       await c('view.inspector').click();
       await expect(c('view.inspector')).toHaveAttribute('aria-expanded', 'true');
