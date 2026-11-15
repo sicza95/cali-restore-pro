@@ -33,6 +33,14 @@
   --cr-canvas: #131618;
   --cr-mask: #64dae9;
   --cr-shadow-floating: 0 8px 24px rgb(0 0 0 / 15%);
+  /* Same in both themes: these sit behind modals or over photos, not on the themed page. */
+  --cr-backdrop: rgb(0 0 0 / 35%);
+  --cr-dialog-backdrop: rgb(10 15 18 / 55%);
+  --cr-photo-label: #252b2e;
+  --cr-photo-label-ink: #ffffff;
+  --cr-mask-guide: #f2ce82;
+  --cr-specimen: #172936;
+  --cr-specimen-ink: #f7f7f5;
   color-scheme: dark;
 }
 

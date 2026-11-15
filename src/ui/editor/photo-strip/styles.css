@@ -33,8 +33,8 @@
   position: absolute;
   inset: auto 0 0;
   padding: 3px 6px;
-  background: #20282e;
-  color: #fff;
+  background: var(--cr-photo-label);
+  color: var(--cr-photo-label-ink);
   font-size: 11px;
   text-align: left;
 }
