@@ -4,7 +4,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `main` at the orchestrator's handoff commit on top of `f088345` (all Verified). PRs #19, #20 and #21 landed by fast-forward and GitHub marks them merged. PRs #22, #23 and #24 were replayed unchanged (`git range-diff` identical) and re-signed as one chain in [PR #25](https://github.com/sicza95/cali-restore-pro/pull/25), which landed by fast-forward; #22 to #24 are closed with a pointer to #25.
+- **Branch:** `main` at the orchestrator's handoff commit on top of `f088345` (all Verified). PRs #19, #20 and #21 landed by fast-forward and GitHub marks them merged. PRs #22 to #24 landed as one re-signed chain via [PR #25](https://github.com/sicza95/cali-restore-pro/pull/25) (closed with a pointer); #26 and #27 landed by fast-forward and show merged. The owner allows direct and force pushes to `main` (2026-11-15), so no more chain PRs.
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
@@ -29,7 +29,7 @@ Phase 2 item 4 (one app shell on the new router: sidebar in landscape, compact h
 - Two side sessions in their own worktrees; both hit the usage limit once and resumed:
   - [PR #26](https://github.com/sicza95/cali-restore-pro/pull/26): the estimate screen is a summary plus five steps (Objects → Work phases → Extras → Adjustments and tax → Save and issue), one primary per step, logic moved to `useEstimateDraft.ts` without behaviour change. Page height at 1194 about 2,640 px → 1,490 px (Phase 2 item 3).
   - [PR #27](https://github.com/sicza95/cali-restore-pro/pull/27): `src/ui/router/` (typed route table with access levels, guards, `?next=`, deep links) and `src/ui/app-context/` (`AppProvider`, `useApp()`); screens no longer take `model`. ADR 0006. One intended difference: `/offline-originals/` with a trailing slash now opens the page (Phase 3 item 2).
-- #27 was replayed onto #26 and re-signed (`git range-diff` identical) as one chain, so `main` moves by one fast-forward.
+- Landed by fast-forward: `main` → #26 head, then #27 rebased onto it (re-signed, `git range-diff` identical, force-pushed to its own branch) → #27 head, then this handoff commit. GitHub marks #26 and #27 merged. (A chain PR #28 was opened first for CI; it shows merged because its head is on `main`.)
 - Verified: both PRs green on all four CI jobs; the chain again on its own PR. Sessions ran `npm run check`, `test:unit` (197), `npm test` (16), `test:files` (22), `test:estimates` (8, #26) and `test:app` (16 passed, 1 skipped, #27).
 - Not run: `test:sync`; `test:estimates` on #27's changes alone; physical iPad.
 

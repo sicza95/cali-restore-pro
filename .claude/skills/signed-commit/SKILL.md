@@ -22,9 +22,14 @@ git log --show-signature -1
 
 ## Push
 
-- `AGENTS.md` says push straight to `main`, but in auto mode the permission classifier **blocks
-  `git push` to `main`** unless the owner asked for a push in that message. If blocked, don't
-  retry: give the owner the push command, or ask them to allow it.
+- The owner allows pushing straight to `main`, and force pushes, at any time (2026-11-15). Every
+  commit must still be signed and Verified.
+- Merge a PR by fast-forwarding `main` to its head (`git push origin <head-sha>:main`), so GitHub
+  marks it merged. If a second PR is now behind, rebase it with `-S`, check `git range-diff` shows
+  the commits unchanged, force-push its own branch (`--force-with-lease`), let CI run, then
+  fast-forward again. Don't open combined "chain" PRs.
+- If the auto-mode classifier still blocks a push, quote the owner's permission and ask; don't
+  retry blindly.
 - After any push, confirm: `gh api repos/sicza95/cali-restore-pro/commits/<sha> --jq .commit.verification.verified`.
 
 ## Steps that change shipped screens
