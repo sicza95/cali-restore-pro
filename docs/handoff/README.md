@@ -15,7 +15,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Phase 3 item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete. Follow-up: the generated report files (`src/platform/reports/export-*.ts`) still pick their language inline; they follow the draft language and are outside `src/ui`.
+Phase 3 item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete. Follow-up #57: the generated report files (`src/platform/reports/export-*.ts`) still pick their language inline.
 
 ## Open questions for the owner
 
