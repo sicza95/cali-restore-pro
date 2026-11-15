@@ -42,6 +42,8 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('mode.drawing').click();
   await expect(page.getByText(/^Committed masks are saved to this surface/)).toBeVisible();
   await openDetails(page);
+  // The exact zoom field sits in "Enter by number" with the other exact values, not the footer.
+  await expect(page.locator('.drawing-details').locator(c('view.zoom'))).toHaveCount(1);
   await expect(c('tool.nodes')).toBeDisabled();
   await expect(c('brush.width')).toHaveCount(0);
   await c('tool.select').focus();
@@ -215,6 +217,17 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
       expect(chip.y + chip.height).toBeLessThanOrEqual(canvas.y + canvas.height + 1);
       expect(rail.y + rail.height).toBeLessThanOrEqual(photo.y + photo.height + 1);
     }
+    // At fit the photo fills the canvas on one axis and stays inside it on the other.
+    const view = await c('view.canvas').evaluate((element) => ({
+      width: element.clientWidth,
+      height: element.clientHeight,
+    }));
+    const fitted = (await page.locator('.drawing-workspace .drawing-photo').boundingBox())!;
+    expect(fitted.width).toBeLessThanOrEqual(view.width + 1);
+    expect(fitted.height).toBeLessThanOrEqual(view.height + 1);
+    expect(
+      Math.min(Math.abs(fitted.width - view.width), Math.abs(fitted.height - view.height)),
+    ).toBeLessThanOrEqual(1);
     const touchTargets = async (controls: string[]) => {
       for (const control of controls) {
         const target = (await c(control).boundingBox())!;
@@ -248,11 +261,19 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
       // Portrait: the grip switches the inspector to its tall height and back.
       await closeDetails(page);
       await touchTargets(['view.inspector']);
+      // Switching height brings the selected layer row into view inside the inspector body.
+      const rowInView = () =>
+        selected().evaluate((row) => {
+          const body = row.closest('.cr-inspector-body')!.getBoundingClientRect();
+          const item = row.getBoundingClientRect();
+          return item.top >= body.top - 1 && item.bottom <= body.bottom + 1;
+        });
       const short = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
       await c('view.inspector').click();
       await expect(c('view.inspector')).toHaveAttribute('aria-expanded', 'true');
       const tall = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
       expect(tall.height).toBeGreaterThan(short.height);
+      await expect.poll(rowInView).toBe(true);
       await page
         .locator('.drawing-workspace .cr-editor')
         .screenshot({ path: info.outputPath(`drawing-${viewport.width}-tall.png`) });
@@ -261,6 +282,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
       ).toEqual([]);
       await c('view.inspector').click();
       await expect(c('view.inspector')).toHaveAttribute('aria-expanded', 'false');
+      await expect.poll(rowInView).toBe(true);
       // The steps after this loop expect "Details" open, as the last state left it.
       await openDetails(page);
     }
