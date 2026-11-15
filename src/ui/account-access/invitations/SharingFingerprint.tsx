@@ -1,17 +1,17 @@
 /* eslint-disable solid/reactivity -- The deferred command reads the current vault on user input. */
 import { createSignal, Show } from 'solid-js';
+import { useApp } from '../../app-context/AppContext';
 import { localSharingKey, sharingFingerprint } from '../../../platform/projects/fixture-sharing';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { invitationCopy } from './copy';
-import type { InvitationModel } from './types';
 
 export function SharingFingerprint(props: {
-  model: InvitationModel;
   vault: LocalVault;
   busy: boolean;
   run: (action: () => Promise<unknown>, refresh?: boolean) => Promise<boolean>;
 }) {
-  const c = () => invitationCopy[props.model.lang()];
+  const app = useApp();
+  const c = () => invitationCopy[app.lang()];
   const [code, setCode] = createSignal('');
   return (
     <div>
@@ -25,7 +25,7 @@ export function SharingFingerprint(props: {
             const key = await localSharingKey(props.vault);
             const fingerprint = await sharingFingerprint(key.publicKey);
             key.signal.throwIfAborted();
-            await props.model.request('/sharing-identity', { publicKey: key.publicKey });
+            await app.request('/sharing-identity', { publicKey: key.publicKey });
             key.signal.throwIfAborted();
             setCode(fingerprint);
           }, false)

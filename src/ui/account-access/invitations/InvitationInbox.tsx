@@ -1,5 +1,6 @@
 /* eslint-disable solid/reactivity -- The account and vault are fixed for the mounted inbox, and commands run on user input. */
 import { createSignal, For, Show } from 'solid-js';
+import { useApp } from '../../app-context/AppContext';
 import {
   localSharingKey,
   openSharedContent,
@@ -15,7 +16,7 @@ import type { LocalVault } from '../../../platform/vault/vault';
 import { SharedEstimateProjection } from '../project-review/SharedEstimateProjection';
 import { estimateCopy } from '../../../platform/estimates/copy';
 import { invitationCopy } from './copy';
-import type { InboxInvitation, InvitationModel } from './types';
+import type { InboxInvitation } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
 import { ProjectInvitations } from './ProjectInvitations';
@@ -24,9 +25,10 @@ import { SharedOriginals } from './SharedOriginals';
 import { OfflineOriginals, useOfflineOriginals } from './OfflineOriginals';
 import './styles.css';
 
-export function InvitationInbox(props: { model: InvitationModel; vault: LocalVault }) {
-  const c = () => invitationCopy[props.model.lang()];
-  const inbox = useInvitations<InboxInvitation>(props.model, '/invitations');
+export function InvitationInbox(props: { vault: LocalVault }) {
+  const app = useApp();
+  const c = () => invitationCopy[app.lang()];
+  const inbox = useInvitations<InboxInvitation>('/invitations');
   const offline = useOfflineOriginals(props.vault.originalPins());
   const [opened, setOpened] = createSignal<{
     id: string;
@@ -38,13 +40,8 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
   }>();
   return (
     <section class="invitation-panel" aria-label={c().heading}>
-      <OfflineOriginals model={offline} language={props.model.lang()} />
-      <SharingFingerprint
-        model={props.model}
-        vault={props.vault}
-        busy={inbox.busy()}
-        run={inbox.run}
-      />
+      <OfflineOriginals model={offline} language={app.lang()} />
+      <SharingFingerprint vault={props.vault} busy={inbox.busy()} run={inbox.run} />
       <Show when={inbox.failed() || inbox.error()}>
         <p role="alert">{c().error}</p>
       </Show>
@@ -67,7 +64,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
               </Show>
               <Show when={item.state === 'pending'}>
                 <time dateTime={item.expiresAt}>
-                  {new Intl.DateTimeFormat(props.model.lang(), {
+                  {new Intl.DateTimeFormat(app.lang(), {
                     dateStyle: 'medium',
                     timeStyle: 'short',
                   }).format(new Date(item.expiresAt))}
@@ -79,9 +76,9 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                     void inbox.run(async () => {
                       const key = await localSharingKey(props.vault);
                       key.signal.throwIfAborted();
-                      await props.model.request('/sharing-identity', { publicKey: key.publicKey });
+                      await app.request('/sharing-identity', { publicKey: key.publicKey });
                       key.signal.throwIfAborted();
-                      await props.model.request('/invitations/' + item.id + '/accept', {});
+                      await app.request('/invitations/' + item.id + '/accept', {});
                     })
                   }
                 >
@@ -89,12 +86,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                 </button>
               </Show>
               <Show when={item.state === 'active'}>
-                <Checkpoints
-                  project={item.projectId}
-                  invitation={item.id}
-                  model={props.model}
-                  vault={props.vault}
-                />
+                <Checkpoints project={item.projectId} invitation={item.id} vault={props.vault} />
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
@@ -106,7 +98,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                     );
                     setOpened(undefined);
                     void inbox.run(async () => {
-                      const grant = await props.model.request<
+                      const grant = await app.request<
                         (SharingEnvelope | ScopeEnvelope) & { senderId: string; senderKey: string }
                       >(
                         '/invitations/' + item.id + (selected ? '/scopes/' + selected : '/content'),
@@ -121,7 +113,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                         project: item.projectId,
                         invitation: item.id,
                         sender: grant.senderId,
-                        recipient: props.model.account()!.id,
+                        recipient: app.account()!.id,
                       };
                       const scoped =
                         selected && 'scope' in grant
@@ -207,7 +199,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                                 <SharedEstimateProjection
                                   scope={scope().id as 'estimate-full' | 'estimate-summary'}
                                   rows={scope().rows}
-                                  language={props.model.lang()}
+                                  language={app.lang()}
                                 />
                               </Show>
                             </section>
@@ -219,7 +211,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                         <section class="shared-project" aria-label={c().snapshot}>
                           <h2>{project().name}</h2>
                           <p>{c().snapshot}</p>
-                          <p>{estimateCopy[props.model.lang()].assessmentOnly}</p>
+                          <p>{estimateCopy[app.lang()].assessmentOnly}</p>
                           <For each={project().objects}>
                             {(object) => (
                               <div>
@@ -244,14 +236,13 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                               sender={result().sender}
                               locked={result().locked}
                               offline={offline}
-                              language={props.model.lang()}
+                              language={app.lang()}
                             />
                           </Show>
                           <Show when={item.coOwner}>
                             <ProjectInvitations
                               projectId={item.projectId}
                               project={project()}
-                              model={props.model}
                               vault={props.vault}
                               onLeave={() => {
                                 setOpened(undefined);

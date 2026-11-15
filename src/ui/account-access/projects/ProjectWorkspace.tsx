@@ -1,21 +1,12 @@
 import type { JournalWrite, PendingAttachment } from '../../../platform/vault/project-store';
+import { useApp } from '../../app-context/AppContext';
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
-import {
-  createResource,
-  createMemo,
-  createSignal,
-  Match,
-  onCleanup,
-  Show,
-  Switch,
-  untrack,
-} from 'solid-js';
+import { createResource, createMemo, createSignal, Match, Show, Switch, untrack } from 'solid-js';
 import { localProjects, newProject } from '../../../platform/projects/projects';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
 import { ProjectRegister } from './ProjectRegister';
-import type { createAccountAccess } from '../createAccountAccess';
 import { ProjectInvitations } from '../invitations/ProjectInvitations';
 import { projectSnapshot } from '../../../platform/projects/shared-project';
 import { ProjectDetail } from './ProjectDetail';
@@ -29,20 +20,17 @@ import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
 import { ProjectReview, ProjectReviewLinks } from '../project-review/ProjectReview';
 import { SurfaceWorkspace } from './SurfaceWorkspace';
-import { followLink, projectHref, projectLocation } from '../../router/routes';
+import { followLink, projectHref } from '../../router/routes';
 import { syncCopy } from './sync-copy';
 import './styles.css';
 
-export function ProjectWorkspace(props: {
-  vault: LocalVault;
-  language: Language;
-  model: ReturnType<typeof createAccountAccess>;
-}) {
+export function ProjectWorkspace(props: { vault: LocalVault; language: Language }) {
+  const app = useApp();
   const c = () => projectCopy[props.language];
   const local = localProjects(untrack(() => props.vault));
   const sync = useEditorSync(
     untrack(() => props.vault),
-    () => props.model.csrf(),
+    () => app.csrf(),
   );
   const [projects, { mutate, refetch }] = createResource<{
     rows: SavedProject[];
@@ -53,7 +41,10 @@ export function ProjectWorkspace(props: {
       () => ({ rows: [] as SavedProject[], failed: true }),
     ),
   );
-  const [route, setRoute] = createSignal(projectLocation(location.pathname));
+  const route = () => {
+    const current = app.router.route();
+    return current.name === 'projects' ? current : undefined;
+  };
   const [sort, setSort] = createSignal('recent');
   const [query, setQuery] = createSignal('');
   const [archived, setArchived] = createSignal(false);
@@ -87,14 +78,7 @@ export function ProjectWorkspace(props: {
     const status = sync.statusKey(project);
     return status === 'disabled' ? c().local : syncCopy[props.language][status];
   }
-  function navigate(href: string) {
-    if (href === location.pathname) return;
-    history.pushState(null, '', href);
-    pop();
-  }
-  const pop = () => setRoute(projectLocation(location.pathname));
-  window.addEventListener('popstate', pop);
-  onCleanup(() => window.removeEventListener('popstate', pop));
+  const navigate = app.router.navigate;
   async function run(task: () => Promise<void>) {
     if (busy()) return false;
     setBusy(true);
@@ -172,7 +156,7 @@ export function ProjectWorkspace(props: {
                         name,
                         c().firstObject,
                         c().firstSurface,
-                        loadPreferences(props.model.account()!.id).currency,
+                        loadPreferences(app.account()!.id).currency,
                       );
                       await save(project);
                       navigate(projectHref(project.id));
@@ -240,7 +224,6 @@ export function ProjectWorkspace(props: {
                 }}
               />
               <ProjectLifecycle
-                model={props.model}
                 localName={(id) => projects()?.rows.find((project) => project.id === id)?.name}
               />
             </>
@@ -294,7 +277,7 @@ export function ProjectWorkspace(props: {
                   project={current()!}
                   route={route()!.review!}
                   language={props.language}
-                  account={props.model.account()!.id}
+                  account={app.account()!.id}
                   navigate={navigate}
                 />
               </Show>
@@ -334,14 +317,13 @@ export function ProjectWorkspace(props: {
                                 ),
                               ]}
                               canHost
-                              model={props.model}
                               vault={props.vault}
                             />
                           )}
                         </Show>
                       }
                     />
-                    <ProjectLifecycle model={props.model} project={id} />
+                    <ProjectLifecycle project={id} />
                     <Show when={current()!.id} keyed>
                       {(id) => (
                         <ProjectBackup

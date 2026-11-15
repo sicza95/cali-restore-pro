@@ -1,16 +1,18 @@
 import { AccountDeletion } from '../profile/AccountDeletion';
+import { useApp } from '../../../app-context/AppContext';
 import { For, Show } from 'solid-js';
 import { ConfirmField } from '../../confirm-field/ConfirmField';
 import { settingsCopy } from '../constants';
-import type { AdminAccount, SettingsProps } from '../types';
+import type { AdminAccount } from '../types';
 
-export function AccountRow(props: SettingsProps & { account: AdminAccount; refresh: () => void }) {
+export function AccountRow(props: { account: AdminAccount; refresh: () => void }) {
+  const app = useApp();
   const a = () => props.account;
-  const c = () => settingsCopy[props.model.lang()];
+  const c = () => settingsCopy[app.lang()];
   const ready = () => a().state === 'active' || a().state === 'suspended';
-  const disabled = () => props.model.busy() || !props.model.confirmed();
+  const disabled = () => app.busy() || !app.confirmed();
   const apply = (action: string, body: object) =>
-    props.model.run('/admin/accounts/' + a().id + '/' + action, body, 'adminSaved').then((ok) => {
+    app.run('/admin/accounts/' + a().id + '/' + action, body, 'adminSaved').then((ok) => {
       if (ok) props.refresh();
     });
   const submit = (e: SubmitEvent, action: string, build: (data: FormData) => object) => {
@@ -29,11 +31,11 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
           </span>
         </summary>
         <p>
-          {props.model.t('sessions')}: {a().sessions.toLocaleString(props.model.lang())} ·{' '}
-          {c().quota}: {a().quotaMiB.toLocaleString(props.model.lang())}
+          {app.t('sessions')}: {a().sessions.toLocaleString(app.lang())} · {c().quota}:{' '}
+          {a().quotaMiB.toLocaleString(app.lang())}
         </p>
         <div class="admin-controls">
-          <Show when={ready() && props.model.can('accounts.suspend')}>
+          <Show when={ready() && app.can('accounts.suspend')}>
             <form
               onSubmit={(e) =>
                 submit(e, 'policy', (data) => ({
@@ -42,7 +44,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
                 }))
               }
             >
-              <Show when={props.model.can('roles.manage')}>
+              <Show when={app.can('roles.manage')}>
                 <label>
                   {c().role}
                   <select data-control-id="admin.account.role" name="role" value={a().role}>
@@ -59,7 +61,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
                   <option value="suspended">{c().suspended}</option>
                 </select>
               </label>
-              <ConfirmField t={props.model.t} />
+              <ConfirmField t={app.t} />
               <button
                 data-control-id="admin.account.policy"
                 class="secondary"
@@ -69,7 +71,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
               </button>
             </form>
           </Show>
-          <Show when={ready() && props.model.can('accounts.entitlements')}>
+          <Show when={ready() && app.can('accounts.entitlements')}>
             <form
               onSubmit={(e) =>
                 submit(e, 'controls', (data) => ({
@@ -104,7 +106,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
                   value={a().quotaMiB}
                 />
               </label>
-              <ConfirmField t={props.model.t} />
+              <ConfirmField t={app.t} />
               <button
                 data-control-id="admin.account.entitlements"
                 class="secondary"
@@ -114,7 +116,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
               </button>
             </form>
           </Show>
-          <Show when={ready() && props.model.can('roles.manage') && a().role === 'administrator'}>
+          <Show when={ready() && app.can('roles.manage') && a().role === 'administrator'}>
             <form
               onSubmit={(e) =>
                 submit(e, 'controls', (data) => ({
@@ -138,7 +140,7 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
                   </label>
                 )}
               </For>
-              <ConfirmField t={props.model.t} />
+              <ConfirmField t={app.t} />
               <button
                 data-control-id="admin.account.delegate"
                 class="secondary"
@@ -148,29 +150,20 @@ export function AccountRow(props: SettingsProps & { account: AdminAccount; refre
               </button>
             </form>
           </Show>
-          <Show
-            when={
-              props.model.can('accounts.sessions.revoke') && a().id !== props.model.account()?.id
-            }
-          >
+          <Show when={app.can('accounts.sessions.revoke') && a().id !== app.account()?.id}>
             <form onSubmit={(e) => submit(e, 'sessions/revoke', () => ({}))}>
-              <ConfirmField t={props.model.t} />
+              <ConfirmField t={app.t} />
               <button
                 data-control-id="admin.account.revoke"
                 class="secondary"
                 disabled={disabled()}
               >
-                {props.model.t('revokeAll')}
+                {app.t('revokeAll')}
               </button>
             </form>
           </Show>
-          <Show
-            when={
-              props.model.account()?.role === 'superuser' && a().id !== props.model.account()?.id
-            }
-          >
+          <Show when={app.account()?.role === 'superuser' && a().id !== app.account()?.id}>
             <AccountDeletion
-              model={props.model}
               path={'/admin/accounts/' + a().id}
               pending={a().state === 'pending_deletion'}
               onChange={props.refresh}

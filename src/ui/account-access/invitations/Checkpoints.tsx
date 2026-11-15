@@ -1,5 +1,6 @@
 /* eslint-disable solid/reactivity -- The invitation and request paths are fixed for each mounted panel. */
 import { createResource, createSignal, For, onCleanup, Show } from 'solid-js';
+import { useApp } from '../../app-context/AppContext';
 import { checkpointSamples } from '../../../platform/projects/checkpoint-samples';
 import type { Checkpoint } from '../../../platform/projects/checkpoint-samples';
 import {
@@ -11,17 +12,17 @@ import {
 import type { CheckpointEnvelope } from '../../../platform/projects/fixture-sharing';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { invitationCopy } from './copy';
-import type { InvitationModel, SentInvitation } from './types';
+import type { SentInvitation } from './types';
 
 type Common = {
-  model: InvitationModel;
   vault: LocalVault;
   project: string;
   invitation: string;
 };
 
 export function Checkpoints(props: Common & { owner?: { path: string; item: SentInvitation } }) {
-  const c = () => invitationCopy[props.model.lang()];
+  const app = useApp();
+  const c = () => invitationCopy[app.lang()];
   const [expanded, setExpanded] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
@@ -30,7 +31,7 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
   const path = (owner?.path ?? '/invitations/' + props.invitation) + '/checkpoints';
   const [list, { refetch }] = createResource(expanded, async () => {
     try {
-      return await props.model.request<{ checkpointIds: string[] }>(path);
+      return await app.request<{ checkpointIds: string[] }>(path);
     } catch {
       return null;
     }
@@ -99,7 +100,7 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                   const id = (event.submitter as HTMLButtonElement | null)?.value;
                   if (!id) return;
                   void run(async () => {
-                    const account = props.model.account()!.id;
+                    const account = app.account()!.id;
                     if (owner) {
                       const checkpoint = checkpointSamples.find((sample) => sample.id === id);
                       const recipientKey = owner.item.recipientKey;
@@ -114,16 +115,12 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                         checkpoint,
                       );
                       key.signal.throwIfAborted();
-                      await props.model.request('/sharing-identity', { publicKey: key.publicKey });
+                      await app.request('/sharing-identity', { publicKey: key.publicKey });
                       key.signal.throwIfAborted();
-                      await props.model.request(
-                        path + '/' + id,
-                        { ...envelope, recipientKey },
-                        'PUT',
-                      );
+                      await app.request(path + '/' + id, { ...envelope, recipientKey }, 'PUT');
                     } else {
                       if (!current().checkpointIds.includes(id)) return;
-                      const grant = await props.model.request<
+                      const grant = await app.request<
                         CheckpointEnvelope & { senderId: string; senderKey: string }
                       >(path + '/' + id);
                       const key = await verifiedKey(grant.senderId, grant.senderKey, code);
@@ -186,9 +183,7 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                           class="secondary"
                           disabled={busy()}
                           onClick={() =>
-                            void run(() =>
-                              props.model.request(path + '/' + checkpoint.id, {}, 'DELETE'),
-                            )
+                            void run(() => app.request(path + '/' + checkpoint.id, {}, 'DELETE'))
                           }
                         >
                           {c().removeCheckpoint}: {checkpoint.title}

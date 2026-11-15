@@ -1,5 +1,6 @@
 /* eslint-disable solid/reactivity -- The parent keys this panel by project ID. */
 import { createSignal, For, Show } from 'solid-js';
+import { useApp } from '../../app-context/AppContext';
 import { scopeContent } from '../../../platform/estimates/scopes';
 import {
   localSharingKey,
@@ -12,7 +13,7 @@ import type { SharedProject } from '../../../platform/projects/shared-project';
 import { publishOriginals } from '../../../platform/projects/shared-originals';
 import { optionalScopes } from '../../../platform/projects/sharing-scopes';
 import { invitationCopy } from './copy';
-import type { InvitationModel, SentInvitation } from './types';
+import type { SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
 import { SharingFingerprint } from './SharingFingerprint';
 import { ProjectOwners } from './ProjectOwners';
@@ -26,10 +27,10 @@ export function ProjectInvitations(props: {
   originalIds?: string[];
   canHost?: boolean;
   onLeave?: () => void;
-  model: InvitationModel;
   vault: LocalVault;
 }) {
-  const c = () => invitationCopy[props.model.lang()];
+  const app = useApp();
+  const c = () => invitationCopy[app.lang()];
   const projectPath = '/hosted-projects/' + props.projectId;
   const path = projectPath + '/invitations';
   const [open, setOpen] = createSignal(false);
@@ -38,7 +39,6 @@ export function ProjectInvitations(props: {
       <summary data-control-id="project.collaboration">{c().heading}</summary>
       <Show when={open()}>
         <InvitationControls
-          model={props.model}
           path={path}
           projectPath={projectPath}
           projectId={props.projectId}
@@ -54,7 +54,6 @@ export function ProjectInvitations(props: {
 }
 
 function InvitationControls(props: {
-  model: InvitationModel;
   path: string;
   projectPath: string;
   projectId: string;
@@ -64,8 +63,9 @@ function InvitationControls(props: {
   onLeave?: () => void;
   vault: LocalVault;
 }) {
-  const c = () => invitationCopy[props.model.lang()];
-  const sent = useInvitations<SentInvitation>(props.model, props.path);
+  const app = useApp();
+  const c = () => invitationCopy[app.lang()];
+  const sent = useInvitations<SentInvitation>(props.path);
   return (
     <>
       <Show
@@ -82,26 +82,20 @@ function InvitationControls(props: {
           class="secondary"
           disabled={sent.busy()}
           data-control-id="project.host"
-          onClick={() => void sent.run(() => props.model.request(props.projectPath, {}, 'PUT'))}
+          onClick={() => void sent.run(() => app.request(props.projectPath, {}, 'PUT'))}
         >
           {c().enable}
         </button>
       </Show>
       <Show when={!sent.error() && !sent.loading()}>
         <ProjectOwners
-          model={props.model}
           projectPath={props.projectPath}
           onRemoved={(id) => {
-            if (id === props.model.account()?.id && props.onLeave) props.onLeave();
+            if (id === app.account()?.id && props.onLeave) props.onLeave();
             else void sent.refetch();
           }}
         />
-        <SharingFingerprint
-          model={props.model}
-          vault={props.vault}
-          busy={sent.busy()}
-          run={sent.run}
-        />
+        <SharingFingerprint vault={props.vault} busy={sent.busy()} run={sent.run} />
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -112,9 +106,7 @@ function InvitationControls(props: {
             const estimateScope = fields.get('estimateScope');
             const shareHistory = fields.has('shareHistory');
             void sent
-              .run(() =>
-                props.model.request(props.path, { email, coOwner, estimateScope, shareHistory }),
-              )
+              .run(() => app.request(props.path, { email, coOwner, estimateScope, shareHistory }))
               .then((ok) => {
                 if (ok) form.reset();
               });
@@ -178,14 +170,12 @@ function InvitationControls(props: {
                     invitation={item.id}
                     project={props.projectId}
                     owner={{ item, path: props.path + '/' + item.id }}
-                    model={props.model}
                     vault={props.vault}
                   />
                   <EditScopes
                     item={item}
                     project={props.projectId}
                     path={props.path + '/' + item.id + '/scopes'}
-                    model={props.model}
                     vault={props.vault}
                     busy={sent.busy()}
                     run={sent.run}
@@ -197,9 +187,7 @@ function InvitationControls(props: {
                     class="secondary"
                     disabled={sent.busy()}
                     onClick={() =>
-                      void sent.run(() =>
-                        props.model.request(props.path + '/' + item.id + '/cancel', {}),
-                      )
+                      void sent.run(() => app.request(props.path + '/' + item.id + '/cancel', {}))
                     }
                   >
                     {c().cancel}
@@ -227,7 +215,7 @@ function InvitationControls(props: {
                     onClick={() => {
                       if (window.confirm(c().revokeConfirm))
                         void sent.run(() =>
-                          props.model.request(props.path + '/' + item.id + '/revoke', {}),
+                          app.request(props.path + '/' + item.id + '/revoke', {}),
                         );
                     }}
                   >
@@ -256,7 +244,7 @@ function InvitationControls(props: {
                         void sent.run(async () => {
                           const fingerprint = await sharingFingerprint(recipientKey());
                           if (code !== fingerprint) throw new Error('Fingerprint mismatch');
-                          const sender = props.model.account()!.id;
+                          const sender = app.account()!.id;
                           const key = await localSharingKey(props.vault, {
                             account: item.recipientId,
                             fingerprint,
@@ -272,7 +260,7 @@ function InvitationControls(props: {
                                 props.projectId,
                                 sourceIds,
                                 originalEpoch,
-                                props.model.csrf(),
+                                app.csrf(),
                                 key.signal,
                               )
                             : [];
@@ -308,12 +296,12 @@ function InvitationControls(props: {
                                 ),
                               );
                           key.signal.throwIfAborted();
-                          await props.model.request('/sharing-identity', {
+                          await app.request('/sharing-identity', {
                             publicKey: key.publicKey,
                           });
                           key.signal.throwIfAborted();
                           const action = item.sourceIds?.length ? '/rotate-originals' : '/activate';
-                          await props.model.request(props.path + '/' + item.id + action, {
+                          await app.request(props.path + '/' + item.id + action, {
                             ...grant,
                             recipientKey: recipientKey(),
                             fileIds: originals.map((original) => original.id),

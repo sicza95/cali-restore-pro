@@ -1,30 +1,33 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
+import { useApp } from '../../../app-context/AppContext';
 import { PasswordField } from '../../password-field/PasswordField';
 import { settingsCopy } from '../constants';
-import type { AccountPage, Operations, SettingsProps } from '../types';
+import type { AccountPage, Operations } from '../types';
 import { AccountRow } from '../account-row/AccountRow';
 
-export function Admin(props: SettingsProps) {
-  const c = () => settingsCopy[props.model.lang()];
+export function Admin() {
+  const app = useApp();
+  const c = () => settingsCopy[app.lang()];
   const [query, setQuery] = createSignal({ prefix: '', history: [''] });
   const [page, { refetch: reload }] = createResource(
-    () => props.model.can('accounts.view') && query(),
+    () => app.can('accounts.view') && query(),
     (q) =>
-      props.model.read<AccountPage>(
+      app.read<AccountPage>(
         '/admin/accounts?' + new URLSearchParams({ q: q.prefix, after: q.history.at(-1) ?? '' }),
       ),
   );
   const [ops, { refetch: refreshOps }] = createResource(
-    () => props.model.can('operations.view'),
-    () => props.model.read<Operations>('/admin/operations'),
+    () => app.can('operations.view'),
+    () => app.read<Operations>('/admin/operations'),
   );
   const refresh = () => {
     void reload();
     void refreshOps();
   };
+  // The admin route guard shows the no-access notice before this screen renders.
   return (
-    <Show when={props.model.canAdmin()} fallback={<p>{c().noAccess}</p>}>
-      <Show when={props.model.can('accounts.view')}>
+    <>
+      <Show when={app.can('accounts.view')}>
         <section class="admin-section">
           <h2>{c().accounts}</h2>
           <form
@@ -43,27 +46,22 @@ export function Admin(props: SettingsProps) {
             </label>
             <button data-control-id="admin.search">{c().search}</button>
           </form>
-          <form
-            class="admin-search"
-            onSubmit={(e) => props.model.submit(e, 'confirm', 'confirmed')}
-          >
-            <PasswordField t={props.model.t} kind="currentPassword" />
-            <button data-control-id="admin.confirm" disabled={props.model.busy()}>
-              {props.model.t('confirmPassword')}
+          <form class="admin-search" onSubmit={(e) => app.submit(e, 'confirm', 'confirmed')}>
+            <PasswordField t={app.t} kind="currentPassword" />
+            <button data-control-id="admin.confirm" disabled={app.busy()}>
+              {app.t('confirmPassword')}
             </button>
           </form>
           <p class="field-help">{c().adminPasswordHelp}</p>
           <Show when={page.loading}>
-            <p role="status">{props.model.t('working')}</p>
+            <p role="status">{app.t('working')}</p>
           </Show>
           <Show when={!page.loading && page()}>
             {(data) => (
               <>
                 <ul class="admin-list">
                   <For each={data().accounts} fallback={<li>{c().empty}</li>}>
-                    {(account) => (
-                      <AccountRow model={props.model} account={account} refresh={refresh} />
-                    )}
+                    {(account) => <AccountRow account={account} refresh={refresh} />}
                   </For>
                 </ul>
                 <div class="admin-actions">
@@ -93,7 +91,7 @@ export function Admin(props: SettingsProps) {
           </Show>
         </section>
       </Show>
-      <Show when={props.model.can('operations.view')}>
+      <Show when={app.can('operations.view')}>
         <section class="admin-section">
           <h2>{c().mail}</h2>
           <button
@@ -105,7 +103,7 @@ export function Admin(props: SettingsProps) {
             {c().refreshOperations}
           </button>
           <Show when={ops.loading}>
-            <p role="status">{props.model.t('working')}</p>
+            <p role="status">{app.t('working')}</p>
           </Show>
           <Show when={ops()}>
             {(data) => (
@@ -115,7 +113,7 @@ export function Admin(props: SettingsProps) {
                     {(status) => (
                       <div>
                         <dt>{c()[status]}</dt>
-                        <dd>{data().mail[status].toLocaleString(props.model.lang())}</dd>
+                        <dd>{data().mail[status].toLocaleString(app.lang())}</dd>
                       </div>
                     )}
                   </For>
@@ -129,11 +127,10 @@ export function Admin(props: SettingsProps) {
                           <strong>{c()[job.status]}</strong>
                           {' · '}
                           <time datetime={job.at}>
-                            {new Date(job.at).toLocaleString(props.model.lang())}
+                            {new Date(job.at).toLocaleString(app.lang())}
                           </time>
                           <div class="field-help">
-                            {c().attempts}: {job.attempts.toLocaleString(props.model.lang())} ·{' '}
-                            {job.id}
+                            {c().attempts}: {job.attempts.toLocaleString(app.lang())} · {job.id}
                           </div>
                         </li>
                       )}
@@ -149,7 +146,7 @@ export function Admin(props: SettingsProps) {
                         <strong>{c()[event.action]}</strong>
                         {' · '}
                         <time datetime={event.at}>
-                          {new Date(event.at).toLocaleString(props.model.lang())}
+                          {new Date(event.at).toLocaleString(app.lang())}
                         </time>
                         <div class="field-help">
                           {c().actor}: {event.actorId} · {c().subject}: {event.subjectId}
@@ -163,6 +160,6 @@ export function Admin(props: SettingsProps) {
           </Show>
         </section>
       </Show>
-    </Show>
+    </>
   );
 }

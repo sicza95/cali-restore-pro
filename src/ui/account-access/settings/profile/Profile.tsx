@@ -1,9 +1,10 @@
 import { settingsCopy } from '../constants';
-import type { SettingsProps } from '../types';
+import { useApp } from '../../../app-context/AppContext';
 import { AccountDeletion } from './AccountDeletion';
 
-export function Profile(props: SettingsProps) {
-  const c = () => settingsCopy[props.model.lang()];
+export function Profile() {
+  const app = useApp();
+  const c = () => settingsCopy[app.lang()];
   return (
     <>
       <section class="account-section">
@@ -12,18 +13,18 @@ export function Profile(props: SettingsProps) {
         </div>
         <div class="account-panel">
           <div>
-            <strong>{props.model.t('email')}</strong>
+            <strong>{app.t('email')}</strong>
             <br />
-            <span class="account-email">{props.model.account()?.email}</span>
+            <span class="account-email">{app.account()?.email}</span>
           </div>
-          <a href="/settings/security">{props.model.t('security')}</a>
+          <a href="/settings/security">{app.t('security')}</a>
         </div>
       </section>
       <section class="account-section">
         <div>
           <h2>{c().deletion}</h2>
         </div>
-        <AccountDeletion model={props.model} path="/account" />
+        <AccountDeletion path="/account" />
       </section>
     </>
   );

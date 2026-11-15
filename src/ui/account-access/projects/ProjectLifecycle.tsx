@@ -1,21 +1,21 @@
 import { createMemo, createSignal, For, Show } from 'solid-js';
-import type { SettingsModel } from '../settings/types';
+import { useApp } from '../../app-context/AppContext';
 import type { DeletionStatus } from '../../../platform/api/types.gen';
 
 export function ProjectLifecycle(props: {
-  model: SettingsModel;
   project?: string;
   /** Name of a project this device still holds; hosted names are unreadable on the server. */
   localName?: (id: string) => string | undefined;
 }) {
+  const app = useApp();
   const [trash, setTrash] = createSignal<DeletionStatus[]>();
   const [notice, setNotice] = createSignal<DeletionStatus>();
-  const hu = () => props.model.lang() === 'hu';
+  const hu = () => app.lang() === 'hu';
   const refresh = async () => {
-    setTrash(await props.model.read<DeletionStatus[]>('/hosted-project-trash'));
+    setTrash(await app.read<DeletionStatus[]>('/hosted-project-trash'));
   };
   const change = async (project: string, action: 'delete' | 'recover' | 'purge') => {
-    const result = await props.model.run(
+    const result = await app.run(
       '/hosted-projects/' + project + '/deletion',
       { action, confirm: true },
       'success',
@@ -39,7 +39,7 @@ export function ProjectLifecycle(props: {
   });
   const someUnknown = () => (trash() ?? []).some((entry) => !props.localName?.(entry.id));
   const date = (iso: string) =>
-    new Intl.DateTimeFormat(props.model.lang(), { dateStyle: 'long', timeStyle: 'short' }).format(
+    new Intl.DateTimeFormat(app.lang(), { dateStyle: 'long', timeStyle: 'short' }).format(
       new Date(iso),
     );
   const deadlines = (entry: DeletionStatus) =>
@@ -66,7 +66,7 @@ export function ProjectLifecycle(props: {
             <button
               data-control-id="project.trash.refresh"
               class="secondary"
-              disabled={props.model.busy()}
+              disabled={app.busy()}
               onClick={() => void refresh()}
             >
               {hu() ? 'Kuka frissítése' : 'Refresh trash'}
@@ -86,9 +86,7 @@ export function ProjectLifecycle(props: {
                           <button
                             data-control-id="project.trash.restore"
                             class="secondary"
-                            disabled={
-                              props.model.busy() || Date.parse(entry.recoverUntil) <= Date.now()
-                            }
+                            disabled={app.busy() || Date.parse(entry.recoverUntil) <= Date.now()}
                             onClick={() => void change(entry.id, 'recover')}
                           >
                             {hu() ? 'Helyreállítás' : 'Recover'}
@@ -96,9 +94,7 @@ export function ProjectLifecycle(props: {
                           <button
                             data-control-id="project.trash.purge"
                             class="secondary"
-                            disabled={
-                              props.model.busy() || Date.parse(entry.recoverUntil) <= Date.now()
-                            }
+                            disabled={app.busy() || Date.parse(entry.recoverUntil) <= Date.now()}
                             onClick={() => {
                               if (
                                 window.confirm(
@@ -152,11 +148,7 @@ export function ProjectLifecycle(props: {
               <input type="checkbox" name="purge" />
               {hu() ? 'A helyreállítási időszak kihagyása' : 'Skip live recovery and queue purge'}
             </label>
-            <button
-              data-control-id="project.trash.delete"
-              class="secondary"
-              disabled={props.model.busy()}
-            >
+            <button data-control-id="project.trash.delete" class="secondary" disabled={app.busy()}>
               {hu() ? 'Törlés' : 'Delete hosted project'}
             </button>
           </form>

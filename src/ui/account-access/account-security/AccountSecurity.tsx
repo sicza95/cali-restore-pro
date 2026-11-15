@@ -1,18 +1,19 @@
 import { For, Show } from 'solid-js';
+import { useApp } from '../../app-context/AppContext';
 import { VaultSection } from './VaultSection';
 import { ConfirmField } from '../confirm-field/ConfirmField';
 import { EmailField } from '../email-field/EmailField';
 import { PasswordField } from '../password-field/PasswordField';
 import { SubmitButton } from '../submit-button/SubmitButton';
-import type { AccountSecurityProps } from './types';
 
-export function AccountSecurity(props: AccountSecurityProps) {
+export function AccountSecurity() {
+  const app = useApp();
   return (
     <Show
-      when={props.model.account()}
+      when={app.account()}
       fallback={
         <p>
-          {props.model.t('signedOut')} <a href="/login">{props.model.t('login')}</a>
+          {app.t('signedOut')} <a href="/login">{app.t('login')}</a>
         </p>
       }
     >
@@ -20,21 +21,18 @@ export function AccountSecurity(props: AccountSecurityProps) {
         <>
           <p class="account-email">{owner().email}</p>
           <Show when={owner().id} keyed>
-            {(id) => <VaultSection account={id} language={props.model.lang()} />}
+            {(id) => <VaultSection account={id} language={app.lang()} />}
           </Show>
           <section class="account-section">
             <div>
-              <h2>{props.model.t('confirmPassword')}</h2>
-              <p>{props.model.t('securityHelp')}</p>
+              <h2>{app.t('confirmPassword')}</h2>
+              <p>{app.t('securityHelp')}</p>
             </div>
-            <form
-              class="account-panel"
-              onSubmit={(e) => props.model.submit(e, 'confirm', 'confirmed')}
-            >
-              <PasswordField t={props.model.t} kind={'currentPassword'} />
+            <form class="account-panel" onSubmit={(e) => app.submit(e, 'confirm', 'confirmed')}>
+              <PasswordField t={app.t} kind={'currentPassword'} />
               <SubmitButton
-                t={props.model.t}
-                busy={props.model.busy()}
+                t={app.t}
+                busy={app.busy()}
                 label="confirmPassword"
                 controlId="account.confirm"
               />
@@ -42,89 +40,82 @@ export function AccountSecurity(props: AccountSecurityProps) {
           </section>
           <section class="account-section">
             <div>
-              <h2>{props.model.t('changePassword')}</h2>
-              <p id="password-help">{props.model.t('passwordHelp')}</p>
+              <h2>{app.t('changePassword')}</h2>
+              <p id="password-help">{app.t('passwordHelp')}</p>
             </div>
             <form
               class="account-panel"
-              onSubmit={(e) => props.model.submit(e, 'change-password', 'success')}
+              onSubmit={(e) => app.submit(e, 'change-password', 'success')}
             >
-              <PasswordField t={props.model.t} kind={'newPassword'} />
-              <ConfirmField t={props.model.t} />
+              <PasswordField t={app.t} kind={'newPassword'} />
+              <ConfirmField t={app.t} />
               <button
                 data-control-id="account.password.change"
-                disabled={props.model.busy() || !props.model.confirmed()}
+                disabled={app.busy() || !app.confirmed()}
               >
-                {props.model.t('changePassword')}
+                {app.t('changePassword')}
               </button>
             </form>
           </section>
           <section class="account-section">
             <div>
-              <h2>{props.model.t('changeEmail')}</h2>
-              <p>{props.model.t('neutral')}</p>
+              <h2>{app.t('changeEmail')}</h2>
+              <p>{app.t('neutral')}</p>
             </div>
-            <form
-              class="account-panel"
-              onSubmit={(e) => props.model.submit(e, 'change-email', 'neutral')}
-            >
-              <EmailField t={props.model.t} />
-              <ConfirmField t={props.model.t} />
+            <form class="account-panel" onSubmit={(e) => app.submit(e, 'change-email', 'neutral')}>
+              <EmailField t={app.t} />
+              <ConfirmField t={app.t} />
               <button
                 data-control-id="account.email.change"
-                disabled={props.model.busy() || !props.model.confirmed()}
+                disabled={app.busy() || !app.confirmed()}
               >
-                {props.model.t('changeEmail')}
+                {app.t('changeEmail')}
               </button>
             </form>
           </section>
           <section class="account-section">
             <div>
-              <h2>{props.model.t('sessions')}</h2>
-              <p>{props.model.t('sessionHelp')}</p>
-              <p>{props.model.t('revokeHelp')}</p>
+              <h2>{app.t('sessions')}</h2>
+              <p>{app.t('sessionHelp')}</p>
+              <p>{app.t('revokeHelp')}</p>
             </div>
             <div class="account-panel">
-              <Show when={props.model.sessionError()}>
-                <p role="alert">{props.model.t('sessionFailed')}</p>
+              <Show when={app.sessionError()}>
+                <p role="alert">{app.t('sessionFailed')}</p>
               </Show>
               <button
                 data-control-id="account.sessions.refresh"
                 class="secondary"
-                disabled={props.model.busy()}
-                onClick={() => void props.model.refreshSessions()}
+                disabled={app.busy()}
+                onClick={() => void app.refreshSessions()}
               >
-                {props.model.t('refresh')}
+                {app.t('refresh')}
               </button>
               <label class="confirmation">
                 <input
                   type="checkbox"
-                  checked={props.model.revokeConfirmed()}
-                  onChange={(e) => props.model.setRevokeConfirmed(e.currentTarget.checked)}
+                  checked={app.revokeConfirmed()}
+                  onChange={(e) => app.setRevokeConfirmed(e.currentTarget.checked)}
                 />
-                {props.model.t('confirmation')}
+                {app.t('confirmation')}
               </label>
               <ul class="session-list">
-                <For each={props.model.sessions()}>
+                <For each={app.sessions()}>
                   {(session) => (
                     <li>
                       <span>
-                        <Show when={session.current}>{props.model.t('current')} · </Show>
+                        <Show when={session.current}>{app.t('current')} · </Show>
                         <time datetime={session.createdAt}>
-                          {new Date(session.createdAt).toLocaleString(props.model.lang())}
+                          {new Date(session.createdAt).toLocaleString(app.lang())}
                         </time>
                       </span>
                       <button
                         data-control-id="account.sessions.revoke"
                         class="secondary"
-                        disabled={
-                          props.model.busy() ||
-                          !props.model.confirmed() ||
-                          !props.model.revokeConfirmed()
-                        }
-                        onClick={() => void props.model.revokeSession(session)}
+                        disabled={app.busy() || !app.confirmed() || !app.revokeConfirmed()}
+                        onClick={() => void app.revokeSession(session)}
                       >
-                        {props.model.t('revoke')}
+                        {app.t('revoke')}
                       </button>
                     </li>
                   )}
@@ -133,12 +124,10 @@ export function AccountSecurity(props: AccountSecurityProps) {
               <button
                 data-control-id="account.sessions.revoke-all"
                 class="secondary"
-                disabled={
-                  props.model.busy() || !props.model.confirmed() || !props.model.revokeConfirmed()
-                }
-                onClick={() => void props.model.revokeAll()}
+                disabled={app.busy() || !app.confirmed() || !app.revokeConfirmed()}
+                onClick={() => void app.revokeAll()}
               >
-                {props.model.t('revokeAll')}
+                {app.t('revokeAll')}
               </button>
             </div>
           </section>

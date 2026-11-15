@@ -1,5 +1,6 @@
 /* eslint-disable solid/reactivity -- The invitation is fixed for this mounted row. */
 import { createSignal, Show } from 'solid-js';
+import { useApp } from '../../app-context/AppContext';
 import { scopeContent } from '../../../platform/estimates/scopes';
 import {
   localSharingKey,
@@ -10,18 +11,18 @@ import { optionalScopes } from '../../../platform/projects/sharing-scopes';
 import type { EstimateScope } from '../../../platform/projects/sharing-scopes';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { invitationCopy } from './copy';
-import type { InvitationModel, SentInvitation } from './types';
+import type { SentInvitation } from './types';
 
 export function EditScopes(props: {
   item: SentInvitation;
   project: string;
   path: string;
-  model: InvitationModel;
   vault: LocalVault;
   busy: boolean;
   run: (action: () => Promise<unknown>) => Promise<boolean>;
 }) {
-  const c = () => invitationCopy[props.model.lang()];
+  const app = useApp();
+  const c = () => invitationCopy[app.lang()];
   const previous = {
     estimateScope: props.item.estimateScope,
     shareHistory: props.item.shareHistory,
@@ -45,8 +46,7 @@ export function EditScopes(props: {
             const desired = next();
             const added = additions();
             void props.run(async () => {
-              if (!added.length)
-                return props.model.request(props.path, { previous, next: desired });
+              if (!added.length) return app.request(props.path, { previous, next: desired });
               const recipientKey = props.item.recipientKey;
               if (!recipientKey) throw new Error('Recipient unavailable');
               const fingerprint = await sharingFingerprint(recipientKey);
@@ -58,7 +58,7 @@ export function EditScopes(props: {
               const context = {
                 project: props.project,
                 invitation: props.item.id,
-                sender: props.model.account()!.id,
+                sender: app.account()!.id,
                 recipient: props.item.recipientId,
               };
               const grants = await Promise.all(
@@ -73,9 +73,9 @@ export function EditScopes(props: {
                 ),
               );
               key.signal.throwIfAborted();
-              await props.model.request('/sharing-identity', { publicKey: key.publicKey });
+              await app.request('/sharing-identity', { publicKey: key.publicKey });
               key.signal.throwIfAborted();
-              return props.model.request(props.path, {
+              return app.request(props.path, {
                 previous,
                 next: desired,
                 recipientKey,
