@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
+	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
 const fileChunkSize = 1 << 20
@@ -201,7 +202,7 @@ func (a fileAccess) checkGrowth(ctx context.Context) error {
 	return err
 }
 
-func (a fileAccess) putPart(ctx context.Context, o fileObjects, id string, part int, body []byte) error {
+func (a fileAccess) putPart(ctx context.Context, o objectstore.Store, id string, part int, body []byte) error {
 	hash := sha256.Sum256(body)
 	var expected []byte
 	err := a.tx.QueryRow(ctx, `SELECT digest FROM encrypted_parts WHERE file_id=$1 AND part=$2`, id, part).Scan(&expected)
@@ -209,23 +210,23 @@ func (a fileAccess) putPart(ctx context.Context, o fileObjects, id string, part 
 		if !bytes.Equal(expected, hash[:]) {
 			return errFileState
 		}
-		if _, err := o.read(id, part, len(body), expected); err == nil {
+		if _, err := o.Read(id, part, len(body), expected); err == nil {
 			return nil
 		}
 		// Repair a staged object only with the identical bytes.
-		return o.put(id, part, body)
+		return o.Put(id, part, body)
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return err
 	}
-	if err := o.put(id, part, body); err != nil {
+	if err := o.Put(id, part, body); err != nil {
 		return err
 	}
 	_, err = a.tx.Exec(ctx, `INSERT INTO encrypted_parts(file_id,part,digest) VALUES ($1,$2,$3)`, id, part, hash[:])
 	return err
 }
 
-func (a fileAccess) publish(ctx context.Context, o fileObjects, id string, f fileRecord) error {
+func (a fileAccess) publish(ctx context.Context, o objectstore.Store, id string, f fileRecord) error {
 	rows, err := a.tx.Query(ctx, `SELECT part,digest FROM encrypted_parts WHERE file_id=$1 ORDER BY part`, id)
 	if err != nil {
 		return err
@@ -244,7 +245,7 @@ func (a fileAccess) publish(ctx context.Context, o fileObjects, id string, f fil
 		if part != next || f.partSize(part) == 0 {
 			return errFileState
 		}
-		if _, err := o.read(id, part, f.partSize(part), hash); err != nil {
+		if _, err := o.Read(id, part, f.partSize(part), hash); err != nil {
 			return errFileState
 		}
 		next++
@@ -285,7 +286,7 @@ func (s *Service) CleanExpiredFiles(ctx context.Context, root string) error {
 	if err := os.RemoveAll(filepath.Join(root, id)); err != nil {
 		return err
 	}
-	if err := syncFileDirectory(root); err != nil {
+	if err := objectstore.SyncDir(root); err != nil {
 		return err
 	}
 	if _, err := tx.Exec(ctx, `DELETE FROM encrypted_files WHERE id=$1`, id); err != nil {

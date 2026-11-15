@@ -10,13 +10,14 @@ import (
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
+	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
 type HTTP struct {
 	service            *Service
 	origin, cookieName string
 	secure             bool
-	objects            *fileObjects
+	objects            *objectstore.Store
 }
 
 func NewHTTP(service *Service, origin string, secure bool) *HTTP {
@@ -27,7 +28,7 @@ func NewHTTP(service *Service, origin string, secure bool) *HTTP {
 	return &HTTP{service: service, origin: strings.TrimRight(origin, "/"), cookieName: name, secure: secure}
 }
 
-func (h *HTTP) EnableFiles(root string) { h.objects = &fileObjects{root: root} }
+func (h *HTTP) EnableFiles(root string) { h.objects = &objectstore.Store{Root: root} }
 
 func (h *HTTP) raw(r *http.Request) string {
 	c, err := r.Cookie(h.cookieName)

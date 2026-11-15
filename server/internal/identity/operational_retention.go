@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
 // Expired keys are unusable at the restore boundary even when the worker is
@@ -39,7 +40,7 @@ func (s *Service) ExpireOperationalArchives(ctx context.Context, root string) er
 		}
 	}
 	if removed {
-		return syncFileDirectory(root)
+		return objectstore.SyncDir(root)
 	}
 	return nil
 }
