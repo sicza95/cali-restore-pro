@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/mailer"
+	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
 
 func TestPostgresLifecycle(t *testing.T) {
-	admin, app := identityDB(t)
+	admin, app := testdb.New(t)
 	ctx := context.Background()
 	s, err := New(app)
 	if err != nil {
@@ -49,9 +50,9 @@ func TestPostgresLifecycle(t *testing.T) {
 		}
 		return p
 	}
-	must(s.RegisterAccount(ctx, "member@example.test", testPassword, "hu"))
+	must(s.RegisterAccount(ctx, "member@example.test", testdb.Password, "hu"))
 	verify := latest("verify")
-	if _, err = s.Login(ctx, verify.To, testPassword, ""); !errors.Is(err, ErrCredentials) {
+	if _, err = s.Login(ctx, verify.To, testdb.Password, ""); !errors.Is(err, ErrCredentials) {
 		t.Fatal("unverified login", err)
 	}
 	// Duplicate registration never replaces a pending verifier or adds another job.
@@ -61,19 +62,19 @@ func TestPostgresLifecycle(t *testing.T) {
 	if count != 1 {
 		t.Fatal("duplicate register mail")
 	}
-	if err = s.ConsumeLink(ctx, verify.Token, "reset", testPassword); !errors.Is(err, ErrLink) {
+	if err = s.ConsumeLink(ctx, verify.Token, "reset", testdb.Password); !errors.Is(err, ErrLink) {
 		t.Fatal("purpose bypass", err)
 	}
 	must(s.ConsumeLink(ctx, verify.Token, "verify", ""))
 	if err = s.ConsumeLink(ctx, verify.Token, "verify", ""); !errors.Is(err, ErrLink) {
 		t.Fatal("replay", err)
 	}
-	raw, err := s.Login(ctx, verify.To, testPassword, "")
+	raw, err := s.Login(ctx, verify.To, testdb.Password, "")
 	must(err)
 	must(s.RequestLink(ctx, verify.To, "hu", "reset"))
 	reset := latest("reset")
 	query(`UPDATE identity_links SET expires_at=now()-interval '1 second'`)
-	if err = s.ConsumeLink(ctx, reset.Token, "reset", testPassword); !errors.Is(err, ErrLink) {
+	if err = s.ConsumeLink(ctx, reset.Token, "reset", testdb.Password); !errors.Is(err, ErrLink) {
 		t.Fatal("expired", err)
 	}
 	must(s.RequestLink(ctx, verify.To, "en", "reset"))
@@ -193,15 +194,15 @@ func TestPostgresLifecycle(t *testing.T) {
 	query(`DELETE FROM mail_outbox`)
 	must(s.RequestLink(ctx, "new@example.test", "en", "reset"))
 	stale := latest("reset")
-	must(Bootstrap(ctx, admin, "operator@example.test", testPassword))
-	operator, err := s.Login(ctx, "operator@example.test", testPassword, "")
+	must(Bootstrap(ctx, admin, "operator@example.test", testdb.Password))
+	operator, err := s.Login(ctx, "operator@example.test", testdb.Password, "")
 	must(err)
 	must(s.SetPolicy(ctx, operator, current.Account.ID, "member", "suspended"))
-	if err = s.ConsumeLink(ctx, stale.Token, "reset", testPassword); !errors.Is(err, ErrLink) {
+	if err = s.ConsumeLink(ctx, stale.Token, "reset", testdb.Password); !errors.Is(err, ErrLink) {
 		t.Fatal("suspended reset", err)
 	}
 	must(s.SetPolicy(ctx, operator, current.Account.ID, "member", "active"))
-	if err = s.ConsumeLink(ctx, stale.Token, "reset", testPassword); !errors.Is(err, ErrLink) {
+	if err = s.ConsumeLink(ctx, stale.Token, "reset", testdb.Password); !errors.Is(err, ErrLink) {
 		t.Fatal("old link resurrected", err)
 	}
 	query(`UPDATE mail_outbox SET expires_at=now()-interval '1 second'`)

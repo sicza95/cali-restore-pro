@@ -10,10 +10,11 @@ import (
 
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
+	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
 
 func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
-	admin, app := identityDB(t)
+	admin, app := testdb.New(t)
 	ctx := context.Background()
 	s, err := New(app)
 	if err != nil {
@@ -25,7 +26,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	hash, err := passhash.Hash(testPassword)
+	hash, err := passhash.Hash(testdb.Password)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,10 +81,10 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 	if _, err := s.Current(ctx, departingSession); !errors.Is(err, ErrUnauthorized) {
 		t.Fatalf("departing session still active: %v", err)
 	}
-	if err := s.recoverAccount(ctx, "deletion-departing@example.test", testPassword); err != nil {
+	if err := s.recoverAccount(ctx, "deletion-departing@example.test", testdb.Password); err != nil {
 		t.Fatal(err)
 	}
-	resumed, err := s.Login(ctx, "deletion-departing@example.test", testPassword, "")
+	resumed, err := s.Login(ctx, "deletion-departing@example.test", testdb.Password, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +130,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 		t.Fatal(err)
 	}
 	exec("UPDATE account_deletions SET recover_until=clock_timestamp()-interval '1 second' WHERE id=$1", host)
-	if err := s.recoverAccount(ctx, "deletion-host@example.test", testPassword); !errors.Is(err, ErrCredentials) {
+	if err := s.recoverAccount(ctx, "deletion-host@example.test", testdb.Password); !errors.Is(err, ErrCredentials) {
 		t.Fatalf("expired account recovered: %v", err)
 	}
 	if err := s.PurgeDeleted(ctx, root); err != nil {

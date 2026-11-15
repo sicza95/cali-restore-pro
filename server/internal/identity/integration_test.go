@@ -6,72 +6,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
-	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
-	"github.com/sicza95/cali-restore-pro/server/migrations"
+	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
 
-const testPassword = "synthetic identity test password"
-
-// Each package gets an independent disposable database; migration-history
-// tampering in the migrations suite cannot race identity tests.
-func identityDB(t *testing.T) (*pgxpool.Pool, *pgxpool.Pool) {
-	t.Helper()
-	dsn := os.Getenv("TEST_DATABASE_URL")
-	if dsn == "" {
-		t.Skip("TEST_DATABASE_URL not set")
-	}
-	ctx := context.Background()
-	root, err := pgxpool.New(ctx, dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(root.Close)
-	if _, err := root.Exec(ctx, `SELECT pg_advisory_xact_lock(72401600); DO $$ BEGIN IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='calirestore_app') THEN CREATE ROLE calirestore_app; END IF; END $$`); err != nil {
-		t.Fatal(err)
-	}
-	dbName := fmt.Sprintf("identity_test_%d", time.Now().UnixNano())
-	if _, err := root.Exec(ctx, "CREATE DATABASE "+dbName); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _, _ = root.Exec(ctx, "DROP DATABASE "+dbName+" WITH (FORCE)") })
-	c, err := pgxpool.ParseConfig(dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	c.ConnConfig.Database = dbName
-	admin, err := pgxpool.NewWithConfig(ctx, c)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(admin.Close)
-	if err := migrations.Apply(ctx, admin); err != nil {
-		t.Fatal(err)
-	}
-	appConfig := c.Copy()
-	appConfig.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		_, err := conn.Exec(ctx, "SET ROLE calirestore_app")
-		return err
-	}
-	app, err := pgxpool.NewWithConfig(ctx, appConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(app.Close)
-	return admin, app
-}
-
 func TestPostgresIdentity(t *testing.T) {
-	admin, app := identityDB(t)
+	admin, app := testdb.New(t)
 	ctx := context.Background()
 	s, err := New(app)
 	if err != nil {
@@ -85,7 +31,7 @@ func TestPostgresIdentity(t *testing.T) {
 	}
 	mustLogin := func(email string) string {
 		t.Helper()
-		raw, err := s.Login(ctx, email, testPassword, "")
+		raw, err := s.Login(ctx, email, testdb.Password, "")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -97,7 +43,7 @@ func TestPostgresIdentity(t *testing.T) {
 		var wg sync.WaitGroup
 		for _, email := range []string{"operator-a@example.test", "operator-b@example.test"} {
 			wg.Go(func() {
-				err := Bootstrap(ctx, admin, email, testPassword)
+				err := Bootstrap(ctx, admin, email, testdb.Password)
 				if err == nil {
 					successes.Add(1)
 				} else if !errors.Is(err, ErrConflict) {
@@ -125,11 +71,11 @@ func TestPostgresIdentity(t *testing.T) {
 				t.Fatal("app privilege escape", sql)
 			}
 		}
-		if err := Bootstrap(ctx, app, bootstrapEmail, testPassword); err == nil {
+		if err := Bootstrap(ctx, app, bootstrapEmail, testdb.Password); err == nil {
 			t.Fatal("app can bootstrap")
 		}
 	})
-	hash, err := passhash.Hash(testPassword)
+	hash, err := passhash.Hash(testdb.Password)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +92,7 @@ func TestPostgresIdentity(t *testing.T) {
 	}
 	t.Run("neutral credentials and persistent opaque revocable sessions", func(t *testing.T) {
 		for _, email := range []string{"missing@example.test", "pending@example.test", "suspended@example.test"} {
-			if _, err := s.Login(ctx, email, testPassword, ""); !errors.Is(err, ErrCredentials) {
+			if _, err := s.Login(ctx, email, testdb.Password, ""); !errors.Is(err, ErrCredentials) {
 				t.Fatal(email, err)
 			}
 		}
@@ -171,7 +117,7 @@ func TestPostgresIdentity(t *testing.T) {
 		if err := s.Revoke(ctx, raw, ids["member"], ""); !errors.Is(err, ErrRecent) {
 			t.Fatal(err)
 		}
-		rotated, err := s.Login(ctx, "member@example.test", testPassword, raw)
+		rotated, err := s.Login(ctx, "member@example.test", testdb.Password, raw)
 		if err != nil || rotated == raw {
 			t.Fatal("confirmation failed to rotate", err)
 		}
@@ -289,7 +235,7 @@ func TestPostgresIdentity(t *testing.T) {
 				t.Fatal(w)
 			}
 		}
-		body := `{"email":"member@example.test","password":"` + testPassword + `"}`
+		body := `{"email":"member@example.test","password":"` + testdb.Password + `"}`
 		login := request("POST", "/api/v1/auth/login", body, "", h.origin, "", "application/json")
 		if login.Code != 200 {
 			t.Fatal(login)
@@ -349,7 +295,7 @@ func TestPostgresIdentity(t *testing.T) {
 		mustExec(`DELETE FROM auth_rate_limits`)
 		s.slots <- struct{}{}
 		s.slots <- struct{}{}
-		if _, err := s.Login(ctx, "member@example.test", testPassword, ""); !errors.Is(err, ErrLimited) {
+		if _, err := s.Login(ctx, "member@example.test", testdb.Password, ""); !errors.Is(err, ErrLimited) {
 			t.Fatal("hash concurrency unbounded", err)
 		}
 		<-s.slots
@@ -377,7 +323,7 @@ func TestPostgresIdentity(t *testing.T) {
 		for range maxSessions {
 			mustExec(`INSERT INTO sessions(account_id,token_digest) VALUES ($1,$2)`, ids["member"], sessiontoken.Digest(sessiontoken.New()))
 		}
-		if _, err := s.Login(ctx, "member@example.test", testPassword, ""); !errors.Is(err, ErrConflict) {
+		if _, err := s.Login(ctx, "member@example.test", testdb.Password, ""); !errors.Is(err, ErrConflict) {
 			t.Fatal("session cap bypass", err)
 		}
 		mustExec(`DELETE FROM auth_rate_limits`)

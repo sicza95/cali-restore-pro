@@ -10,10 +10,11 @@ import (
 
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
+	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
 
 func TestPostgresForcedAccountDeletion(t *testing.T) {
-	admin, app := identityDB(t)
+	admin, app := testdb.New(t)
 	ctx := context.Background()
 	s, err := New(app)
 	if err != nil {
@@ -41,7 +42,7 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 	const trash = "c0000000-0000-4000-8000-000000000003"
 	const file = "f0000000-0000-4000-8000-000000000001"
 	const grant = "a0000000-0000-4000-8000-000000000001"
-	hash, err := passhash.Hash(testPassword)
+	hash, err := passhash.Hash(testdb.Password)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +140,7 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 	if err := claim(); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.recoverAccount(ctx, "forced-owner@example.test", testPassword); err != nil {
+	if err := s.recoverAccount(ctx, "forced-owner@example.test", testdb.Password); err != nil {
 		t.Fatal(err)
 	}
 	assert("SELECT NOT EXISTS(SELECT 1 FROM project_deletions WHERE id=$1)", sole)
