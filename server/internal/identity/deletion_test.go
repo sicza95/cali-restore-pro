@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
@@ -34,8 +35,8 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
  VALUES($1,$2,'active',true,10) RETURNING id`, email, hash).Scan(&id); err != nil {
 			t.Fatal(err)
 		}
-		raw = token()
-		exec("INSERT INTO sessions(account_id,token_digest) VALUES($1,$2)", id, digest(raw))
+		raw = sessiontoken.New()
+		exec("INSERT INTO sessions(account_id,token_digest) VALUES($1,$2)", id, sessiontoken.Digest(raw))
 		return
 	}
 	host, hostSession := account("deletion-host@example.test")

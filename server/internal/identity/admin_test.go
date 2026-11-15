@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 func TestAdminHTTP(t *testing.T) {
@@ -19,13 +21,13 @@ func TestAdminHTTP(t *testing.T) {
 	type user struct{ id, raw string }
 	makeUser := func(email, role string, permissions int) user {
 		t.Helper()
-		u := user{raw: token()}
+		u := user{raw: sessiontoken.New()}
 		err := root.QueryRow(ctx, `INSERT INTO accounts(email,password_hash,role,state,admin_permissions)
     VALUES ($1,'unused',$2,'active',$3) RETURNING id`, email, role, permissions).Scan(&u.id)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err = root.Exec(ctx, `INSERT INTO sessions(account_id,token_digest) VALUES ($1,$2)`, u.id, digest(u.raw)); err != nil {
+		if _, err = root.Exec(ctx, `INSERT INTO sessions(account_id,token_digest) VALUES ($1,$2)`, u.id, sessiontoken.Digest(u.raw)); err != nil {
 			t.Fatal(err)
 		}
 		return u
@@ -43,7 +45,7 @@ func TestAdminHTTP(t *testing.T) {
 		req.AddCookie(&http.Cookie{Name: h.cookieName, Value: u.raw})
 		req.Header.Set("Origin", origin)
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-CSRF-Token", CSRF(u.raw))
+		req.Header.Set("X-CSRF-Token", sessiontoken.CSRF(u.raw))
 		w := httptest.NewRecorder()
 		mux.ServeHTTP(w, req)
 		if w.Code != want {

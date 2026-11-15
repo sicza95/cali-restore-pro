@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 type HTTP struct {
@@ -30,7 +31,7 @@ func (h *HTTP) EnableFiles(root string) { h.objects = &fileObjects{root: root} }
 
 func (h *HTTP) raw(r *http.Request) string {
 	c, err := r.Cookie(h.cookieName)
-	if err != nil || !validToken(c.Value) {
+	if err != nil || !sessiontoken.Valid(c.Value) {
 		return ""
 	}
 	return c.Value
@@ -87,7 +88,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 						failure(w, ErrUnauthorized)
 						return
 					}
-					if subtle.ConstantTimeCompare([]byte(CSRF(raw)), []byte(r.Header.Get("X-CSRF-Token"))) != 1 {
+					if subtle.ConstantTimeCompare([]byte(sessiontoken.CSRF(raw)), []byte(r.Header.Get("X-CSRF-Token"))) != 1 {
 						failure(w, ErrForbidden)
 						return
 					}
@@ -126,7 +127,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		h.setCookie(w, raw)
-		httpjson.Respond(w, 200, map[string]string{"csrfToken": CSRF(raw)})
+		httpjson.Respond(w, 200, map[string]string{"csrfToken": sessiontoken.CSRF(raw)})
 	})
 	route("GET /api/v1/auth/me", true, func(w http.ResponseWriter, r *http.Request) {
 		current, err := h.service.Current(r.Context(), h.raw(r))
@@ -138,7 +139,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			Account      Account      `json:"account"`
 			Capabilities []Capability `json:"capabilities"`
 			CSRFToken    string       `json:"csrfToken"`
-		}{current.Account, current.Account.Capabilities(), CSRF(h.raw(r))})
+		}{current.Account, current.Account.Capabilities(), sessiontoken.CSRF(h.raw(r))})
 	})
 	route("POST /api/v1/auth/confirm", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
@@ -158,7 +159,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		h.setCookie(w, raw)
-		httpjson.Respond(w, 200, map[string]string{"csrfToken": CSRF(raw)})
+		httpjson.Respond(w, 200, map[string]string{"csrfToken": sessiontoken.CSRF(raw)})
 	})
 	route("POST /api/v1/auth/logout", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct{}

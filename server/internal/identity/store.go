@@ -3,9 +3,6 @@ package identity
 import (
 	"context"
 	"crypto/cipher"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"net/mail"
 	"strings"
@@ -14,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 var (
@@ -58,36 +56,17 @@ func normalizeEmail(email string) (string, bool) {
 	return email, err == nil && parsed.Address == email && !strings.ContainsAny(email, "\r\n")
 }
 
-func token() string {
-	b := make([]byte, 32)
-	// crypto/rand.Read never returns an error in the supported Go runtime.
-	_, _ = rand.Read(b)
-	return base64.RawURLEncoding.EncodeToString(b)
-}
-
-func digest(raw string) []byte {
-	sum := sha256.Sum256([]byte(raw))
-	return sum[:]
-}
-
-func validToken(raw string) bool {
-	b, err := base64.RawURLEncoding.DecodeString(raw)
-	return err == nil && len(b) == 32 && base64.RawURLEncoding.EncodeToString(b) == raw
-}
-
-func CSRF(raw string) string { return base64.RawURLEncoding.EncodeToString(digest("csrf:" + raw)) }
-
 type rowQuery interface {
 	QueryRow(context.Context, string, ...any) pgx.Row
 }
 
 func session(ctx context.Context, q rowQuery, raw string) (Session, error) {
 	var s Session
-	if !validToken(raw) {
+	if !sessiontoken.Valid(raw) {
 		return s, ErrUnauthorized
 	}
 	err := q.QueryRow(ctx, `SELECT s.id, a.id, a.email, a.state, a.role, a.admin_permissions, s.created_at, s.verified_at
-        FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_digest=$1 AND a.state='active'`, digest(raw)).Scan(
+        FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_digest=$1 AND a.state='active'`, sessiontoken.Digest(raw)).Scan(
 		&s.ID, &s.Account.ID, &s.Account.Email, &s.Account.State, &s.Account.Role, &s.Account.AdminPermissions, &s.CreatedAt, &s.VerifiedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return s, ErrUnauthorized
@@ -121,7 +100,7 @@ func (s *Service) rate(ctx context.Context, email string) error {
 		result, err := s.pool.Exec(ctx, `INSERT INTO auth_rate_limits (bucket,window_at,attempts)
             VALUES ($1, date_bin(make_interval(secs => $2), clock_timestamp(), '2000-01-01'::timestamptz), 1)
             ON CONFLICT (bucket,window_at) DO UPDATE SET attempts=auth_rate_limits.attempts+1
-            WHERE auth_rate_limits.attempts < $3`, digest(b.key), b.seconds, b.limit)
+            WHERE auth_rate_limits.attempts < $3`, sessiontoken.Digest(b.key), b.seconds, b.limit)
 		if err != nil {
 			return err
 		}
@@ -204,15 +183,15 @@ func (s *Service) Login(ctx context.Context, email, password, replace string) (s
 	if count >= maxSessions {
 		return "", ErrConflict
 	}
-	raw := token()
-	if _, err = tx.Exec(ctx, `INSERT INTO sessions (account_id,token_digest) VALUES ($1,$2)`, a.ID, digest(raw)); err != nil {
+	raw := sessiontoken.New()
+	if _, err = tx.Exec(ctx, `INSERT INTO sessions (account_id,token_digest) VALUES ($1,$2)`, a.ID, sessiontoken.Digest(raw)); err != nil {
 		return "", err
 	}
 	return raw, tx.Commit(ctx)
 }
 
 func (s *Service) Logout(ctx context.Context, raw string) error {
-	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE token_digest=$1`, digest(raw))
+	_, err := s.pool.Exec(ctx, `DELETE FROM sessions WHERE token_digest=$1`, sessiontoken.Digest(raw))
 	return err
 }
 
@@ -226,7 +205,7 @@ func (s *Service) Sessions(ctx context.Context, raw string) ([]SessionInfo, erro
 	// One statement observes both the current account/session and its list.
 	rows, err := s.pool.Query(ctx, `SELECT other.id, other.created_at, other.id=own.id FROM sessions own
         JOIN accounts a ON a.id=own.account_id AND a.state='active'
-        JOIN sessions other ON other.account_id=a.id WHERE own.token_digest=$1 ORDER BY other.created_at,other.id`, digest(raw))
+        JOIN sessions other ON other.account_id=a.id WHERE own.token_digest=$1 ORDER BY other.created_at,other.id`, sessiontoken.Digest(raw))
 	if err != nil {
 		return nil, err
 	}

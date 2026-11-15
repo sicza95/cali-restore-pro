@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 var ErrLink = errors.New("invalid, expired or used link")
@@ -66,13 +67,13 @@ func (s *Service) enqueue(ctx context.Context, tx pgx.Tx, account, to, lang, pur
 
 func (s *Service) issue(ctx context.Context, tx pgx.Tx, id, to, lang, purpose string) error {
 	// Reissue invalidates previous links without extending their validity.
-	raw := token()
+	raw := sessiontoken.New()
 	expiry := time.Now().Add(30 * time.Minute)
 	if purpose == "verify" {
 		expiry = time.Now().Add(24 * time.Hour)
 	}
 	_, err := tx.Exec(ctx, `INSERT INTO identity_links(token_digest,account_id,purpose,target_email,expires_at) VALUES($1,$2,$3,$4,$5)
- ON CONFLICT(account_id,purpose) DO UPDATE SET token_digest=EXCLUDED.token_digest,target_email=EXCLUDED.target_email,expires_at=EXCLUDED.expires_at`, digest(raw), id, purpose, to, expiry)
+ ON CONFLICT(account_id,purpose) DO UPDATE SET token_digest=EXCLUDED.token_digest,target_email=EXCLUDED.target_email,expires_at=EXCLUDED.expires_at`, sessiontoken.Digest(raw), id, purpose, to, expiry)
 	if err != nil {
 		return err
 	}
@@ -145,7 +146,7 @@ func (s *Service) RequestLink(ctx context.Context, email, lang, purpose string) 
 }
 
 func (s *Service) ConsumeLink(ctx context.Context, raw, purpose, password string) error {
-	if !validToken(raw) {
+	if !sessiontoken.Valid(raw) {
 		return ErrLink
 	}
 	if purpose != "verify" && purpose != "reset" && purpose != "email" {
@@ -172,7 +173,7 @@ func (s *Service) ConsumeLink(ctx context.Context, raw, purpose, password string
 	defer tx.Rollback(context.Background())
 	var id, to, state, oldEmail, lang string
 	err = tx.QueryRow(ctx, `SELECT l.account_id,l.target_email,a.state,a.email,a.language FROM identity_links l JOIN accounts a ON a.id=l.account_id
- WHERE l.token_digest=$1 AND l.purpose=$2 AND l.expires_at>clock_timestamp() FOR UPDATE OF a,l`, digest(raw), purpose).Scan(&id, &to, &state, &oldEmail, &lang)
+ WHERE l.token_digest=$1 AND l.purpose=$2 AND l.expires_at>clock_timestamp() FOR UPDATE OF a,l`, sessiontoken.Digest(raw), purpose).Scan(&id, &to, &state, &oldEmail, &lang)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return ErrLink
 	}

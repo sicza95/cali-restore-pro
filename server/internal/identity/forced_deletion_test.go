@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 func TestPostgresForcedAccountDeletion(t *testing.T) {
@@ -48,8 +49,8 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 		t.Helper()
 		exec(`INSERT INTO accounts(id,email,password_hash,role,state,server_features,quota_mib)
  VALUES($1,$2,$3,$4,'active',true,10)`, id, email, hash, role)
-		raw := token()
-		exec("INSERT INTO sessions(account_id,token_digest) VALUES($1,$2)", id, digest(raw))
+		raw := sessiontoken.New()
+		exec("INSERT INTO sessions(account_id,token_digest) VALUES($1,$2)", id, sessiontoken.Digest(raw))
 		return raw
 	}
 	op := sessionFor(operator, "forced-operator@example.test", "superuser")
@@ -91,7 +92,7 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(`{"confirm":true,"force":true}`))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Origin", origin)
-		req.Header.Set("X-CSRF-Token", CSRF(raw))
+		req.Header.Set("X-CSRF-Token", sessiontoken.CSRF(raw))
 		req.AddCookie(&http.Cookie{Name: "calirestore_session", Value: raw})
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
