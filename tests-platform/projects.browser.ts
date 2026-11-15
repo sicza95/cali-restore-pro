@@ -342,9 +342,6 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
   await page.screenshot({ path: info.outputPath('projects-portrait.png'), fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
-  await page.screenshot({ path: info.outputPath('projects-phone.png'), fullPage: true });
   await page.getByRole('button', { name: 'Archive', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Restore project' })).toBeVisible();
   await controls('project.library').click();

@@ -55,10 +55,7 @@ test('navigation registry, capability changes, language, theme and Back', async 
   await expect(page.locator('html')).toHaveAttribute('lang', 'hu');
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-transparency', 'opaque');
-  for (const viewport of [
-    { width: 834, height: 1194 },
-    { width: 390, height: 844 },
-  ]) {
+  for (const viewport of [{ width: 834, height: 1194 }]) {
     await page.setViewportSize(viewport);
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);

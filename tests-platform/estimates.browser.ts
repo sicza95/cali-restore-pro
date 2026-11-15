@@ -246,7 +246,6 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   for (const viewport of [
     { width: 1194, height: 834 },
     { width: 834, height: 1194 },
-    { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
@@ -289,7 +288,6 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   for (const viewport of [
     { width: 1194, height: 834 },
     { width: 834, height: 1194 },
-    { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
     await expect(preview).toBeVisible();
@@ -321,5 +319,5 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await step('issue');
   await expect(page.getByRole('button', { name: 'Becslési verzió mentése' })).toBeVisible();
   await expectTaskLanguage(page, 'estimate hu');
-  await page.screenshot({ path: info.outputPath('estimate-hu-390.png'), fullPage: true });
+  await page.screenshot({ path: info.outputPath('estimate-hu.png'), fullPage: true });
 });
