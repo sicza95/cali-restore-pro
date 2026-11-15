@@ -15,7 +15,7 @@ M-08 implements the [application journeys and control inventory](workflows-and-c
 
 ## Baseline and kickoff
 
-- M-07 application and disposable restore evidence is recorded in the [coverage matrix](requirements-coverage.md) and [lifecycle evidence](../m07-deletion-retention.md). Production database continuity and retention evidence remains pending access to the actual deployment.
+- M-07 application and disposable restore evidence is recorded in the [coverage matrix](requirements-coverage.md) and [lifecycle evidence](../milestones/m07-deletion-retention.md). Production database continuity and retention evidence remains pending access to the actual deployment.
 - The checked-out `master` baseline at kickoff was `e9c7047`. GitHub marked that commit Verified. GitHub `main` was at `cd6e544`. Verify the release branch and the signatures on the intervening commits before publishing the M-08 work.
 - The tool rail is the registry pilot. Its entries describe review-only selection and reuse the existing seven tool IDs. The label/help keys are reserved for the localized copy. The existing rail still renders its English labels. The browser assertion covers the Storybook composition.
 - Kickoff verification passed type checking, lint, formatting, the Storybook build and all 11 Playwright tests against the built Storybook on an alternate loopback port. Reviewed landscape and portrait screenshots. This is desktop browser evidence at iPad viewport sizes.

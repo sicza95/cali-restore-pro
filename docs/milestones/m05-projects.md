@@ -40,8 +40,8 @@ work, as are image decoding and measurement.
   The storage test checked revision conflicts, lock invalidation and vault forget.
 - Axe found no violations in the populated project view. Both iPad viewport
   screenshots were inspected:
-  [1194 × 834 landscape](evidence/m05/projects-landscape.png) and
-  [834 × 1194 portrait](evidence/m05/projects-portrait.png).
+  [1194 × 834 landscape](../evidence/m05/projects-landscape.png) and
+  [834 × 1194 portrait](../evidence/m05/projects-portrait.png).
 - Go vet and race tests against disposable PostgreSQL covered hosted and unhosted
   deletion preflights and the encrypted file regressions. TypeScript, ESLint,
   Prettier, the production app build, and OpenAPI generation passed. The Storybook

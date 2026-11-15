@@ -18,7 +18,7 @@ The app serves account access and security screens. The worker delivers verifica
 
 For an existing checkout, rerun `npm run setup:secrets` to add `mail_key`, then rebuild the stack and apply migration 0003. The app and worker use the same mounted key. Keep it stable across restarts and store it separately from the database backup. A worker with a different key cannot deliver existing queued mail.
 
-Compose defaults to `mail-sink:1025` with a development sender. For a production deployment, configure `SMTP_ADDRESS`, `SMTP_FROM`, and worker access to a trusted SMTP relay. Production requires certificate-verified STARTTLS. For authenticated SMTP, pass `SMTP_USERNAME` and mount a worker-only `SMTP_PASSWORD_FILE` using a Compose override. Production relay delivery and recovery qualification remain separate gates. See the [account lifecycle contract](../docs/m01b-account-lifecycle.md).
+Compose defaults to `mail-sink:1025` with a development sender. For a production deployment, configure `SMTP_ADDRESS`, `SMTP_FROM`, and worker access to a trusted SMTP relay. Production requires certificate-verified STARTTLS. For authenticated SMTP, pass `SMTP_USERNAME` and mount a worker-only `SMTP_PASSWORD_FILE` using a Compose override. Production relay delivery and recovery qualification remain separate gates. See the [account lifecycle contract](../docs/milestones/m01b-account-lifecycle.md).
 
 ## One-time superuser bootstrap (M-01a)
 
@@ -28,7 +28,7 @@ After applying migrations, create a protected, ignored `deploy/secrets/bootstrap
 docker compose --profile ops run --rm bootstrap
 ```
 
-This separate service mounts the operator migration credential and the one-time file, with no listener, published port or content volume. App/worker never receive either credential. A successful command records one active initial superuser without exposing its identity/password in logs. Repeating the same address is a no-op; another address is refused. A rerun never resets the password or repairs a demoted/suspended account. Remove the one-time file and protect any copies after use. Do not bootstrap a real account into a shared/demo environment by automation. The operator establishes bootstrap address ownership out of band. See the [identity contract and limitations](../docs/m01a-identity.md).
+This separate service mounts the operator migration credential and the one-time file, with no listener, published port or content volume. App/worker never receive either credential. A successful command records one active initial superuser without exposing its identity/password in logs. Repeating the same address is a no-op; another address is refused. A rerun never resets the password or repairs a demoted/suspended account. Remove the one-time file and protect any copies after use. Do not bootstrap a real account into a shared/demo environment by automation. The operator establishes bootstrap address ownership out of band. See the [identity contract and limitations](../docs/milestones/m01a-identity.md).
 
 Storybook remains separate and uses its original commands and synthetic data:
 
@@ -89,7 +89,7 @@ The test overlay creates an independent disposable PostgreSQL database. Its Go s
 
 ## Backup and isolated restore
 
-Use the [M-07 operational archive and restore procedure](../docs/m07-deletion-retention.md)
+Use the [M-07 operational archive and restore procedure](../docs/milestones/m07-deletion-retention.md)
 for deployments with accounts or hosted projects. The M-00 commands below are for
 an empty identity database with synthetic object bytes.
 
