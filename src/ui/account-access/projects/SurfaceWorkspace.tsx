@@ -19,6 +19,7 @@ import { control as drawingControl } from '../../editor/drawing-review/constants
 import { drawingCopy } from '../../editor/drawing-review/copy';
 import { SurfaceReviewAdapter } from './SurfaceReviewAdapter';
 import { SurfaceDrawing } from './SurfaceDrawing';
+import { Icon } from '../../icon/Icon';
 import { surfaceCopy } from './surface-copy';
 import './surface-styles.css';
 import { ProjectOriginals } from './ProjectOriginals';
@@ -182,7 +183,7 @@ export function SurfaceWorkspace(props: {
           {checkpointCopy[props.language].mode}
         </button>
       </div>
-      <div class="surface-navigation">
+      <div class="surface-navigation" data-compact={drawing() || undefined}>
         <label>
           {view().surface}
           <select
@@ -195,7 +196,13 @@ export function SurfaceWorkspace(props: {
               {(object) => (
                 <optgroup label={object.name}>
                   <For each={object.surfaces}>
-                    {(surface) => <option value={surface.id}>{surface.name}</option>}
+                    {(surface) => (
+                      // `selected` as well as the select's `value`: the value effect can run
+                      // before these options exist, which left the first surface shown.
+                      <option value={surface.id} selected={surface.id === props.surface.id}>
+                        {surface.name}
+                      </option>
+                    )}
                   </For>
                 </optgroup>
               )}
@@ -236,18 +243,26 @@ export function SurfaceWorkspace(props: {
             class="secondary"
             data-control-id="surface.view.previous"
             disabled={index() === 0}
+            title={drawing() ? view().previous : undefined}
             onClick={() => move(-1)}
           >
-            {view().previous}
+            <Show when={drawing()} fallback={view().previous}>
+              <Icon name="chevron" class="surface-step-previous" />
+              <span class="account-visually-hidden">{view().previous}</span>
+            </Show>
           </button>
           <button
             type="button"
             class="secondary"
             data-control-id="surface.view.next"
             disabled={index() + 1 >= images().length}
+            title={drawing() ? view().next : undefined}
             onClick={() => move(1)}
           >
-            {view().next}
+            <Show when={drawing()} fallback={view().next}>
+              <Icon name="chevron" class="surface-step-next" />
+              <span class="account-visually-hidden">{view().next}</span>
+            </Show>
           </button>
         </Show>
       </div>

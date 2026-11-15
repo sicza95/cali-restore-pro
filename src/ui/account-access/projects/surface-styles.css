@@ -192,3 +192,25 @@
 .surface-review input[type='checkbox'] {
   accent-color: var(--cr-accent);
 }
+/* Drawing mode: one compact row so the editor starts near the top of the page. */
+.surface-navigation[data-compact] {
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-block-end: 8px;
+}
+.surface-navigation[data-compact] label {
+  flex: 1 1 0;
+  font-size: 13px;
+}
+.surface-navigation[data-compact] button {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+.surface-step-previous {
+  transform: rotate(180deg);
+}

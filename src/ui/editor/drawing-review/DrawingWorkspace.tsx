@@ -196,6 +196,7 @@ export function DrawingWorkspace(props: {
           controlId: (action) => control('history.' + action),
         }}
         saveState={drawingSaveState(m, props.journal)}
+        saveDetail={c().draftLifetime}
         copy={{
           ...workspaceCopy(props.language),
           perStrokeSave: m.manual() ? c().manual : c().perStroke,
