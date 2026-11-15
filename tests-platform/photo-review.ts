@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { surfaceControls } from '../src/ui/projects/surface-review-controls';
 import { expectTaskLanguage } from './copy-guard';
+import { canvasShare, verifyPhotoGestures } from './photo-gestures';
 
 export function photoControl(page: Page, key: string) {
   const id = 'surface.' + key;
@@ -12,7 +13,8 @@ export function photoControl(page: Page, key: string) {
 export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
   const c = (key: string) => photoControl(page, key);
   const frame = page.locator('.surface-canvas .surface-photo-frame');
-  await c('view.pan.right').tap();
+  await verifyPhotoGestures(page);
+  await c('view.canvas').press('ArrowRight');
   await expect(frame).toHaveCSS('transform', /^matrix.*24/);
   await c('view.fit').press('Enter');
   await expect(frame).toHaveAttribute('style', /translate\(0px, 0px\)/);
@@ -39,18 +41,18 @@ export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
         { width: 834, height: 1194 },
       ]) {
         await page.setViewportSize(viewport);
+        // The canvas gets most of the first screen (#34): it was 47 % at 1194 and 55 % at 834.
+        // Polled: right after a resize the shell may still show the other orientation's header.
+        await expect
+          .poll(() => canvasShare(page))
+          .toBeGreaterThanOrEqual(viewport.width === 834 ? 60 : 50);
         const rail = (await page.locator('.surface-rail').boundingBox())!;
         const canvas = (await page.locator('.surface-stage').boundingBox())!;
         const inspector = (await page.locator('.surface-inspector').boundingBox())!;
         expect(rail.x).toBeLessThan(canvas.x);
         if (viewport.width === 834) expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
         else expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
-        for (const control of [
-          'review.prepare',
-          'review.apply',
-          'review.cancel',
-          'view.pan.right',
-        ]) {
+        for (const control of ['review.prepare', 'review.apply', 'review.cancel', 'view.fit']) {
           const box = (await c(control).boundingBox())!;
           expect(box.height).toBeGreaterThanOrEqual(44);
           expect(box.width).toBeGreaterThanOrEqual(44);

@@ -50,12 +50,28 @@
   grid-area: canvas;
   min-width: 0;
 }
+/*
+ * The canvas runs to the bottom of the first screen: the shell's breadcrumb and title, the vault
+ * bar, the status and object lines, the tabs and the compact picker row take about 400 px at
+ * 1194 × 834 and 834 × 1194. The view row and hint sit just below; gestures and keys cover them.
+ */
+.surface-review {
+  --surface-canvas-block: max(320px, calc(100dvh - 400px));
+}
+.surface-focus {
+  --surface-canvas-block: calc(100dvh - 140px);
+}
 .surface-canvas {
   display: grid;
   position: relative;
   place-items: center;
-  min-block-size: clamp(280px, 55vh, 660px);
+  block-size: var(--surface-canvas-block);
   overflow: hidden;
+  cursor: grab;
+  /* Pinch zooms the photo, not the page. No user-select here: with touch-action it slowed
+     multi-finger taps on the drawing canvas by about 450 ms (#34); pointerdown already stops
+     selection while dragging. */
+  touch-action: none;
   background: var(--cr-canvas);
   border: 1px solid var(--cr-rule);
   border-radius: var(--cr-panel-radius);
@@ -67,8 +83,28 @@
 .surface-canvas img {
   display: block;
   max-inline-size: 100%;
-  max-block-size: clamp(280px, 64vh, 760px);
+  max-block-size: var(--surface-canvas-block);
   object-fit: contain;
+  -webkit-user-drag: none;
+}
+.surface-canvas:active {
+  cursor: grabbing;
+}
+.surface-canvas:focus-visible {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 2px;
+}
+.surface-view-hint {
+  margin-block: 4px 0;
+  color: var(--cr-muted);
+  font-size: 13px;
+}
+.surface-photo-count {
+  flex: none;
+  align-self: center;
+  color: var(--cr-muted);
+  font-size: 13px;
+  white-space: nowrap;
 }
 .surface-canvas .surface-photo-loading {
   visibility: hidden;
@@ -160,9 +196,6 @@
 .surface-focus {
   grid-template-columns: max-content minmax(0, 1fr);
   grid-template-areas: 'rail canvas' 'inspector inspector';
-}
-.surface-focus .surface-canvas {
-  min-block-size: 58vh;
 }
 @media (max-width: 950px) {
   .surface-review {

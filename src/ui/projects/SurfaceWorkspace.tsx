@@ -131,6 +131,8 @@ export function SurfaceWorkspace(props: {
     );
   const saveImages = (images: Attachment[], attachment?: PendingAttachment) =>
     saveSurface(updateSurfaceImages(props.surface, images), attachment);
+  // Photo setup and drawing: one compact picker row, so the canvas starts near the top.
+  const compact = () => mode() !== 'checkpoint';
   return (
     <>
       <header class="surface-heading">
@@ -171,7 +173,7 @@ export function SurfaceWorkspace(props: {
           {checkpointCopy[props.language].mode}
         </button>
       </div>
-      <div class="surface-navigation" data-compact={drawing() || undefined}>
+      <div class="surface-navigation" data-compact={compact() || undefined}>
         <label>
           {view().surface}
           <select
@@ -231,10 +233,10 @@ export function SurfaceWorkspace(props: {
             class="secondary"
             data-control-id="surface.view.previous"
             disabled={index() === 0}
-            title={drawing() ? view().previous : undefined}
+            title={compact() ? view().previous : undefined}
             onClick={() => move(-1)}
           >
-            <Show when={drawing()} fallback={view().previous}>
+            <Show when={compact()} fallback={view().previous}>
               <Icon name="chevron" class="surface-step-previous" />
               <span class="account-visually-hidden">{view().previous}</span>
             </Show>
@@ -244,22 +246,22 @@ export function SurfaceWorkspace(props: {
             class="secondary"
             data-control-id="surface.view.next"
             disabled={index() + 1 >= images().length}
-            title={drawing() ? view().next : undefined}
+            title={compact() ? view().next : undefined}
             onClick={() => move(1)}
           >
-            <Show when={drawing()} fallback={view().next}>
+            <Show when={compact()} fallback={view().next}>
               <Icon name="chevron" class="surface-step-next" />
               <span class="account-visually-hidden">{view().next}</span>
             </Show>
           </button>
+          <Show when={mode() === 'photo' && photo()}>
+            <span class="surface-photo-count">
+              {index() + 1} / {images().length} · {view()[role()]}
+            </span>
+          </Show>
         </Show>
       </div>
       <div hidden={mode() !== 'photo'}>
-        <Show when={photo()}>
-          <p>
-            {index() + 1} / {images().length} · {view()[role()]}
-          </p>
-        </Show>
         <Show when={reviewKey()} keyed>
           {(key) => (
             <SurfaceReviewAdapter

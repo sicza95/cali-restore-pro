@@ -15,13 +15,21 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-The baseline roadmap is done. Highest-value next work by the re-score: UX first, photo setup by gesture (#34), the surface header (#39) and the warning treatment (#38); then the truncated estimate rows (#35). A physical iPad session (#49) would test the 6/10 UX rating on the target device.
+UX next by the re-score: the surface header (#39), which would also free first-screen space for the photo canvas, and the warning treatment (#38); then the truncated estimate rows (#35). A physical iPad session (#49) should try the new photo gestures with fingers and Pencil.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Photo setup by gesture (#34)
+
+- Plan: [`docs/plan/photo-gestures.md`](../plan/photo-gestures.md), pushed first (`5339ceb`).
+- Photo setup pans by drag and arrow keys and zooms by pinch, Ctrl/⌘ + wheel and + − (0 fits), reusing the drawing canvas's wheel and key rules; the Left / Right / Up / Down buttons and their controls and copy are gone, and a hint names the gestures (EN, HU). The canvas is focusable with a label, the hint as its description and `aria-keyshortcuts`. The picker row is compact on this tab too, with the photo counter in it, and the canvas runs to the bottom of the first screen: 52 % of the first screen at 1194 × 834 (was 47 %), 68 % at 834 × 1194 (was 55 %).
+- Found and fixed on the way: zoom anchored on the wrong origin (the preparation preview sets `transform-origin: 0 0`), and `user-select: none` with `touch-action: none` on the photo canvas slowing multi-finger taps on the drawing canvas by about 450 ms (bisected; cause in Chrome not established).
+- Verified: `npm run check`, `test:unit` (214), `test:files` (22; the projects flow also 3 of 3 with `--repeat-each 3`), `npm test` (16), `test:sync` (2), `test:estimates` (8), `test:app` (16 passed, 1 skipped) on disposable `calirestore-qa-photo` (removed with volumes), `build-storybook`. Looked at `photo-en-light-1194` and `photo-hu-light-834`.
+- Not run: Go tests; a real iPad (pinch and drag were tested with CDP touch events only).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Phase 2 items 4 and 5 confirmed; baseline re-scored (#33)
 
