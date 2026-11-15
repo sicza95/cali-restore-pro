@@ -1,6 +1,6 @@
 # Canvas-first layout — Phase 1, step 3
 
-15 November 2026 · Status: decisions accepted, in progress · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1 item 3 · Follows [pointer drawing first](editor-pointer-first.md)
+15 November 2026 · Status: done, in review · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1 item 3 · Follows [pointer drawing first](editor-pointer-first.md)
 
 Goal: on the surface editor, the photo gets the space and the input methods it deserves. You zoom and pan with gestures, the wheel, the trackpad or the keyboard, the photo fills the canvas, and in portrait the inspector docks below the canvas at a height that shows what you need without scrolling a small box.
 
@@ -62,6 +62,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
    - The photo fills the canvas on one axis at 1194, 834 and 390 px.
    - Portrait inspector short and tall: touch targets, the selected layer row visible, axe.
    - Screenshots and axe at 1194, 834 and 390 px. Tick Phase 1 item 3 in the quality baseline and update the handoff.
+   - As built: wheel, keys and the footer buttons were already covered by `canvas-zoom.ts` from commits 1 and 2. This commit adds the photo-fit check at all three widths, `view.zoom` inside "Enter by number", and the selected layer row in view after each grip toggle. The row is checked after a toggle, not on arrival: opening and closing "Enter by number" leaves the inspector body scrolled past the layer list, and nothing brings it back until the height or selection changes (open in the handoff).
 
 ## Risks and how the plan handles them
 

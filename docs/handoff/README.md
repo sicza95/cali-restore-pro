@@ -4,22 +4,32 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 5, `b53d0f5`). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
+- **Branch:** `feat/canvas-first-layout` (step 3, all seven commits pushed; the step 3 PR is open for review). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is planned; the owner accepted all five decisions as recommended. Its seven commits go on `feat/canvas-first-layout` for one PR.
+- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is done on `feat/canvas-first-layout` and ticked in the baseline; it reaches `main` when its PR is fast-forward merged. PR screenshots live on the orphan branch `pr-assets/step3` (delete it after merge).
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Commit step 3 commit 6 (`fix(editor): phone width`, in the working tree, not committed) on `feat/canvas-first-layout`, then commit 7 (tests and screenshots) and open the step 3 PR.
+Owner reviews the step 3 PR. Before merging, decide whether to fix the inspector scroll (open question 2) on the branch. After merging: fast-forward `main` to the PR head, delete `pr-assets/step3`, then plan Phase 1 step 4 (retire the duplicate review components).
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
+2. In the portrait short inspector, opening and closing "Enter by number" leaves the inspector body scrolled past the layer list, so the short state shows no layer row (visible in the 834 and 390 `closed` screenshots). Fix on the step 3 branch before merging (reveal the selected row when the disclosure closes), or carry it into step 4?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commits 6 and 7 pushed, PR opened
+
+- Committed and pushed commit 6 as `08d0c58` (`fix(editor): phone width`); GitHub reports Verified.
+- Commit 7 (`test(editor): cover canvas-first layout`): `drawing-review.ts` checks the photo fills the canvas on one axis at 1194, 834 and 390 px, that `view.zoom` sits inside "Enter by number", and that the selected layer row is in view after each grip toggle. Wheel, keys and footer zoom were already covered by `canvas-zoom.ts`. Ticked Phase 1 item 3 in the quality baseline.
+- Found: the short portrait inspector can show no layer row after "Enter by number" is opened and closed (open question 2). The test checks the row after a toggle, which is what the plan promises, not on arrival.
+- Screenshots `drawing-{1194,834,390}-{closed,open}.png` and `drawing-{834,390}-tall.png` are on the orphan branch `pr-assets/step3` and embedded in the PR.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed).
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests, physical Pencil.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 5 pushed, commit 6: phone width
 

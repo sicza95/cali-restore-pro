@@ -33,3 +33,20 @@ git log --show-signature -1
 - The plan doc and handoff for the step land on `main` first.
 - Merge by fast-forwarding `main` to the PR head (not GitHub squash or rebase), so the signatures
   survive. Check every commit shows Verified before merging.
+
+## PR screenshots
+
+`gh` and the GitHub MCP can't upload images (GitHub has no API for PR attachments), and
+screenshots never go on `main` or the step branch. Put them on a signed orphan branch without
+touching the working tree, then embed them with `blob/…?raw=true` URLs (these work for a private
+repo when the viewer is signed in):
+
+```bash
+S=../.analysis/claude-tmp/<step>-shots   # copy PNGs out of test-results first
+tree=$(for f in $S/*.png; do printf '100644 blob %s\t%s\n' "$(git hash-object -w "$f")" "$(basename "$f")"; done | git mktree)
+c=$(git commit-tree -S "$tree" -m "chore: <step> PR screenshots")
+git push origin "$c:refs/heads/pr-assets/<step>"
+```
+
+`![1194 closed](https://github.com/sicza95/cali-restore-pro/blob/pr-assets/<step>/drawing-1194-closed.png?raw=true)`.
+Delete the branch after the PR merges.
