@@ -36,6 +36,7 @@ function DraftActions(props: DraftProps) {
       </p>
       <div class="drawing-actions">
         <button
+          class="primary"
           type="button"
           data-control-id={control('history.commit')}
           disabled={m.blocked() || !m.draft()!.pending.length}
@@ -151,6 +152,7 @@ export function ResolveDrawingDraft(props: {
       <p>{c().resolveHelp}</p>
       <div class="drawing-actions">
         <button
+          class="primary"
           type="button"
           data-control-id={control('resolve.commit')}
           disabled={!props.canCommit}

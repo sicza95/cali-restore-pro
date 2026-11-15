@@ -166,6 +166,7 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
               <div class="project-create">
                 <NameForm
                   controlId="projects.create"
+                  primary
                   label={c().name}
                   action={c().add}
                   disabled={busy()}

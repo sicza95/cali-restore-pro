@@ -64,7 +64,9 @@ export function Preferences() {
       >
         <div class="preferences-actions">
           <p>{c().localHelp}</p>
-          <button data-control-id="preferences.save">{c().save}</button>
+          <button class="primary" data-control-id="preferences.save">
+            {c().save}
+          </button>
         </div>
         <Show when={result()}>
           {(status) => <p role={status() === 'saved' ? 'status' : 'alert'}>{c()[status()]}</p>}

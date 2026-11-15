@@ -348,6 +348,7 @@ export function SurfaceReviewAdapter(props: {
               </Show>
               <div class="surface-actions">
                 <button
+                  class="primary"
                   type="button"
                   data-control-id={id('apply')}
                   disabled={!valid() || props.busy || matcher.status() === 'matching'}

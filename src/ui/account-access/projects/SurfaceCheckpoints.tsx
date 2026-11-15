@@ -258,6 +258,7 @@ export function SurfaceCheckpoints(props: {
               />
             </label>
             <button
+              class="primary"
               data-control-id={id('create')}
               disabled={!props.state || !name().trim() || props.busy || full()}
             >
@@ -302,6 +303,7 @@ export function SurfaceCheckpoints(props: {
                 {c().cancel}
               </button>
               <button
+                class="primary"
                 type="button"
                 data-control-id={id('confirm')}
                 disabled={!mayRestore()}

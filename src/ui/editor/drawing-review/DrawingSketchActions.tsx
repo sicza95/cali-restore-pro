@@ -24,6 +24,7 @@ export function DrawingSketchActions(props: {
         </span>
       </Show>
       <button
+        class="primary"
         type="button"
         data-control-id={control('path.apply')}
         disabled={!t.valid()}

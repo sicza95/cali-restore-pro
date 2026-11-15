@@ -91,7 +91,7 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
                 <p>
                   v{preset.version} · {preset.currency} /{preset.unit}
                 </p>
-                <button>
+                <button class="primary">
                   {props.language === 'hu' ? 'Új verzió mentése' : 'Save new version'}
                 </button>
                 <button

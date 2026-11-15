@@ -36,7 +36,7 @@ unstyled controls, many equal-weight buttons". iPad and desktop only
 | Surface: checkpoints                 | Create checkpoint; Confirm in the dialog    |
 | Estimate step                        | Next, or Save estimate version on the last  |
 | Report / Outputs                     | Download / Preview                          |
-| Vault (setup, unlock, approve)       | the current step's action                   |
+| Vault (setup, unlock)                | the current step's action                   |
 | Invitations                          | Accept                                      |
 | Preferences, libraries, admin search | Save, Save new version, Search              |
 

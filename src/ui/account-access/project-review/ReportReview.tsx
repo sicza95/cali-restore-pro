@@ -86,6 +86,7 @@ export function ReportReview(props: {
       </Show>
       <div class="review-actions">
         <button
+          class="primary"
           type="button"
           data-control-id={id('preview')}
           disabled={!ready() || busy() || !selected().length}
@@ -258,6 +259,7 @@ export function ReportReview(props: {
         <div class="report-download-actions">
           <div class="review-actions">
             <button
+              class="primary"
               type="button"
               data-control-id={id('download')}
               disabled={!current() || download.working()}

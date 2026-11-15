@@ -165,7 +165,12 @@ export function VaultSection(props: {
           <Show
             when={recovery()}
             fallback={
-              <button data-control-id="vault.setup.generate" disabled={busy()} onClick={generate}>
+              <button
+                class="primary"
+                data-control-id="vault.setup.generate"
+                disabled={busy()}
+                onClick={generate}
+              >
                 {c().create}
               </button>
             }
@@ -186,6 +191,7 @@ export function VaultSection(props: {
             </label>
             <Show when={!pairing()}>
               <button
+                class="primary"
                 data-control-id="vault.setup.confirm"
                 disabled={!ack() || busy()}
                 onClick={() =>
@@ -225,7 +231,6 @@ export function VaultSection(props: {
               fallback={
                 <button
                   data-control-id="vault.request.pair"
-                  class="secondary"
                   disabled={busy()}
                   onClick={() => {
                     setPairing(vault.requestTransfer());
@@ -263,6 +268,7 @@ export function VaultSection(props: {
         <Show when={status()?.exists && text() === undefined}>
           <Show when={status()?.remembered}>
             <button
+              class="primary"
               data-control-id={vaultEntryControls.remembered.id}
               disabled={busy()}
               onClick={() => void run(() => vault.unlock(), loadText)}
@@ -272,13 +278,17 @@ export function VaultSection(props: {
           </Show>
           <form onSubmit={formAction((e) => vault.unlock(secret(e)), loadText)}>
             <VaultKeyField label={c().key} />
-            <button data-control-id={vaultEntryControls.recovery.id} disabled={busy()}>
+            <button
+              classList={{ primary: !status()?.remembered }}
+              data-control-id={vaultEntryControls.recovery.id}
+              disabled={busy()}
+            >
               {c().unlock}
             </button>
           </form>
         </Show>
         <Show when={text() !== undefined && (props.workspace || props.entry)}>
-          <button class="secondary" data-control-id={vaultEntryControls.lock.id} onClick={lock}>
+          <button data-control-id={vaultEntryControls.lock.id} onClick={lock}>
             {c().lock}
           </button>
         </Show>
@@ -306,12 +316,7 @@ export function VaultSection(props: {
           >
             {c().save}
           </button>
-          <button
-            class="secondary"
-            data-control-id={vaultEntryControls.lock.id}
-            disabled={busy()}
-            onClick={lock}
-          >
+          <button data-control-id={vaultEntryControls.lock.id} disabled={busy()} onClick={lock}>
             {c().lock}
           </button>
           <label class="confirmation">
@@ -330,7 +335,6 @@ export function VaultSection(props: {
           </label>
           <button
             data-control-id="vault.backup.download"
-            class="secondary"
             disabled={busy()}
             onClick={() =>
               void run(
@@ -372,7 +376,6 @@ export function VaultSection(props: {
             </label>
             <button
               data-control-id="vault.forget.confirm"
-              class="secondary"
               disabled={busy() || !discard()}
               onClick={() =>
                 void run(

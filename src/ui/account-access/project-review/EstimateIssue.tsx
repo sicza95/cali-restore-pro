@@ -51,6 +51,7 @@ export function EstimateIssueActions(props: { copy: EstimateCopy; draft: Estimat
   return (
     <>
       <button
+        class="primary"
         type="button"
         data-control-id={id('snapshot')}
         disabled={!d.valid()}
