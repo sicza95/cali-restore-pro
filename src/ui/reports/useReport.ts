@@ -1,12 +1,12 @@
 import { createSignal, onCleanup, onMount, untrack } from 'solid-js';
 import { createStore, reconcile, unwrap } from 'solid-js/store';
-import { estimateRepository } from '../../../platform/estimates/persistence';
-import { coversEstimate, reportEstimate } from '../../../platform/reports/estimate';
-import { reportRepository } from '../../../platform/reports/persistence';
-import { workbookEstimate } from '../../../platform/reports/workbook-estimate';
-import type { Branding, Draft, ReportSettings } from '../../../platform/reports/types';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { LocalVault } from '../../../platform/vault/vault';
+import { estimateRepository } from '../../platform/estimates/persistence';
+import { coversEstimate, reportEstimate } from '../../platform/reports/estimate';
+import { reportRepository } from '../../platform/reports/persistence';
+import { workbookEstimate } from '../../platform/reports/workbook-estimate';
+import type { Branding, Draft, ReportSettings } from '../../platform/reports/types';
+import type { SavedProject } from '../../platform/projects/types';
+import type { LocalVault } from '../../platform/vault/vault';
 import { loadPreferences } from '../settings/preferences/utils';
 import { prepareSurfaces, selectedSurfaces } from './report-model';
 

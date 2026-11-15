@@ -1,10 +1,10 @@
-import type { SavedProject, Surface } from '../../../platform/projects/types';
-import type { PreviewSurface, ReportSettings } from '../../../platform/reports/types';
-import { defaultSelection } from '../../../platform/reports/types';
-import { assessmentVersions } from '../../../platform/projects/assessment-selection';
-import { prepareAssessment } from '../../../platform/reports/prepare-assessment';
-import { referencePhoto } from '../../../platform/reports/reference-photos';
-import type { LocalVault } from '../../../platform/vault/vault';
+import type { SavedProject, Surface } from '../../platform/projects/types';
+import type { PreviewSurface, ReportSettings } from '../../platform/reports/types';
+import { defaultSelection } from '../../platform/reports/types';
+import { assessmentVersions } from '../../platform/projects/assessment-selection';
+import { prepareAssessment } from '../../platform/reports/prepare-assessment';
+import { referencePhoto } from '../../platform/reports/reference-photos';
+import type { LocalVault } from '../../platform/vault/vault';
 
 export function surfaceSelection(surface: Surface, settings: ReportSettings['surfaces']) {
   const scope = settings[surface.id] ?? defaultSelection;

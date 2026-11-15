@@ -1,15 +1,15 @@
 /* eslint-disable solid/reactivity -- The invitation is fixed for this mounted row. */
 import { createSignal, Show } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
-import { scopeContent } from '../../../platform/estimates/scopes';
+import { useApp } from '../app-context/AppContext';
+import { scopeContent } from '../../platform/estimates/scopes';
 import {
   localSharingKey,
   sealScope,
   sharingFingerprint,
-} from '../../../platform/projects/fixture-sharing';
-import { optionalScopes } from '../../../platform/projects/sharing-scopes';
-import type { EstimateScope } from '../../../platform/projects/sharing-scopes';
-import type { LocalVault } from '../../../platform/vault/vault';
+} from '../../platform/projects/fixture-sharing';
+import { optionalScopes } from '../../platform/projects/sharing-scopes';
+import type { EstimateScope } from '../../platform/projects/sharing-scopes';
+import type { LocalVault } from '../../platform/vault/vault';
 import { invitationCopy } from './copy';
 import type { SentInvitation } from './types';
 

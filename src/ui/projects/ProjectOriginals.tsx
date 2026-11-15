@@ -1,14 +1,14 @@
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
-import { checkpointSources } from '../../../platform/projects/assessment-checkpoints';
-import type { PendingAttachment } from '../../../platform/vault/project-store';
+import { checkpointSources } from '../../platform/projects/assessment-checkpoints';
+import type { PendingAttachment } from '../../platform/vault/project-store';
 import { createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
-import { ImageImportError } from '../../../platform/images/types';
-import type { ImportIssue } from '../../../platform/images/types';
-import type { Attachment, ImageRole, Surface } from '../../../platform/projects/types';
-import type { LocalVault } from '../../../platform/vault/vault';
+import { ImageImportError } from '../../platform/images/types';
+import type { ImportIssue } from '../../platform/images/types';
+import type { Attachment, ImageRole, Surface } from '../../platform/projects/types';
+import type { LocalVault } from '../../platform/vault/vault';
 import type { Copy } from './forms';
-import { formatFileSize } from '../../../platform/format/number';
-import type { Language } from '../types';
+import { formatFileSize } from '../../platform/format/number';
+import type { Language } from '../account-access/types';
 
 export function ProjectOriginals(props: {
   project: string;

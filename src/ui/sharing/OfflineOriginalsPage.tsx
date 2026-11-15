@@ -1,14 +1,14 @@
 import { createSignal, onCleanup, onMount, Show, untrack } from 'solid-js';
-import { offlineAccountKey } from '../../../platform/vault/offline-account';
-import type { LocalVault } from '../../../platform/vault/vault';
-import { VaultSection } from '../account-security/VaultSection';
-import { applyLanguage, storedLanguage } from '../presentation';
+import { offlineAccountKey } from '../../platform/vault/offline-account';
+import type { LocalVault } from '../../platform/vault/vault';
+import { VaultSection } from '../account/account-security/VaultSection';
+import { applyLanguage, storedLanguage } from '../account-access/presentation';
 import {
   applyPreferences,
   loadPreferences,
   preferenceDefaults,
 } from '../settings/preferences/utils';
-import type { Language } from '../types';
+import type { Language } from '../account-access/types';
 import { OfflineOriginals, pinCopy, useOfflineOriginals } from './OfflineOriginals';
 import './styles.css';
 

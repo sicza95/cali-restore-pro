@@ -1,17 +1,17 @@
 /* eslint-disable solid/reactivity -- The parent keys this panel by project ID. */
 import { createSignal, For, Show } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
-import { scopeContent } from '../../../platform/estimates/scopes';
+import { useApp } from '../app-context/AppContext';
+import { scopeContent } from '../../platform/estimates/scopes';
 import {
   localSharingKey,
   sealProjectSnapshot,
   sealScope,
   sharingFingerprint,
-} from '../../../platform/projects/fixture-sharing';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { SharedProject } from '../../../platform/projects/shared-project';
-import { publishOriginals } from '../../../platform/projects/shared-originals';
-import { optionalScopes } from '../../../platform/projects/sharing-scopes';
+} from '../../platform/projects/fixture-sharing';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { SharedProject } from '../../platform/projects/shared-project';
+import { publishOriginals } from '../../platform/projects/shared-originals';
+import { optionalScopes } from '../../platform/projects/sharing-scopes';
 import { invitationCopy } from './copy';
 import type { SentInvitation } from './types';
 import { useInvitations } from './useInvitations';

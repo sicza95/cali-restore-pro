@@ -1,8 +1,8 @@
 import { For } from 'solid-js';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
-import type { EstimateResult, EstimateSnapshot } from '../../../platform/estimates/types';
-import { formatHours, formatMoney } from '../../../platform/format/number';
-import type { Language } from '../types';
+import type { EstimateCopy } from '../../platform/estimates/copy';
+import type { EstimateResult, EstimateSnapshot } from '../../platform/estimates/types';
+import { formatHours, formatMoney } from '../../platform/format/number';
+import type { Language } from '../account-access/types';
 import { versionLine } from './estimate-version';
 
 const facts = ['total', 'beforeTax', 'taxTotal', 'subtotal', 'hours'] as const;

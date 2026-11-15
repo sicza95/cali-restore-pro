@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
-import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
+import { surfaceControls } from '../src/ui/projects/surface-review-controls';
 import { expectTaskLanguage } from './copy-guard';
 
 export function photoControl(page: Page, key: string) {

@@ -1,4 +1,4 @@
-import type { ControlContract } from '../../control-registry/types';
+import type { ControlContract } from '../control-registry/types';
 
 function control(
   id: string,

@@ -1,4 +1,4 @@
-import type { Matrix } from '../../../platform/projects/planar-types';
+import type { Matrix } from '../../platform/projects/planar-types';
 import { fields, lineKeys, toolFields } from './surface-review-controls';
 import type { ReviewTool } from './surface-review-controls';
 

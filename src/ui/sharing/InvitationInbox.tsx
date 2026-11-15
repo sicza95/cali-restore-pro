@@ -1,20 +1,20 @@
 /* eslint-disable solid/reactivity -- The account and vault are fixed for the mounted inbox, and commands run on user input. */
 import { createSignal, For, Show } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
+import { useApp } from '../app-context/AppContext';
 import {
   localSharingKey,
   openSharedContent,
   openScope,
   sharingFingerprint,
-} from '../../../platform/projects/fixture-sharing';
-import type { ScopeEnvelope, SharingEnvelope } from '../../../platform/projects/fixture-sharing';
-import { optionalScopes } from '../../../platform/projects/sharing-scopes';
-import type { OptionalScope } from '../../../platform/projects/sharing-scopes';
-import type { SharedProject } from '../../../platform/projects/shared-project';
-import type { SharedOriginal } from '../../../platform/projects/shared-originals';
-import type { LocalVault } from '../../../platform/vault/vault';
-import { SharedEstimateProjection } from '../project-review/SharedEstimateProjection';
-import { estimateCopy } from '../../../platform/estimates/copy';
+} from '../../platform/projects/fixture-sharing';
+import type { ScopeEnvelope, SharingEnvelope } from '../../platform/projects/fixture-sharing';
+import { optionalScopes } from '../../platform/projects/sharing-scopes';
+import type { OptionalScope } from '../../platform/projects/sharing-scopes';
+import type { SharedProject } from '../../platform/projects/shared-project';
+import type { SharedOriginal } from '../../platform/projects/shared-originals';
+import type { LocalVault } from '../../platform/vault/vault';
+import { SharedEstimateProjection } from '../estimates/SharedEstimateProjection';
+import { estimateCopy } from '../../platform/estimates/copy';
 import { invitationCopy } from './copy';
 import type { InboxInvitation } from './types';
 import { useInvitations } from './useInvitations';

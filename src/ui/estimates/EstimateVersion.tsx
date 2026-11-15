@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js';
-import { estimateCopy } from '../../../platform/estimates/copy';
-import type { EstimateSnapshot } from '../../../platform/estimates/types';
+import { estimateCopy } from '../../platform/estimates/copy';
+import type { EstimateSnapshot } from '../../platform/estimates/types';
 import {
   formatArea,
   formatHours,
@@ -8,8 +8,8 @@ import {
   formatNumber,
   formatPercent,
   formatRate,
-} from '../../../platform/format/number';
-import type { Language } from '../types';
+} from '../../platform/format/number';
+import type { Language } from '../account-access/types';
 import { extraRate, phaseEffort, phaseRate } from './estimate-model';
 import type { Phase } from './estimate-model';
 import { versionLine } from './estimate-version';

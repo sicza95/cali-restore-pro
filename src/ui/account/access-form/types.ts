@@ -1,6 +1,6 @@
 import type { PublicRouteName } from '../../router/types';
 import type { Accessor } from 'solid-js';
-import type { Language, Submit, Translate } from '../types';
+import type { Language, Submit, Translate } from '../../account-access/types';
 
 export type AccessFormProps = {
   view: 'login' | PublicRouteName;

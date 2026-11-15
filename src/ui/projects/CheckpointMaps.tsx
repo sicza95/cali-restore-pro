@@ -1,7 +1,7 @@
 import { createSignal, For, Show } from 'solid-js';
-import type { CheckpointComparison } from '../../../platform/projects/checkpoint.worker';
-import type { PlanarSurface } from '../../../platform/projects/planar-types';
-import type { LocalVault } from '../../../platform/vault/vault';
+import type { CheckpointComparison } from '../../platform/projects/checkpoint.worker';
+import type { PlanarSurface } from '../../platform/projects/planar-types';
+import type { LocalVault } from '../../platform/vault/vault';
 import type { SurfaceCheckpointCopy } from './checkpoint-copy';
 import type { SurfaceCopy } from './surface-copy';
 import { SurfacePhoto } from './SurfacePhoto';

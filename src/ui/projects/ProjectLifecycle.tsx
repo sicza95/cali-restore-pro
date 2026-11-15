@@ -1,6 +1,6 @@
 import { createMemo, createSignal, For, Show } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
-import type { DeletionStatus } from '../../../platform/api/types.gen';
+import { useApp } from '../app-context/AppContext';
+import type { DeletionStatus } from '../../platform/api/types.gen';
 
 export function ProjectLifecycle(props: {
   project?: string;

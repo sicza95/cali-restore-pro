@@ -1,21 +1,21 @@
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
-import type { PendingAttachment } from '../../../platform/vault/project-store';
+import type { PendingAttachment } from '../../platform/vault/project-store';
 import { createSignal, For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
-import { updateSurfaceImages } from '../../../platform/projects/surface-attachments';
-import { newObject, newSurface, projectName } from '../../../platform/projects/projects';
+import { updateSurfaceImages } from '../../platform/projects/surface-attachments';
+import { newObject, newSurface, projectName } from '../../platform/projects/projects';
 import type {
   RestorationObject,
   SavedProject,
   Surface,
   Units,
-} from '../../../platform/projects/types';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { Language } from '../types';
+} from '../../platform/projects/types';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { Language } from '../account-access/types';
 import { NameForm, UnitsField } from './forms';
 import { ProjectOriginals } from './ProjectOriginals';
 import { projectCopy } from './project-copy';
-import { followLink, projectHref } from '../../router/routes';
+import { followLink, projectHref } from '../router/routes';
 
 export function ProjectDetail(props: {
   project: SavedProject;

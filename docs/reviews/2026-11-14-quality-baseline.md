@@ -147,7 +147,7 @@ Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths
 1. [x] Add Vitest for `src/platform/**` with test vectors for estimates, geometry, vault crypto and revision queue; run it in CI. Done in [PR #24](https://github.com/sicza95/cali-restore-pro/pull/24), landed via #25: 182 tests, CI job "Unit tests (Vitest)".
 2. [x] Introduce one router module (typed routes, guards, deep links) and an app context replacing the prop-drilled `model`. Done in [PR #27](https://github.com/sicza95/cali-restore-pro/pull/27) ([plan](../plan/router-context.md), [ADR 0006](../adr/0006-router-and-app-context.md)): `src/ui/router/` and `src/ui/app-context/`.
 3. Central i18n catalogue with typed keys and a missing-translation check.
-4. Rename `src/ui/account-access/` into feature folders (`account/`, `projects/`, `estimates/`, `reports/`, `sharing/`).
+4. [x] Rename `src/ui/account-access/` into feature folders (`account/`, `projects/`, `estimates/`, `reports/`, `sharing/`). Done in issue #29: also `settings/` and `project-review/` (the page shared by estimates and reports); `account-access/` keeps only the shared app core. Pure moves, no behaviour change.
 5. [x] Split Go `internal/identity` into domain packages without behaviour changes; keep tests green at each step. Done in [PR #22](https://github.com/sicza95/cali-restore-pro/pull/22), landed via #25: nine domain packages.
 6. Replace hard-coded colours with tokens; remove file-level lint disables.
 

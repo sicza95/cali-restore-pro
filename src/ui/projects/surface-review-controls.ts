@@ -1,4 +1,4 @@
-import type { ControlContract } from '../../control-registry/types';
+import type { ControlContract } from '../control-registry/types';
 
 export const tools = ['prepare', 'align', 'calibrate'] as const;
 export const directions = ['left', 'right', 'up', 'down'] as const;

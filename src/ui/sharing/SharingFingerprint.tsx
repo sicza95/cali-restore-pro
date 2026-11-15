@@ -1,8 +1,8 @@
 /* eslint-disable solid/reactivity -- The deferred command reads the current vault on user input. */
 import { createSignal, Show } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
-import { localSharingKey, sharingFingerprint } from '../../../platform/projects/fixture-sharing';
-import type { LocalVault } from '../../../platform/vault/vault';
+import { useApp } from '../app-context/AppContext';
+import { localSharingKey, sharingFingerprint } from '../../platform/projects/fixture-sharing';
+import type { LocalVault } from '../../platform/vault/vault';
 import { invitationCopy } from './copy';
 
 export function SharingFingerprint(props: {

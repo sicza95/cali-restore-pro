@@ -1,6 +1,6 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
-import { useApp } from '../../../app-context/AppContext';
-import { PasswordField } from '../../password-field/PasswordField';
+import { useApp } from '../../app-context/AppContext';
+import { PasswordField } from '../../account/password-field/PasswordField';
 import { settingsCopy } from '../constants';
 import type { AccountPage, Operations } from '../types';
 import { AccountRow } from '../account-row/AccountRow';

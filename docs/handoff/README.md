@@ -8,20 +8,29 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
-- **Active roadmap phase:** Phase 2 items 1 to 3 done; Phase 3 items 1, 2 and 5 done; Phase 4 done. Left: Phase 2 items 4 and 5, Phase 3 items 3, 4 and 6.
+- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1, 2, 4 and 5 done; Phase 4 done. Left: Phase 3 items 3 (i18n, #30) and 6 (colour tokens, #31).
 - **CI:** one workflow `ci.yml` with four parallel jobs: Frontend checks, Unit tests (Vitest), Go tests, Platform E2E.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:sync`, `test:estimates` (locally, this batch), backup scripts.
 
 ## Next step
 
-Phase 2 item 4 (one app shell on the new router: sidebar in landscape, compact header + drawer in portrait, real breadcrumbs), then item 5 (styled controls, one primary per view). Phase 3 items 3 (i18n catalogue), 4 (feature folders) and 6 (colour tokens) touch many files, so they run one at a time after the shell.
+Phase 3 item 3, the i18n catalogue (#30), now that copy sits in its feature folders; then item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · 390 px checks removed, feature folders
+
+- Drift on start: `main` was 8 commits ahead of this handoff (app shell, styled controls, sync test, issue-closing rule). Those sessions did not add a log entry.
+- #47 (owner: remove): the 390 × 844 viewport is gone from seven platform tests, with the phone dock assertions in `drawing-review.ts` and the `projects-phone` screenshot; `estimate-hu-390.png` is now `estimate-hu.png`. ADR 0003 updated. The phone CSS (640 px media queries in `editor/`) stays but is untested.
+- #29: `src/ui/account-access/` split by a script that moves files with `git mv` and rewrites every relative import (code, CSS, `new URL` workers, tests): `account/` (sign-in forms, vault, `AccountScreen`), `settings/`, `projects/`, `project-review/` (the review page with the shared `fields.tsx` and `styles.css`), `estimates/`, `reports/`, `sharing/` (was `invitations/`). `account-access/` keeps 13 shared core files (session state, API, types, navigation, global styles). Only import lines changed. Baseline Phase 3 item 4 ticked; architecture overview updated.
+- ESLint now ignores `.claude/**`: leftover side-session worktrees made `npm run lint` fail with 727 parser errors.
+- Verified: `npm run check`, `test:unit` (200), `npm test` (16), `test:files` (22), `test:estimates` (8), `test:sync` (2), `test:app` (16 passed, 1 skipped) on disposable `calirestore-qa-folders` (removed with volumes), `build-storybook`.
+- Not run: Go tests (no Go change), physical iPad.
 
 ### 2026-11-15 · Claude (orchestrator on the owner's Windows machine) · Estimate steps and router
 

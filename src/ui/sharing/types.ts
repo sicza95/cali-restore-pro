@@ -1,4 +1,4 @@
-import type { ScopeSelection } from '../../../platform/projects/sharing-scopes';
+import type { ScopeSelection } from '../../platform/projects/sharing-scopes';
 
 export type Invitation = ScopeSelection & {
   id: string;

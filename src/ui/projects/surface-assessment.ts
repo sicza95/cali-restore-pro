@@ -4,7 +4,7 @@ import {
   newPlanarSurface,
   preparePhoto,
   sameSource,
-} from '../../../platform/projects/planar-state';
+} from '../../platform/projects/planar-state';
 import type {
   AlignmentInput,
   CalibrationInput,
@@ -13,7 +13,7 @@ import type {
   Point as Pixel,
   Preparation,
   SourceFrame,
-} from '../../../platform/projects/planar-types';
+} from '../../platform/projects/planar-types';
 import { lineKeys, pairKeys } from './surface-review-controls';
 import type { ReviewTool } from './surface-review-controls';
 import { defaults } from './surface-review-model';

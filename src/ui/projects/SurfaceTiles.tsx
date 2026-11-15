@@ -1,6 +1,6 @@
 import { For, onCleanup, onMount, untrack } from 'solid-js';
-import { columns, rows, tileSize } from '../../../platform/images/types';
-import type { Dimensions } from '../../../platform/images/types';
+import { columns, rows, tileSize } from '../../platform/images/types';
+import type { Dimensions } from '../../platform/images/types';
 
 export function SurfaceTiles(props: {
   level: Dimensions;

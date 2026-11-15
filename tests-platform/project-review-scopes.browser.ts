@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { reportControls } from '../src/ui/account-access/project-review/report-controls';
+import { reportControls } from '../src/ui/reports/report-controls';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const other = '00000000-0000-4000-8000-000000000002';

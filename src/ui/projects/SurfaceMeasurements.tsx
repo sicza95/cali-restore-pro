@@ -1,9 +1,9 @@
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
-import { displayArea, resultStatus } from '../../../platform/projects/planar-measurement';
-import type { PlanarResult } from '../../../platform/projects/planar-measurement';
-import type { PlanarSurface } from '../../../platform/projects/planar-types';
-import { formatArea, formatPercent } from '../../../platform/format/number';
-import type { Language } from '../types';
+import { displayArea, resultStatus } from '../../platform/projects/planar-measurement';
+import type { PlanarResult } from '../../platform/projects/planar-measurement';
+import type { PlanarSurface } from '../../platform/projects/planar-types';
+import { formatArea, formatPercent } from '../../platform/format/number';
+import type { Language } from '../account-access/types';
 import type { SurfaceCopy } from './surface-copy';
 
 export function SurfaceMeasurements(props: {
@@ -21,7 +21,7 @@ export function SurfaceMeasurements(props: {
     setJob('running');
     let worker: Worker;
     try {
-      worker = new Worker(new URL('../../../platform/projects/planar.worker.ts', import.meta.url), {
+      worker = new Worker(new URL('../../platform/projects/planar.worker.ts', import.meta.url), {
         type: 'module',
       });
     } catch {

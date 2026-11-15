@@ -1,6 +1,6 @@
 import { createSignal, Show } from 'solid-js';
-import { useApp } from '../../../app-context/AppContext';
-import type { DeletionPreflight } from '../../../../platform/api/types.gen';
+import { useApp } from '../../app-context/AppContext';
+import type { DeletionPreflight } from '../../../platform/api/types.gen';
 import { settingsCopy } from '../constants';
 
 export function AccountDeletion(props: { path: string; pending?: boolean; onChange?: () => void }) {

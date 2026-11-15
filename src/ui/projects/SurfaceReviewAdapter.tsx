@@ -1,11 +1,11 @@
 import { createMemo, createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
-import { detailMapping } from '../../../platform/projects/planar-alignment';
-import { newPlanarSurface, photoFrame, sameSource } from '../../../platform/projects/planar-state';
-import { preparationMatrix } from '../../../platform/projects/planar-transform';
-import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
+import { detailMapping } from '../../platform/projects/planar-alignment';
+import { newPlanarSurface, photoFrame, sameSource } from '../../platform/projects/planar-state';
+import { preparationMatrix } from '../../platform/projects/planar-transform';
+import type { PlanarSurface, SourceFrame } from '../../platform/projects/planar-types';
 import { commitAssessment, preparation, savedDraft } from './surface-assessment';
 import { surfaceMatcher } from './surface-match';
-import type { LocalVault } from '../../../platform/vault/vault';
+import type { LocalVault } from '../../platform/vault/vault';
 import type { SurfaceCopy } from './surface-copy';
 import { SurfaceCalibrationFields } from './SurfaceCalibrationFields';
 import { SurfaceAlignmentFields } from './SurfaceAlignmentFields';

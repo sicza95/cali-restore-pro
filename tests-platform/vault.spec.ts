@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Download, Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { vaultEntryControls } from '../src/ui/account-access/account-security/entry-controls';
+import { vaultEntryControls } from '../src/ui/account/account-security/entry-controls';
 import AxeBuilder from '@axe-core/playwright';
 
 const first = '10000000-0000-4000-8000-000000000001';

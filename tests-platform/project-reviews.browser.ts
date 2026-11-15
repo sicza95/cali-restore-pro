@@ -2,8 +2,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { orientedJpeg } from './fixtures/images';
 import { expect, test } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
-import { estimateControls } from '../src/ui/account-access/project-review/estimate-controls';
-import { reportControls } from '../src/ui/account-access/project-review/report-controls';
+import { estimateControls } from '../src/ui/estimates/estimate-controls';
+import { reportControls } from '../src/ui/reports/report-controls';
 import { projectTable, reportTable, revisionQueueTable } from '../src/platform/vault/store';
 import { expectTaskLanguage } from './copy-guard';
 

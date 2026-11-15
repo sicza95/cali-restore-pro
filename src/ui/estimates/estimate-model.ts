@@ -1,8 +1,8 @@
 import { createSignal } from 'solid-js';
 import { createStore } from 'solid-js/store';
-import { validDecimal } from './fields';
-export type { Phase, Extra, Adjustment } from '../../../platform/estimates/types';
-import type { Phase, Extra } from '../../../platform/estimates/types';
+import { validDecimal } from '../project-review/fields';
+export type { Phase, Extra, Adjustment } from '../../platform/estimates/types';
+import type { Phase, Extra } from '../../platform/estimates/types';
 
 export const modes = ['time', 'productivity'] as const;
 export const methods = ['hourly', 'fixed', 'area'] as const;

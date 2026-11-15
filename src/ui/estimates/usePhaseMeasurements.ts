@@ -1,15 +1,15 @@
 import { createEffect, createMemo, createSignal, onCleanup, untrack } from 'solid-js';
 import { unwrap } from 'solid-js/store';
-import { measureAssessment } from '../../../platform/projects/measure-assessment';
-import { selectAssessment } from '../../../platform/projects/assessment-selection';
+import { measureAssessment } from '../../platform/projects/measure-assessment';
+import { selectAssessment } from '../../platform/projects/assessment-selection';
 import {
   measuredQuantity,
   updateMeasuredPhase,
-} from '../../../platform/estimates/assessment-quantity';
-import type { PlanarResult } from '../../../platform/projects/planar-measurement';
-import type { PlanarSurface } from '../../../platform/projects/planar-types';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { LocalVault } from '../../../platform/vault/vault';
+} from '../../platform/estimates/assessment-quantity';
+import type { PlanarResult } from '../../platform/projects/planar-measurement';
+import type { PlanarSurface } from '../../platform/projects/planar-types';
+import type { SavedProject } from '../../platform/projects/types';
+import type { LocalVault } from '../../platform/vault/vault';
 import type { PhaseModel } from './estimate-model';
 
 export function usePhaseMeasurements(

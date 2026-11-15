@@ -1,7 +1,7 @@
 import { createSignal, onCleanup, onMount, Show, untrack } from 'solid-js';
 import { newCode } from '../../../platform/vault/crypto';
 import { LocalVault } from '../../../platform/vault/vault';
-import type { Language } from '../types';
+import type { Language } from '../../account-access/types';
 import { vaultEntryControls } from './entry-controls';
 import { vaultCopy } from './vault-copy';
 import { VaultFileField, VaultKeyField } from './VaultFields';

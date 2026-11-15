@@ -1,9 +1,9 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
-import type { LocalVault } from '../../../../platform/vault/vault';
-import { presetRepository } from '../../../../platform/estimates/persistence';
-import { PatternReview } from '../../../editor/checkpoint-review/PatternReview';
-import { accountPaths } from '../../../router/constants';
-import type { Language } from '../../types';
+import type { LocalVault } from '../../../platform/vault/vault';
+import { presetRepository } from '../../../platform/estimates/persistence';
+import { PatternReview } from '../../editor/checkpoint-review/PatternReview';
+import { accountPaths } from '../../router/constants';
+import type { Language } from '../../account-access/types';
 import './libraries.css';
 
 export const libraryCopy = {

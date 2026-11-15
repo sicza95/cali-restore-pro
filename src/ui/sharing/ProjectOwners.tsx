@@ -1,5 +1,5 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
+import { useApp } from '../app-context/AppContext';
 import { invitationCopy } from './copy';
 
 type Owner = { id: string; email: string; host: boolean };

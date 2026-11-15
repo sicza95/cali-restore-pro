@@ -1,6 +1,6 @@
 import { createSignal, For, onCleanup, onMount, Show } from 'solid-js';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { Language } from '../types';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { Language } from '../account-access/types';
 
 export const pinCopy = {
   en: {

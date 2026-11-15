@@ -9,13 +9,13 @@ import {
   smallestPositive,
 } from './estimate-model';
 import type { Phase } from './estimate-model';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
+import type { EstimateCopy } from '../../platform/estimates/copy';
 import { phaseControl as id } from './estimate-controls';
-import { ReviewNumber, ReviewSelect, validDecimal } from './fields';
-import { changeFactor, changeUnit, convertArea } from '../../../platform/estimates/units';
-import { calculatePhase } from '../../../platform/estimates/calculate';
-import { formatArea, formatHours, formatNumber } from '../../../platform/format/number';
-import type { Language } from '../types';
+import { ReviewNumber, ReviewSelect, validDecimal } from '../project-review/fields';
+import { changeFactor, changeUnit, convertArea } from '../../platform/estimates/units';
+import { calculatePhase } from '../../platform/estimates/calculate';
+import { formatArea, formatHours, formatNumber } from '../../platform/format/number';
+import type { Language } from '../account-access/types';
 
 export function PhaseInputs(props: {
   copy: EstimateCopy;

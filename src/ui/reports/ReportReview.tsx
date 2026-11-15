@@ -1,19 +1,14 @@
 import { createSignal, For, Show } from 'solid-js';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { Language } from '../types';
-import { estimateUnits } from './estimate-model';
-import { ReviewCheck, ReviewSelect } from './fields';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { SavedProject } from '../../platform/projects/types';
+import type { Language } from '../account-access/types';
+import { estimateUnits } from '../estimates/estimate-model';
+import { ReviewCheck, ReviewSelect } from '../project-review/fields';
 import { reportControl as id } from './report-controls';
-import { reportCopy } from '../../../platform/reports/copy';
-import {
-  contentKeys,
-  defaultSelection,
-  formats,
-  resolutions,
-} from '../../../platform/reports/types';
+import { reportCopy } from '../../platform/reports/copy';
+import { contentKeys, defaultSelection, formats, resolutions } from '../../platform/reports/types';
 import { selectedSurfaces } from './report-model';
-import type { Draft } from '../../../platform/reports/types';
+import type { Draft } from '../../platform/reports/types';
 import { useReport } from './useReport';
 import { useReportDownload } from './useReportDownload';
 import { ReportPreview } from './ReportPreview';

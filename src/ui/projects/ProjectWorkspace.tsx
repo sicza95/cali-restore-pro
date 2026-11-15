@@ -1,5 +1,5 @@
-import type { JournalWrite, PendingAttachment } from '../../../platform/vault/project-store';
-import { useApp } from '../../app-context/AppContext';
+import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
+import { useApp } from '../app-context/AppContext';
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
 import {
   createEffect,
@@ -11,13 +11,13 @@ import {
   Switch,
   untrack,
 } from 'solid-js';
-import { localProjects, newProject } from '../../../platform/projects/projects';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { Language } from '../types';
+import { localProjects, newProject } from '../../platform/projects/projects';
+import type { SavedProject } from '../../platform/projects/types';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { Language } from '../account-access/types';
 import { ProjectRegister } from './ProjectRegister';
-import { ProjectInvitations } from '../invitations/ProjectInvitations';
-import { projectSnapshot } from '../../../platform/projects/shared-project';
+import { ProjectInvitations } from '../sharing/ProjectInvitations';
+import { projectSnapshot } from '../../platform/projects/shared-project';
 import { ProjectDetail } from './ProjectDetail';
 import { ProjectLifecycle } from './ProjectLifecycle';
 import { ProjectBackup } from './ProjectBackup';
@@ -29,7 +29,7 @@ import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
 import { ProjectReview, ProjectReviewLinks } from '../project-review/ProjectReview';
 import { SurfaceWorkspace } from './SurfaceWorkspace';
-import { projectHref } from '../../router/routes';
+import { projectHref } from '../router/routes';
 import { syncCopy } from './sync-copy';
 import './styles.css';
 

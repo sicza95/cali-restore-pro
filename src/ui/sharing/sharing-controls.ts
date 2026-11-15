@@ -1,4 +1,4 @@
-import { registerPlatformControls } from '../register-platform-controls';
+import { registerPlatformControls } from '../account-access/register-platform-controls';
 
 export const sharingControls = [
   ...registerPlatformControls(

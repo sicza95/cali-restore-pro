@@ -1,7 +1,7 @@
 import { createSignal, onCleanup } from 'solid-js';
-import { exportReport } from '../../../platform/reports/export';
-import type { Draft } from '../../../platform/reports/types';
-import type { LocalVault } from '../../../platform/vault/vault';
+import { exportReport } from '../../platform/reports/export';
+import type { Draft } from '../../platform/reports/types';
+import type { LocalVault } from '../../platform/vault/vault';
 
 export function useReportDownload(vault: () => LocalVault, current: () => boolean) {
   const [working, setWorking] = createSignal(false);

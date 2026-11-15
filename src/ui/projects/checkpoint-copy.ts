@@ -1,4 +1,4 @@
-import { checkpointCopy } from '../../editor/checkpoint-review/copy';
+import { checkpointCopy } from '../editor/checkpoint-review/copy';
 
 export const surfaceCheckpointCopy = {
   en: {

@@ -7,12 +7,12 @@ import { useCompactLayout } from '../app-shell/useCompactLayout';
 import { accountPaths } from '../router/constants';
 import { routeGuard } from '../router/guard';
 import { isAccountDestination, signInLink } from '../router/routes';
-import { AccessForm } from './access-form/AccessForm';
-import { AccountScreen } from './AccountScreen';
+import { AccessForm } from '../account/access-form/AccessForm';
+import { AccountScreen } from '../account/AccountScreen';
 import { navigationText } from './navigation-copy';
-import { settingsCopy } from './settings/constants';
-import './settings/styles.css';
-import './access-form/styles.css';
+import { settingsCopy } from '../settings/constants';
+import '../settings/styles.css';
+import '../account/access-form/styles.css';
 
 export function AccountAccess() {
   return (

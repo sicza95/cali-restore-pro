@@ -1,10 +1,10 @@
 import { For, Show } from 'solid-js';
-import { assessmentBlock } from '../../../platform/reports/assessment-rows';
-import { cellText } from '../../../platform/reports/cell-text';
-import { mapSvg } from '../../../platform/reports/map-svg';
-import { reportCopy } from '../../../platform/reports/copy';
-import type { ReportCopy } from '../../../platform/reports/copy';
-import type { Draft, PreviewSurface, Version } from '../../../platform/reports/types';
+import { assessmentBlock } from '../../platform/reports/assessment-rows';
+import { cellText } from '../../platform/reports/cell-text';
+import { mapSvg } from '../../platform/reports/map-svg';
+import { reportCopy } from '../../platform/reports/copy';
+import type { ReportCopy } from '../../platform/reports/copy';
+import type { Draft, PreviewSurface, Version } from '../../platform/reports/types';
 import { ReportEstimatePreview } from './ReportEstimatePreview';
 
 function ReportVersion(props: {

@@ -1,10 +1,10 @@
 import { createMemo, createResource, createSignal, Show } from 'solid-js';
-import { newPlanarSurface } from '../../../platform/projects/planar-state';
-import type { PlanarSurface, SourceFrame } from '../../../platform/projects/planar-types';
-import type { SurfaceJournal } from '../../../platform/projects/surface-journal';
-import type { LocalVault } from '../../../platform/vault/vault';
-import { DrawingWorkspace } from '../../editor/drawing-review/DrawingWorkspace';
-import type { DrawingCopy } from '../../editor/drawing-review/copy';
+import { newPlanarSurface } from '../../platform/projects/planar-state';
+import type { PlanarSurface, SourceFrame } from '../../platform/projects/planar-types';
+import type { SurfaceJournal } from '../../platform/projects/surface-journal';
+import type { LocalVault } from '../../platform/vault/vault';
+import { DrawingWorkspace } from '../editor/drawing-review/DrawingWorkspace';
+import type { DrawingCopy } from '../editor/drawing-review/copy';
 import { SurfacePhoto } from './SurfacePhoto';
 import type { SurfaceCopy } from './surface-copy';
 

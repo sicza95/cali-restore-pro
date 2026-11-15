@@ -1,10 +1,10 @@
 import { createMemo, createSignal, onCleanup, Show, untrack } from 'solid-js';
 import type { JSX } from 'solid-js';
-import type { ImageManifest } from '../../../platform/images/types';
-import type { Matrix } from '../../../platform/projects/planar-types';
+import type { ImageManifest } from '../../platform/images/types';
+import type { Matrix } from '../../platform/projects/planar-types';
 import { photoMatrixStyle } from './surface-review-model';
 import { SurfaceTiles } from './SurfaceTiles';
-import type { LocalVault } from '../../../platform/vault/vault';
+import type { LocalVault } from '../../platform/vault/vault';
 import type { SurfaceCopy } from './surface-copy';
 
 export function SurfacePhoto(props: {

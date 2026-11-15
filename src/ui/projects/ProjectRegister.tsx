@@ -1,9 +1,9 @@
 import { For, Show } from 'solid-js';
-import type { SavedProject } from '../../../platform/projects/types';
-import { Icon } from '../../icon/Icon';
-import type { Language } from '../types';
+import type { SavedProject } from '../../platform/projects/types';
+import { Icon } from '../icon/Icon';
+import type { Language } from '../account-access/types';
 import { projectCopy } from './project-copy';
-import { followLink, projectHref } from '../../router/routes';
+import { followLink, projectHref } from '../router/routes';
 
 export function ProjectRegister(props: {
   projects: SavedProject[];

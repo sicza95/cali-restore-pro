@@ -1,9 +1,9 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { Phase, Preset } from '../../../platform/estimates/types';
-import { applyPreset, presetRepository } from '../../../platform/estimates/persistence';
-import { formatArea, formatRate } from '../../../platform/format/number';
-import type { Language } from '../types';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { Phase, Preset } from '../../platform/estimates/types';
+import { applyPreset, presetRepository } from '../../platform/estimates/persistence';
+import { formatArea, formatRate } from '../../platform/format/number';
+import type { Language } from '../account-access/types';
 
 /** "HUF 40/h" for a rate, "2.5 m²/h" for a productivity. */
 function presetValue(preset: Preset, language: Language) {
