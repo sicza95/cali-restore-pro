@@ -49,9 +49,12 @@ describe('where copy lives', () => {
     expect(empty).toEqual([]);
   });
 
-  it('never picks a language inline in the UI', () => {
+  it('never picks a language inline in the UI or report exports', () => {
     expect(
-      hits(/(===|!==)\s*'(en|hu)'|'(en|hu)'\s*(===|!==)/, (file) => file.startsWith('ui/')),
+      hits(
+        /(===|!==)\s*'(en|hu)'|'(en|hu)'\s*(===|!==)/,
+        (file) => file.startsWith('ui/') || file.startsWith('platform/reports/'),
+      ),
     ).toEqual([]);
   });
 });
