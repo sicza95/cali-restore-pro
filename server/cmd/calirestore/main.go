@@ -23,6 +23,7 @@ import (
 	"github.com/sicza95/cali-restore-pro/server/internal/mailer"
 	"github.com/sicza95/cali-restore-pro/server/internal/oparchive"
 	"github.com/sicza95/cali-restore-pro/server/internal/platform"
+	"github.com/sicza95/cali-restore-pro/server/internal/projects"
 	"github.com/sicza95/cali-restore-pro/server/migrations"
 )
 
@@ -113,12 +114,13 @@ func run(ctx context.Context, args []string) error {
 	if err != nil {
 		return errors.New("identity initialization failed")
 	}
+	hosted := projects.New(pool, identities)
 	objectRoot := filepath.Join(c.ObjectDir, "encrypted-v1")
 	if err := os.MkdirAll(objectRoot, 0700); err != nil {
 		return errors.New("cannot initialize encrypted object storage")
 	}
 	if args[0] == "verify-restored-objects" {
-		if err := identities.VerifyRestoredObjects(ctx, objectRoot); err != nil {
+		if err := hosted.VerifyRestoredObjects(ctx, objectRoot); err != nil {
 			return errRestoreVerification
 		}
 		return nil
@@ -158,8 +160,8 @@ func run(ctx context.Context, args []string) error {
 			}
 			return errors.Join(
 				archives,
-				identities.PurgeDeleted(ctx, objectRoot),
-				identities.CleanExpiredFiles(ctx, objectRoot),
+				hosted.PurgeDeleted(ctx, objectRoot),
+				hosted.CleanExpiredFiles(ctx, objectRoot),
 				identities.DeliverMail(ctx, send),
 			)
 		})
@@ -168,8 +170,9 @@ func run(ctx context.Context, args []string) error {
 		return errors.New("frontend build missing")
 	}
 	auth := identity.NewHTTP(identities, c.Origin, strings.HasPrefix(c.Origin, "https://"))
-	auth.EnableFiles(objectRoot)
-	srv := &http.Server{ErrorLog: log.New(httpDiagnostic{slog.Default()}, "", 0), Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+	files := projects.NewHTTP(auth, hosted)
+	files.EnableFiles(objectRoot)
+	srv := &http.Server{ErrorLog: log.New(httpDiagnostic{slog.Default()}, "", 0), Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register, files.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
 	stopped := make(chan error, 1)
 	go func() { stopped <- srv.ListenAndServe() }()
 	slog.Info("HTTP server started")

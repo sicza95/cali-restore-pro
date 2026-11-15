@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 type scopeEnvelope struct {
@@ -50,7 +51,7 @@ func (h *HTTP) scopeRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("GET /api/v1/invitations/{invitation}/scopes/{scope}", true, func(w http.ResponseWriter, r *http.Request) {
 		id, scope := r.PathValue("invitation"), r.PathValue("scope")
 		if !httpjson.UUID(id) || !validOptionalScope(scope) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		var grant struct {

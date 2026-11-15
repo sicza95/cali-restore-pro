@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 var (
@@ -81,7 +82,7 @@ func (h *HTTP) ownerRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("GET "+path, true, func(w http.ResponseWriter, r *http.Request) {
 		project := r.PathValue("project")
 		if !httpjson.UUID(project) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		var owners []projectOwner
@@ -108,7 +109,7 @@ func (h *HTTP) ownerRoutes(route func(string, bool, http.HandlerFunc)) {
 		}
 		project, owner := r.PathValue("project"), r.PathValue("owner")
 		if !httpjson.UUID(project) || !httpjson.UUID(owner) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {

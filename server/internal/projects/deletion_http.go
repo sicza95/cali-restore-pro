@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -7,10 +7,11 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 func (s *Service) recoverAccount(ctx context.Context, email, password string) error {
-	account, verifier, err := s.checkPasswordState(ctx, email, password, "pending_deletion")
+	account, verifier, err := s.accounts.CheckPasswordState(ctx, email, password, "pending_deletion")
 	if err != nil {
 		return err
 	}
@@ -22,13 +23,13 @@ func (s *Service) recoverAccount(ctx context.Context, email, password string) er
 	if _, err := tx.Exec(ctx, lifecycleWriteLock); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", mutationLock); err != nil {
+	if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", identity.MutationLock); err != nil {
 		return err
 	}
 	var hash string
 	err = tx.QueryRow(ctx, `SELECT password_hash FROM accounts WHERE id=$1 AND state='pending_deletion' FOR UPDATE`, account.ID).Scan(&hash)
 	if errors.Is(err, pgx.ErrNoRows) || err == nil && hash != verifier {
-		return ErrCredentials
+		return identity.ErrCredentials
 	}
 	if err != nil {
 		return err
@@ -37,7 +38,7 @@ func (s *Service) recoverAccount(ctx context.Context, email, password string) er
 	err = tx.QueryRow(ctx, `DELETE FROM account_deletions WHERE id=$1 AND recover_until>clock_timestamp()
  AND purged_at IS NULL RETURNING previous_state`, account.ID).Scan(&state)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrCredentials
+		return identity.ErrCredentials
 	}
 	if err != nil {
 		return err
@@ -58,7 +59,7 @@ func (h *HTTP) deletionRoutes(route func(string, bool, http.HandlerFunc)) {
 			return
 		}
 		if err := h.service.recoverAccount(r.Context(), body.Email, body.Password); err != nil {
-			failure(w, err)
+			identity.Failure(w, err)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -79,7 +80,7 @@ func (h *HTTP) deletionRoutes(route func(string, bool, http.HandlerFunc)) {
 			return err
 		})
 		if err != nil {
-			failure(w, err)
+			identity.Failure(w, err)
 			return
 		}
 		if list == nil {
@@ -102,32 +103,32 @@ func (h *HTTP) changeAccountDeletion(w http.ResponseWriter, r *http.Request) {
 	}
 	id := r.PathValue("id")
 	if !body.Confirm || !body.Force && !body.PendingWorkResolved || body.Force && id == "" || id != "" && !httpjson.UUID(id) {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	var result deletionStatus
 	err := h.service.withFileLock(r.Context(), h.raw(r), lifecycleWriteLock, func(a fileAccess) error {
 		ctx := r.Context()
-		actor, err := session(ctx, a.tx, h.raw(r))
+		actor, err := identity.LookupSession(ctx, a.tx, h.raw(r))
 		if err != nil {
 			return err
 		}
-		if err := recent(actor); err != nil {
+		if err := identity.RequireRecent(actor); err != nil {
 			return err
 		}
 		if id == "" {
 			id = a.account
-		} else if !actor.Account.Allows(ManageRoles) || id != a.account && actor.Account.Role != "superuser" {
-			return ErrForbidden
+		} else if !actor.Account.Allows(identity.ManageRoles) || id != a.account && actor.Account.Role != "superuser" {
+			return identity.ErrForbidden
 		}
 		if body.Force && (id == a.account || actor.Account.Role != "superuser") {
-			return ErrForbidden
+			return identity.ErrForbidden
 		}
 		result, err = a.deleteAccount(ctx, id, body.Purge, body.Force)
 		return err
 	})
 	if err != nil {
-		failure(w, err)
+		identity.Failure(w, err)
 		return
 	}
 	if r.PathValue("id") == "" {
@@ -146,7 +147,7 @@ func (h *HTTP) changeProjectDeletion(w http.ResponseWriter, r *http.Request) {
 	}
 	project := r.PathValue("project")
 	if !httpjson.UUID(project) || !body.Confirm || (body.Action != "delete" && body.Action != "purge" && body.Action != "recover") {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	var result deletionStatus

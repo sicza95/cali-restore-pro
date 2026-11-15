@@ -49,7 +49,7 @@ func (s *Service) hash(ctx context.Context, password string) (string, error) {
 	return passhash.Hash(password)
 }
 
-func (s *Service) enqueue(ctx context.Context, tx pgx.Tx, account, to, lang, purpose, raw string, expiry time.Time) error {
+func (s *Service) Enqueue(ctx context.Context, tx pgx.Tx, account, to, lang, purpose, raw string, expiry time.Time) error {
 	if s.mailCipher == nil {
 		return errors.New("mail not configured")
 	}
@@ -76,15 +76,15 @@ func (s *Service) issue(ctx context.Context, tx pgx.Tx, id, to, lang, purpose st
 	if err != nil {
 		return err
 	}
-	return s.enqueue(ctx, tx, id, to, lang, purpose, raw, expiry)
+	return s.Enqueue(ctx, tx, id, to, lang, purpose, raw, expiry)
 }
 
 func (s *Service) RegisterAccount(ctx context.Context, email, password, lang string) error {
-	email, valid := normalizeEmail(email)
+	email, valid := NormalizeEmail(email)
 	if !valid || !passhash.Valid(password) {
 		return ErrCredentials
 	}
-	if err := s.rate(ctx, email); err != nil {
+	if err := s.Rate(ctx, email); err != nil {
 		return err
 	}
 	verifier, err := s.hash(ctx, password)
@@ -112,14 +112,14 @@ func (s *Service) RegisterAccount(ctx context.Context, email, password, lang str
 }
 
 func (s *Service) RequestLink(ctx context.Context, email, lang, purpose string) error {
-	email, valid := normalizeEmail(email)
+	email, valid := NormalizeEmail(email)
 	if !valid {
 		return ErrCredentials
 	}
 	if purpose != "verify" && purpose != "reset" {
 		return ErrForbidden
 	}
-	if err := s.rate(ctx, email); err != nil {
+	if err := s.Rate(ctx, email); err != nil {
 		return err
 	}
 	tx, err := beginMutation(ctx, s.pool)
@@ -151,7 +151,7 @@ func (s *Service) ConsumeLink(ctx context.Context, raw, purpose, password string
 	if purpose != "verify" && purpose != "reset" && purpose != "email" {
 		return ErrLink
 	}
-	if err := s.rate(ctx, "link:"+raw); err != nil {
+	if err := s.Rate(ctx, "link:"+raw); err != nil {
 		return err
 	}
 	var verifier string
@@ -207,11 +207,11 @@ func (s *Service) ConsumeLink(ctx context.Context, raw, purpose, password string
 		return err
 	}
 	if purpose != "verify" {
-		if err = s.enqueue(ctx, tx, id, oldEmail, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
+		if err = s.Enqueue(ctx, tx, id, oldEmail, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
 			return err
 		}
 		if purpose == "email" {
-			if err = s.enqueue(ctx, tx, id, to, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
+			if err = s.Enqueue(ctx, tx, id, to, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
 				return err
 			}
 		}
@@ -227,10 +227,10 @@ func (s *Service) ChangeCredential(ctx context.Context, raw, password, email str
 	if err != nil {
 		return err
 	}
-	if err = recent(current); err != nil {
+	if err = RequireRecent(current); err != nil {
 		return err
 	}
-	if err = s.rate(ctx, current.Account.Email); err != nil {
+	if err = s.Rate(ctx, current.Account.Email); err != nil {
 		return err
 	}
 	// Confirmation is rotated by /auth/confirm before this action; validate it
@@ -247,7 +247,7 @@ func (s *Service) ChangeCredential(ctx context.Context, raw, password, email str
 	}
 	if email != "" {
 		var valid bool
-		email, valid = normalizeEmail(email)
+		email, valid = NormalizeEmail(email)
 		if !valid {
 			return ErrCredentials
 		}
@@ -257,11 +257,11 @@ func (s *Service) ChangeCredential(ctx context.Context, raw, password, email str
 		return err
 	}
 	defer tx.Rollback(context.Background())
-	actor, err := session(ctx, tx, raw)
+	actor, err := LookupSession(ctx, tx, raw)
 	if err != nil {
 		return err
 	}
-	if err = recent(actor); err != nil {
+	if err = RequireRecent(actor); err != nil {
 		return err
 	}
 	var lang string
@@ -290,7 +290,7 @@ func (s *Service) ChangeCredential(ctx context.Context, raw, password, email str
 			return err
 		}
 	}
-	if err = s.enqueue(ctx, tx, actor.Account.ID, actor.Account.Email, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
+	if err = s.Enqueue(ctx, tx, actor.Account.ID, actor.Account.Email, lang, "security", "", time.Now().Add(24*time.Hour)); err != nil {
 		return err
 	}
 	action := "password_changed"
