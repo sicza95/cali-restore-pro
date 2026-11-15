@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 	"github.com/sicza95/cali-restore-pro/server/migrations"
 )
 
@@ -306,11 +307,11 @@ func TestPostgresIdentity(t *testing.T) {
 			code                      int
 		}{
 			{"logout", `{}`, "", "application/json", 403},
-			{"logout", `{}`, CSRF(raw), "text/plain", 415},
-			{"logout", `{} {}`, CSRF(raw), "application/json", 400},
-			{"logout", `{"extra":true}`, CSRF(raw), "application/json", 400},
-			{"logout", strings.Repeat(" ", 5000) + `{}`, CSRF(raw), "application/json", 400},
-			{"sessions/revoke", `{"all":true}`, CSRF(raw), "application/json", 403},
+			{"logout", `{}`, sessiontoken.CSRF(raw), "text/plain", 415},
+			{"logout", `{} {}`, sessiontoken.CSRF(raw), "application/json", 400},
+			{"logout", `{"extra":true}`, sessiontoken.CSRF(raw), "application/json", 400},
+			{"logout", strings.Repeat(" ", 5000) + `{}`, sessiontoken.CSRF(raw), "application/json", 400},
+			{"sessions/revoke", `{"all":true}`, sessiontoken.CSRF(raw), "application/json", 403},
 		} {
 			w := request("POST", "/api/v1/auth/"+test.path, test.body, raw, h.origin, test.csrf, test.content)
 			if w.Code != test.code {
@@ -321,10 +322,10 @@ func TestPostgresIdentity(t *testing.T) {
 			t.Fatal(w)
 		}
 		memberID := ids["member"]
-		if w := request("POST", "/api/v1/admin/accounts/"+memberID+"/policy", `{"role":"superuser","state":"active","confirm":true}`, raw, h.origin, CSRF(raw), "application/json"); w.Code != 403 {
+		if w := request("POST", "/api/v1/admin/accounts/"+memberID+"/policy", `{"role":"superuser","state":"active","confirm":true}`, raw, h.origin, sessiontoken.CSRF(raw), "application/json"); w.Code != 403 {
 			t.Fatal("direct HTTP self-promotion", w)
 		}
-		if w := request("POST", "/api/v1/auth/logout", `{}`, raw, h.origin, CSRF(raw), "application/json"); w.Code != 200 || w.Result().Cookies()[0].MaxAge != -1 {
+		if w := request("POST", "/api/v1/auth/logout", `{}`, raw, h.origin, sessiontoken.CSRF(raw), "application/json"); w.Code != 200 || w.Result().Cookies()[0].MaxAge != -1 {
 			t.Fatal(w)
 		}
 		if w := request("GET", "/api/v1/auth/me", "", raw, "", "", ""); w.Code != 401 {
@@ -374,7 +375,7 @@ func TestPostgresIdentity(t *testing.T) {
 		mustExec(`DELETE FROM auth_rate_limits`)
 		mustExec(`DELETE FROM sessions WHERE account_id=$1`, ids["member"])
 		for range maxSessions {
-			mustExec(`INSERT INTO sessions(account_id,token_digest) VALUES ($1,$2)`, ids["member"], digest(token()))
+			mustExec(`INSERT INTO sessions(account_id,token_digest) VALUES ($1,$2)`, ids["member"], sessiontoken.Digest(sessiontoken.New()))
 		}
 		if _, err := s.Login(ctx, "member@example.test", testPassword, ""); !errors.Is(err, ErrConflict) {
 			t.Fatal("session cap bypass", err)

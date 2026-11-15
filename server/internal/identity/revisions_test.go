@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 func TestPostgresProjectRevisions(t *testing.T) {
@@ -25,8 +26,8 @@ func TestPostgresProjectRevisions(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		raw = token()
-		if _, err := admin.Exec(ctx, `INSERT INTO sessions(account_id,token_digest) VALUES ($1,$2)`, id, digest(raw)); err != nil {
+		raw = sessiontoken.New()
+		if _, err := admin.Exec(ctx, `INSERT INTO sessions(account_id,token_digest) VALUES ($1,$2)`, id, sessiontoken.Digest(raw)); err != nil {
 			t.Fatal(err)
 		}
 		return
@@ -50,7 +51,7 @@ func TestPostgresProjectRevisions(t *testing.T) {
 		r := httptest.NewRequest(method, path+suffix, bytes.NewReader(body))
 		r.Header.Set("Content-Type", "application/json")
 		r.Header.Set("Origin", origin)
-		r.Header.Set("X-CSRF-Token", CSRF(raw))
+		r.Header.Set("X-CSRF-Token", sessiontoken.CSRF(raw))
 		r.Header.Set("X-Sync-Account", id)
 		r.AddCookie(&http.Cookie{Name: h.cookieName, Value: raw})
 		w := httptest.NewRecorder()
