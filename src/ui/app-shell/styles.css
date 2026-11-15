@@ -96,8 +96,11 @@
   padding: 8px;
 }
 .app-nav[data-mode='rail'] .language select {
-  width: 56px;
-  padding-inline: 8px;
+  width: 60px;
+  padding-inline: 8px 22px;
+  background-position:
+    calc(100% - 15px) calc(50% + 1px),
+    calc(100% - 10px) calc(50% + 1px);
 }
 
 /* Portrait: one compact header row; the links live in the drawer. */
