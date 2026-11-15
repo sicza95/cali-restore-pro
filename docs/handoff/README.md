@@ -10,17 +10,24 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
 - **Active roadmap phase:** Phase 1 is done and on `main`. Phase 2 (UX and copy) step 1 is planned in [copy audit](../plan/copy-audit.md); the owner accepted all four decisions as recommended.
 - **Suite status:** see the latest log entry.
-- **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
+- **Not run:** `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Copy audit commit 5 (account connection status) on `copy/task-language`. Commits 1 to 4 are on the branch.
+Copy audit commit 6 (stop showing internal ids) on `copy/task-language`. Commits 1 to 5 are on the branch.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 5: connection status
+
+- Pushed commit 4 (`24e8cb3`); Verified.
+- The page footer reads "Server: Online · Check again" (HU "Szerver: Elérhető · Újra ellenőrzés") instead of "Platform connection: Connected · Check connection". `app.spec.ts` updated.
+- Verified: `npm run check`, `npm run test:files` (21 passed), `npm test` (12 passed), and **`npm run test:app` (16 passed, 1 skipped: `invitations.spec.ts` without its `M06_*` variables)** on a disposable Compose project `calirestore-qa-copy`, removed afterwards with its volumes. First `test:app` run since step 3 of Phase 1.
+- Not run: `test:sync`, `test:estimates` (no estimate copy changed), Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 4: reports and outputs
 

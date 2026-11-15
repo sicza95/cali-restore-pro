@@ -64,6 +64,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
 
 5. **`copy(account): connection status in plain words`**
    - `account-access/constants.ts`: "Platform connection" → "Server"; "Connected" → "Online"; "Check connection" → "Check again". Only if decision 4 keeps the panel.
+   - As built: as planned, in EN and HU ("Szerver", "Elérhető", "Újra ellenőrzés"), plus "Checking…" for "Checking connection…". The strings only appear in the page footer (`AccountAccess.tsx`); `app.spec.ts` (in `test:app`) is the only test that names them.
 
 6. **`fix(ui): stop showing internal ids`**
    - `SurfaceMeasurements.tsx`: an unnamed layer shows its kind and number ("Damage layer 2"), not its UUID.

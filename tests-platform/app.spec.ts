@@ -15,7 +15,7 @@ test('production shell connects through the real same-origin API in both themes 
       await page.setViewportSize(viewport);
       await page.goto('/');
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sign in');
-      await expect(page.getByRole('status')).toHaveText('Connected');
+      await expect(page.getByRole('status')).toHaveText('Online');
       await expect(page.locator('body')).toHaveAttribute('data-theme', colorScheme);
       expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
       await page.screenshot({ path: info.outputPath(`${viewport.width}-${colorScheme}.png`) });
@@ -31,6 +31,6 @@ test('unavailable API is explicit and a user can retry', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('status')).toHaveText('Connection unavailable. Please try again.');
   await page.unroute('**/api/v1/status');
-  await page.getByRole('button', { name: 'Check connection' }).click();
-  await expect(page.getByRole('status')).toHaveText('Connected');
+  await page.getByRole('button', { name: 'Check again' }).click();
+  await expect(page.getByRole('status')).toHaveText('Online');
 });
