@@ -274,7 +274,7 @@ export function SurfaceReviewAdapter(props: {
         <Show when={tool()} keyed fallback={<p>{props.copy.initial}</p>}>
           {(key) => (
             <>
-              <h3>{props.copy[key]}</h3>
+              <h2>{props.copy[key]}</h2>
               <Show when={key === 'prepare'}>
                 <label>
                   {props.copy.aspect}

@@ -13,7 +13,7 @@ export function BrandingSettings(props: { copy: ReportCopy; model: ReturnType<ty
   const custom = () => m.brand() ?? m.defaults;
   return (
     <section class="project-pane">
-      <h3>{c().branding}</h3>
+      <h2>{c().branding}</h2>
       <ReviewSelect
         id={id('branding')}
         label={c().branding}

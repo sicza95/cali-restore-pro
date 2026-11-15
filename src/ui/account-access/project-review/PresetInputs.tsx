@@ -70,7 +70,7 @@ export function PresetInputs(props: {
   }
   return (
     <section class="review-inset">
-      <h4>{c().title}</h4>
+      <h3>{c().title}</h3>
       <label>
         {c().name}
         <input value={name()} maxlength="80" onInput={(e) => setName(e.currentTarget.value)} />

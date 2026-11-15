@@ -65,6 +65,8 @@ test('navigation registry, capability changes, language, theme and Back', async 
     await page.screenshot({ path: info.outputPath(`preferences-${viewport.width}-hu-dark.png`) });
   }
 
+  // Portrait: the links sit in a modal drawer behind Menu.
+  await page.setViewportSize({ width: 834, height: 1194 });
   const menu = page.locator(byId(menuControl.id));
   const preferences = page.locator(byId('app.nav.preferences'));
   await expect(menu).toHaveAttribute('aria-expanded', 'false');
@@ -72,6 +74,30 @@ test('navigation registry, capability changes, language, theme and Back', async 
   await menu.focus();
   await menu.press('Enter');
   await expect(menu).toHaveAttribute('aria-expanded', 'true');
+  const drawer = page.getByRole('dialog', { name: 'Menü' });
+  await expect(drawer).toBeVisible();
+  await drawer.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  await expect(preferences).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.screenshot({ path: info.outputPath('drawer-834-hu-dark.png') });
+  // Focus stays in the drawer: the page behind it is inert.
+  for (let step = 0; step < 16; step++) {
+    await page.keyboard.press('Tab');
+    expect(
+      await page.evaluate(
+        () =>
+          document.activeElement === document.body || !!document.activeElement?.closest('dialog'),
+      ),
+    ).toBe(true);
+  }
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await expect(menu).toBeFocused();
+  await expect(preferences).toBeHidden();
+  await menu.click();
+  await page.getByRole('button', { name: 'Menü bezárása' }).click();
+  await expect(menu).toBeFocused();
+  await menu.click();
   await expect(preferences).toBeVisible();
 
   capabilities = [];

@@ -76,7 +76,7 @@ export function EstimateReview(props: {
       <EstimateStepNav copy={c()} current={step()} state={state} incomplete={incomplete} go={go} />
       <EstimateStepPanel copy={c()} current={step()} go={go} step="objects">
         <section class="project-pane">
-          <h3>{c().selection}</h3>
+          <h2>{c().selection}</h2>
           <p>
             {c().currency} · <strong>{project().settings.currency}</strong>
           </p>

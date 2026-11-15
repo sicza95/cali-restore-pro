@@ -18,7 +18,7 @@ export function Extras(props: {
   const c = () => props.copy;
   return (
     <section class="project-pane">
-      <h3>{c().extras}</h3>
+      <h2>{c().extras}</h2>
       <For each={props.rows}>
         {(extra) => (
           <div class="review-inset">
@@ -115,7 +115,7 @@ export function Adjustments(props: {
   const c = () => props.copy;
   return (
     <section class="project-pane">
-      <h3>{c().adjustments}</h3>
+      <h2>{c().adjustments}</h2>
       <For each={props.rows}>
         {(row) => (
           <div class="review-inset review-fields">

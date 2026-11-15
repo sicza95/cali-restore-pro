@@ -293,7 +293,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     // Drawing mode compacts the pickers into one row; the surface select still shows this surface.
     await expect(
       page.locator('[data-control-id="surface.view.surface"] option:checked'),
-    ).toHaveText((await page.locator('.surface-heading h2').textContent())!);
+    ).toHaveText((await page.locator('.app-page-title').textContent())!);
     // Both iPad orientations and the phone width must pass axe with "Details" closed and open.
     for (const state of ['closed', 'open'] as const) {
       if (state === 'open') {

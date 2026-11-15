@@ -54,7 +54,6 @@ export function ProjectDetail(props: {
   return (
     <>
       <div class="project-heading">
-        <h2>{props.project.name}</h2>
         <button
           class="secondary"
           disabled={props.busy}
@@ -67,7 +66,7 @@ export function ProjectDetail(props: {
       <Show when={!props.project.archived}>
         <div class="project-detail">
           <section class="project-pane">
-            <h3>{c().hierarchy}</h3>
+            <h2>{c().hierarchy}</h2>
             <div class="project-fields">
               <label>
                 {c().object}
@@ -168,7 +167,7 @@ export function ProjectDetail(props: {
             />
           </section>
           <section class="project-pane">
-            <h3>{c().settings}</h3>
+            <h2>{c().settings}</h2>
             <NameForm
               controlId="project.rename"
               label={c().name}

@@ -3,6 +3,7 @@ import '@fontsource-variable/dm-sans';
 import '../ui/tokens.css';
 import '../ui/account-access/styles.css';
 import '../ui/account-access/shell.css';
+import '../ui/app-shell/styles.css';
 import { AccountAccess } from '../ui/account-access/AccountAccess';
 import { parseRoute } from '../ui/router/routes';
 

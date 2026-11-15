@@ -18,10 +18,10 @@ function ReportVersion(props: {
     assessmentBlock(props.draft, props.surface, props.version, !!props.comparison);
   return (
     <section class="report-version">
-      <h5>
+      <h4>
         {props.comparison ? props.copy.comparison + ' · ' : ''}
         {block().name}
-      </h5>
+      </h4>
       <Show when={block().map}>
         {(map) => (
           <img
@@ -60,7 +60,7 @@ export function ReportPreview(props: { draft: Draft }) {
         {draft().workbook ? ' · ' + c()[draft().workbook!] : ''}
         {draft().resolution ? ' · ' + draft().resolution + ' dpi' : ''}
       </p>
-      <h3 id="report-preview-title">{c().title}</h3>
+      <h2 id="report-preview-title">{c().title}</h2>
       <p>
         <strong>{draft().project.name}</strong>
       </p>
@@ -94,9 +94,9 @@ export function ReportPreview(props: { draft: Draft }) {
       <For each={draft().surfaces}>
         {(surface) => (
           <section class="report-sheet-row">
-            <h4>
+            <h3>
               {surface.object} / {surface.name}
-            </h4>
+            </h3>
             <p>
               {c().units} · {surface.unit}
             </p>
@@ -124,7 +124,7 @@ export function ReportPreview(props: { draft: Draft }) {
       </For>
       <Show when={draft().notes.trim()}>
         <section>
-          <h4>{c().notes}</h4>
+          <h3>{c().notes}</h3>
           <p class="report-notes">{draft().notes}</p>
         </section>
       </Show>

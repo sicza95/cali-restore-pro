@@ -1,11 +1,10 @@
 .project-review h2,
 .project-review h3,
 .project-review h4,
-.project-review h5,
 .project-review p {
   margin: 0;
 }
-.project-review :is(h4, h5) {
+.project-review :is(h3, h4) {
   font-size: 1rem;
   font-weight: 650;
 }
@@ -35,11 +34,6 @@
 .review-breadcrumbs a {
   color: var(--cr-muted);
   font-size: 14px;
-}
-.project-review > header > h2 {
-  font-size: clamp(24px, 3vw, 36px);
-  letter-spacing: -0.04em;
-  line-height: 1.15;
 }
 .project-review .report-paper {
   background: var(--cr-surface);

@@ -1,8 +1,7 @@
 import { For, Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { Language } from '../types';
-import { followProjectLink, projectHref, projectReviewHref } from '../projects/project-route';
-import { projectCopy } from '../projects/project-copy';
+import { followProjectLink, projectReviewHref } from '../projects/project-route';
 import { estimateCopy } from '../../../platform/estimates/copy';
 import { reviewRoutes, routeControl } from './report-controls';
 import type { ReviewRoute } from './report-controls';
@@ -45,29 +44,9 @@ export function ProjectReview(props: {
   route: ReviewRoute;
   navigate: (href: string) => void;
 }) {
-  const c = () => estimateCopy[props.language];
   return (
     <div class="review-flow project-review">
-      <nav class="review-breadcrumbs" aria-label={projectCopy[props.language].hierarchy}>
-        <a
-          class="project-back"
-          data-control-id="project.library"
-          href="/projects"
-          onClick={(event) => followProjectLink(event, props.navigate)}
-        >
-          {projectCopy[props.language].back}
-        </a>
-        <a
-          class="project-back"
-          data-control-id="project.review.parent"
-          href={projectHref(props.project.id)}
-          onClick={(event) => followProjectLink(event, props.navigate)}
-        >
-          {props.project.name}
-        </a>
-      </nav>
       <header>
-        <h2>{c()[props.route]}</h2>
         <ProjectReviewLinks
           project={props.project.id}
           language={props.language}

@@ -24,7 +24,7 @@ import { surfaceCopy } from './surface-copy';
 import './surface-styles.css';
 import { ProjectOriginals } from './ProjectOriginals';
 import { projectCopy } from './project-copy';
-import { followLink, projectHref } from '../../router/routes';
+import { projectHref } from '../../router/routes';
 
 export function SurfaceWorkspace(props: {
   project: SavedProject;
@@ -69,7 +69,6 @@ export function SurfaceWorkspace(props: {
         : 'detail';
   const reviewKey = createMemo(() => [photo()?.id, role(), reference()?.id].join('/'));
   const move = (offset: number) => setSelected(images()[index() + offset]?.id);
-  const href = () => projectHref(props.project.id);
   const saveSurface = (
     changes: Partial<Surface>,
     attachment?: PendingAttachment,
@@ -136,17 +135,8 @@ export function SurfaceWorkspace(props: {
     saveSurface(updateSurfaceImages(props.surface, images), attachment);
   return (
     <>
-      <a
-        class="project-back"
-        data-control-id="surface.project"
-        href={href()}
-        onClick={(event) => followLink(event, props.onNavigate)}
-      >
-        {props.project.name}
-      </a>
       <header class="surface-heading">
         <p>{props.object.name}</p>
-        <h2>{props.surface.name}</h2>
       </header>
       <div class="surface-mode" role="group" aria-label={draw().mode}>
         <button

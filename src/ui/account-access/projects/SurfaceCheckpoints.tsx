@@ -161,7 +161,7 @@ export function SurfaceCheckpoints(props: {
     <section class="review-flow" aria-label={c().mode}>
       <div class="review-grid">
         <section class="project-pane">
-          <h3>{c().mode}</h3>
+          <h2>{c().mode}</h2>
           <div class="review-fields">
             <label>
               {c().version}
@@ -287,7 +287,7 @@ export function SurfaceCheckpoints(props: {
             class="drawing-dialog"
             aria-labelledby="checkpoint-restore-title"
           >
-            <h3 id="checkpoint-restore-title">{c().restore}</h3>
+            <h2 id="checkpoint-restore-title">{c().restore}</h2>
             <p>{c().restoreHelp}</p>
             <p>
               <strong>{chosen()?.name}</strong>
@@ -313,7 +313,7 @@ export function SurfaceCheckpoints(props: {
           </dialog>
         </section>
         <section class="project-pane">
-          <h3>{c().measurements}</h3>
+          <h2>{c().measurements}</h2>
           <label>
             {c().unit}
             <select

@@ -42,7 +42,7 @@ export function PhaseInputs(props: {
   };
   return (
     <>
-      <h4>{c().breakdown}</h4>
+      <h3>{c().breakdown}</h3>
       <div class="review-fields">
         <ReviewSelect
           id={id('measurement')}

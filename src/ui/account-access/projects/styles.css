@@ -31,8 +31,7 @@
   justify-content: space-between;
   margin: 12px 0;
 }
-.project-heading h2,
-.project-pane h3 {
+.project-pane h2 {
   margin: 0;
   overflow-wrap: anywhere;
 }

@@ -1,11 +1,6 @@
 .surface-heading {
   margin-block: 0 16px;
 }
-.project-workspace .surface-heading h2 {
-  font-size: clamp(24px, 3vw, 36px);
-  line-height: 1.15;
-  letter-spacing: -0.04em;
-}
 .surface-heading p {
   margin: 0;
   color: var(--cr-muted);
@@ -132,7 +127,7 @@
   border: 1px solid var(--cr-rule);
   border-radius: var(--cr-panel-radius);
 }
-.surface-inspector :is(h3, p) {
+.surface-inspector :is(h2, p) {
   margin: 0;
 }
 .surface-transient {
