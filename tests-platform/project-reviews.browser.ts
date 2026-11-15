@@ -5,6 +5,7 @@ import type { Page, TestInfo } from '@playwright/test';
 import { estimateControls } from '../src/ui/account-access/project-review/estimate-controls';
 import { reportControls } from '../src/ui/account-access/project-review/report-controls';
 import { projectTable, reportTable, revisionQueueTable } from '../src/platform/vault/store';
+import { expectTaskLanguage } from './copy-guard';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const other = '00000000-0000-4000-8000-000000000002';
@@ -60,6 +61,7 @@ async function inspectReview(page: Page, info: TestInfo, label: string, ids: str
       expect(box.width).toBeGreaterThanOrEqual(44);
       expect(box.height).toBeGreaterThanOrEqual(44);
     }
+    await expectTaskLanguage(page, `${label} ${viewport.width}`);
     await page.screenshot({
       path: info.outputPath(`${label}-${viewport.width}.png`),
       fullPage: true,

@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
 import { checkpointControls } from '../src/ui/editor/checkpoint-review/registry';
 import { openDetails } from './drawing-review';
+import { expectTaskLanguage } from './copy-guard';
 
 export async function verifyCheckpointReview(page: Page, info: TestInfo) {
   const control = (id: string) => {
@@ -110,6 +111,7 @@ export async function verifyCheckpointReview(page: Page, info: TestInfo) {
       expect(box.width).toBeGreaterThanOrEqual(44);
       expect(box.height).toBeGreaterThanOrEqual(44);
     }
+    await expectTaskLanguage(page, `checkpoint ${viewport.width}`);
     await page.screenshot({
       path: info.outputPath(`checkpoint-${viewport.width}.png`),
       fullPage: true,

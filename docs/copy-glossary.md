@@ -47,4 +47,4 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 
 ## Guard
 
-The banned terms above are checked in rendered text by `tests-platform/copy-guard.ts` (copy audit commit 7). English terms are matched as whole words, case-insensitively. Hungarian terms are matched as phrases, because _előnézet_ alone is allowed. A UUID pattern is checked as well. Add a term to both this table and the guard.
+The banned terms above are checked in rendered text by `tests-platform/copy-guard.ts` (copy audit commit 7). English terms are matched as whole words, case-insensitively. Hungarian terms are matched as phrases, because _előnézet_ alone is allowed. A UUID pattern and revision numbers (`r4`) are checked as well. Text in an open dialog is skipped (rule 5). It runs on the screens the copy audit covered, not yet on account, vault or admin screens. Add a term to both this table and the guard.

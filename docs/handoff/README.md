@@ -14,13 +14,20 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Copy audit commit 7 (guard test against banned terms) on `copy/task-language`. Commits 1 to 6 are on the branch.
+Copy audit commit 8 (docs: tick Phase 2 item 1, re-rate UX findings 2 and 3), then open the step's PR. Owner decides on [PR #18](https://github.com/sicza95/cali-restore-pro/pull/18) (trash shows real project names), which targets `copy/task-language`.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 7: guard test
+
+- Pushed commit 6 (`c8b35e3`); Verified. A side session, started from a task card, ran in this same folder (no worktree available) and opened [PR #18](https://github.com/sicza95/cali-restore-pro/pull/18) into `copy/task-language`: the hosted trash shows real project names when the device has them. The folder was back on `copy/task-language` with a clean tree afterwards.
+- New `tests-platform/copy-guard.ts`: `expectTaskLanguage` before ten screenshots on the audited screens. Banned terms, UUIDs and `r4`-style revisions fail; "encrypted backup" is allowed; open dialogs (file previews) are skipped.
+- Verified: `npm run check`, `npm run test:files` (21 passed), `npm test` (12 passed). Negative run: a "Committed" estimate note failed the guard.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests (no app code changed).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 6: no internal ids on screen
 

@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
+import { expectTaskLanguage } from './copy-guard';
 
 export function photoControl(page: Page, key: string) {
   const id = 'surface.' + key;
@@ -55,6 +56,7 @@ export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
           expect(box.width).toBeGreaterThanOrEqual(44);
         }
         await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
+        await expectTaskLanguage(page, `photo ${lang} ${viewport.width}`);
         await page.screenshot({
           path: info.outputPath(`photo-${lang}-${colorScheme}-${viewport.width}.png`),
           fullPage: true,

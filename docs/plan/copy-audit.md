@@ -76,6 +76,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
    - `tests-platform/copy-guard.ts`: at each point where the flows already take a screenshot, read the page's visible text and fail on any banned term from the glossary (EN and HU lists, whole words, case-insensitive), printing the term and the screen. Run at the end of the existing flows in `projects.browser.ts`, so it adds no new navigation.
    - A UUID pattern check on the same text.
    - Negative run: put one banned term back and see the test fail.
+   - As built: `expectTaskLanguage(page, screen)` runs before ten existing screenshots on the screens this audit covered (drawing, photo, checkpoint, estimate EN and HU, backup panel, outputs, measured report, project page, reopened surface). It checks 19 term patterns plus UUIDs and revision numbers like `r4`, allows "encrypted backup", and skips text in an open dialog: the file preview shows the downloaded file's audit rows on purpose (glossary rule 5). Its first run flagged "restoration-v1 · Project revision 1" in that preview, which led to the dialog rule. Account, vault and admin screens are not guarded; the audit did not cover them. Negative run: "Committed estimate versions…" failed on estimate 1194 as expected.
 
 8. **`docs(plan): step 1 done`**
    - Tick Phase 2 item 1 in the quality baseline; re-rate UX findings 2 and 3 (2 keeps the raw floats until item 2). As-built notes here; update the handoff.
