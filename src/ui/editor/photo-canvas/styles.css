@@ -38,14 +38,19 @@
 
 .cr-crack-mask {
   fill: none;
-  stroke: #f2ce82;
+  stroke: var(--cr-mask-guide);
   stroke-width: 5;
   stroke-opacity: 0.85;
 }
 
+.cr-hatch-line {
+  stroke: var(--cr-mask-guide);
+  stroke-width: 3;
+}
+
 .cr-treatment-mask {
   fill-opacity: 0.8;
-  stroke: #f2ce82;
+  stroke: var(--cr-mask-guide);
   stroke-width: 2;
 }
 
@@ -104,8 +109,8 @@
   position: absolute;
   bottom: 19px;
   right: 18px;
-  color: #fff;
-  background: #252b2e;
+  color: var(--cr-photo-label-ink);
+  background: var(--cr-photo-label);
   padding: 4px 7px;
   border-radius: 4px;
   font-size: 11px;

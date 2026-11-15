@@ -27,6 +27,11 @@ npm run check && npm run build-storybook && npm test && npm run test:files
 the handoff when they were not run. Never run `test:app` at the same time as `npm test`: `npm test`
 deletes `test-results/` and `test:app` then fails with ENOENT on its trace files.
 
+To prove a visual change is limited to what you intended, copy `test-results/` before and after
+and compare same-named PNGs with `PNG.sync.read` from `playwright-core/lib/utilsBundle.js` (no
+PIL here): count changed pixels and the largest channel delta. Timestamps show as few pixels with
+a large delta; colour tweaks as many pixels with a small one.
+
 ## Proving a change has no visible effect
 
 1. Before the change, copy `test-results/**/drawing-*.png` to `../.analysis/claude-tmp/<step>-base/`.

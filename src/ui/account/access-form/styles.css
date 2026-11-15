@@ -53,8 +53,8 @@
   grid-template-rows: minmax(0, 1fr) auto;
   margin: 0;
   min-height: 560px;
-  background: #172936;
-  color: #f7f7f5;
+  background: var(--cr-specimen);
+  color: var(--cr-specimen-ink);
 }
 .access-specimen img {
   display: block;

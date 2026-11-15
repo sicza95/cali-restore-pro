@@ -8,20 +8,29 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
-- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1 to 5 done; Phase 4 done. Left: Phase 3 item 6 (colour tokens, #31).
+- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1 to 5 done; Phase 4 done. Left: the second half of Phase 3 item 6 (remove file-level lint disables).
 - **CI:** one workflow `ci.yml` with four parallel jobs: Frontend checks, Unit tests (Vitest), Go tests, Platform E2E.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:sync`, `test:estimates` (locally, this batch), backup scripts.
 
 ## Next step
 
-Phase 3 item 6, colour tokens (#31). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
+Fix the flaky account switch in `project-reviews.browser.ts` (#58): it may be a privacy bug. Then the second half of Phase 3 item 6 (file-level lint disables). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Colour tokens (#31)
+
+- Plan: [`docs/plan/colour-tokens.md`](../plan/colour-tokens.md), pushed first (`1c28461`).
+- `tokens.css` gains `--cr-backdrop`, `--cr-dialog-backdrop`, `--cr-photo-label(-ink)`, `--cr-mask-guide` and `--cr-specimen(-ink)` (same in both themes). The drawer, both dialog backdrops, the sign-in photo panel, canvas caption, thumbnail labels, mask strokes and the hatch pattern use them. Intended changes: one dialog backdrop for both dialogs, one label colour for photo labels, one guide colour for strokes and hatch.
+- New `src/ui/colour-literals.test.ts`; Vitest now includes `src/ui/**/*.test.ts`. Exceptions: data defaults (new layer colours, report accent); `src/platform` exports are not scanned.
+- Verified: `npm run check`, `test:unit` (210; negative run failed as expected), `npm test` (16), `test:files` (22 on rerun), `build-storybook`. Pixel diff of all screenshots against `main`: only the intended changes and timestamps.
+- Found: `project-reviews.browser.ts:348` is flaky on `main` too (previous account's project name still visible after switching accounts), issue #58.
+- Not run: `test:app`, `test:sync`, `test:estimates` (no flow or copy change), Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Report exports use the catalogue (#57)
 

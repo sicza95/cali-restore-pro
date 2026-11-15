@@ -1,6 +1,6 @@
 # Colour tokens — Phase 3, item 6 (first half)
 
-15 November 2026 · Status: in progress · Issue: #31 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 3 item 6 and code finding 6
+15 November 2026 · Status: done · Issue: #31 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 3 item 6 and code finding 6
 
 Goal: every colour the UI paints comes from `src/ui/tokens.css`, and a test stops new literals. Screens look the same, except for two small changes made on purpose (below). The second half of item 6, removing file-level lint disables, is separate.
 
@@ -36,3 +36,10 @@ Found on `main` at `0cb9676`. The baseline counted 45 literals; earlier work rem
 ## Verification
 
 `npm run check`, `test:unit` (with a temporary literal to see the guard fail), `npm test`, `test:files`, `build-storybook`; light and dark screenshots of the sign-in page, the photo canvas, a dialog and the drawer compared with `main`.
+
+## Outcome
+
+- Seven tokens in `tokens.css`; every UI colour literal outside it is gone. The hatch line is a class (`.cr-hatch-line`).
+- `src/ui/colour-literals.test.ts` guards `src/ui` and `src/stories`; a temporary `#123456` in `app-shell/styles.css` failed it.
+- Pixel diff of every `test:files` and `npm test` screenshot against `main`: the only changes are timestamps, the dialog backdrop (report preview, delta up to 13 of 255), and the hatch and thumbnail label (delta up to 6). Two full-page screenshots changed height because of leftover page height in a flaky baseline run; their content is the same.
+- `project-reviews.browser.ts` failed once on `main` and once after the change, at the same line: issue #58.

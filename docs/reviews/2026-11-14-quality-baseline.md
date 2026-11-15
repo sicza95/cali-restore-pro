@@ -149,7 +149,7 @@ Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths
 3. [x] Central i18n catalogue with typed keys and a missing-translation check. Done in issue #30 ([plan](../plan/i18n-catalogue.md)): `src/platform/i18n/`, `defineCopy` type check plus unit tests for parity, banned terms and inline language choices.
 4. [x] Rename `src/ui/account-access/` into feature folders (`account/`, `projects/`, `estimates/`, `reports/`, `sharing/`). Done in issue #29: also `settings/` and `project-review/` (the page shared by estimates and reports); `account-access/` keeps only the shared app core. Pure moves, no behaviour change.
 5. [x] Split Go `internal/identity` into domain packages without behaviour changes; keep tests green at each step. Done in [PR #22](https://github.com/sicza95/cali-restore-pro/pull/22), landed via #25: nine domain packages.
-6. Replace hard-coded colours with tokens; remove file-level lint disables.
+6. Replace hard-coded colours with tokens; remove file-level lint disables. Colours done in issue #31 ([plan](../plan/colour-tokens.md)): UI colours come from `tokens.css`, guarded by `test:unit`. Lint disables still open.
 
 ### Phase 4 — Delivery hygiene
 

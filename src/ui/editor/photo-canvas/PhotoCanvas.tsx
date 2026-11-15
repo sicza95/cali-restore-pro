@@ -42,7 +42,7 @@ export function PhotoCanvas(props: PhotoCanvasProps) {
                 height="16"
                 patternTransform="rotate(40)"
               >
-                <path d="M0 0V16" stroke="#f1cf86" stroke-width="3" />
+                <path class="cr-hatch-line" d="M0 0V16" />
               </pattern>
             </defs>
             <Show when={props.visible.has('flaking')}>
