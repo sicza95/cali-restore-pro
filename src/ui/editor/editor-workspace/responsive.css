@@ -33,6 +33,37 @@
   .cr-inspector-tabs {
     grid-column: 1 / -1;
   }
+  /* Two portrait heights when the host passes `inspectorSize`: short keeps the canvas first. */
+  .cr-editor-workspace[data-inspector='short'] {
+    grid-template-rows: minmax(0, 1fr) 196px;
+  }
+  /* Tall gives the inspector about 60 %, but the canvas keeps room for the rail and chip. */
+  .cr-editor-workspace[data-inspector='tall'] {
+    grid-template-rows: minmax(var(--cr-canvas-min, 480px), 2fr) minmax(0, 3fr);
+  }
+  .cr-editor--focus .cr-editor-workspace[data-inspector] {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .cr-inspector {
+    position: relative;
+  }
+  .cr-inspector > .cr-inspector-grip {
+    display: inline-flex;
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    z-index: 1;
+    color: var(--cr-ink);
+  }
+  .cr-inspector-grip svg {
+    transform: rotate(-90deg);
+  }
+  .cr-inspector-grip[aria-expanded='true'] svg {
+    transform: rotate(90deg);
+  }
+  .cr-inspector:has(> .cr-inspector-grip) .cr-inspector-tabs {
+    margin-right: 60px;
+  }
   .cr-inspector-body {
     grid-row: 2;
   }
@@ -85,6 +116,7 @@
   }
   .cr-editor-workspace {
     grid-template-rows: minmax(0, 1fr) 270px;
+    --cr-canvas-min: 410px;
   }
   .cr-inspector {
     grid-template-columns: minmax(0, 1fr);

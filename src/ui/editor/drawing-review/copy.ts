@@ -56,6 +56,7 @@ const messages = {
   zoomOut: ['Zoom out', 'Kicsinyítés'],
   zoomIn: ['Zoom in', 'Nagyítás'],
   zoomControls: ['Zoom', 'Nagyítás mértéke'],
+  inspectorTall: ['Larger inspector', 'Nagyobb panel'],
   tool: ['Tool inspector', 'Eszközbeállítások'],
   details: ['Details', 'Részletek'],
   numericEntry: ['Enter by number', 'Megadás számokkal'],

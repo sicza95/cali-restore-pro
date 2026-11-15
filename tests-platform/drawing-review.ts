@@ -232,6 +232,26 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
         (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
       ).toEqual([]);
     }
+    if (viewport.width < 1194) {
+      // Portrait: the grip switches the inspector to its tall height and back.
+      await closeDetails(page);
+      await touchTargets(['view.inspector']);
+      const short = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
+      await c('view.inspector').click();
+      await expect(c('view.inspector')).toHaveAttribute('aria-expanded', 'true');
+      const tall = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
+      expect(tall.height).toBeGreaterThan(short.height);
+      await page
+        .locator('.drawing-workspace .cr-editor')
+        .screenshot({ path: info.outputPath(`drawing-${viewport.width}-tall.png`) });
+      expect(
+        (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
+      ).toEqual([]);
+      await c('view.inspector').click();
+      await expect(c('view.inspector')).toHaveAttribute('aria-expanded', 'false');
+      // The steps after this loop expect "Details" open, as the last state left it.
+      await openDetails(page);
+    }
   }
   await c('path.cancel').click();
   await page.setViewportSize({ width: 1194, height: 834 });

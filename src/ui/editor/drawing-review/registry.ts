@@ -66,6 +66,7 @@ export const drawingControls: readonly ControlContract[] = [
       ['view.fit', 'fitShort', 'Reset drawing viewport zoom and pan; shows the current zoom'],
       ['view.zoomOut', 'zoomOut', 'Zoom the drawing viewport out by one step'],
       ['view.zoomIn', 'zoomIn', 'Zoom the drawing viewport in by one step'],
+      ['view.inspector', 'inspectorTall', 'Switch the portrait inspector between short and tall'],
     ],
   ),
   ...register(

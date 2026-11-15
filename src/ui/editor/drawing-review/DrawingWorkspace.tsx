@@ -73,6 +73,7 @@ export function DrawingWorkspace(props: {
   const [original, setOriginal] = createSignal(false);
   const [zoom, setZoom] = createSignal(100);
   const [focus, setFocus] = createSignal(false);
+  const [tallInspector, setTallInspector] = createSignal(false);
   createEffect(on(m.selected, () => setNotice(undefined), { defer: true }));
   createEffect(on(() => props.source?.id, t.reset, { defer: true }));
   const blocked = () =>
@@ -237,6 +238,12 @@ export function DrawingWorkspace(props: {
             </fieldset>
           </Show>
         }
+        inspectorSize={{
+          tall: tallInspector(),
+          onTall: setTallInspector,
+          label: c().inspectorTall,
+          controlId: control('view.inspector'),
+        }}
         inspectorDetail={
           <div class="drawing-workspace-detail">
             <Show when={size() && props.state}>

@@ -63,9 +63,23 @@ export interface EditorWorkspaceProps<T extends string = Tool> {
   inspectorDetail?: JSX.Element;
   /** Rendered in the Layers tab above the layer list. */
   inspectorLead?: JSX.Element;
+  /**
+   * Portrait only (960 px and below): the inspector's height and a grip button that switches it.
+   * Without it the inspector keeps the fixed portrait height.
+   */
+  inspectorSize?: InspectorSize;
   footerStart?: JSX.Element;
   /** Notices and dialogs, rendered last inside the root. */
   children?: JSX.Element;
 }
+
+export type InspectorSize = {
+  /** Short shows the tabs and the top of the Layers tab; tall gives the inspector about 60 %. */
+  tall: boolean;
+  onTall: (tall: boolean) => void;
+  /** The grip's accessible name; `aria-expanded` carries the state. */
+  label: string;
+  controlId?: string;
+};
 
 export type ToolContextProps = { icon: IconName; layer?: string; children?: JSX.Element };
