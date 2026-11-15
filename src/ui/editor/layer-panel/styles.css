@@ -8,6 +8,11 @@
   border: 1px solid var(--cr-rule);
 }
 
+/* The portrait height grip; `responsive.css` shows it at 960 px and below. */
+.cr-inspector > .cr-inspector-grip {
+  display: none;
+}
+
 .cr-inspector-tabs {
   display: flex;
   flex: none;

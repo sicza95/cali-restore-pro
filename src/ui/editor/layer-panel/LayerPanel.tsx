@@ -1,5 +1,6 @@
-import { For, Show, createSignal, createUniqueId } from 'solid-js';
+import { For, Show, createEffect, createSignal, createUniqueId, on } from 'solid-js';
 import { Button } from '../../controls/button/Button';
+import { IconButton } from '../../controls/icon-button/IconButton';
 import { moveFocus } from '../../shared/moveFocus';
 import { Icon } from '../../icon/Icon';
 import { Area } from '../area/Area';
@@ -13,6 +14,19 @@ export function LayerPanel(props: LayerPanelProps) {
   const [tab, setTab] = createSignal<'layers' | 'measurements'>('layers');
   const [collapsed, setCollapsed] = createSignal<ReadonlySet<LayerId>>(new Set());
   const id = createUniqueId();
+  let body: HTMLDivElement | undefined;
+  /** Keep the selected row in view inside the body only; `scrollIntoView` would scroll the page. */
+  const reveal = () => {
+    const row = body?.querySelector('.cr-layer-row[data-selected="true"]');
+    if (!body || !row) return;
+    const box = body.getBoundingClientRect();
+    const item = row.getBoundingClientRect();
+    if (item.top < box.top) body.scrollTop -= box.top - item.top;
+    else if (item.bottom > box.bottom) body.scrollTop += item.bottom - box.bottom;
+  };
+  createEffect(
+    on([() => props.active, () => props.size?.tall, tab], () => requestAnimationFrame(reveal)),
+  );
 
   const isOpen = (folder: LayerId) =>
     props.onToggleExpand ? !!findLayer(props.layers, folder)?.expanded : !collapsed().has(folder);
@@ -104,6 +118,19 @@ export function LayerPanel(props: LayerPanelProps) {
 
   return (
     <aside class="cr-inspector" aria-label={props.copy.inspector}>
+      <Show when={props.size}>
+        {(size) => (
+          <IconButton
+            variant="ghost"
+            icon="chevron"
+            class="cr-inspector-grip"
+            label={size().label}
+            aria-expanded={size().tall}
+            data-control-id={size().controlId}
+            onClick={() => size().onTall(!size().tall)}
+          />
+        )}
+      </Show>
       <div
         class="cr-inspector-tabs"
         role="tablist"
@@ -128,6 +155,7 @@ export function LayerPanel(props: LayerPanelProps) {
       </div>
       <div
         id={`${id}-panel`}
+        ref={(element) => (body = element)}
         class="cr-inspector-body"
         role="tabpanel"
         aria-labelledby={`${id}-${tab()}`}

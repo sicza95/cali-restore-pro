@@ -101,7 +101,10 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
           </Button>
         </div>
       </header>
-      <div class="cr-editor-workspace">
+      <div
+        class="cr-editor-workspace"
+        data-inspector={props.inspectorSize && (props.inspectorSize.tall ? 'tall' : 'short')}
+      >
         <section class="cr-canvas-region" aria-label={copy().canvas}>
           <div class="cr-opacity-layer" style={{ '--cr-mask-opacity': props.maskOpacity / 100 }}>
             {props.canvas}
@@ -138,6 +141,7 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
             onCalibrate={props.onCalibrate && (() => props.onCalibrate?.())}
             detail={props.inspectorDetail}
             lead={props.inspectorLead}
+            size={props.inspectorSize}
           />
         </Show>
       </div>

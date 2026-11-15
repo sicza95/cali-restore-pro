@@ -40,6 +40,13 @@ the handoff when they were not run.
 - **The tool rail covers the photo's left edge.** The photo is fitted to the canvas (step 3 commit 3),
   so taps by photo percentage near the left edge hit rail buttons. Tap clear of it; when a tap draws
   nothing, check `document.elementFromPoint` at the tap point first.
+- **Leave "Details" as you found it.** The portrait loop in `drawing-review.ts` ends with Details
+  open, and the steps after it click controls inside it (`brush.dot`). A check that closes Details
+  must reopen it.
+- **Screenshot the editor, not the viewport, at 390 px.** The surface page chrome pushes the editor
+  below the fold; use `locator('.drawing-workspace .cr-editor').screenshot()`.
+- **Look at the tall portrait inspector.** The canvas must stay taller than the tool rail plus the
+  chip; `--cr-canvas-min` in `responsive.css` holds that.
 - New controls need an entry in `src/ui/editor/drawing-review/registry.ts`, or
   `control-inventory.spec.ts` fails.
 - Keep `DrawingWorkspace.tsx` and `DrawingCanvas.tsx` small; new logic goes in new files (400-line

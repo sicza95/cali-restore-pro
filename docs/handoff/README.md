@@ -13,14 +13,24 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Step 3 commit 4 (`feat(editor): portrait inspector height`) on `feat/canvas-first-layout`.
+Commit step 3 commit 4 (in the working tree, not committed), then step 3 commit 5 (`feat(surfaces): bring the editor up in drawing mode`) on `feat/canvas-first-layout`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
-2. At fit, the floating tool rail now covers about 70 px of the photo's left edge (landscape photos fill the canvas width). Pan is off at fit, so that strip is only reachable after zooming in. Accept it, or inset the fit box to clear the rail?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 4: portrait inspector height
+
+- The owner accepted the rail overlap at fit (the rail covers about 70 px of the photo's left edge; reachable after zooming in). Open question 2 is closed.
+- Shell: new optional `inspectorSize` prop on `EditorWorkspace` (`tall`, `onTall`, `label`, `controlId`). With it, at 960 px and below the workspace sets `data-inspector="short|tall"`: short is 196 px; tall is `minmax(var(--cr-canvas-min), 2fr) minmax(0, 3fr)` (about 60 %), with a canvas minimum of 480 px (410 px at 640 px and below) so the rail and chip still fit. Without the prop nothing changes (Storybook keeps 286 px). Focus mode still hides the inspector.
+- `LayerPanel` renders the grip (`IconButton`, chevron, `aria-expanded`, 44 px, top right) when given `size`, and keeps the selected layer row in view inside the body when the selection, the height or the tab changes. It scrolls the body itself; `scrollIntoView` would scroll the page too.
+- `DrawingWorkspace` owns the state (short by default) and passes `surface.draw.view.inspector`, labelled "Larger inspector" / "Nagyobb panel", registered in `registry.ts`.
+- `tests-platform/drawing-review.ts`: at 834 and 390 px the grip is a 44 px target, tall is taller than short, a `drawing-<width>-tall.png` screenshot of the editor, axe in the tall state, then back to short.
+- Fixed before commit: in the first tall screenshot at 834 px the canvas was shorter than the rail (the rail was clipped and the chip sat on it). Hence the canvas minimum.
+- Verified on the final code: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed; one earlier failure was the test itself, see process notes). Looked at `drawing-834-closed`, `drawing-834-tall`, `drawing-390-closed` and `drawing-390-tall`. 834 short: grip at the top right, draft note and Details visible. 834 tall: the whole rail, the chip clear of it, the selected layer row at the top of the inspector. 390 tall: the whole rail; the chip still covers the photo (commit 6).
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests; the step 1 Storybook geometry comparison (the shell's default path is unchanged).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 3: fit the photo to the canvas
 

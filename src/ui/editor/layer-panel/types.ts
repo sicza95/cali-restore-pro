@@ -1,4 +1,5 @@
 import type { JSX } from 'solid-js';
+import type { InspectorSize } from '../editor-workspace/types';
 import type { EditorCopy, EditorLayer, LayerId } from '../types';
 
 export type LayerPanelProps = {
@@ -22,6 +23,8 @@ export type LayerPanelProps = {
   rowControlId?: (kind: LayerControl) => string;
   /** When given, folders open and close from each layer's `expanded`, not from local state. */
   onToggleExpand?: (folder: LayerId) => void;
+  /** Portrait height and its grip button (see `EditorWorkspace`). */
+  size?: InspectorSize;
 };
 
 export type LayerControl = 'select' | 'visibility' | 'expand';
