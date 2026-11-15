@@ -46,6 +46,8 @@ export interface EditorWorkspaceProps<T extends string = Tool> {
   toolControlId?: (tool: T) => string;
   history: EditorHistory;
   saveState: SaveState;
+  /** Longer explanation of where work is saved, shown as the save status title. */
+  saveDetail?: string;
   copy?: Partial<EditorCopy>;
   /** No surface yet: hides the tools and shows the inspector's empty state. */
   empty?: boolean;

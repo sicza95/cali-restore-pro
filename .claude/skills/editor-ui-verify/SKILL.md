@@ -47,6 +47,11 @@ the handoff when they were not run.
   below the fold; use `locator('.drawing-workspace .cr-editor').screenshot()`.
 - **Look at the tall portrait inspector.** The canvas must stay taller than the tool rail plus the
   chip; `--cr-canvas-min` in `responsive.css` holds that.
+- **Selects built with `<For>` options:** set `selected` on the option too, not only `value` on the
+  select; effect order can leave the first option shown. Check select text in screenshots.
+- **Background verify chains:** echo a marker after each step (`&& echo CHECK OK`) and read the
+  markers; the task's exit code says nothing when the chain ends with `; tail`. Run
+  `npx prettier --write` on touched files first.
 - New controls need an entry in `src/ui/editor/drawing-review/registry.ts`, or
   `control-inventory.spec.ts` fails.
 - Keep `DrawingWorkspace.tsx` and `DrawingCanvas.tsx` small; new logic goes in new files (400-line

@@ -50,6 +50,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
 
 5. **`feat(surfaces): bring the editor up in drawing mode`** (decision 4)
    - In drawing mode, the surface and photo pickers become one compact row: two selects side by side and Previous and Next as icon buttons with labels. The notice about where masks are saved moves to the editor's save state title. Photo review and checkpoint review are unchanged.
+   - As built: `.surface-navigation[data-compact]` in drawing mode; Previous and Next are 44 px chevron buttons whose names come from a visually hidden span (plus `title`). The notice is the save status `title` (`saveDetail` on `EditorWorkspace`) and stays in the DOM, visually hidden, for screen readers. Surface options set `selected`, because the select's `value` alone showed the first surface after this change. Saves about 45 px at 834 px; the vault bar, back links, surface heading and mode tabs still sit above the editor.
 
 6. **`fix(editor): phone width`**
    - At 640 px and below the tool chip docks as a bar between the canvas and the inspector instead of floating over the photo, and the footer shows only the zoom controls and the reference toggle. This keeps 390 px working without designing for it (see the open question in the handoff).

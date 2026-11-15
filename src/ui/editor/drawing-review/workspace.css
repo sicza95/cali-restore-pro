@@ -158,3 +158,12 @@
     max-height: calc(100% - 20px);
   }
 }
+
+/* The save status title carries this notice; keep it for screen readers only. */
+.drawing-workspace > .drawing-transient {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

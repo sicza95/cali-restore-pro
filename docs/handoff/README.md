@@ -4,7 +4,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 3). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
+- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 4, `b9a6c62`). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
 - **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is planned; the owner accepted all five decisions as recommended. Its seven commits go on `feat/canvas-first-layout` for one PR.
@@ -13,13 +13,23 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Commit step 3 commit 4 (in the working tree, not committed), then step 3 commit 5 (`feat(surfaces): bring the editor up in drawing mode`) on `feat/canvas-first-layout`.
+Commit step 3 commit 5 (in the working tree, verified, not committed), then step 3 commit 6 (`fix(editor): phone width`) on `feat/canvas-first-layout`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 4 pushed, commit 5: compact surface chrome in drawing mode
+
+- Committed and pushed commit 4 as `b9a6c62` (`feat(editor): two-height portrait inspector`); GitHub reports Verified.
+- Commit 5 (in the working tree, **not committed**): in drawing mode `.surface-navigation` gets `data-compact`. The surface and photo selects sit side by side in one row, and Previous and Next become 44 px chevron icon buttons. They keep their visible-text names (hidden span plus `title`) and control ids. Photo review and checkpoint review are unchanged.
+- The "Committed masks are saved to this surface…" notice is now the `title` of the editor's save status (new optional `saveDetail` on `EditorWorkspace`, `detail` on `SaveStatus`). The paragraph stays in the DOM for screen readers but is visually hidden in the workspace. `DrawingReviewAdapter` is unchanged.
+- Found in the screenshots: after the change, the surface select showed "Surface 1" on the Upper plaster page. Solid set the select's `value` before its options existed. Options now carry `selected` too. `drawing-review.ts` asserts that the checked surface option matches the page heading; with the fix removed, this check fails ("Surface 1").
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed, run again after the fix). Looked at `drawing-834-closed`, `drawing-834-tall` and `drawing-390-closed`. At 834 px the picker row is one line and the notice is gone; the editor header moved up about 45 px (from about 495 px to about 450 px). At 390 px the row fits (the "Open another surface" label wraps to two lines) and the surface name is truncated in its select; the chip still covers the photo (commit 6).
+- Still above the editor in portrait: vault bar, "Project data saved on this device", the back links, the surface heading (repeated in the editor header) and the mode tabs. The plan does not cover them, so the canvas still starts below the fold at 834 × 1194. Left for Phase 2's app shell unless the owner wants more here.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests; Storybook geometry comparison (the shell's default path is unchanged).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 4: portrait inspector height
 

@@ -64,7 +64,7 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
             {props.title} <Icon name="chevron" size={13} />
           </h1>
         </div>
-        <SaveStatus state={props.saveState} />
+        <SaveStatus state={props.saveState} detail={props.saveDetail} />
         <div class="cr-header-tools" role="group" aria-label={copy().workspaceActions}>
           <IconButton
             variant="ghost"
