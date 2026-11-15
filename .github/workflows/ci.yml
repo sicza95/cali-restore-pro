@@ -37,7 +37,19 @@ jobs:
       - name: Storybook browser tests
         run: npm test
 
-  # Phase 3 item 1 adds a `unit` (Vitest) job here, beside `frontend`.
+  unit:
+    name: Unit tests (Vitest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Platform unit tests
+        run: npm run test:unit
 
   go:
     name: Go tests
