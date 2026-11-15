@@ -8,19 +8,26 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 is done and on `main`: steps 1 to 4 are ticked in the quality baseline. Next comes Phase 2 (UX and copy).
+- **Active roadmap phase:** Phase 1 is done and on `main`. Phase 2 (UX and copy) step 1 is planned in [copy audit](../plan/copy-audit.md); the owner accepted all four decisions as recommended.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Plan Phase 2 item 1 (copy audit) for iPad and desktop.
+Owner answers the four decisions in [copy audit](../plan/copy-audit.md). Then commit the plan to `main` and start commit 1 (glossary) on `copy/task-language`.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Phase 2 step 1 planned
+
+- Committed and pushed `e1b065e` (step 4 merge and iPad/desktop decision); Verified.
+- Wrote [copy audit](../plan/copy-audit.md): a glossary, four copy commits by area (estimates, editor, reports, account), one commit that stops showing internal ids, a guard test against banned terms, and a docs commit. The owner accepted all four decisions as recommended (one branch and PR, the glossary terms, the backup limit on the backup panel, plain wording for the connection panel).
+- Found: "Geometry is not connected yet" on the estimate page is false since M-16. The estimate backup limit is real (`project-backups.ts` refuses estimate-inclusive backups), so the plan moves it to the backup panel instead of deleting it.
+- Verified: nothing run (docs only).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 merged, phone width dropped
 
