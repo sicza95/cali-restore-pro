@@ -4,6 +4,7 @@ import { projectControls } from '../src/ui/account-access/projects/project-contr
 
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
 import { verifyCheckpointReview } from './checkpoint-review';
+import { verifyCanvasZoom } from './canvas-zoom';
 import { drawingControl, openDetails, verifyDrawingReview } from './drawing-review';
 import {
   verifyDetailDrawing,
@@ -165,6 +166,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
     '',
   );
   await verifyDrawingInput(page);
+  await verifyCanvasZoom(page);
   await verifyPointerStroke(page);
   await verifyPointerPath(page);
   await verifyDrawingReview(page, info);

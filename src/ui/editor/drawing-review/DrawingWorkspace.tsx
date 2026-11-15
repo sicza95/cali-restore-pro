@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, createUniqueId, on, Show } from
 import type { JSX } from 'solid-js';
 import { EditorWorkspace } from '../editor-workspace/EditorWorkspace';
 import { control, drawingTools, masterId } from './constants';
+import { maxZoom } from './canvas-zoom';
 import type { DrawingCopy } from './copy';
 import { createDrawingReview } from './createDrawingReview';
 import { createDrawingTools } from './createDrawingTools';
@@ -293,7 +294,7 @@ export function DrawingWorkspace(props: {
                 name="view.zoom"
                 label={c().zoom}
                 min={100}
-                max={250}
+                max={maxZoom * 100}
                 value={zoom()}
                 onValue={setZoom}
               />

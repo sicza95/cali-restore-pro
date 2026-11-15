@@ -1,4 +1,4 @@
-import { createEffect, createSignal, on, Show, untrack } from 'solid-js';
+import { createEffect, createSignal, on, onCleanup, Show, untrack } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { project } from '../../../platform/projects/planar-transform';
 import type {
@@ -16,6 +16,8 @@ import { drawingGestureHistory } from './drawing-gesture-history';
 import { clamp } from './geometry';
 import type { Point } from './types';
 import { center, distance, viewTransform } from './drawing-viewport';
+import type { CanvasView } from './canvas-zoom';
+import { panBy, wheelAction, wheelDelta, wheelFactor, zoomAt, zoomKey } from './canvas-zoom';
 
 type Gesture =
   | { id: number; kind: 'pan'; origin: Point; offset: Point }
@@ -54,7 +56,15 @@ export function DrawingCanvas(props: {
   const box = () => image.getBoundingClientRect();
   const size = () => ({ x: image.offsetWidth, y: image.offsetHeight });
   const zoom = () => props.zoom / 100;
-  const raw = (event: PointerEvent): Point => ({ x: event.clientX, y: event.clientY });
+  const raw = (event: { clientX: number; clientY: number }): Point => ({
+    x: event.clientX,
+    y: event.clientY,
+  });
+  const view = (): CanvasView => ({ zoom: zoom(), offset: offset() });
+  function show(next: CanvasView) {
+    setOffset(next.offset);
+    if (next.zoom !== zoom()) props.onZoom(next.zoom * 100);
+  }
   function point(event: PointerEvent) {
     const frame = props.size!;
     const bounds = box();
@@ -179,10 +189,26 @@ export function DrawingCanvas(props: {
       before.length === 2
         ? distance(after[0]!, after[1]!) / Math.max(1, distance(before[0]!, before[1]!))
         : 1;
-    const nextZoom = clamp(zoom() * factor, 1, 2.5);
-    setOffset(viewTransform(offset(), zoom(), nextZoom, a, b, box(), size()));
-    props.onZoom(nextZoom * 100);
+    show(zoomAt(view(), factor, a, box(), size(), b));
     return true;
+  }
+  function wheel(event: WheelEvent) {
+    if (!props.size || event.defaultPrevented) return;
+    const action = wheelAction(event, zoom());
+    if (action === 'page') return;
+    event.preventDefault();
+    const delta = wheelDelta(event, viewport.clientHeight);
+    if (action === 'zoom') show(zoomAt(view(), wheelFactor(delta.y), raw(event), box(), size()));
+    else setOffset(panBy(view(), { x: -delta.x, y: -delta.y }, box(), size()));
+  }
+  function key(event: KeyboardEvent) {
+    const change = props.size && event.target === viewport ? zoomKey(event) : undefined;
+    if (!change) return;
+    event.preventDefault();
+    if (change === 'fit') return show({ zoom: 1, offset: { x: 0, y: 0 } });
+    const frame = viewport.getBoundingClientRect();
+    const middle = { x: frame.left + frame.width / 2, y: frame.top + frame.height / 2 };
+    show(zoomAt(view(), change, middle, box(), size()));
   }
   function ink(event: PointerEvent, penUp = false) {
     if (gesture?.kind !== 'ink' || !props.canDraw) return;
@@ -256,15 +282,20 @@ export function DrawingCanvas(props: {
     <div
       ref={(element) => {
         viewport = element;
+        // Explicitly non-passive: cancelling stops page scroll and the browser's own Ctrl + wheel zoom.
+        element.addEventListener('wheel', wheel, { passive: false });
+        onCleanup(() => element.removeEventListener('wheel', wheel));
       }}
       class="drawing-viewport"
       data-control-id={control('view.canvas')}
       tabIndex={-1}
+      aria-keyshortcuts={props.size ? 'Plus Minus 0' : undefined}
       aria-describedby={props.describedBy}
       classList={{
         'drawing-pannable': t.tool() === 'hand' && zoom() > 1,
         'drawing-markable': props.canDraw && (t.brushing() || t.sketching()),
       }}
+      onKeyDown={key}
       onPointerDown={start}
       onPointerMove={move}
       onPointerUp={(event) => finish(event)}
