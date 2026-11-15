@@ -1,5 +1,4 @@
-/* eslint-disable solid/reactivity -- Form submissions read the current props. */
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, untrack } from 'solid-js';
 import type { revisionKeyTransfer } from '../../platform/projects/revision-key-transfer';
 import type { Language } from '../account-access/types';
 import { keyTransferCopy as copy } from './key-transfer-copy';
@@ -14,7 +13,8 @@ type Form = {
 
 export function SendProjectKey(props: Form & { project: string }) {
   const c = () => copy[props.language];
-  const [recipient, setRecipient] = createSignal(props.model.account);
+  // Starts as this account (sending to your own device); the user edits it from there.
+  const [recipient, setRecipient] = createSignal(untrack(() => props.model.account));
   const [secret, setSecret] = createSignal('');
   return (
     <details

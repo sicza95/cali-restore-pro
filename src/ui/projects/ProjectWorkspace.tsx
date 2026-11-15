@@ -1,6 +1,5 @@
 import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
 import { useApp } from '../app-context/AppContext';
-/* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
 import { createResource, createMemo, createSignal, Match, Show, Switch, untrack } from 'solid-js';
 import { localProjects, newProject } from '../../platform/projects/projects';
 import type { SavedProject } from '../../platform/projects/types';
@@ -70,20 +69,20 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
       ? { [project.id]: project.name, [shown.id]: shown.name }
       : { [project.id]: project.name };
   });
-  const visible = () =>
-    (projects()?.rows ?? [])
+  const visible = () => {
+    const language = props.language;
+    const showArchived = archived();
+    const search = query().trim().toLocaleLowerCase(language);
+    const recent = sort() === 'recent';
+    return (projects()?.rows ?? [])
       .filter(
-        (p) =>
-          p.archived === archived() &&
-          p.name
-            .toLocaleLowerCase(props.language)
-            .includes(query().trim().toLocaleLowerCase(props.language)),
+        (p) => p.archived === showArchived && p.name.toLocaleLowerCase(language).includes(search),
       )
       .sort(
         (a, b) =>
-          (sort() === 'recent' ? b.updatedAt - a.updatedAt : 0) ||
-          a.name.localeCompare(b.name, props.language),
+          (recent ? b.updatedAt - a.updatedAt : 0) || a.name.localeCompare(b.name, language),
       );
+  };
   function rowSync(project: SavedProject) {
     const status = sync.statusKey(project);
     return status === 'disabled' ? c().local : syncCopy[props.language][status];

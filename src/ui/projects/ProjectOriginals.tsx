@@ -1,4 +1,3 @@
-/* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
 import { checkpointSources } from '../../platform/projects/assessment-checkpoints';
 import type { PendingAttachment } from '../../platform/vault/project-store';
 import { createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
@@ -47,11 +46,12 @@ export function ProjectOriginals(props: {
             try {
               const project = props.project;
               const images = props.surface.images;
+              const save = props.onSave;
               await files.importImage(
                 project,
                 file,
                 async (ref, signal) => {
-                  await props.onSave([...images, { id: ref.id, role }], { id: ref.id, signal });
+                  await save([...images, { id: ref.id, role }], { id: ref.id, signal });
                 },
                 { signal: controller.signal, progress: setProgress },
               );

@@ -1,5 +1,4 @@
-/* eslint-disable solid/reactivity -- The invitation and request paths are fixed for each mounted panel. */
-import { createResource, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
 import { checkpointSamples } from '../../platform/projects/checkpoint-samples';
 import type { Checkpoint } from '../../platform/projects/checkpoint-samples';
@@ -27,8 +26,9 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
   const [opened, setOpened] = createSignal<Checkpoint>();
-  const owner = props.owner;
-  const path = (owner?.path ?? '/invitations/' + props.invitation) + '/checkpoints';
+  // Each row mounts its own panel (a <For> row), so the invitation is fixed for this panel.
+  const owner = untrack(() => props.owner);
+  const path = (owner?.path ?? '/invitations/' + untrack(() => props.invitation)) + '/checkpoints';
   const [list, { refetch }] = createResource(expanded, async () => {
     try {
       return await app.request<{ checkpointIds: string[] }>(path);

@@ -109,14 +109,12 @@ export function SurfaceWorkspace(props: {
   // Project commands execute from user events under the shared save guard.
   const savePhoto = (state: PlanarSurface, previous: PlanarSurface) => {
     if (state === previous) return Promise.resolve(true);
-    // eslint-disable-next-line solid/reactivity
     if (!reference()) return props.onRun(() => saveSurface(withAssessment(state)));
     const journal = recovery.journal();
     if (!journal || journal.conflict) return Promise.resolve(false);
     return recovery.save(recordHistory(journal, photoHistory(previous, state)), state);
   };
   const saveCheckpoints: Parameters<typeof SurfaceCheckpoints>[0]['create'] = (checkpoints) =>
-    // eslint-disable-next-line solid/reactivity
     props.onRun(() => saveSurface({ checkpoints }));
   const restoreCheckpoint: Parameters<typeof SurfaceCheckpoints>[0]['restore'] = (
     state,
@@ -128,7 +126,7 @@ export function SurfaceWorkspace(props: {
         checkpoint: { before: assessment()!, after: state },
       }),
       state,
-      // eslint-disable-next-line solid/reactivity
+      // eslint-disable-next-line solid/reactivity -- recovery.save calls this once the journal is written, during the user's command.
       (next, write) => saveSurface({ ...withAssessment(next), checkpoints }, undefined, write),
     );
   const saveImages = (images: Attachment[], attachment?: PendingAttachment) =>

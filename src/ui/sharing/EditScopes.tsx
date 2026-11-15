@@ -1,5 +1,4 @@
-/* eslint-disable solid/reactivity -- The invitation is fixed for this mounted row. */
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, untrack } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
 import { scopeContent } from '../../platform/estimates/scopes';
 import {
@@ -23,10 +22,11 @@ export function EditScopes(props: {
 }) {
   const app = useApp();
   const c = () => invitationCopy[app.lang()];
-  const previous = {
+  // The saved scopes this row started from; the form edits copies of them.
+  const previous = untrack(() => ({
     estimateScope: props.item.estimateScope,
     shareHistory: props.item.shareHistory,
-  };
+  }));
   const [estimateScope, setEstimate] = createSignal(previous.estimateScope);
   const [shareHistory, setHistory] = createSignal(previous.shareHistory);
   const [open, setOpen] = createSignal(false);
@@ -55,8 +55,10 @@ export function EditScopes(props: {
                 account: props.item.recipientId,
                 fingerprint,
               });
+              const vault = props.vault;
+              const project = props.project;
               const context = {
-                project: props.project,
+                project,
                 invitation: props.item.id,
                 sender: app.account()!.id,
                 recipient: props.item.recipientId,
@@ -68,7 +70,7 @@ export function EditScopes(props: {
                     recipientKey,
                     context,
                     scope,
-                    await scopeContent(props.vault, props.project, scope),
+                    await scopeContent(vault, project, scope),
                   ),
                 ),
               );
