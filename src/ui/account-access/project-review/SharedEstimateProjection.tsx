@@ -37,6 +37,15 @@ export function SharedEstimateProjection(props: {
           currency: value.snapshot.input.currency,
         };
   };
+  /** The phase's name from the shared inputs, never its internal id. */
+  const phaseName = (id: string, index: number) => {
+    const value = authorized();
+    const phase =
+      value?.scope === 'estimate-full'
+        ? value.snapshot.input.phases.find((p) => p.id === id)
+        : undefined;
+    return phase?.name || c().phaseNumber(index + 1);
+  };
   const fields = () =>
     props.scope === 'estimate-full'
       ? projection()
@@ -66,10 +75,10 @@ export function SharedEstimateProjection(props: {
       </For>
       <Show when={projection() && props.scope === 'estimate-full'}>
         <For each={(authorized() as { snapshot: EstimateSnapshot }).snapshot.result.phases}>
-          {(phase) => (
+          {(phase, index) => (
             <p>
-              {phase.id} · {c().hours} {phase.hours ?? '—'} · {c().material} {phase.material} ·{' '}
-              {c().subtotal} {phase.subtotal ?? '—'}
+              {phaseName(phase.id, index())} · {c().hours} {phase.hours ?? '—'} · {c().material}{' '}
+              {phase.material} · {c().subtotal} {phase.subtotal ?? '—'}
             </p>
           )}
         </For>

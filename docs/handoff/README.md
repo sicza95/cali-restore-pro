@@ -14,13 +14,21 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Copy audit commit 6 (stop showing internal ids) on `copy/task-language`. Commits 1 to 5 are on the branch.
+Copy audit commit 7 (guard test against banned terms) on `copy/task-language`. Commits 1 to 6 are on the branch.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 6: no internal ids on screen
+
+- Pushed commit 5 (`b887828`); Verified.
+- Unnamed layers in surface measurements show their kind and number instead of a UUID; shared full estimates show phase names. Also found and fixed: project UUIDs in the hosted trash ("Deleted project 1"), image UUIDs in the sync list ("Mapping 1"), "Revision 4" on a shared project. Admin job ids stay (support reference).
+- Follow-up: the trash can't show real names without the local vault (names are encrypted on the server).
+- Verified: `npm run check`, `npm run test:files` (21 passed), `npm run test:sync` (2 passed), `npm test` (12 passed).
+- Not run: `test:app` (the trash panel is not covered by any suite), `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 5: connection status
 

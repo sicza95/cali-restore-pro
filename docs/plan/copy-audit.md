@@ -70,6 +70,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
    - `SurfaceMeasurements.tsx`: an unnamed layer shows its kind and number ("Damage layer 2"), not its UUID.
    - `SharedEstimateProjection.tsx`: show the phase name, not `phase.id`.
    - A search for other `.id}` text nodes in `src/ui` (attribute uses are fine).
+   - As built: unnamed layers show "Damage layer 2", "Phase layer 1" or "Folder 1" (`surfaceCopy.unnamed`, EN and HU); shared full estimates show the phase name from the shared inputs, else "Phase 2". The wider search found four more. The hosted trash listed project UUIDs as link text, and the server only knows ids because names are encrypted, so it now says "Deleted project 1, 2…". Showing the real name would need the local vault in that panel; left as a follow-up. The sync list showed image UUIDs; it now says "Mapping 1". The shared project dropped "Revision 4" and says "Read-only shared project". The superuser job list keeps job ids, as a support reference for administrators.
 
 7. **`test(copy): banned terms stay off screen`**
    - `tests-platform/copy-guard.ts`: at each point where the flows already take a screenshot, read the page's visible text and fail on any banned term from the glossary (EN and HU lists, whole words, case-insensitive), printing the term and the screen. Run at the end of the existing flows in `projects.browser.ts`, so it adds no new navigation.

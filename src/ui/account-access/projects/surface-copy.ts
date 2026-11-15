@@ -1,3 +1,5 @@
+type LayerKind = 'master' | 'damage' | 'phase' | 'folder';
+
 export const surfaceCopy = {
   en: {
     photo: 'Photo',
@@ -87,6 +89,11 @@ export const surfaceCopy = {
     main: 'Mapping reference',
     detail: 'Mapping detail',
     reference: 'Reference only',
+    /** An unnamed layer or folder, by kind and its number among that kind. */
+    unnamed: (kind: LayerKind, n: number) =>
+      ({ master: 'Master mask', damage: 'Damage layer', phase: 'Phase layer', folder: 'Folder' })[
+        kind
+      ] + (kind === 'master' ? '' : ` ${n}`),
   },
   hu: {
     photo: 'Fotó',
@@ -179,6 +186,10 @@ export const surfaceCopy = {
     main: 'Térképezési referencia',
     detail: 'Térképezési részlet',
     reference: 'Csak referencia',
+    unnamed: (kind: LayerKind, n: number) =>
+      ({ master: 'Fő maszk', damage: 'Kárréteg', phase: 'Munkafázisréteg', folder: 'Mappa' })[
+        kind
+      ] + (kind === 'master' ? '' : ` ${n}`),
   },
 };
 export type SurfaceCopy = (typeof surfaceCopy)['en'];
