@@ -1,5 +1,6 @@
 import { For, Show } from 'solid-js';
 import { assessmentBlock } from '../../../platform/reports/assessment-rows';
+import { cellText } from '../../../platform/reports/cell-text';
 import { mapSvg } from '../../../platform/reports/map-svg';
 import { reportCopy } from '../../../platform/reports/copy';
 import type { ReportCopy } from '../../../platform/reports/copy';
@@ -15,8 +16,6 @@ function ReportVersion(props: {
 }) {
   const block = () =>
     assessmentBlock(props.draft, props.surface, props.version, !!props.comparison);
-  const number = () =>
-    new Intl.NumberFormat(props.draft.language, { maximumSignificantDigits: 15 });
   return (
     <section class="report-version">
       <h5>
@@ -40,10 +39,7 @@ function ReportVersion(props: {
           {([, label, value, unit]) => (
             <>
               <dt>{label}</dt>
-              <dd>
-                {typeof value === 'number' ? number().format(value) : (value ?? '—')}
-                {value != null && unit ? ' ' + unit : ''}
-              </dd>
+              <dd>{cellText(value, unit, props.draft.language)}</dd>
             </>
           )}
         </For>

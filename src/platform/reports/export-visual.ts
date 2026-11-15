@@ -1,3 +1,4 @@
+import { cellText } from './cell-text';
 import { reportBlocks } from './export-rows';
 import type { AssessmentMap } from './assessment-map';
 import { mapSvg } from './map-svg';
@@ -95,16 +96,13 @@ function scene(draft: Draft, hasLogo: boolean, paged: boolean) {
     page.push({ logo: true, y });
     y += 62;
   }
-  const format = new Intl.NumberFormat(draft.language, { maximumFractionDigits: 18 });
   for (const block of reportBlocks(draft)) {
     const heading = block.heading ? wrap(block.heading, 13, true) : [];
     const rows = block.rows
       .filter(([, label]) => label !== c.project)
       .flatMap(([, label, value, unit]) => {
-        const text =
-          value === null ? '—' : typeof value === 'number' ? format.format(value) : value;
         return wrap(
-          [label, text + (unit ? ' ' + unit : '')].filter(Boolean).join(' · '),
+          [label, cellText(value, unit, draft.language)].filter(Boolean).join(' · '),
           11,
           false,
         );
