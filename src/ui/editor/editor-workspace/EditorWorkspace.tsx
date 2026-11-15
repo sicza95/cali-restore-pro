@@ -128,6 +128,11 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
             active={props.activeLayer}
             onSelect={(layer) => props.onSelectLayer(layer)}
             onToggleVisible={(layer) => props.onToggleLayer(layer)}
+            tree={props.layerTree}
+            rowControlId={props.layerControlId}
+            onToggleExpand={
+              props.onToggleLayerExpand && ((folder) => props.onToggleLayerExpand?.(folder))
+            }
             onCalibrate={props.onCalibrate && (() => props.onCalibrate?.())}
             detail={props.inspectorDetail}
           />

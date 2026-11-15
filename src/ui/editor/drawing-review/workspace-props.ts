@@ -5,12 +5,12 @@ import type { EditorLayer } from '../types';
 import { drawingTools } from './constants';
 import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
-import { layerName } from './DrawingLayers';
+import { layerMeta, layerName } from './DrawingLayers';
 import type { Layer, Tool } from './types';
 
 /** The drawing model's layers as the editor shell lists them. Ids become strings. */
-export const editorLayers = (layers: readonly Layer[], copy: DrawingCopy): EditorLayer[] =>
-  layers.map((layer) => ({
+export const editorLayers = (model: DrawingReview, copy: DrawingCopy): EditorLayer[] =>
+  model.layers().map((layer: Layer) => ({
     id: String(layer.id),
     name: layerName(layer, copy),
     kind: layer.kind,
@@ -18,6 +18,8 @@ export const editorLayers = (layers: readonly Layer[], copy: DrawingCopy): Edito
     visible: layer.visible,
     locked: layer.locked,
     swatch: { color: layer.color, fill: layer.fill },
+    meta: layerMeta(model, layer, copy),
+    expanded: layer.kind === 'folder' ? layer.expanded : undefined,
   }));
 
 export const editorTools = (copy: DrawingCopy): ToolItem<Tool>[] =>

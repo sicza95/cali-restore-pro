@@ -5,7 +5,7 @@ import { Icon } from '../../icon/Icon';
 import { Area } from '../area/Area';
 import type { LayerId } from '../types';
 import { LayerMeasurements } from './LayerMeasurements';
-import { LayerRow } from './LayerRow';
+import { LayerLabel, LayerRow } from './LayerRow';
 import type { LayerPanelProps } from './types';
 import { coverage, findLayer, layerIds, masterLayer } from './utils';
 
@@ -14,7 +14,10 @@ export function LayerPanel(props: LayerPanelProps) {
   const [collapsed, setCollapsed] = createSignal<ReadonlySet<LayerId>>(new Set());
   const id = createUniqueId();
 
+  const isOpen = (folder: LayerId) =>
+    props.onToggleExpand ? !!findLayer(props.layers, folder)?.expanded : !collapsed().has(folder);
   const toggleFolder = (folder: LayerId) => {
+    if (props.onToggleExpand) return props.onToggleExpand(folder);
     const next = new Set(collapsed());
     if (!next.delete(folder)) next.add(folder);
     setCollapsed(next);
@@ -29,31 +32,75 @@ export function LayerPanel(props: LayerPanelProps) {
       active={props.active}
       onSelect={(next) => props.onSelect(next)}
       onToggleVisible={(next) => props.onToggleVisible(next)}
+      rowControlId={props.rowControlId}
     />
   );
-  const group = (folder: LayerId) => (
-    <section class="cr-layer-group" aria-label={findLayer(props.layers, folder)?.name}>
-      <button
-        class="cr-group-header"
-        type="button"
-        aria-expanded={!collapsed().has(folder)}
-        aria-controls={`${id}-${folder}`}
-        onClick={() => toggleFolder(folder)}
-      >
-        <Icon name="chevron" size={16} class={collapsed().has(folder) ? '' : 'cr-chevron-open'} />
-        <span>
-          {findLayer(props.layers, folder)?.name}
-          <small>{props.copy.uniqueCoverage}</small>
-        </span>
-        <Show when={findLayer(props.layers, folder)?.area !== undefined}>
-          <Area value={findLayer(props.layers, folder)?.area ?? 0} />
-        </Show>
-      </button>
-      <div id={`${id}-${folder}`} hidden={collapsed().has(folder)}>
-        <For each={layerIds(props.layers, (layer) => layer.parent === folder)}>{row}</For>
-      </div>
-    </section>
+  const node = (layer: LayerId) => (
+    <Show when={folders().includes(layer)} fallback={row(layer)}>
+      {group(layer)}
+    </Show>
   );
+  const group = (folder: LayerId) => {
+    const layer = () => findLayer(props.layers, folder);
+    return (
+      <section class="cr-layer-group" aria-label={layer()?.name}>
+        <Show
+          when={props.tree}
+          fallback={
+            <button
+              class="cr-group-header"
+              type="button"
+              aria-expanded={isOpen(folder)}
+              aria-controls={`${id}-${folder}`}
+              onClick={() => toggleFolder(folder)}
+            >
+              <Icon name="chevron" size={16} class={isOpen(folder) ? 'cr-chevron-open' : ''} />
+              <span>
+                {layer()?.name}
+                <small>{props.copy.uniqueCoverage}</small>
+              </span>
+              <Show when={layer()?.area !== undefined}>
+                <Area value={layer()?.area ?? 0} />
+              </Show>
+            </button>
+          }
+        >
+          <div class="cr-layer-row cr-folder-row" data-selected={props.active === folder}>
+            <button
+              class="cr-folder-toggle"
+              type="button"
+              aria-expanded={isOpen(folder)}
+              aria-controls={`${id}-${folder}`}
+              aria-label={
+                isOpen(folder)
+                  ? props.copy.collapseFolder(layer()?.name ?? '')
+                  : props.copy.expandFolder(layer()?.name ?? '')
+              }
+              data-control-id={props.rowControlId?.('expand')}
+              onClick={() => toggleFolder(folder)}
+            >
+              <Icon name="chevron" size={16} class={isOpen(folder) ? 'cr-chevron-open' : ''} />
+            </button>
+            <button
+              class="cr-layer-select"
+              type="button"
+              aria-pressed={props.active === folder}
+              data-control-id={props.rowControlId?.('select')}
+              onClick={() => props.onSelect(folder)}
+            >
+              <LayerLabel id={folder} layer={layer()} />
+            </button>
+          </div>
+        </Show>
+        <div id={`${id}-${folder}`} hidden={!isOpen(folder)}>
+          {/* A host-owned folder drops its closed rows, so they leave the accessibility tree and the DOM. */}
+          <Show when={isOpen(folder) || !props.onToggleExpand}>
+            <For each={layerIds(props.layers, (item) => item.parent === folder)}>{node}</For>
+          </Show>
+        </div>
+      </section>
+    );
+  };
 
   return (
     <aside class="cr-inspector" aria-label={props.copy.inspector}>
@@ -100,36 +147,49 @@ export function LayerPanel(props: LayerPanelProps) {
             when={tab() === 'layers'}
             fallback={<LayerMeasurements copy={props.copy} layers={props.layers} />}
           >
-            <Show when={masterLayer(props.layers)}>
-              {(master) => (
-                <div class="cr-boundary">
-                  <span>
-                    <Icon name="frame" size={17} />
-                    {master().name}
-                  </span>
-                  <Show when={master().area !== undefined}>
-                    <Area value={master().area ?? 0} />
+            <Show
+              when={props.tree}
+              fallback={
+                <>
+                  <Show when={masterLayer(props.layers)}>
+                    {(master) => (
+                      <div class="cr-boundary">
+                        <span>
+                          <Icon name="frame" size={17} />
+                          {master().name}
+                        </span>
+                        <Show when={master().area !== undefined}>
+                          <Area value={master().area ?? 0} />
+                        </Show>
+                      </div>
+                    )}
                   </Show>
-                </div>
-              )}
-            </Show>
-            <For
-              each={layerIds(
-                props.layers,
-                (layer) => !layer.parent && (layer.kind === 'folder' || layer.kind === 'damage'),
-              )}
+                  <For
+                    each={layerIds(
+                      props.layers,
+                      (layer) =>
+                        !layer.parent && (layer.kind === 'folder' || layer.kind === 'damage'),
+                    )}
+                  >
+                    {node}
+                  </For>
+                  <Show when={layerIds(props.layers, (layer) => layer.kind === 'phase').length > 0}>
+                    <section
+                      class="cr-layer-group cr-phase-group"
+                      aria-label={props.copy.workPhases}
+                    >
+                      <h2>{props.copy.workPhases}</h2>
+                      <For each={layerIds(props.layers, (layer) => layer.kind === 'phase')}>
+                        {row}
+                      </For>
+                    </section>
+                  </Show>
+                </>
+              }
             >
-              {(layer) => (
-                <Show when={folders().includes(layer)} fallback={row(layer)}>
-                  {group(layer)}
-                </Show>
-              )}
-            </For>
-            <Show when={layerIds(props.layers, (layer) => layer.kind === 'phase').length > 0}>
-              <section class="cr-layer-group cr-phase-group" aria-label={props.copy.workPhases}>
-                <h2>{props.copy.workPhases}</h2>
-                <For each={layerIds(props.layers, (layer) => layer.kind === 'phase')}>{row}</For>
-              </section>
+              <div class="cr-layer-tree">
+                <For each={layerIds(props.layers, (layer) => !layer.parent)}>{node}</For>
+              </div>
             </Show>
             {props.detail}
           </Show>

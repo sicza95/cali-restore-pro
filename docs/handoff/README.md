@@ -7,19 +7,30 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`, commit 2 (Apply and Cancel in the chip) is on `feat/pointer-drawing-first`; the owner accepted decisions 1 to 3 as recommended.
+- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`, commits 2 (Apply and Cancel in the chip) and 3 (one layer list) are on `feat/pointer-drawing-first`; the owner accepted decisions 1 to 3 as recommended.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-On `feat/pointer-drawing-first`, start commit 3 of [pointer drawing first](../plan/editor-pointer-first.md): one layer list with counts and actions (`EditorLayer.meta` and `expanded`, `LayerPanel` row ids and nesting, `DrawingLayers` drops its own list).
+On `feat/pointer-drawing-first`, start commit 4 of [pointer drawing first](../plan/editor-pointer-first.md): the shell's header undo and redo take the descriptive names and `history.*` ids, and a draft bar with Commit and Discard shows above the layer list; save mode and the history log stay in "Details".
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 3: one layer list
+
+- `EditorLayer` gained optional `meta` and `expanded`. `LayerPanel` gained `tree`, `rowControlId(kind)` and `onToggleExpand`, forwarded by `EditorWorkspace` as `layerTree`, `layerControlId` and `onToggleLayerExpand`. Rows show `meta` under the name, and folders nest to any depth in both modes.
+- **Departure from the plan:** the plan assumed the drawing could use `LayerPanel`'s grouped layout. It can't without losing behaviour: the drawing list selects the master and folders, keeps damage and phase layers in stacking order (which `layer.up`/`down` change), and puts phases inside folders. So `tree` lists the layers in model order as one tree, with the master and folders as selectable rows and a separate open/close button (`layer.expand`) on each folder. Without `tree` the grouped layout is unchanged, so Storybook keeps its DOM.
+- With `onToggleExpand`, a closed folder's rows leave the DOM (as the old list did); without it they stay `hidden`, as before.
+- `DrawingLayers` takes `list={false}` in the workspace: its add row and properties now sit under the shell list, outside "Details". The unused `DrawingReviewAdapter` keeps the old list until step 4 retires it. Meta text (`layerMeta`) and the folder toggle (`toggleFolder`) are shared by both.
+- The workspace passes no layers until a surface and photo are ready (the old list was hidden then too). The tool heading in the workspace is now `h2`, because axe flagged a jump from the shell's `h1` once the old list's `h3` was gone.
+- Fixed a step 1 bug: inside the app, the global `button` rule made shell layer names white on white. `.cr-layer-select`, `.cr-group-header` and the folder toggle now set `--cr-ink`.
+- Verified: `npm run check`, `npm test` (12), `npm run test:files` (21), `npm run build-storybook`. Looked at the inspector at 1194 px from the top, including a collapsed and an expanded folder.
+- Not verified: `test:app`, dark theme in the app, a Storybook geometry comparison (`ui.spec.ts` layout and axe checks pass).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 2: apply and cancel from the canvas
 

@@ -11,7 +11,7 @@ import { DrawingHistory, ResolveDrawingDraft } from './DrawingHistory';
 import { DrawingNumericEntry } from './DrawingNumericEntry';
 import { sketchActive } from './DrawingSketchActions';
 import { DrawingToolOptions, DrawingToolSettings } from './DrawingToolSettings';
-import { DrawingLayers, layerName } from './DrawingLayers';
+import { DrawingLayers, layerName, toggleFolder } from './DrawingLayers';
 import { workspaceCopy } from './workspace-copy';
 import { drawingSaveState, editorLayers, editorTools } from './workspace-props';
 import { drawingFrame, drawingProjection } from '../../../platform/projects/drawing-region';
@@ -157,10 +157,17 @@ export function DrawingWorkspace(props: {
         as="section"
         title={props.title}
         breadcrumb={props.breadcrumb}
-        layers={editorLayers(m.layers(), c())}
+        layers={size() && props.state ? editorLayers(m, c()) : []}
         activeLayer={String(m.selected())}
-        onSelectLayer={(id) => m.select(Number(id))}
+        onSelectLayer={(id) => {
+          if (!m.busy()) m.select(Number(id));
+        }}
         onToggleLayer={(id) => toggleLayer(Number(id))}
+        layerTree
+        layerControlId={(kind) => control('layer.' + kind)}
+        onToggleLayerExpand={(id) => {
+          if (!m.busy()) toggleFolder(m, Number(id));
+        }}
         tool={t.tool()}
         onTool={select}
         tools={editorTools(c())}
@@ -205,6 +212,11 @@ export function DrawingWorkspace(props: {
         }
         inspectorDetail={
           <div class="drawing-workspace-detail">
+            <Show when={size() && props.state}>
+              <fieldset disabled={m.busy()} class="drawing-layer-controls">
+                <DrawingLayers model={m} copy={c()} vault={props.vault} list={false} />
+              </fieldset>
+            </Show>
             <p class="drawing-help">{help()}</p>
             <Show when={size() && props.state}>
               <DrawingToolSettings
@@ -214,6 +226,7 @@ export function DrawingWorkspace(props: {
                 reason={toolReason(t.tool())}
                 toolOptions={false}
                 actions={false}
+                level={2}
               />
               <details class="drawing-details" open>
                 <summary>{c().details}</summary>
@@ -231,7 +244,6 @@ export function DrawingWorkspace(props: {
                     onCommit={commitDraft}
                     onDiscard={discardDraft}
                   />
-                  <DrawingLayers model={m} copy={c()} vault={props.vault} />
                 </fieldset>
               </details>
             </Show>

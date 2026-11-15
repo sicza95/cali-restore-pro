@@ -12,6 +12,10 @@ export type EditorLayer = {
   /** Measured area in m². */
   area?: number;
   swatch: { color: string; fill: 'solid' | 'hatch' | 'none' };
+  /** A second line under the name, for example "3 · Mark · Pending 1". */
+  meta?: string;
+  /** A folder's open state when the host owns it (see `LayerPanel`'s `onToggleExpand`). */
+  expanded?: boolean;
 };
 
 /** Every string the editor shell and its inspector render themselves. */
@@ -33,6 +37,8 @@ export type EditorCopy = {
   measurements: string;
   hideLayer: (name: string) => string;
   showLayer: (name: string) => string;
+  expandFolder: (name: string) => string;
+  collapseFolder: (name: string) => string;
   emptyTitle: string;
   emptyNote: string;
   uniqueCoverage: string;

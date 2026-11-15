@@ -194,11 +194,11 @@
   background: var(--cr-ground);
   border-radius: var(--cr-panel-radius);
 }
-.drawing-panel :is(h3, p) {
+.drawing-panel :is(h2, h3, p) {
   margin: 0;
   overflow-wrap: anywhere;
 }
-.drawing-panel h3 {
+.drawing-panel :is(h2, h3) {
   font-size: 1rem;
 }
 .drawing-fields {

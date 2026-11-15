@@ -11,10 +11,45 @@ import type { Layer, LayerKind } from './types';
 export const layerName = (layer: Pick<Layer, 'name' | 'kind'>, copy: DrawingCopy) =>
   layer.name || copy[layer.kind];
 
+/** Kind (for named layers), mark or child count, pending and undone drafts: "Damage · 3 · Mark · Pending marks 1". */
+export function layerMeta(model: DrawingReview, layer: Layer, copy: DrawingCopy) {
+  const draft = model.drafts()[layer.id];
+  const folder = layer.kind === 'folder';
+  return [
+    ...(layer.name ? [copy[layer.kind]] : []),
+    folder ? model.layers().filter((item) => item.parent === layer.id).length : layer.marks.length,
+    folder ? copy.layers : copy.mark,
+    ...(draft?.pending.length ? [`${copy.pending} ${draft.pending.length}`] : []),
+    ...(draft?.undone.length ? [`${copy.undone} ${draft.undone.length}`] : []),
+  ].join(' · ');
+}
+
+/** Opens or closes a folder; closing it over the selected layer selects the folder instead. */
+export function toggleFolder(model: DrawingReview, id: number) {
+  const folder = model.layers().find((item) => item.id === id);
+  if (!folder) return;
+  if (folder.expanded) {
+    let item = model.layer();
+    while (item.parent) {
+      if (item.parent === id) {
+        model.select(id);
+        break;
+      }
+      item = model.layers().find((ancestor) => ancestor.id === item.parent)!;
+    }
+  }
+  void model.update(id, { expanded: !folder.expanded });
+}
+
+/**
+ * Layer list, add row and the selected layer's properties. Without `list`, the host lists the
+ * layers itself (the editor shell's `LayerPanel`) and this renders only the add row and properties.
+ */
 export function DrawingLayers(props: {
   model: DrawingReview;
   copy: DrawingCopy;
   vault: LocalVault;
+  list?: boolean;
 }) {
   const m = untrack(() => props.model);
   const c = () => props.copy;
@@ -35,88 +70,61 @@ export function DrawingLayers(props: {
     layer().id === masterId || m.layers().some((item) => item.parent === layer().id);
   return (
     <section class="drawing-panel" aria-label={c().layers}>
-      <h3>{c().layers}</h3>
-      <ul class="drawing-layers">
-        <For each={visibleRows().map(({ id }) => id)}>
-          {(id) => {
-            const row = () => m.layers().find((item) => item.id === id)!;
-            const name = () => layerName(row(), c());
-            const pending = () => m.drafts()[id]?.pending.length ?? 0;
-            const undone = () => m.drafts()[id]?.undone.length ?? 0;
-            return (
-              <li
-                style={{ '--drawing-depth': visibleRows().find((item) => item.id === id)?.depth }}
-              >
-                <button
-                  class="secondary drawing-layer-select"
-                  type="button"
-                  data-control-id={control('layer.select')}
-                  aria-pressed={m.selected() === id}
-                  onClick={() => m.select(id)}
-                >
-                  <strong>{name()}</strong>
-                  <small>
-                    <Show when={row().name}>{c()[row().kind]} · </Show>
-                    {row().kind === 'folder'
-                      ? m.layers().filter((item) => item.parent === id).length
-                      : row().marks.length}
-                    {' · '}
-                    {row().kind === 'folder' ? c().layers : c().mark}
-                    <Show when={pending()}>
-                      {' '}
-                      · {c().pending} {pending()}
-                    </Show>
-                    <Show when={undone()}>
-                      {' '}
-                      · {c().undone} {undone()}
-                    </Show>
-                  </small>
-                </button>
-                <Show
-                  when={row().kind === 'folder'}
-                  fallback={
-                    <button
-                      class="secondary drawing-icon"
-                      data-control-id={control('layer.visibility')}
-                      type="button"
-                      aria-label={name() + ' · ' + c().visibility}
-                      aria-pressed={row().visible}
-                      title={c().visibility}
-                      onClick={() => m.update(id, { visible: !row().visible })}
-                    >
-                      <Icon name={row().visible ? 'eye' : 'eyeOff'} size={18} />
-                    </button>
-                  }
+      <Show when={props.list !== false}>
+        <h3>{c().layers}</h3>
+        <ul class="drawing-layers">
+          <For each={visibleRows().map(({ id }) => id)}>
+            {(id) => {
+              const row = () => m.layers().find((item) => item.id === id)!;
+              const name = () => layerName(row(), c());
+              return (
+                <li
+                  style={{ '--drawing-depth': visibleRows().find((item) => item.id === id)?.depth }}
                 >
                   <button
-                    class="secondary drawing-icon"
+                    class="secondary drawing-layer-select"
                     type="button"
-                    data-control-id={control('layer.expand')}
-                    aria-label={name() + ' · ' + (row().expanded ? c().collapse : c().expand)}
-                    aria-expanded={row().expanded}
-                    title={row().expanded ? c().collapse : c().expand}
-                    onClick={() => {
-                      if (row().expanded) {
-                        let item = layer();
-                        while (item.parent) {
-                          if (item.parent === id) {
-                            m.select(id);
-                            break;
-                          }
-                          item = m.layers().find((ancestor) => ancestor.id === item.parent)!;
-                        }
-                      }
-                      m.update(id, { expanded: !row().expanded });
-                    }}
+                    data-control-id={control('layer.select')}
+                    aria-pressed={m.selected() === id}
+                    onClick={() => m.select(id)}
                   >
-                    <Icon name={row().expanded ? 'minus' : 'plus'} size={18} />
+                    <strong>{name()}</strong>
+                    <small>{layerMeta(m, row(), c())}</small>
                   </button>
-                </Show>
-              </li>
-            );
-          }}
-        </For>
-      </ul>
+                  <Show
+                    when={row().kind === 'folder'}
+                    fallback={
+                      <button
+                        class="secondary drawing-icon"
+                        data-control-id={control('layer.visibility')}
+                        type="button"
+                        aria-label={name() + ' · ' + c().visibility}
+                        aria-pressed={row().visible}
+                        title={c().visibility}
+                        onClick={() => m.update(id, { visible: !row().visible })}
+                      >
+                        <Icon name={row().visible ? 'eye' : 'eyeOff'} size={18} />
+                      </button>
+                    }
+                  >
+                    <button
+                      class="secondary drawing-icon"
+                      type="button"
+                      data-control-id={control('layer.expand')}
+                      aria-label={name() + ' · ' + (row().expanded ? c().collapse : c().expand)}
+                      aria-expanded={row().expanded}
+                      title={row().expanded ? c().collapse : c().expand}
+                      onClick={() => toggleFolder(m, id)}
+                    >
+                      <Icon name={row().expanded ? 'minus' : 'plus'} size={18} />
+                    </button>
+                  </Show>
+                </li>
+              );
+            }}
+          </For>
+        </ul>
+      </Show>
       <div class="drawing-actions drawing-add">
         <label>
           {c().kind}
