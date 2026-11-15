@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 )
 
 func TestPostgresEncryptedFiles(t *testing.T) {
@@ -38,8 +39,8 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		raw := token()
-		exec(`INSERT INTO sessions(account_id,token_digest) VALUES($1,$2)`, id, digest(raw))
+		raw := sessiontoken.New()
+		exec(`INSERT INTO sessions(account_id,token_digest) VALUES($1,$2)`, id, sessiontoken.Digest(raw))
 		return raw
 	}
 	alice, bob := account("alice@example.test"), account("bob@example.test")
@@ -53,7 +54,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 		r := httptest.NewRequest(method, path, bytes.NewReader(body))
 		r.Header.Set("Content-Type", "application/json")
 		r.Header.Set("Origin", origin)
-		r.Header.Set("X-CSRF-Token", CSRF(raw))
+		r.Header.Set("X-CSRF-Token", sessiontoken.CSRF(raw))
 		if raw != "" {
 			r.AddCookie(&http.Cookie{Name: h.cookieName, Value: raw})
 		}
@@ -233,6 +234,6 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	want("GET", path+"/parts/1", alice, nil, false, 503)
-	exec(`DELETE FROM sessions WHERE token_digest=$1`, digest(alice))
+	exec(`DELETE FROM sessions WHERE token_digest=$1`, sessiontoken.Digest(alice))
 	want("GET", path, alice, nil, false, 401)
 }
