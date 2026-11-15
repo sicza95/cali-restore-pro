@@ -87,6 +87,9 @@ accepts one too. That is the only intended difference.
 5. Migrate security, navigation and invitations off `model`.
 6. Migrate the project workspace off `model` and onto `router.navigate`.
 
+Steps 3 to 6 landed as one commit: removing the prop from a parent and its children only
+typechecks together.
+
 ## Verification
 
 `npm run check`, `npm run test:unit`, `npm test`, `npm run build-storybook`, `npm run test:files`
