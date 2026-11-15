@@ -33,6 +33,12 @@ const allowed: RegExp[] = [/encrypted backup/gi, /titkosított biztonsági ment�
 const uuid = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 /**
+ * A raw float such as `0.00113388` or `1,23456`: five or more fraction digits. The shared
+ * formatter (`src/platform/format/number.ts`) never shows more than four.
+ */
+const rawFloat = /\d[.,]\d{5,}/;
+
+/**
  * Fails when the visible page text uses a banned engineering term or shows a UUID. Text in an
  * open dialog is skipped: the file preview shows the downloaded file's audit rows on purpose
  * (glossary rule 5).
@@ -45,11 +51,11 @@ export async function expectTaskLanguage(page: Page, screen: string) {
     return all;
   });
   for (const phrase of allowed) text = text.replace(phrase, '');
-  const found = [...banned, uuid].flatMap((pattern) => {
+  const found = [...banned, uuid, rawFloat].flatMap((pattern) => {
     const match = pattern.exec(text);
     return match
       ? [`"${match[0]}" in …${text.slice(Math.max(0, match.index - 40), match.index + 40)}…`]
       : [];
   });
-  expect(found, `engineering terms on ${screen}`).toEqual([]);
+  expect(found, `task language on ${screen}`).toEqual([]);
 }
