@@ -39,6 +39,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
 
 1. **`docs(copy): glossary for task language`**
    - New `docs/copy-glossary.md`: banned terms, their replacements in EN and HU, and two rules. A note that describes the build goes in docs, not on screen. A real limit stays on screen, said once, where the user acts on it.
+   - As built: [copy glossary](../copy-glossary.md), with six rules, a table of 20 terms and the words that stay. Found while writing it: the Hungarian split help names a milestone on screen ("A maszkok az M-14-ben határozhatók meg."); commit 2 fixes it. Because HU used _előnézet_ (preview) for "review", the guard matches HU terms as phrases.
    - Proposed core terms (decision 2): commit → save; committed → saved; draft stays; "review" dropped from page titles and actions; scope → "what's included" or the concrete noun ("Phase area", "Objects in this estimate"); encrypted/client-side → dropped, or "saved on this device"; revision `r4` → "version 4" or hidden; calculation version → kept only in exported files.
 
 2. **`copy(estimates): task language on the estimate page`**
