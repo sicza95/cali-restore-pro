@@ -7,21 +7,28 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main` at the orchestrator's handoff commit on top of `f088345` (all Verified). PRs #19, #20 and #21 landed by fast-forward and GitHub marks them merged. PRs #22 to #24 landed as one re-signed chain via [PR #25](https://github.com/sicza95/cali-restore-pro/pull/25) (closed with a pointer); #26 and #27 landed by fast-forward and show merged. The owner allows direct and force pushes to `main` (2026-11-15), so no more chain PRs.
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
-- **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
-- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1 to 5 done; Phase 4 done. Phase 3 done.
+- **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md), re-scored 2026-11-15 at `7016b48`: code 8, architecture 8, UX 6, UI 6 (was 7, 7, 4, 5).
+- **Active roadmap phase:** Phases 0 to 4 of the baseline are done. Remaining work is in GitHub issues; the re-score lists what moves each rating next.
 - **CI:** one workflow `ci.yml` with four parallel jobs: Frontend checks, Unit tests (Vitest), Go tests, Platform E2E.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:sync`, `test:estimates` (locally, this batch), backup scripts.
 
 ## Next step
 
-Phase 3 is done. Tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete, then re-score the baseline ratings (not re-scored since 2026-11-14). Open issues: `gh issue list`.
+The baseline roadmap is done. Highest-value next work by the re-score: UX first, photo setup by gesture (#34), the surface header (#39) and the warning treatment (#38); then the truncated estimate rows (#35). A physical iPad session (#49) would test the 6/10 UX rating on the target device.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Phase 2 items 4 and 5 confirmed; baseline re-scored (#33)
+
+- Item 4 (app shell) confirmed against [its plan](../plan/app-shell.md) in code, tests (`navigation.spec.ts` drawer focus, Escape, focus return) and screenshots; ticked, with #39 left. Item 5 (styled controls) confirmed the same way; a temporary probe in `copy-guard.ts` (not committed) listed the visible primaries on every guarded screen. One gap fixed: under the checkpoints tab the embedded pattern editor's "Save pattern version" was a second primary; it is now primary only on the libraries page (`PatternReview.tsx`). Ticked.
+- Re-scored the baseline with evidence (new section "Re-score after Phases 1 to 4"): code 8, architecture 8, UX 6, UI 6 (was 7, 7, 4, 5), with what holds, why not higher, and what would move each rating. Fixed the stale 390 px sentence in Phase 2.
+- Verified: `npm run check`, `test:unit` (210), `test:files` (22) and `npm test` (16) after the `PatternReview` change.
+- Not run: `test:app`, `test:sync`, `test:estimates` (one class attribute changed in the editor), Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · File-level lint disables removed (#32)
 

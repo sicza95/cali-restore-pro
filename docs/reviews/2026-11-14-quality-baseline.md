@@ -1,17 +1,19 @@
 # Quality baseline review
 
-14 November 2026 · Reviewer: Claude (first session) · Base commit `3c33d33` · Re-checked the same evening against fresh screenshots from `d2f0e33` (see [Re-check on current main](#re-check-on-current-main))
+14 November 2026 · Reviewer: Claude (first session) · Base commit `3c33d33` · Re-checked the same evening against fresh screenshots from `d2f0e33` (see [Re-check on current main](#re-check-on-current-main)) · **Re-scored 15 November 2026 at `7016b48`** (see [Re-score after Phases 1 to 4](#re-score-after-phases-1-to-4))
 
 This review rates the repository as it stands after M-16 and sets the order of work to bring it to a consistent standard. Ratings are out of 10 and compare against a production-grade, single-team product, not against a prototype.
 
 ## Summary
 
-| Area         | Rating | One-line verdict                                                                                                        |
-| ------------ | -----: | ----------------------------------------------------------------------------------------------------------------------- |
-| Code quality | 7 / 10 | Disciplined and clean at file level; weak at unit-test depth and at cross-cutting concerns (routing, i18n, state).      |
-| Architecture | 7 / 10 | Strong deployment and security posture; module boundaries have eroded on both the Go and the SolidJS side.              |
-| UX           | 4 / 10 | The product works end to end, but most screens read as an integration-test harness rather than a tool for conservators. |
-| UI           | 5 / 10 | The Storybook editor is close to an 8; the shipped app screens are closer to a 4. The two have diverged.                |
+| Area         | Rating (15 Nov) | Was (14 Nov) | One-line verdict (15 Nov)                                                                                               |
+| ------------ | --------------: | -----------: | ----------------------------------------------------------------------------------------------------------------------- |
+| Code quality |          8 / 10 |       7 / 10 | Every listed weakness fixed and guarded by tests; UI logic is still tested only end to end.                             |
+| Architecture |          8 / 10 |       7 / 10 | Boundaries restored on both sides (Go domains, feature folders, router and app context); production qualification open. |
+| UX           |          6 / 10 |       4 / 10 | Task language, steps and one navigation model; long form-heavy pages and button-driven photo setup remain.              |
+| UI           |          6 / 10 |       5 / 10 | One shell, styled controls and one primary per view; dense rows still truncate and some panels are bare lists.          |
+
+The 14 November verdicts and findings below are kept as the baseline; the [re-score](#re-score-after-phases-1-to-4) says which still hold.
 
 The single most important finding: **the polished iPad editor in Storybook (`src/ui/editor/editor-workspace/EditorWorkspace.tsx`) is not used by the application.** The app's surface editor (`src/ui/account-access/projects/*`, `src/ui/editor/drawing-review/*`) is a separate, form-driven review UI. Bringing those together is the highest-value piece of work in the repository.
 
@@ -60,6 +62,46 @@ New findings from this run:
 3. Photo review shows "The assessment changed outside this editor. Discard the old recovery draft to resume editing." as plain text under the pan buttons, with no warning treatment.
 
 Ratings are unchanged (code 7, architecture 7, UX 4, UI 5). The corrected UX 1 finding does not move the UX rating: the capability exists, but the screen does not yet present it as the primary way to work. It does make Phase 1 smaller than first estimated, because step 2 is mostly re-housing existing canvas drawing rather than building it.
+
+## Re-score after Phases 1 to 4
+
+15 November 2026 · Claude · at `7016b48` (Phases 1 to 4 done; issues #29 to #32, #47, #57, #58 closed today). Evidence: a full local run of every suite (`check`, `test:unit` 210, `npm test` 16, `test:files` 22, `test:estimates` 8, `test:sync` 2, `test:app` 16 + 1 skipped, `build-storybook`), the fresh `test:files` screenshots at 1194 × 834 and 834 × 1194 (project, photo setup, drawing, checkpoints, estimate steps, outputs, admin), and a probe of visible primary actions per screen. Same scale as before: a production-grade, single-team product. Not done: Go tests (no Go change today), a physical iPad, Firefox and WebKit.
+
+### Code quality — 8 / 10 (was 7)
+
+All six weaknesses are fixed: Vitest covers `src/platform` (estimates, geometry, vault crypto, revision queue, report workbooks) plus UI-level guards, 210 tests in CI (1); one typed router with guards and deep links (2) and an app context instead of the prop-drilled model (3), [ADR 0006](../adr/0006-router-and-app-context.md); a typed EN/HU catalogue where a missing Hungarian key fails `typecheck` and `test:unit` (4, [plan](../plan/i18n-catalogue.md)); no file-level lint disables (5, [plan](../plan/lint-disables.md)); UI colours only from tokens, guarded (6, [plan](../plan/colour-tokens.md)). Guards now catch whole classes of regressions: copy parity and glossary terms, inline language choices, colour literals, raw floats on screen.
+
+Why not 9: UI behaviour is tested only through Playwright (no component tests); several files sit at the 400-line limit (#44); the global `button` rule in `account-access/styles.css` still styles every app button and has caused white-on-white twice (process notes); and today a racy absence check hid a real leak, vault names left in the breadcrumb after locking, until it was traced (#58). Tests that can pass before data loads are a pattern worth auditing.
+
+### Architecture — 8 / 10 (was 7)
+
+All five weaknesses are fixed: `internal/identity` split into nine domain packages (1); `src/ui` split into `account/`, `settings/`, `projects/`, `project-review/`, `estimates/`, `reports/`, `sharing/` (2); one editor (3, retired earlier); a router and app context (4); one CI workflow with parallel jobs (5). Decisions are recorded as ADRs and every phase has a plan document.
+
+Why not 9: `account-access/` still holds the app core and global styles, so the folder name and the CSS cascade still cross features; account pages mix in-app navigation and full page loads (#45); the shell's record names show that vault-scoped state needs an explicit lifetime (fixed for names in #58, but not yet a general rule); and production qualification is open (cryptographic review #52, deployment and recovery #53, sustained 4K/8K memory #50).
+
+### UX — 6 / 10 (was 4)
+
+| Finding (14 Nov)               | Now                                                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 · direct manipulation        | Mostly retired by Phase 1: the canvas leads in drawing, with gesture zoom and pan; numeric entry sits behind "Enter by number".                                                      |
+| 2 · internal data shown        | Retired: no ids or revisions on audited screens, numbers formatted per unit and language (guarded).                                                                                  |
+| 3 · developer language         | Retired on audited screens and in every catalogue string (unit-tested since #30). Account, vault and admin screens had no screen audit, but their catalogue strings are now checked. |
+| 4 · everything visible at once | Retired for the estimate: summary plus five steps, page about 1,490 px instead of 2,640.                                                                                             |
+| 5 · inconsistent navigation    | Retired: one shell, drawer in portrait, real breadcrumbs, one title. Left: the surface editor header repeats the trail (#39).                                                        |
+| 6 · small, passive canvas      | **Holds for photo setup**: Left, Right, Up and Down buttons and a zoom slider under the photo (#34); the checkpoint comparison also pans with sliders.                               |
+
+Why 6 and not 7: the project page and photo setup are still long, form-first pages (the project page in portrait is about 2,160 px of equal-weight panels); Surface measurements is a bare list under the photo; the "assessment changed outside this editor" message still has no warning treatment (#38); no physical iPad and Pencil session yet (#49).
+
+### UI — 6 / 10 (was 5)
+
+Better: one shell in both orientations; selects with token chevrons, a styled file picker and accent checkboxes; one dark primary per view (probed); colours only from tokens in both themes. Still holding: three-column estimate rows truncate at 1194 ("Object 1 / Sur…", "Current asses…", "No mask assi…", #35); Surface measurements and the checkpoint measurements are unstyled lists; the admin page is sparse on the right (#36); the Storybook portrait inspector clips and letterboxes (#37). The app screens are now about a 6, the editor about an 8.
+
+### What would move each rating next
+
+- Code to 9: component tests for the editor and estimate state, the files at the limit split (#44), the global button rule scoped to the app shell.
+- Architecture to 9: the `account-access/` core renamed and its global CSS scoped; #45 decided; #52 and #53 done.
+- UX to 7: photo setup by gesture (#34), #38 and #39, a lighter project page (disclosure for the rarely used panels), a physical iPad session (#49).
+- UI to 7: #35, #36, #37, and styled measurement lists.
 
 ## Code quality — 7 / 10
 
@@ -134,13 +176,13 @@ Each step is meant to be one or a few signed conventional commits, with the hand
 
 ### Phase 2 — UX and copy pass
 
-Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths (390 px) are not supported for now, so no Phase 2 item adds phone layouts. The existing 390 px test checks stay until the owner decides to remove them.
+Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths (390 px) are not supported for now, so no Phase 2 item adds phone layouts. The 390 px test checks were removed on 15 November 2026 (issue #47).
 
 1. [x] Copy audit: replace engineering terms with task language, move "not connected yet" notes to docs, hide IDs. Done in the eight commits of the [copy audit](../plan/copy-audit.md): a [glossary](../copy-glossary.md) in EN and HU, task language on the estimate, editor, report and footer, the backup limit moved to the backup panel (with a fix for its misleading error), no internal ids, a translated save status, and `copy-guard.ts` checking ten screens. The UX rating stays at 4 until the estimate page and app shell (items 3 and 4) land; findings 4 to 6 still hold.
 2. [x] Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals. Done in [PR #21](https://github.com/sicza95/cali-restore-pro/pull/21) ([plan](../plan/number-format.md)).
 3. [x] Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue). Done in [PR #26](https://github.com/sicza95/cali-restore-pro/pull/26) ([plan](../plan/estimate-steps.md)): summary plus five steps, one primary per step.
-4. One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs.
-5. Styled file picker, select and button hierarchy (one primary per view).
+4. [x] One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs. Done in `0a43106` ([plan](../plan/app-shell.md)), confirmed 15 November 2026: sidebar, icon rail on surface pages, compact header with a modal drawer (focus trapped, Escape and focus return tested in `navigation.spec.ts`), chevron breadcrumbs from the route table with `aria-current`, one shell `h1`. Left: the surface editor's own header repeats the trail (#39). Breadcrumb names now leave the shell when the vault locks (#58).
+5. [x] Styled file picker, select and button hierarchy (one primary per view). Done in `07c01c6`, `59ce430`, `ba1633b` ([plan](../plan/styled-controls.md)), confirmed 15 November 2026: secondary is the default button, selects and the file picker are styled, checkboxes take the accent token. A probe counted the visible primaries on every screen the copy guard visits: one each (or none), except the checkpoints tab, where the embedded pattern editor's Save was a second primary; it is now primary only on the libraries page.
 
 ### Phase 3 — Code structure
 
