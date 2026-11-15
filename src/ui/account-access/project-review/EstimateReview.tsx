@@ -8,6 +8,7 @@ import type { SavedProject } from '../../../platform/projects/types';
 import type { Language } from '../types';
 import { estimateCopy } from '../../../platform/estimates/copy';
 import { financeControl as id } from './estimate-controls';
+import { versionLine } from './estimate-version';
 import {
   createPhases,
   extraRate,
@@ -160,9 +161,7 @@ export function EstimateReview(props: {
   }
   return (
     <div class="review-flow estimate-review">
-      <p class="review-note">
-        {c().transient} {c().recoveryLimit}
-      </p>
+      <p class="review-note">{c().note}</p>
       <p role="status">{status()}</p>
       <Show when={priceCurrency() !== project().settings.currency}>
         <p role="alert">{c().reprice}</p>
@@ -287,11 +286,11 @@ export function EstimateReview(props: {
                 {(item) => (
                   <div class="review-inset" role="status">
                     <p>
-                      {c().snapshotState} · r{item().revision} · {item().currency}
+                      {versionLine(props.language, versions()[Number(version()) - 1])} ·{' '}
+                      {item().currency}
                     </p>
                     <p>
-                      {versions()[Number(version()) - 1]?.result.calculation} · {c().total} ·{' '}
-                      {versions()[Number(version()) - 1]?.result.total ?? '—'}
+                      {c().total} · {versions()[Number(version()) - 1]?.result.total ?? '—'}
                     </p>
                     <p>
                       {item()

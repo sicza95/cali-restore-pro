@@ -57,3 +57,7 @@ Normal outputs physically omit unselected pixels/geometry/data, including embedd
 CSV preserves numeric/unit meaning, quotes user text correctly and prevents formula injection. XLSX offers numeric snapshot and editable-estimate modes; editable formulas/hidden data may include only the recipient's authorized scope. Summary/assessment-only readers must not recover private rates/hours/materials from formulas, document XML, metadata or embedded images. SVG must contain no executable/external-fetch content. Inspect encoded payloads as well as rendered previews.
 
 M-16 reruns fixture-oracle and permission/content checks with real committed geometry and sources. Confirm report/preview/data totals, output extent, selected-version scope and unit/rounding consistency on desktop and target iPad. Until then, encoder correctness is bounded fixture evidence rather than qualification of measured professional output.
+
+## Known limit: backups
+
+Portable project backups (M-07) do not carry saved estimate versions or report drafts yet. `projectBackups().export` refuses such a project with `BackupUnavailable` rather than writing an incomplete backup, and the project's backup panel says so when it opens (`projectBackups().gap`), with "Prepare backup" disabled. Lifting this needs estimate- and report-inclusive backup formats; until then that work stays on the device.

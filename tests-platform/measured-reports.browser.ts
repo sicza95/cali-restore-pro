@@ -85,7 +85,7 @@ test('reconciles a committed checkpoint estimate with scoped production download
   await expect(phase('hoursOutput')).toHaveValue('2');
   await expect(page.locator('[data-estimate-result="total"]')).toHaveText('20.00');
   await finance('issue').click();
-  await expect(page.getByText('Encrypted version saved locally. Not cloud-synced.')).toBeVisible();
+  await expect(page.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
 
   await page.locator('[data-control-id="project.review.outputs"]').click();
   await report('format').selectOption('SVG');

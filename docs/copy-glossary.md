@@ -26,7 +26,7 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 | review version                                   | version                              | előnézeti verzió                                           | verzió                                  |
 | draft review                                     | draft                                | piszkozat-előnézet (as a title)                            | piszkozat                               |
 | independent mask scope                           | phase area                           | önálló maszkterület                                        | a munkafázis területe                   |
-| selected estimate scope, extra scope             | objects in this estimate, applies to | a becslés kiválasztott köre, tétel hatóköre                | a becslés tárgyai, érvényes             |
+| selected estimate scope, extra scope             | objects in this estimate, applies to | a becslés kiválasztott köre, tétel hatóköre                | a becslés tárgyai, érvényes erre        |
 | encrypted (version, sample), client-side         | nothing, or "saved on this device"   | titkosított, kliensoldali                                  | semmi, vagy „ezen az eszközön mentve”   |
 | encrypted input version · r4                     | Version 4                            | titkosított bemeneti verzió · r4                           | 4. verzió                               |
 | not cloud-synced                                 | not synced yet                       | nincs felhőszinkron                                        | még nincs szinkronizálva                |
@@ -39,6 +39,7 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 
 - **Draft** (_vázlat_ for drawing, _piszkozat_ for reports): an unfinished, unsaved piece of work is a real idea for the user.
 - **Preview** (_előnézet_) where it means looking at a result before downloading it.
+- **Encrypted backup** (_titkosított biztonsági mentés_): the user must keep the backup key, so the word tells them something they act on.
 - **Assessment, checkpoint, phase, layer, mask, calibration**: conservation and editor vocabulary the user works with.
 
 ## Guard

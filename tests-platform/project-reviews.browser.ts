@@ -196,7 +196,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(finance('taxPercent')).toHaveValue('20');
   await finance('assumptions').fill('Review cleaning access.');
   await finance('snapshot').tap();
-  const captured = page.getByRole('status').filter({ hasText: 'Encrypted input version' });
+  const captured = page.getByRole('status').filter({ hasText: /^Version \d+ · Saved · / });
   await expect(captured).toContainText('12.5');
   await expect(captured).toContainText('Object 1');
   await expect(captured).not.toContainText('Lighting');
@@ -287,7 +287,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
     await expect(draft).toHaveCount(0);
   }
   await page.getByLabel('App language').selectOption('hu');
-  await expect(page.getByRole('heading', { name: 'Exportálási előnézet' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Exportálás', exact: true })).toBeVisible();
   await report('language').selectOption('en');
   await page.emulateMedia({ colorScheme: 'dark' });
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');

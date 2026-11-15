@@ -43,8 +43,9 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
       .export(project)
       .then(
         () => false,
-        () => true,
+        (error: { gap?: string }) => error.gap === 'estimate',
       );
+    const backupGap = await vault.projectBackups().gap(project);
     const stale = await repository.save(project, 0, doc).then(
       () => false,
       () => true,
@@ -143,6 +144,7 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
     other.close();
     return {
       incompleteBackup,
+      backupGap,
       stale,
       immutable,
       isolation,
@@ -158,6 +160,7 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
   expect(result).toMatchObject({
     stale: true,
     incompleteBackup: true,
+    backupGap: 'estimate',
     immutable: true,
     isolation: true,
     locked: true,
@@ -215,16 +218,16 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await expect(page.locator('[data-estimate-result="total"]')).toHaveText('630');
   await page.getByLabel('Preset name', { exact: true }).fill('Studio hourly');
   await page.getByRole('button', { name: 'Save rate preset', exact: true }).click();
-  await expect(page.getByText('Saved encrypted', { exact: true })).toBeVisible();
+  await expect(page.getByText('Preset saved', { exact: true })).toBeVisible();
   await finance('issue').click();
-  await expect(page.getByText('Encrypted version saved locally. Not cloud-synced.')).toBeVisible();
+  await expect(page.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(phase('time')).toHaveValue('15');
   await expect(page.locator('[data-estimate-result="total"]')).toHaveText('630');
   await phase('rate').fill('88');
   await expect(
-    page.getByRole('status').filter({ hasText: 'Encrypted input version' }),
+    page.getByRole('status').filter({ hasText: /^Version 1 · Issued · / }),
   ).toContainText('40');
   for (const viewport of [
     { width: 1194, height: 834 },
@@ -290,6 +293,13 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   expect(editableBytes).not.toContain('Studio hourly');
   expect(editableBytes).toContain('<f>');
   await report('cancel').click();
+  await page.locator('[data-control-id="project.review.parent"]').click();
+  await page.locator('[data-control-id="project.backup"]').click();
+  await expect(
+    page.getByText('Backups don’t include estimates or report drafts yet.'),
+  ).toBeVisible();
+  await expect(page.locator('[data-control-id="backup.export"]')).toBeDisabled();
+  await page.screenshot({ path: info.outputPath('project-backup-gap.png'), fullPage: true });
   await page.locator('[data-control-id="project.review.estimates"]').click();
   await page.getByLabel('App language').selectOption('hu');
   await expect(page.getByRole('button', { name: 'Becslési verzió mentése' })).toBeVisible();

@@ -14,13 +14,28 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Owner answers the four decisions in [copy audit](../plan/copy-audit.md). Then commit the plan to `main` and start commit 1 (glossary) on `copy/task-language`.
+Copy audit commit 3 (editor: save, not commit) on `copy/task-language`. Commit 2 (estimate page) is committed on the branch.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 2: estimate page
+
+- Estimate copy (EN and HU) follows the glossary: page titles "Estimate", "Report", "Outputs"; one note instead of the stale "Geometry is not connected yet" and the backup notice; "Phase area", "Phase layer", "Objects in this estimate", "Results", "Split phase". The HU split help no longer names M-14. The version line is "Version 1 · Issued · <date> · HUF" (new `estimate-version.ts`); "restoration-v1" is off the screen.
+- Found and fixed: a project with a saved estimate failed its backup with the misleading "check your originals… 512 MiB" error. New `BackupUnavailable` and `projectBackups().gap()`; the backup panel says so when opened and disables "Prepare backup". Recorded in [estimation and outputs](../plan/estimation-and-outputs.md).
+- Tests: three string lookups updated; `estimates.browser.ts` checks the refusal's gap and the panel message, with a `project-backup-gap.png` screenshot.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed after fixing one HU heading lookup, see process notes). Looked at `estimate-1194`, `estimate-hu-390` and `project-backup-gap`.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests.
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 1: glossary
+
+- Committed the plan with the owner's decisions as `b0239e5` on `main`, signed. **Not pushed**: the permission classifier blocked `git push` to `main` (the owner's message accepted the decisions but didn't ask for a push).
+- On `copy/task-language`: [copy glossary](../copy-glossary.md) as `1852b79`, signed, not pushed. Six rules, 20 terms in EN and HU, the words that stay, and how the guard matches them. Found: the HU split help names milestone M-14 on screen.
+- Verified: `npm run check`. Later, at the owner's request, pushed `main` and `copy/task-language`; both commits Verified.
+- Not run: `npm test`, `test:files` (docs only), `test:app`, `test:sync`, `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Phase 2 step 1 planned
 
