@@ -70,6 +70,7 @@ export function InvitationInbox(props: { vault: LocalVault }) {
                   }).format(new Date(item.expiresAt))}
                 </time>
                 <button
+                  class="primary"
                   data-control-id="invitations.accept"
                   disabled={inbox.busy()}
                   onClick={() =>

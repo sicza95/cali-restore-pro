@@ -8,6 +8,8 @@ export function NameForm(props: {
   action: string;
   value?: string;
   disabled: boolean;
+  /** The view's one primary action; other name forms are secondary. */
+  primary?: boolean;
   onSubmit: (name: string) => Promise<boolean>;
 }) {
   return (
@@ -27,7 +29,11 @@ export function NameForm(props: {
         {props.label}
         <input name="name" required maxLength={120} value={props.value ?? ''} />
       </label>
-      <button data-control-id={props.controlId} disabled={props.disabled}>
+      <button
+        classList={{ primary: !!props.primary }}
+        data-control-id={props.controlId}
+        disabled={props.disabled}
+      >
         {props.action}
       </button>
     </form>

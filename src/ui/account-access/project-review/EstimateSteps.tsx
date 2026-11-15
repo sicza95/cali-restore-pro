@@ -96,6 +96,7 @@ export function EstimateStepPanel(props: {
         <Show when={next()} fallback={props.primary}>
           {(step) => (
             <button
+              class="primary"
               type="button"
               data-control-id={stepControl('next')}
               onClick={() => props.go(step())}

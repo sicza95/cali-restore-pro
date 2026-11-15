@@ -44,7 +44,9 @@ export function Admin() {
               {c().searchLabel}
               <input data-control-id="admin.search.query" name="q" type="search" maxlength={254} />
             </label>
-            <button data-control-id="admin.search">{c().search}</button>
+            <button class="primary" data-control-id="admin.search">
+              {c().search}
+            </button>
           </form>
           <form class="admin-search" onSubmit={(e) => app.submit(e, 'confirm', 'confirmed')}>
             <PasswordField t={app.t} kind="currentPassword" />

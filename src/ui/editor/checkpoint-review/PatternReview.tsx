@@ -160,6 +160,7 @@ export function PatternReview(props: { language: Language; library?: boolean; va
       </div>
       <div class="review-actions">
         <button
+          class="primary"
           type="button"
           data-control-id={control('save')}
           disabled={!valid() || !name().trim() || saving() || rows.loading}
