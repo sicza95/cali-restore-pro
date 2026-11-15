@@ -347,7 +347,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await page.screenshot({ path: info.outputPath('projects-phone.png'), fullPage: true });
   await page.getByRole('button', { name: 'Archive', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Restore project' })).toBeVisible();
-  await page.getByRole('link', { name: 'All projects' }).click();
+  await controls('project.library').click();
   await expect(page.getByRole('link', { name: 'East Chapel' })).toHaveCount(0);
   await page.getByLabel('Show archived').check();
   await expect(controls('projects.open')).toHaveText('East Chapel');
@@ -362,7 +362,8 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(
     page.getByText('This project or surface is unavailable on this device.'),
   ).toBeVisible();
-  await expect(page.getByText('East Chapel')).toHaveCount(0);
+  await expect(controls('surface.project')).toHaveText('East Chapel'); // the project still exists
+  await expect(page.locator('.project-workspace').getByText('East Chapel')).toHaveCount(0);
   await expect(controls('originals.attach')).toHaveCount(0);
   account = '00000000-0000-4000-8000-000000000002';
   await page.goto(surfacePath);

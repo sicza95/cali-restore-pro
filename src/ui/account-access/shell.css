@@ -3,68 +3,6 @@
   grid-template-columns: 228px minmax(0, 1fr);
   padding: 8px 8px 8px 0;
 }
-.account-nav {
-  align-self: start;
-  position: sticky;
-  top: 8px;
-  padding: 16px 16px 16px 20px;
-  max-height: calc(100dvh - 16px);
-  overflow-y: auto;
-  border: 0;
-}
-.product-name {
-  width: fit-content;
-  min-height: var(--cr-touch);
-  font-weight: 700;
-  font-size: 19px;
-  letter-spacing: -0.045em;
-  white-space: nowrap;
-}
-.product-name svg {
-  flex: none;
-  color: var(--cr-accent);
-}
-.product-name strong {
-  font-size: 0.72em;
-  color: var(--cr-muted);
-  letter-spacing: 0;
-}
-.account-nav nav {
-  gap: 3px;
-  margin: 28px 0;
-}
-.account-nav nav :is(a, .account-sign-out) {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: var(--cr-touch);
-  padding: 8px 10px;
-  text-align: start;
-  font-size: 14px;
-  font-weight: 550;
-  color: var(--cr-muted);
-}
-.account-nav nav svg {
-  flex: none;
-}
-.account-nav nav .account-sign-out {
-  margin-top: 12px;
-  background: transparent;
-}
-.account-nav nav :is(a:hover, a[aria-current='page'], .account-sign-out:hover) {
-  background: var(--cr-hover);
-  color: var(--cr-ink);
-}
-.account-nav nav a[aria-current='page'] {
-  font-weight: 700;
-}
-.account-nav nav a[aria-current='page'] svg {
-  color: var(--cr-accent);
-}
-.account-nav .language {
-  font-size: 13px;
-  color: var(--cr-muted);
-}
 .account-content {
   min-width: 0;
   max-width: none;
@@ -112,29 +50,6 @@ h1 {
   padding: 0 clamp(16px, 4vw, 56px) 16px;
   margin-inline: auto;
 }
-.account-shell--public .account-nav {
-  position: static;
-  align-self: stretch;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 24px;
-  padding: 14px 0;
-  max-height: none;
-  overflow: visible;
-}
-.account-shell--public .account-nav nav[data-expanded] {
-  display: flex;
-  flex-wrap: wrap;
-  width: auto;
-  margin: 0 0 0 auto;
-}
-.account-shell--public .account-nav .language {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: auto;
-}
 .account-shell--public .language select {
   width: auto;
 }
@@ -153,39 +68,6 @@ h1 {
     grid-template-columns: minmax(0, 1fr);
     padding: 0 8px 8px;
   }
-  .account-nav {
-    position: static;
-    gap: 8px 24px;
-    max-height: none;
-    overflow: visible;
-    padding: 8px 12px;
-  }
-  .account-nav button.account-nav-toggle {
-    display: inline-flex;
-    margin-inline-start: auto;
-    align-items: center;
-    gap: 8px;
-  }
-  .account-nav nav {
-    margin: 0;
-  }
-  .account-nav nav[data-expanded='false'] {
-    display: none;
-  }
-  .account-nav nav .account-sign-out {
-    margin: 0;
-  }
-  .account-nav .language {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .account-nav .language select {
-    width: auto;
-  }
-  .account-shell--public .account-nav button.account-nav-toggle {
-    display: none;
-  }
 }
 @media (max-width: 700px) {
   .account-section {
@@ -197,67 +79,6 @@ h1 {
   .account-panel {
     padding: 16px;
   }
-  .account-shell--public .account-nav {
-    gap: 4px 12px;
-  }
-  .account-shell--public .account-nav .language {
-    margin-inline-start: auto;
-  }
-  .account-shell--public .account-nav nav[data-expanded] {
-    order: 1;
-    width: 100%;
-    margin-inline-start: 0;
-  }
-}
-.account-shell:has(.surface-heading) {
-  grid-template-columns: minmax(0, 1fr);
-  padding: 8px;
-}
-.account-shell:has(.surface-heading) .account-nav {
-  position: static;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 20px;
-  max-height: none;
-  overflow: visible;
-  padding: 0 12px 8px;
-}
-.account-shell:has(.surface-heading) .account-nav-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-inline-start: auto;
-}
-.account-shell:has(.surface-heading) .account-nav nav {
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-  margin: 0;
-}
-.account-shell:has(.surface-heading) .account-nav nav[data-expanded='false'] {
-  display: none;
-}
-.account-shell:has(.surface-heading) .account-nav .language {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.account-shell:has(.surface-heading) .account-nav .language select {
-  width: auto;
-}
-.account-shell:has(.surface-heading) .account-nav .account-sign-out {
-  margin: 0;
-}
-.account-shell:has(.surface-heading) .account-content {
-  padding: 16px clamp(12px, 2vw, 28px);
-}
-.account-shell:has(.surface-heading) .account-content > h1 {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
 .offline-originals-page {
   max-width: 72rem;

@@ -141,7 +141,7 @@ function PhaseDetails(props: {
         </button>
       </div>
       <p class="review-note">{c().splitHelp}</p>
-      <h4>{c().scope}</h4>
+      <h3>{c().scope}</h3>
       <div class="review-fields">
         <ReviewSelect
           id={id('scopeSurface')}
@@ -236,7 +236,7 @@ export function WorkPhases(props: {
   const [name, setName] = createSignal('');
   return (
     <section class="project-pane">
-      <h3>{c().phases}</h3>
+      <h2>{c().phases}</h2>
       <form
         class="review-fields"
         onSubmit={(e) => {
@@ -289,7 +289,7 @@ export function WorkPhases(props: {
         </Show>
       </Show>
       <Show when={m.rows.some((row) => row.archived)}>
-        <h4>{c().archived}</h4>
+        <h3>{c().archived}</h3>
         <ul class="project-register">
           <For each={m.rows.filter((row) => row.archived)}>
             {(phase) => (

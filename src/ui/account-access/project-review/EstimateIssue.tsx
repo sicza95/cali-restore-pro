@@ -16,7 +16,7 @@ export function EstimateIssue(props: {
   const d = untrack(() => props.draft);
   return (
     <section class="project-pane">
-      <h3>{c().stepIssue}</h3>
+      <h2>{c().stepIssue}</h2>
       <label>
         {c().assumptions}
         <textarea

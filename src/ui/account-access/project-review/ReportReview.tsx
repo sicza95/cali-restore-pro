@@ -52,7 +52,7 @@ export function ReportReview(props: {
 
   const actions = () => (
     <section class="project-pane">
-      <h3>{c().output}</h3>
+      <h2>{c().output}</h2>
       <div class="review-fields">
         <ReviewSelect
           id={id('format')}
@@ -163,7 +163,7 @@ export function ReportReview(props: {
           />
           <div class="review-flow">
             <section class="project-pane">
-              <h3>{c().settings}</h3>
+              <h2>{c().settings}</h2>
               <div class="review-fields">
                 <ReviewSelect
                   id={id('language')}
@@ -184,7 +184,7 @@ export function ReportReview(props: {
               </div>
             </section>
             <section class="project-pane">
-              <h3>{c().content}</h3>
+              <h2>{c().content}</h2>
               <div class="review-fields">
                 <For each={contentKeys}>
                   {(key) => (

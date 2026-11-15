@@ -1,7 +1,16 @@
 import type { JournalWrite, PendingAttachment } from '../../../platform/vault/project-store';
 import { useApp } from '../../app-context/AppContext';
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
-import { createResource, createMemo, createSignal, Match, Show, Switch, untrack } from 'solid-js';
+import {
+  createEffect,
+  createResource,
+  createMemo,
+  createSignal,
+  Match,
+  Show,
+  Switch,
+  untrack,
+} from 'solid-js';
 import { localProjects, newProject } from '../../../platform/projects/projects';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
@@ -20,7 +29,7 @@ import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
 import { ProjectReview, ProjectReviewLinks } from '../project-review/ProjectReview';
 import { SurfaceWorkspace } from './SurfaceWorkspace';
-import { followLink, projectHref } from '../../router/routes';
+import { projectHref } from '../../router/routes';
 import { syncCopy } from './sync-copy';
 import './styles.css';
 
@@ -41,6 +50,16 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
       () => ({ rows: [] as SavedProject[], failed: true }),
     ),
   );
+  // The shell's breadcrumbs and title name projects and surfaces; only this screen can read them.
+  createEffect(() => {
+    const names: Record<string, string> = {};
+    for (const project of projects()?.rows ?? []) {
+      names[project.id] = project.name;
+      for (const object of project.objects)
+        for (const surface of object.surfaces) names[surface.id] = surface.name;
+    }
+    app.publishNames(names);
+  });
   const route = () => {
     const current = app.router.route();
     return current.name === 'projects' ? current : undefined;
@@ -229,16 +248,6 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
             </>
           }
         >
-          <Show when={!route()?.review || !activeReview()}>
-            <a
-              class="project-back"
-              href="/projects"
-              data-control-id="project.library"
-              onClick={(event) => followLink(event, navigate)}
-            >
-              {c().back}
-            </a>
-          </Show>
           <Switch>
             <Match when={route()?.surface}>
               <Show

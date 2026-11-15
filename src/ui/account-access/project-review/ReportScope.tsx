@@ -17,7 +17,7 @@ export function ReportScope(props: {
   const c = () => props.copy;
   return (
     <section class="project-pane">
-      <h3>{c().scope}</h3>
+      <h2>{c().scope}</h2>
       <For each={props.project.objects}>
         {(object) => (
           <section class="review-inset">

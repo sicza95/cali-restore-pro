@@ -51,7 +51,7 @@ export function SurfaceMeasurements(props: {
   };
   return (
     <section aria-label={props.copy.measurements}>
-      <h3>{props.copy.measurements}</h3>
+      <h2>{props.copy.measurements}</h2>
       <p role="status">{props.copy[status()]}</p>
       <dl>
         <dt>{props.copy.assessed}</dt>

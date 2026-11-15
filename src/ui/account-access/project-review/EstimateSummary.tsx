@@ -19,7 +19,7 @@ export function EstimateSummary(props: {
   const c = () => props.copy;
   return (
     <section class="project-pane estimate-summary" aria-labelledby="estimate-summary-title">
-      <h3 id="estimate-summary-title">{c().summary}</h3>
+      <h2 id="estimate-summary-title">{c().summary}</h2>
       <dl class="estimate-totals">
         <For each={facts}>
           {(key) => (

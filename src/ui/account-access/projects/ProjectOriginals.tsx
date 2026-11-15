@@ -29,7 +29,7 @@ export function ProjectOriginals(props: {
 
   return (
     <section class="project-pane project-originals">
-      <h3>{props.copy.originals}</h3>
+      <h2>{props.copy.originals}</h2>
       <form
         class="project-fields"
         onSubmit={(e) => {

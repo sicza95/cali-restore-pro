@@ -49,7 +49,7 @@ export function ProjectSync(props: {
   const status = () => c()[props.model.statusKey(props.project)];
   return (
     <section class="project-pane project-sync" aria-label={c().title}>
-      <h3>{c().title}</h3>
+      <h2>{c().title}</h2>
       <p role="status">{status()}</p>
       <Show when={failed() || props.model.unavailable()}>
         <p role="alert">{c().unavailable}</p>
@@ -128,7 +128,7 @@ function CopyPreview(props: { title: string; project: Project; language: Languag
   const c = () => projectCopy[props.language];
   return (
     <section aria-label={props.title} class="project-sync-copy">
-      <h4>{props.title}</h4>
+      <h3>{props.title}</h3>
       <p>
         {props.project.name} · {props.project.settings.currency}
       </p>

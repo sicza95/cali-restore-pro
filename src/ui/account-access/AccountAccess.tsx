@@ -1,10 +1,13 @@
 import { Match, Show, Switch } from 'solid-js';
 import { AppProvider, useApp } from '../app-context/AppContext';
+import { AppNavigation } from '../app-shell/AppNavigation';
+import type { NavigationMode } from '../app-shell/AppNavigation';
+import { PageHeading } from '../app-shell/PageHeading';
+import { useCompactLayout } from '../app-shell/useCompactLayout';
 import { accountPaths } from '../router/constants';
 import { routeGuard } from '../router/guard';
 import { isAccountDestination, signInLink } from '../router/routes';
 import { AccessForm } from './access-form/AccessForm';
-import { AccountNavigation } from './AccountNavigation';
 import { AccountScreen } from './AccountScreen';
 import { navigationText } from './navigation-copy';
 import { settingsCopy } from './settings/constants';
@@ -41,12 +44,27 @@ function AccountShell() {
       unavailable: app.sessionUnavailable(),
       canAdmin: app.canAdmin(),
     });
+  const compact = useCompactLayout();
+  const surface = () => {
+    const route = router.route();
+    return route.name === 'projects' && !!route.surface;
+  };
+  const mode = (): NavigationMode => {
+    if (publicView()) return 'public';
+    if (compact()) return 'compact';
+    return surface() ? 'rail' : 'sidebar';
+  };
   return (
-    <div class="account-shell" classList={{ 'account-shell--public': !!publicView() }}>
-      <AccountNavigation />
+    <div
+      class="account-shell"
+      classList={{ 'account-shell--public': !!publicView() }}
+      data-nav={mode()}
+      data-surface={surface() || undefined}
+    >
+      <AppNavigation mode={mode()} />
       <main class="account-content">
         <Show when={!publicView()}>
-          <h1>{c()[view()]}</h1>
+          <PageHeading />
         </Show>
         <Show when={message()}>
           {(key) => (

@@ -13,9 +13,9 @@ export function ReportEstimatePreview(props: { estimate: ReportEstimate; languag
     formatMoney(value, summary().currency, props.language);
   return (
     <section class="report-sheet-row">
-      <h4>
+      <h3>
         {c().finances} · {props.estimate.detail ? c().full : c().summary}
-      </h4>
+      </h3>
       <p>
         v{summary().version} · {summary().currency} · {summary().calculation} ·{' '}
         {c().projectRevision} {summary().projectRevision} ·{' '}
@@ -69,7 +69,7 @@ export function ReportEstimatePreview(props: { estimate: ReportEstimate; languag
             <For each={detail().phases}>
               {(phase) => (
                 <section>
-                  <h5>{phase.name}</h5>
+                  <h4>{phase.name}</h4>
                   <dl class="review-facts">
                     <dt>{e().hours}</dt>
                     <dd>{formatHours(phase.hours, props.language)}</dd>

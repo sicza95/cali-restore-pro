@@ -14,44 +14,15 @@ body {
   grid-template-columns: 232px minmax(0, 1fr);
   min-height: 100dvh;
 }
-.account-nav {
-  padding: 32px 24px;
-  border-right: 1px solid var(--cr-rule);
-}
-.product-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 650;
-  font-size: 20px;
-  text-decoration: none;
-}
 .field-help,
 footer,
 .account-section > div > p {
   color: var(--cr-muted);
   font-size: 14px;
 }
-.account-nav-toggle {
-  display: none;
-}
-.account-nav nav {
-  display: grid;
-  gap: 8px;
-  margin: 24px 0 40px;
-}
 a {
   color: inherit;
   text-underline-offset: 4px;
-}
-.account-nav nav a {
-  min-height: var(--cr-touch);
-  padding: 10px 12px;
-  text-decoration: none;
-  border-radius: var(--cr-radius);
-}
-.account-nav a[aria-current='page'] {
-  background: var(--cr-hover);
 }
 .account-content {
   padding: 40px 32px;
@@ -196,25 +167,6 @@ footer section {
     grid-template-columns: minmax(0, 1fr);
     align-content: start;
   }
-  .account-nav {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 24px;
-    border-right: 0;
-    border-bottom: 1px solid var(--cr-rule);
-    padding: 16px 24px;
-  }
-  .account-nav nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    width: 100%;
-    margin: 0;
-  }
-  .account-nav .language {
-    margin-left: auto;
-  }
   .account-content {
     padding: 32px 24px;
   }
@@ -226,22 +178,8 @@ footer section {
   .account-content {
     padding: 24px 16px;
   }
-  .account-nav {
-    padding: 16px;
-    justify-content: space-between;
-  }
-  .account-nav .account-nav-toggle {
-    display: block;
-  }
-  .account-nav nav[data-expanded='false'] {
-    display: none;
-  }
   .account-panel {
     padding: 20px;
-  }
-  .account-nav .language {
-    width: 100%;
-    margin: 0;
   }
 }
 
