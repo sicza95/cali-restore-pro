@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 )
 
 func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
@@ -22,7 +24,7 @@ func TestPostgresDeletionRecoveryAndInterruptedPurge(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	hash, err := HashPassword(testPassword)
+	hash, err := passhash.Hash(testPassword)
 	if err != nil {
 		t.Fatal(err)
 	}

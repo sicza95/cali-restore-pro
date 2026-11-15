@@ -27,7 +27,7 @@ registers its routes on the identity `HTTP` type, so it cannot move without a sm
 | Package                          | Holds                                                                                                   |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `internal/httpjson`              | JSON responses, bounded strict request decoding, UUID check                                             |
-| `internal/identity/password`     | Argon2id verifier and password rule                                                                     |
+| `internal/identity/passhash`     | Argon2id verifier and password rule                                                                     |
 | `internal/identity/sessiontoken` | Opaque token, digest, CSRF value                                                                        |
 | `internal/mailer`                | Mail templates and SMTP transport                                                                       |
 | `internal/objectstore`           | Encrypted object files on disk                                                                          |
@@ -44,7 +44,7 @@ interface boundary, which would be a design change rather than a move.
 
 1. This plan.
 2. `httpjson` leaf.
-3. `password` leaf.
+3. `passhash` leaf (named so it does not shadow `password` parameters).
 4. `sessiontoken` leaf.
 5. `mailer` leaf.
 6. `objectstore` leaf.

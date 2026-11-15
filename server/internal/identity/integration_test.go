@@ -15,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/migrations"
 )
 
@@ -127,7 +128,7 @@ func TestPostgresIdentity(t *testing.T) {
 			t.Fatal("app can bootstrap")
 		}
 	})
-	hash, err := HashPassword(testPassword)
+	hash, err := passhash.Hash(testPassword)
 	if err != nil {
 		t.Fatal(err)
 	}
