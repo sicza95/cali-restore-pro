@@ -210,13 +210,13 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await phase('time').fill('10');
   await phase('rate').fill('40');
   await phase('material').fill('30');
-  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('430');
+  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('HUF 430');
   await phase('multiplier').fill('2');
   await phase('keepHours').click();
   await phase('multiplier').fill('3');
   await phase('adjustHours').click();
   await expect(phase('time')).toHaveValue('15');
-  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('630');
+  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('HUF 630');
   await page.getByLabel('Preset name', { exact: true }).fill('Studio hourly');
   await page.getByRole('button', { name: 'Save rate preset', exact: true }).click();
   await expect(page.getByText('Preset saved', { exact: true })).toBeVisible();
@@ -225,7 +225,7 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await page.reload();
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(phase('time')).toHaveValue('15');
-  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('630');
+  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('HUF 630');
   await phase('rate').fill('88');
   await expect(
     page.getByRole('status').filter({ hasText: /^Version 1 · Issued · / }),
@@ -255,7 +255,7 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await expect(preview).toContainText('630');
   await expect(preview).toContainText('restoration-v1');
   await expect(preview).not.toContainText('Manual cleaning allowance');
-  await expect(preview).not.toContainText('40 HUF/h');
+  await expect(preview).not.toContainText('HUF 40/h');
   const summaryDownload = page.waitForEvent('download');
   await report('download').click();
   const summaryFile = await summaryDownload;
@@ -269,8 +269,8 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await report('workbook').selectOption('editable');
   await report('preview').click();
   await expect(preview).toContainText('630');
-  await expect(preview).toContainText('40 HUF/h');
-  await expect(preview).not.toContainText('88 HUF/h');
+  await expect(preview).toContainText('HUF 40/h');
+  await expect(preview).not.toContainText('HUF 88/h');
   await expect(preview).toContainText('Measurement unavailable for this version.');
   await expect(preview).toContainText('Editable estimate');
   for (const viewport of [

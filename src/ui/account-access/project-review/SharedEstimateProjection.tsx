@@ -8,6 +8,7 @@ import { reportEstimate } from '../../../platform/reports/estimate';
 import type { FullEstimateScope, ReportEstimate } from '../../../platform/reports/estimate';
 import { ReportEstimatePreview } from './ReportEstimatePreview';
 import { reportCopy } from '../../../platform/reports/copy';
+import { formatHours, formatMoney } from '../../../platform/format/number';
 import './styles.css';
 
 export function SharedEstimateProjection(props: {
@@ -18,6 +19,8 @@ export function SharedEstimateProjection(props: {
   const c = () => estimateCopy[props.language];
   const r = () => reportCopy[props.language];
   const title = createUniqueId();
+  const money = (value: string | null | undefined) =>
+    formatMoney(value, projection()?.currency ?? '', props.language);
   const [preview, setPreview] = createSignal<ReportEstimate>();
   let dialog!: HTMLDialogElement;
   const authorized = () => {
@@ -62,14 +65,14 @@ export function SharedEstimateProjection(props: {
       <For each={projection()?.objects}>
         {(object) => (
           <p>
-            {object.name} · {object.subtotal}
+            {object.name} · {money(object.subtotal)}
           </p>
         )}
       </For>
       <For each={projection() ? (['extras', 'beforeTax', 'taxTotal'] as const) : []}>
         {(key) => (
           <p>
-            {c()[key]} · {projection()![key]}
+            {c()[key]} · {money(projection()![key])}
           </p>
         )}
       </For>
@@ -77,8 +80,9 @@ export function SharedEstimateProjection(props: {
         <For each={(authorized() as { snapshot: EstimateSnapshot }).snapshot.result.phases}>
           {(phase, index) => (
             <p>
-              {phaseName(phase.id, index())} · {c().hours} {phase.hours ?? '—'} · {c().material}{' '}
-              {phase.material} · {c().subtotal} {phase.subtotal ?? '—'}
+              {phaseName(phase.id, index())} · {c().hours}{' '}
+              {formatHours(phase.hours, props.language)} · {c().material} {money(phase.material)} ·{' '}
+              {c().subtotal} {money(phase.subtotal)}
             </p>
           )}
         </For>
@@ -91,9 +95,12 @@ export function SharedEstimateProjection(props: {
               <dd>
                 {projection()
                   ? index() === 0
-                    ? projection()!.total
+                    ? money(projection()!.total)
                     : props.scope === 'estimate-full'
-                      ? (authorized() as { snapshot: EstimateSnapshot }).snapshot.result.hours
+                      ? formatHours(
+                          (authorized() as { snapshot: EstimateSnapshot }).snapshot.result.hours,
+                          props.language,
+                        )
                       : '—'
                   : props.rows[index()]}
               </dd>

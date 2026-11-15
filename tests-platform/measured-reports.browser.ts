@@ -84,7 +84,7 @@ test('reconciles a committed checkpoint estimate with scoped production download
   await phase('mode').selectOption('productivity');
   await phase('productivity').fill('2');
   await expect(phase('hoursOutput')).toHaveValue('2');
-  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('20.00');
+  await expect(page.locator('[data-estimate-result="total"]')).toHaveText('€20.00');
   await finance('issue').click();
   await expect(page.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
 
@@ -101,7 +101,7 @@ test('reconciles a committed checkpoint estimate with scoped production download
   await report('reference').first().check();
   await report('preview').click();
   await expect(dialog).toContainText('Initial on-site survey');
-  await expect(dialog).toContainText('20.00');
+  await expect(dialog).toContainText('€20.00');
   await expect(dialog.getByRole('img', { name: 'Assessment map' })).toHaveCount(2);
   await expect(dialog.getByRole('img', { name: 'Reference photo 1' })).toHaveJSProperty(
     'naturalWidth',

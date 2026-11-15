@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js';
 import type { ReportEstimate } from '../../../platform/reports/estimate';
-import { quantityText } from '../../../platform/estimates/display';
+import { formatHours, formatMoney, formatRate } from '../../../platform/format/number';
 import type { Language } from '../types';
 import { estimateCopy } from '../../../platform/estimates/copy';
 import { reportCopy } from '../../../platform/reports/copy';
@@ -9,6 +9,8 @@ export function ReportEstimatePreview(props: { estimate: ReportEstimate; languag
   const c = () => reportCopy[props.language];
   const e = () => estimateCopy[props.language];
   const summary = () => props.estimate.summary;
+  const money = (value: string | null | undefined) =>
+    formatMoney(value, summary().currency, props.language);
   return (
     <section class="report-sheet-row">
       <h4>
@@ -33,36 +35,36 @@ export function ReportEstimatePreview(props: { estimate: ReportEstimate; languag
           {(object) => (
             <>
               <dt>{object.name}</dt>
-              <dd>{object.subtotal}</dd>
+              <dd>{money(object.subtotal)}</dd>
             </>
           )}
         </For>
         <dt>{e().extras}</dt>
-        <dd>{summary().extras}</dd>
+        <dd>{money(summary().extras)}</dd>
         <For each={summary().adjustments}>
           {(row, index) => (
             <>
               <dt>
                 {e().adjustments} {index() + 1}
               </dt>
-              <dd>{row.amount}</dd>
+              <dd>{money(row.amount)}</dd>
             </>
           )}
         </For>
         <dt>{e().beforeTax}</dt>
-        <dd>{summary().beforeTax}</dd>
+        <dd>{money(summary().beforeTax)}</dd>
         <dt>{e().taxTotal}</dt>
-        <dd>{summary().taxTotal}</dd>
+        <dd>{money(summary().taxTotal)}</dd>
         <dt>{c().estimateTotal}</dt>
         <dd>
-          <strong>{summary().total}</strong>
+          <strong>{money(summary().total)}</strong>
         </dd>
       </dl>
       <Show when={props.estimate.detail}>
         {(detail) => (
           <>
             <p>
-              {e().hours} · {quantityText(detail().hours)}
+              {e().hours} · {formatHours(detail().hours, props.language)}
             </p>
             <For each={detail().phases}>
               {(phase) => (
@@ -70,22 +72,26 @@ export function ReportEstimatePreview(props: { estimate: ReportEstimate; languag
                   <h5>{phase.name}</h5>
                   <dl class="review-facts">
                     <dt>{e().hours}</dt>
-                    <dd>{quantityText(phase.hours)}</dd>
+                    <dd>{formatHours(phase.hours, props.language)}</dd>
                     <dt>{e().rate}</dt>
                     <dd>
-                      {phase.rate} {summary().currency}
-                      {phase.method === 'area'
-                        ? '/' + phase.unit
-                        : phase.method === 'hourly'
-                          ? '/h'
-                          : ''}
+                      {formatRate(
+                        phase.rate,
+                        summary().currency,
+                        phase.method === 'area'
+                          ? phase.unit
+                          : phase.method === 'hourly'
+                            ? 'h'
+                            : undefined,
+                        props.language,
+                      )}
                     </dd>
                     <dt>{c().workPrice}</dt>
-                    <dd>{phase.work}</dd>
+                    <dd>{money(phase.work)}</dd>
                     <dt>{e().material}</dt>
-                    <dd>{phase.material}</dd>
+                    <dd>{money(phase.material)}</dd>
                     <dt>{e().subtotal}</dt>
-                    <dd>{phase.subtotal}</dd>
+                    <dd>{money(phase.subtotal)}</dd>
                   </dl>
                 </section>
               )}

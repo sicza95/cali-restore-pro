@@ -2,7 +2,16 @@ import { createResource, createSignal, For, Show } from 'solid-js';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Phase, Preset } from '../../../platform/estimates/types';
 import { applyPreset, presetRepository } from '../../../platform/estimates/persistence';
+import { formatArea, formatRate } from '../../../platform/format/number';
 import type { Language } from '../types';
+
+/** "HUF 40/h" for a rate, "2.5 m²/h" for a productivity. */
+function presetValue(preset: Preset, language: Language) {
+  const unit = preset.unit === 'hourly' ? 'h' : preset.unit === 'fixed' ? undefined : preset.unit;
+  if (preset.kind === 'rate')
+    return formatRate(preset.value, preset.currency ?? '', unit, language);
+  return unit && unit !== 'h' ? formatArea(preset.value, unit, language) + '/h' : preset.value;
+}
 
 export function PresetInputs(props: {
   vault: LocalVault;
@@ -93,7 +102,7 @@ export function PresetInputs(props: {
           {(preset) => (
             <li>
               <span>
-                {preset.name} · v{preset.version} · {preset.value} {preset.currency} /{preset.unit}
+                {preset.name} · v{preset.version} · {presetValue(preset, props.language)}
               </span>
               <button
                 type="button"

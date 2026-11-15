@@ -10,9 +10,11 @@ import {
 } from '../../../platform/projects/assessment-selection';
 import { PhaseInputs } from './PhaseInputs';
 import type { Phase, PhaseModel } from './estimate-model';
+import type { Language } from '../types';
 
 function PhaseDetails(props: {
   copy: EstimateCopy;
+  language: Language;
   model: PhaseModel;
   phase: Phase;
   project: SavedProject;
@@ -211,6 +213,7 @@ function PhaseDetails(props: {
       <p class="review-note">{c().maskHelp}</p>
       <PhaseInputs
         copy={c()}
+        language={props.language}
         phase={p()}
         measuring={props.measuring}
         currency={props.project.settings.currency}
@@ -222,6 +225,7 @@ function PhaseDetails(props: {
 
 export function WorkPhases(props: {
   copy: EstimateCopy;
+  language: Language;
   project: SavedProject;
   measuring: boolean;
   model: PhaseModel;
@@ -276,6 +280,7 @@ export function WorkPhases(props: {
               phase={m.rows.find(({ id }) => id === phaseId)!}
               model={m}
               copy={c()}
+              language={props.language}
               project={props.project}
               measuring={props.measuring}
               navigate={props.navigate}
