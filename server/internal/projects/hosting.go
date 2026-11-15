@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 type hostingTransfer struct {
@@ -78,7 +79,7 @@ func (a fileAccess) claimHosting(ctx context.Context, project string) error {
 		if *host == a.account {
 			return nil
 		}
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	if err := a.checkHostingCapacity(ctx, project); err != nil {
 		return err
@@ -89,7 +90,7 @@ func (a fileAccess) claimHosting(ctx context.Context, project string) error {
 
 func (a fileAccess) checkHostingCapacity(ctx context.Context, project string) error {
 	if !a.hosting || a.quota == 0 {
-		return ErrForbidden
+		return identity.ErrForbidden
 	}
 	var charge int64
 	if err := a.tx.QueryRow(ctx, `SELECT
@@ -131,7 +132,7 @@ func (h *HTTP) hostingRoutes(route func(string, bool, http.HandlerFunc)) {
 func (h *HTTP) changeHosting(w http.ResponseWriter, r *http.Request, id string, change func(fileAccess, context.Context, string, string) error) {
 	project := r.PathValue("project")
 	if !httpjson.UUID(project) || !httpjson.UUID(id) {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {

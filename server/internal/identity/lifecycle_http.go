@@ -75,17 +75,17 @@ func (h *HTTP) lifecycleRoutes(route func(string, bool, http.HandlerFunc)) {
 				if !body.Confirm {
 					err = ErrForbidden
 				} else if action == "change-password" {
-					err = h.service.ChangeCredential(r.Context(), h.raw(r), body.Password, "")
+					err = h.service.ChangeCredential(r.Context(), h.Token(r), body.Password, "")
 				} else {
-					err = h.service.ChangeCredential(r.Context(), h.raw(r), "", body.Email)
+					err = h.service.ChangeCredential(r.Context(), h.Token(r), "", body.Email)
 				}
 			}
 			if err != nil {
-				failure(w, err)
+				Failure(w, err)
 				return
 			}
 			if action == "change-password" {
-				h.setCookie(w, "")
+				h.SetCookie(w, "")
 			}
 			// Accepted means durable transaction, never a claim of SMTP delivery.
 			httpjson.Respond(w, 200, map[string]bool{"ok": true})

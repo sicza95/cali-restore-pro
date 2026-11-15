@@ -54,6 +54,8 @@ interface boundary, which would be a design change rather than a move.
    exports the seam they need (errors, `Failure`, session lookup, recent-credential check,
    mutation lock, mail enqueue, password check for recovery, the route guard, cookie helpers).
    `cmd/calirestore` builds a `projects.Service` and registers both route sets.
+   `DeletionPreflight` stays in `identity`: its routes are account and admin routes, and the
+   identity tests cover them.
 
 ## What does not change
 

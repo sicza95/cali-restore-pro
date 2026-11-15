@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 type scopeChange struct {
@@ -28,11 +29,11 @@ func (a fileAccess) insertNewScopes(ctx context.Context, id string, previous, ne
 		}
 	}
 	if len(grants) != want {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	for _, grant := range grants {
 		if !next.includes(grant.Scope) || previous.includes(grant.Scope) {
-			return ErrConflict
+			return identity.ErrConflict
 		}
 		if _, err := a.tx.Exec(ctx, `INSERT INTO invitation_scope_grants(invitation_id,scope,sender_id,encapsulation,ciphertext)
  VALUES($1,$2,$3,$4,$5)`, id, grant.Scope, a.account, grant.Encapsulation, grant.Ciphertext); err != nil {
@@ -61,7 +62,7 @@ func (a fileAccess) updateInvitationScopes(ctx context.Context, project, id stri
 		return err
 	}
 	if previous != change.Previous || len(change.Grants) > 0 && (recipientKey == "" || recipientKey != change.RecipientKey) {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	if err := a.insertNewScopes(ctx, id, previous, change.Next, change.Grants); err != nil {
 		return err
@@ -84,7 +85,7 @@ func (h *HTTP) changeInvitationScopes(w http.ResponseWriter, r *http.Request) {
 	project, id := r.PathValue("project"), r.PathValue("invitation")
 	if !httpjson.UUID(project) || !httpjson.UUID(id) || !body.Previous.valid() || !body.Next.valid() ||
 		!validScopeEnvelopes(body.Grants) || len(body.Grants) > 0 && !validSharingPoint(body.RecipientKey) {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {

@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"bytes"
@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
@@ -23,10 +24,11 @@ import (
 func TestPostgresEncryptedFiles(t *testing.T) {
 	admin, app := testdb.New(t)
 	ctx := context.Background()
-	s, err := New(app)
+	ids, err := identity.New(app)
 	if err != nil {
 		t.Fatal(err)
 	}
+	s := New(app, ids)
 	exec := func(sql string, args ...any) {
 		t.Helper()
 		if _, err := admin.Exec(ctx, sql, args...); err != nil {
@@ -47,9 +49,11 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	alice, bob := account("alice@example.test"), account("bob@example.test")
 	root := t.TempDir()
 	origin := "https://test.example"
-	h := NewHTTP(s, origin, false)
+	auth := identity.NewHTTP(ids, origin, false)
+	h := NewHTTP(auth, s)
 	h.EnableFiles(root)
 	mux := http.NewServeMux()
+	auth.Register(mux)
 	h.Register(mux)
 	request := func(method, path, raw string, body []byte, binary bool) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(method, path, bytes.NewReader(body))
@@ -57,7 +61,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 		r.Header.Set("Origin", origin)
 		r.Header.Set("X-CSRF-Token", sessiontoken.CSRF(raw))
 		if raw != "" {
-			r.AddCookie(&http.Cookie{Name: h.cookieName, Value: raw})
+			r.AddCookie(&http.Cookie{Name: auth.CookieName(), Value: raw})
 		}
 		if binary {
 			r.Header.Set("Content-Type", "application/octet-stream")
@@ -108,7 +112,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	recipient := []byte(`{"email":"bob@example.test"}`)
 	want("POST", invitations, bob, recipient, false, 404)
 	want("POST", invitations, alice, recipient, false, 503)
-	if err := s.ConfigureMail(make([]byte, 32), origin); err != nil {
+	if err := ids.ConfigureMail(make([]byte, 32), origin); err != nil {
 		t.Fatal(err)
 	}
 	exec(`UPDATE accounts SET language='hu' WHERE email='bob@example.test'`)
@@ -124,7 +128,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	accept := func(invite string) string { return "/api/v1/invitations/" + invite + "/accept" }
 	first := issue()
 	delivered := false
-	err = s.DeliverMail(ctx, func(_ context.Context, to, subject, body string) error {
+	err = ids.DeliverMail(ctx, func(_ context.Context, to, subject, body string) error {
 		delivered = true
 		if to != "bob@example.test" || subject != "CaliRestore Pro projektmeghívó" ||
 			!strings.HasSuffix(body, origin+"/invitations") || strings.Contains(body, first) || strings.Contains(body, "c0ffee00") {

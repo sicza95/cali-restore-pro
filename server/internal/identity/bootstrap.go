@@ -21,7 +21,7 @@ func pgErrCode(err error) string {
 // route. A sealed guard survives demotion and prevents creating a second initial
 // superuser. Repeating the same account is a no-op, not a password reset.
 func Bootstrap(ctx context.Context, pool *pgxpool.Pool, email, password string) error {
-	email, ok := normalizeEmail(email)
+	email, ok := NormalizeEmail(email)
 	if !ok {
 		return errors.New("invalid bootstrap email")
 	}

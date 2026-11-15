@@ -47,7 +47,7 @@ func (s *Service) AdminAccounts(ctx context.Context, raw, prefix, after string) 
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
-	actor, err := session(ctx, tx, raw)
+	actor, err := LookupSession(ctx, tx, raw)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (s *Service) Operations(ctx context.Context, raw string) (AdminOperations, 
 		return result, err
 	}
 	defer tx.Rollback(context.Background())
-	actor, err := session(ctx, tx, raw)
+	actor, err := LookupSession(ctx, tx, raw)
 	if err != nil {
 		return result, err
 	}
@@ -143,7 +143,7 @@ func (s *Service) SetAdminControls(ctx context.Context, raw, subject string, ent
 		return err
 	}
 	defer tx.Rollback(context.Background())
-	actor, err := session(ctx, tx, raw)
+	actor, err := LookupSession(ctx, tx, raw)
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (s *Service) SetAdminControls(ctx context.Context, raw, subject string, ent
 	if !actor.Account.Allows(required) {
 		return ErrForbidden
 	}
-	if err = recent(actor); err != nil {
+	if err = RequireRecent(actor); err != nil {
 		return err
 	}
 	var role, state string

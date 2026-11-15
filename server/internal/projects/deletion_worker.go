@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
@@ -68,7 +69,7 @@ func purgeProject(ctx context.Context, tx pgx.Tx, root string) error {
 			return err
 		}
 		if !httpjson.UUID(file) {
-			return ErrInvalid
+			return identity.ErrInvalid
 		}
 		if err := os.RemoveAll(filepath.Join(root, file)); err != nil {
 			return err

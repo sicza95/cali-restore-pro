@@ -9,9 +9,9 @@ import (
 func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("GET /api/v1/admin/accounts", true, func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query()
-		accounts, err := h.service.AdminAccounts(r.Context(), h.raw(r), query.Get("q"), query.Get("after"))
+		accounts, err := h.service.AdminAccounts(r.Context(), h.Token(r), query.Get("q"), query.Get("after"))
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
 		next := ""
@@ -25,9 +25,9 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 		httpjson.Respond(w, 200, map[string]any{"accounts": accounts, "next": next})
 	})
 	route("GET /api/v1/admin/operations", true, func(w http.ResponseWriter, r *http.Request) {
-		result, err := h.service.Operations(r.Context(), h.raw(r))
+		result, err := h.service.Operations(r.Context(), h.Token(r))
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
 		httpjson.Respond(w, 200, result)
@@ -45,41 +45,41 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 			return
 		}
 		if !body.Confirm || !httpjson.UUID(r.PathValue("id")) {
-			failure(w, ErrForbidden)
+			Failure(w, ErrForbidden)
 			return
 		}
 		var entitlement *Entitlement
 		if body.Entitlement != nil {
 			if body.Entitlement.ServerFeatures == nil || body.Entitlement.QuotaMiB == nil {
-				failure(w, ErrInvalid)
+				Failure(w, ErrInvalid)
 				return
 			}
 			entitlement = &Entitlement{*body.Entitlement.ServerFeatures, *body.Entitlement.QuotaMiB}
 		}
-		if err := h.service.SetAdminControls(r.Context(), h.raw(r), r.PathValue("id"), entitlement, body.Permissions); err != nil {
-			failure(w, err)
+		if err := h.service.SetAdminControls(r.Context(), h.Token(r), r.PathValue("id"), entitlement, body.Permissions); err != nil {
+			Failure(w, err)
 			return
 		}
 		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 	for _, path := range []string{"GET /api/v1/account/deletion-preflight", "GET /api/v1/admin/accounts/{id}/deletion-preflight"} {
 		route(path, true, func(w http.ResponseWriter, r *http.Request) {
-			actor, err := h.service.Current(r.Context(), h.raw(r))
+			actor, err := h.service.Current(r.Context(), h.Token(r))
 			if err != nil {
-				failure(w, err)
+				Failure(w, err)
 				return
 			}
 			id := r.PathValue("id")
 			if id != "" && (!httpjson.UUID(id) || !actor.Account.Allows(ManageRoles)) {
-				failure(w, ErrForbidden)
+				Failure(w, ErrForbidden)
 				return
 			}
 			if id == "" {
 				id = actor.Account.ID
 			}
-			reason, err := accountDeletionPreflight(r.Context(), h.service.pool, id)
+			reason, err := DeletionPreflight(r.Context(), h.service.pool, id)
 			if err != nil {
-				failure(w, err)
+				Failure(w, err)
 				return
 			}
 			httpjson.Respond(w, 200, map[string]any{"eligible": reason == "", "reason": reason,

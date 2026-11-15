@@ -10,14 +10,12 @@ import (
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
-	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
 type HTTP struct {
 	service            *Service
 	origin, cookieName string
 	secure             bool
-	objects            *objectstore.Store
 }
 
 func NewHTTP(service *Service, origin string, secure bool) *HTTP {
@@ -28,9 +26,7 @@ func NewHTTP(service *Service, origin string, secure bool) *HTTP {
 	return &HTTP{service: service, origin: strings.TrimRight(origin, "/"), cookieName: name, secure: secure}
 }
 
-func (h *HTTP) EnableFiles(root string) { h.objects = &objectstore.Store{Root: root} }
-
-func (h *HTTP) raw(r *http.Request) string {
+func (h *HTTP) Token(r *http.Request) string {
 	c, err := r.Cookie(h.cookieName)
 	if err != nil || !sessiontoken.Valid(c.Value) {
 		return ""
@@ -38,7 +34,7 @@ func (h *HTTP) raw(r *http.Request) string {
 	return c.Value
 }
 
-func (h *HTTP) setCookie(w http.ResponseWriter, raw string) {
+func (h *HTTP) SetCookie(w http.ResponseWriter, raw string) {
 	age := 2147483647 // Persistent until explicit revocation, not an idle timer.
 	if raw == "" {
 		age = -1
@@ -46,7 +42,7 @@ func (h *HTTP) setCookie(w http.ResponseWriter, raw string) {
 	http.SetCookie(w, &http.Cookie{Name: h.cookieName, Value: raw, Path: "/", Secure: h.secure, HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: age})
 }
 
-func failure(w http.ResponseWriter, err error) {
+func Failure(w http.ResponseWriter, err error) {
 	status, code := 503, "unavailable"
 	switch {
 	case errors.Is(err, ErrInvalid):
@@ -70,27 +66,32 @@ func failure(w http.ResponseWriter, err error) {
 	httpjson.Respond(w, status, map[string]string{"error": code})
 }
 
-func (h *HTTP) Register(mux *http.ServeMux) {
-	route := func(pattern string, authenticated bool, next http.HandlerFunc) {
+// CookieName is the session cookie name for this origin scheme.
+func (h *HTTP) CookieName() string { return h.cookieName }
+
+// Guard returns the route registrar every API route uses: no cross-site
+// requests, same-origin writes, CSRF on authenticated writes and a 10 s budget.
+func (h *HTTP) Guard(mux *http.ServeMux) func(pattern string, authenticated bool, next http.HandlerFunc) {
+	return func(pattern string, authenticated bool, next http.HandlerFunc) {
 		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "no-store")
 			if r.Header.Get("Sec-Fetch-Site") == "cross-site" {
-				failure(w, ErrForbidden)
+				Failure(w, ErrForbidden)
 				return
 			}
 			if r.Method != "GET" {
 				if r.Header.Get("Origin") != h.origin {
-					failure(w, ErrForbidden)
+					Failure(w, ErrForbidden)
 					return
 				}
 				if authenticated {
-					raw := h.raw(r)
+					raw := h.Token(r)
 					if raw == "" {
-						failure(w, ErrUnauthorized)
+						Failure(w, ErrUnauthorized)
 						return
 					}
 					if subtle.ConstantTimeCompare([]byte(sessiontoken.CSRF(raw)), []byte(r.Header.Get("X-CSRF-Token"))) != 1 {
-						failure(w, ErrForbidden)
+						Failure(w, ErrForbidden)
 						return
 					}
 				}
@@ -100,20 +101,14 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			next(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// Register adds the account, session and admin routes. Project routes live in
+// internal/projects and use the same Guard.
+func (h *HTTP) Register(mux *http.ServeMux) {
+	route := h.Guard(mux)
 	h.lifecycleRoutes(route)
 	h.adminRoutes(route)
-	h.deletionRoutes(route)
-	if h.objects != nil {
-		h.fileRoutes(route, *h.objects)
-		h.invitationRoutes(route)
-		h.activationRoutes(route)
-		h.scopeRoutes(route)
-		h.checkpointRoutes(route)
-		h.ownerRoutes(route)
-		h.hostingRoutes(route)
-		h.revisionRoutes(route)
-		h.revisionKeyRoutes(route)
-	}
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			Email    string `json:"email"`
@@ -124,23 +119,23 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		}
 		raw, err := h.service.Login(r.Context(), body.Email, body.Password, "")
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
-		h.setCookie(w, raw)
+		h.SetCookie(w, raw)
 		httpjson.Respond(w, 200, map[string]string{"csrfToken": sessiontoken.CSRF(raw)})
 	})
 	route("GET /api/v1/auth/me", true, func(w http.ResponseWriter, r *http.Request) {
-		current, err := h.service.Current(r.Context(), h.raw(r))
+		current, err := h.service.Current(r.Context(), h.Token(r))
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
 		httpjson.Respond(w, 200, struct {
 			Account      Account      `json:"account"`
 			Capabilities []Capability `json:"capabilities"`
 			CSRFToken    string       `json:"csrfToken"`
-		}{current.Account, current.Account.Capabilities(), sessiontoken.CSRF(h.raw(r))})
+		}{current.Account, current.Account.Capabilities(), sessiontoken.CSRF(h.Token(r))})
 	})
 	route("POST /api/v1/auth/confirm", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
@@ -149,17 +144,17 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		if !httpjson.Decode(w, r, &body) {
 			return
 		}
-		current, err := h.service.Current(r.Context(), h.raw(r))
+		current, err := h.service.Current(r.Context(), h.Token(r))
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
-		raw, err := h.service.Login(r.Context(), current.Account.Email, body.Password, h.raw(r))
+		raw, err := h.service.Login(r.Context(), current.Account.Email, body.Password, h.Token(r))
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
-		h.setCookie(w, raw)
+		h.SetCookie(w, raw)
 		httpjson.Respond(w, 200, map[string]string{"csrfToken": sessiontoken.CSRF(raw)})
 	})
 	route("POST /api/v1/auth/logout", true, func(w http.ResponseWriter, r *http.Request) {
@@ -167,17 +162,17 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		if !httpjson.Decode(w, r, &body) {
 			return
 		}
-		if err := h.service.Logout(r.Context(), h.raw(r)); err != nil {
-			failure(w, err)
+		if err := h.service.Logout(r.Context(), h.Token(r)); err != nil {
+			Failure(w, err)
 			return
 		}
-		h.setCookie(w, "")
+		h.SetCookie(w, "")
 		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 	route("GET /api/v1/auth/sessions", true, func(w http.ResponseWriter, r *http.Request) {
-		list, err := h.service.Sessions(r.Context(), h.raw(r))
+		list, err := h.service.Sessions(r.Context(), h.Token(r))
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
 		httpjson.Respond(w, 200, map[string]any{"sessions": list})
@@ -192,20 +187,20 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		if !body.Confirm || (body.All == (body.SessionID != "")) || (body.SessionID != "" && !httpjson.UUID(body.SessionID)) {
-			failure(w, ErrForbidden)
+			Failure(w, ErrForbidden)
 			return
 		}
-		current, err := h.service.Current(r.Context(), h.raw(r))
+		current, err := h.service.Current(r.Context(), h.Token(r))
 		if err != nil {
-			failure(w, err)
+			Failure(w, err)
 			return
 		}
-		if err := h.service.Revoke(r.Context(), h.raw(r), current.Account.ID, body.SessionID); err != nil {
-			failure(w, err)
+		if err := h.service.Revoke(r.Context(), h.Token(r), current.Account.ID, body.SessionID); err != nil {
+			Failure(w, err)
 			return
 		}
 		if body.All || body.SessionID == current.ID {
-			h.setCookie(w, "")
+			h.SetCookie(w, "")
 		}
 		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
@@ -219,11 +214,11 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		if !body.Confirm || !httpjson.UUID(r.PathValue("id")) {
-			failure(w, ErrForbidden)
+			Failure(w, ErrForbidden)
 			return
 		}
-		if err := h.service.SetPolicy(r.Context(), h.raw(r), r.PathValue("id"), body.Role, body.State); err != nil {
-			failure(w, err)
+		if err := h.service.SetPolicy(r.Context(), h.Token(r), r.PathValue("id"), body.Role, body.State); err != nil {
+			Failure(w, err)
 			return
 		}
 		httpjson.Respond(w, 200, map[string]bool{"ok": true})
@@ -236,11 +231,11 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		if !body.Confirm || !httpjson.UUID(r.PathValue("id")) {
-			failure(w, ErrForbidden)
+			Failure(w, ErrForbidden)
 			return
 		}
-		if err := h.service.revoke(r.Context(), h.raw(r), r.PathValue("id"), "", true); err != nil {
-			failure(w, err)
+		if err := h.service.revoke(r.Context(), h.Token(r), r.PathValue("id"), "", true); err != nil {
+			Failure(w, err)
 			return
 		}
 		httpjson.Respond(w, 200, map[string]bool{"ok": true})

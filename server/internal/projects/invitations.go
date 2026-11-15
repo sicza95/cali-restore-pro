@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 type pendingInvitation struct {
@@ -117,12 +118,12 @@ func (s *Service) invite(ctx context.Context, a fileAccess, project, email strin
  )
  RETURNING id, recipient_id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email, coOwner, scope.EstimateScope, scope.ShareHistory).Scan(&id, &recipient, &expires, &lang)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return "", ErrConflict
+		return "", identity.ErrConflict
 	}
 	if err != nil {
 		return "", err
 	}
-	return id, s.enqueue(ctx, a.tx, recipient, email, lang, "project-invitation", "", expires)
+	return id, s.accounts.Enqueue(ctx, a.tx, recipient, email, lang, "project-invitation", "", expires)
 }
 
 func (a fileAccess) acceptInvitation(ctx context.Context, id string) error {
@@ -131,7 +132,7 @@ func (a fileAccess) acceptInvitation(ctx context.Context, id string) error {
  AND r.email=i.recipient_email AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=i.project_id)
  AND i.state='pending' AND i.expires_at>clock_timestamp()`, id, a.account)
 	if err == nil && result.RowsAffected() == 0 {
-		return ErrLink
+		return identity.ErrLink
 	}
 	return err
 }
@@ -168,7 +169,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("GET "+projectInvitations, true, func(w http.ResponseWriter, r *http.Request) {
 		project := r.PathValue("project")
 		if !httpjson.UUID(project) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		var list []ownerInvitation
@@ -195,7 +196,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			return err
 		})
 		if err != nil {
-			failure(w, err)
+			identity.Failure(w, err)
 			return
 		}
 		httpjson.Respond(w, http.StatusOK, map[string]any{"invitations": list})
@@ -209,26 +210,26 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 		if !httpjson.Decode(w, r, &body) {
 			return
 		}
-		email, valid := normalizeEmail(body.Email)
+		email, valid := identity.NormalizeEmail(body.Email)
 		project := r.PathValue("project")
 		if !valid || !httpjson.UUID(project) {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
 		if body.EstimateScope == "" {
 			body.EstimateScope = "none"
 		}
 		if !body.invitationScope.valid() {
-			failure(w, ErrInvalid)
+			identity.Failure(w, identity.ErrInvalid)
 			return
 		}
-		actor, err := h.service.Current(r.Context(), h.raw(r))
+		actor, err := h.service.accounts.Current(r.Context(), h.raw(r))
 		if err != nil {
-			failure(w, err)
+			identity.Failure(w, err)
 			return
 		}
-		if err := h.service.rate(r.Context(), "invitation:"+actor.Account.ID); err != nil {
-			failure(w, err)
+		if err := h.service.accounts.Rate(r.Context(), "invitation:"+actor.Account.ID); err != nil {
+			identity.Failure(w, err)
 			return
 		}
 		var id string
@@ -256,7 +257,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			h.changeInvitation(w, r, func(a fileAccess, id string) error {
 				project := r.PathValue("project")
 				if !httpjson.UUID(project) {
-					return ErrInvalid
+					return identity.ErrInvalid
 				}
 				return change(a, r.Context(), project, id)
 			})
@@ -271,7 +272,7 @@ func (h *HTTP) changeInvitation(w http.ResponseWriter, r *http.Request, change f
 	}
 	id := r.PathValue("invitation")
 	if !httpjson.UUID(id) {
-		failure(w, ErrInvalid)
+		identity.Failure(w, identity.ErrInvalid)
 		return
 	}
 	err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {

@@ -24,7 +24,7 @@ var (
 	ErrLimited      = errors.New("try again later")
 )
 
-const mutationLock = 72401601
+const MutationLock = 72401601
 const maxSessions = 20
 
 type Service struct {
@@ -47,7 +47,7 @@ func New(pool *pgxpool.Pool) (*Service, error) {
 	return &Service{pool: pool, slots: make(chan struct{}, 2), dummy: dummy}, err
 }
 
-func normalizeEmail(email string) (string, bool) {
+func NormalizeEmail(email string) (string, bool) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	if len(email) > 254 || strings.IndexFunc(email, func(r rune) bool { return r > 127 }) >= 0 {
 		return "", false
@@ -60,7 +60,7 @@ type rowQuery interface {
 	QueryRow(context.Context, string, ...any) pgx.Row
 }
 
-func session(ctx context.Context, q rowQuery, raw string) (Session, error) {
+func LookupSession(ctx context.Context, q rowQuery, raw string) (Session, error) {
 	var s Session
 	if !sessiontoken.Valid(raw) {
 		return s, ErrUnauthorized
@@ -75,7 +75,7 @@ func session(ctx context.Context, q rowQuery, raw string) (Session, error) {
 }
 
 func (s *Service) Current(ctx context.Context, raw string) (Session, error) {
-	return session(ctx, s.pool, raw)
+	return LookupSession(ctx, s.pool, raw)
 }
 
 func beginMutation(ctx context.Context, pool *pgxpool.Pool) (pgx.Tx, error) {
@@ -83,7 +83,7 @@ func beginMutation(ctx context.Context, pool *pgxpool.Pool) (pgx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", mutationLock); err != nil {
+	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", MutationLock); err != nil {
 		_ = tx.Rollback(context.Background())
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func beginMutation(ctx context.Context, pool *pgxpool.Pool) (pgx.Tx, error) {
 
 // Fixed windows are shared by all API processes. No IP, User-Agent or raw
 // attempted address is retained; address hashes are pseudonymous, not anonymous.
-func (s *Service) rate(ctx context.Context, email string) error {
+func (s *Service) Rate(ctx context.Context, email string) error {
 	for _, b := range []struct {
 		key            string
 		seconds, limit int
@@ -113,16 +113,16 @@ func (s *Service) rate(ctx context.Context, email string) error {
 }
 
 func (s *Service) checkPassword(ctx context.Context, email, password string) (Account, string, error) {
-	return s.checkPasswordState(ctx, email, password, "active")
+	return s.CheckPasswordState(ctx, email, password, "active")
 }
 
-func (s *Service) checkPasswordState(ctx context.Context, email, password, state string) (Account, string, error) {
+func (s *Service) CheckPasswordState(ctx context.Context, email, password, state string) (Account, string, error) {
 	var a Account
-	email, valid := normalizeEmail(email)
+	email, valid := NormalizeEmail(email)
 	if !valid {
 		email = "invalid"
 	}
-	if err := s.rate(ctx, email); err != nil {
+	if err := s.Rate(ctx, email); err != nil {
 		return a, "", err
 	}
 	select {
@@ -157,7 +157,7 @@ func (s *Service) Login(ctx context.Context, email, password, replace string) (s
 	}
 	defer tx.Rollback(context.Background())
 	if replace != "" {
-		current, err := session(ctx, tx, replace)
+		current, err := LookupSession(ctx, tx, replace)
 		if err != nil {
 			return "", err
 		}
@@ -227,7 +227,7 @@ func (s *Service) Sessions(ctx context.Context, raw string) ([]SessionInfo, erro
 	return result, nil
 }
 
-func recent(s Session) error {
+func RequireRecent(s Session) error {
 	if time.Since(s.VerifiedAt) > 5*time.Minute {
 		return ErrRecent
 	}
@@ -246,11 +246,11 @@ func (s *Service) revoke(ctx context.Context, raw, subject, sessionID string, ad
 		return err
 	}
 	defer tx.Rollback(context.Background())
-	actor, err := session(ctx, tx, raw)
+	actor, err := LookupSession(ctx, tx, raw)
 	if err != nil {
 		return err
 	}
-	if err = recent(actor); err != nil {
+	if err = RequireRecent(actor); err != nil {
 		return err
 	}
 	if adminRoute || actor.Account.ID != subject {
@@ -290,11 +290,11 @@ func (s *Service) SetPolicy(ctx context.Context, raw, subject, role, state strin
 		return err
 	}
 	defer tx.Rollback(context.Background())
-	actor, err := session(ctx, tx, raw)
+	actor, err := LookupSession(ctx, tx, raw)
 	if err != nil {
 		return err
 	}
-	if err = recent(actor); err != nil {
+	if err = RequireRecent(actor); err != nil {
 		return err
 	}
 	var oldRole, oldState string

@@ -1,4 +1,4 @@
-package identity
+package projects
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
 
 type originalGrant struct {
@@ -84,7 +85,7 @@ func (a fileAccess) checkOriginalPublication(ctx context.Context, project, file 
 func (a fileAccess) linkOriginals(ctx context.Context, project, id string, grant originalGrant) error {
 	if len(grant.FileIDs) == 0 {
 		if len(grant.SourceIDs) != 0 {
-			return ErrInvalid
+			return identity.ErrInvalid
 		}
 		return nil
 	}
@@ -96,14 +97,14 @@ func (a fileAccess) linkOriginals(ctx context.Context, project, id string, grant
 		return err
 	}
 	if grant.Epoch != epoch {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	sources := grant.SourceIDs
 	if len(sources) == 0 && epoch == "" {
 		sources = grant.FileIDs
 	}
 	if len(sources) != len(grant.FileIDs) {
-		return ErrInvalid
+		return identity.ErrInvalid
 	}
 	for i, source := range sources {
 		expected := source
@@ -111,7 +112,7 @@ func (a fileAccess) linkOriginals(ctx context.Context, project, id string, grant
 			expected = versionedOriginalID(project, epoch, source)
 		}
 		if expected != grant.FileIDs[i] {
-			return ErrConflict
+			return identity.ErrConflict
 		}
 	}
 	tag, err := a.tx.Exec(ctx, `INSERT INTO invitation_originals(invitation_id,file_id,source_id)
@@ -121,7 +122,7 @@ func (a fileAccess) linkOriginals(ctx context.Context, project, id string, grant
  AND NOT EXISTS (SELECT 1 FROM retired_originals x WHERE x.file_id=f.id)
  ON CONFLICT DO NOTHING`, id, project, grant.FileIDs, sources)
 	if err == nil && tag.RowsAffected() != int64(len(sources)) {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	return err
 }
@@ -132,7 +133,7 @@ func (a fileAccess) rotateOriginals(ctx context.Context, project, id, recipientK
 	}
 	if grant.Format != "project-v1" || !httpjson.UUID(files.Epoch) ||
 		len(files.SourceIDs) == 0 || len(files.SourceIDs) != len(files.FileIDs) {
-		return ErrInvalid
+		return identity.ErrInvalid
 	}
 	tag, err := a.tx.Exec(ctx, `UPDATE invitation_grants g SET encapsulation=$5,ciphertext=$6
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
@@ -147,7 +148,7 @@ func (a fileAccess) rotateOriginals(ctx context.Context, project, id, recipientK
 		return err
 	}
 	if tag.RowsAffected() != 1 {
-		return ErrConflict
+		return identity.ErrConflict
 	}
 	if _, err := a.tx.Exec(ctx, `DELETE FROM invitation_originals WHERE invitation_id=$1`, id); err != nil {
 		return err
