@@ -8,20 +8,30 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
-- **Active roadmap phase:** Phase 2 items 1 and 2 done; Phase 3 items 1 and 5 done; Phase 4 done. Left: Phase 2 items 3 to 5, Phase 3 items 2, 3, 4 and 6.
+- **Active roadmap phase:** Phase 2 items 1 to 3 done; Phase 3 items 1, 2 and 5 done; Phase 4 done. Left: Phase 2 items 4 and 5, Phase 3 items 3, 4 and 6.
 - **CI:** one workflow `ci.yml` with four parallel jobs: Frontend checks, Unit tests (Vitest), Go tests, Platform E2E.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:sync`, `test:estimates` (locally, this batch), backup scripts.
 
 ## Next step
 
-Phase 3 item 2 (one router module and an app context) before Phase 2 item 4 (one app shell), since the shell sits on the router. Phase 2 item 3 (estimate review as summary + steps) can run beside it.
+Phase 2 item 4 (one app shell on the new router: sidebar in landscape, compact header + drawer in portrait, real breadcrumbs), then item 5 (styled controls, one primary per view). Phase 3 items 3 (i18n catalogue), 4 (feature folders) and 6 (colour tokens) touch many files, so they run one at a time after the shell.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (orchestrator on the owner's Windows machine) · Estimate steps and router
+
+- Merged [PR #25](https://github.com/sicza95/cali-restore-pro/pull/25) (PRs 22 to 24) at the owner's request; closed #22 to #24 with a pointer.
+- Two side sessions in their own worktrees; both hit the usage limit once and resumed:
+  - [PR #26](https://github.com/sicza95/cali-restore-pro/pull/26): the estimate screen is a summary plus five steps (Objects → Work phases → Extras → Adjustments and tax → Save and issue), one primary per step, logic moved to `useEstimateDraft.ts` without behaviour change. Page height at 1194 about 2,640 px → 1,490 px (Phase 2 item 3).
+  - [PR #27](https://github.com/sicza95/cali-restore-pro/pull/27): `src/ui/router/` (typed route table with access levels, guards, `?next=`, deep links) and `src/ui/app-context/` (`AppProvider`, `useApp()`); screens no longer take `model`. ADR 0006. One intended difference: `/offline-originals/` with a trailing slash now opens the page (Phase 3 item 2).
+- #27 was replayed onto #26 and re-signed (`git range-diff` identical) as one chain, so `main` moves by one fast-forward.
+- Verified: both PRs green on all four CI jobs; the chain again on its own PR. Sessions ran `npm run check`, `test:unit` (197), `npm test` (16), `test:files` (22), `test:estimates` (8, #26) and `test:app` (16 passed, 1 skipped, #27).
+- Not run: `test:sync`; `test:estimates` on #27's changes alone; physical iPad.
 
 ### 2026-11-15 · Claude (orchestrator on the owner's Windows machine) · Roadmap batch: formatting, CI, Vitest, Go split, docs
 

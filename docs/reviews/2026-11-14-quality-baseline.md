@@ -138,14 +138,14 @@ Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths
 
 1. [x] Copy audit: replace engineering terms with task language, move "not connected yet" notes to docs, hide IDs. Done in the eight commits of the [copy audit](../plan/copy-audit.md): a [glossary](../copy-glossary.md) in EN and HU, task language on the estimate, editor, report and footer, the backup limit moved to the backup panel (with a fix for its misleading error), no internal ids, a translated save status, and `copy-guard.ts` checking ten screens. The UX rating stays at 4 until the estimate page and app shell (items 3 and 4) land; findings 4 to 6 still hold.
 2. [x] Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals. Done in [PR #21](https://github.com/sicza95/cali-restore-pro/pull/21) ([plan](../plan/number-format.md)).
-3. Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue).
+3. [x] Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue). Done in [PR #26](https://github.com/sicza95/cali-restore-pro/pull/26) ([plan](../plan/estimate-steps.md)): summary plus five steps, one primary per step.
 4. One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs.
 5. Styled file picker, select and button hierarchy (one primary per view).
 
 ### Phase 3 — Code structure
 
 1. [x] Add Vitest for `src/platform/**` with test vectors for estimates, geometry, vault crypto and revision queue; run it in CI. Done in [PR #24](https://github.com/sicza95/cali-restore-pro/pull/24), landed via #25: 182 tests, CI job "Unit tests (Vitest)".
-2. Introduce one router module (typed routes, guards, deep links) and an app context replacing the prop-drilled `model`.
+2. [x] Introduce one router module (typed routes, guards, deep links) and an app context replacing the prop-drilled `model`. Done in [PR #27](https://github.com/sicza95/cali-restore-pro/pull/27) ([plan](../plan/router-context.md), [ADR 0006](../adr/0006-router-and-app-context.md)): `src/ui/router/` and `src/ui/app-context/`.
 3. Central i18n catalogue with typed keys and a missing-translation check.
 4. Rename `src/ui/account-access/` into feature folders (`account/`, `projects/`, `estimates/`, `reports/`, `sharing/`).
 5. [x] Split Go `internal/identity` into domain packages without behaviour changes; keep tests green at each step. Done in [PR #22](https://github.com/sicza95/cali-restore-pro/pull/22), landed via #25: nine domain packages.
