@@ -10,6 +10,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
@@ -327,6 +328,15 @@ func TestPostgresIdentity(t *testing.T) {
 			t.Fatal("session cap bypass", err)
 		}
 		mustExec(`DELETE FROM auth_rate_limits`)
+		// Rate counts the global budget in fixed 60 s windows on the database clock. Start the
+		// burst early in a window so all 121 calls land in the same one.
+		var remaining float64
+		if err := admin.QueryRow(ctx, `SELECT extract(epoch FROM date_bin(make_interval(secs => 60), clock_timestamp(), '2000-01-01'::timestamptz) + interval '60 seconds' - clock_timestamp())::float8`).Scan(&remaining); err != nil {
+			t.Fatal(err)
+		}
+		if remaining < 10 {
+			time.Sleep(time.Duration(remaining*float64(time.Second)) + 500*time.Millisecond)
+		}
 		for i := range 120 {
 			if err := s.Rate(ctx, fmt.Sprintf("global-%d@example.test", i)); err != nil {
 				t.Fatal(err)
