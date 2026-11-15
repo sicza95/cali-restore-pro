@@ -207,6 +207,14 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     expect(rail.x + rail.width).toBeLessThan(canvas.x + canvas.width / 2);
     if (viewport.width === 1194) expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
     else expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
+    if (viewport.width <= 640) {
+      // At phone width the tool chip docks under the photo instead of covering it.
+      const photo = (await page.locator('.drawing-workspace .cr-opacity-layer').boundingBox())!;
+      const chip = (await page.locator('.drawing-workspace .cr-tool-context').boundingBox())!;
+      expect(chip.y).toBeGreaterThanOrEqual(photo.y + photo.height - 1);
+      expect(chip.y + chip.height).toBeLessThanOrEqual(canvas.y + canvas.height + 1);
+      expect(rail.y + rail.height).toBeLessThanOrEqual(photo.y + photo.height + 1);
+    }
     const touchTargets = async (controls: string[]) => {
       for (const control of controls) {
         const target = (await c(control).boundingBox())!;
