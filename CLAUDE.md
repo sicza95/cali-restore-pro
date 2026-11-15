@@ -14,7 +14,9 @@
 
 1. Update `docs/handoff/README.md`: what changed, what was verified (and what was not), open questions, next step.
 2. If code or docs changed, give the owner the exact commit command (see signing below).
-3. Finish the reply with a **Suggested next prompt** the owner can paste to continue.
+3. Log process issues and facts learned in [`docs/handoff/process-notes.md`](docs/handoff/process-notes.md), and give a short session evaluation in the reply.
+4. Create, update or retire skills in `.claude/skills/` as procedures emerge (start with `session-ritual`, `signed-commit`, `editor-ui-verify`). They are living: refactor or supersede them freely.
+5. Finish the reply with a **Suggested next prompt** the owner can paste to continue.
 
 ## Commit signing
 

@@ -13,13 +13,22 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Step 3 commit 1 (wheel, trackpad and keyboard zoom) on `feat/canvas-first-layout`; see the latest log entry for its state.
+Owner pushes `main` (plan commit `d9d2e5b`). Then step 3 commit 2 (compact zoom controls in the footer, `DrawingViewControls.tsx`) on `feat/canvas-first-layout`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 1: wheel, trackpad and keyboard zoom
+
+- The owner accepted all five step 3 decisions as recommended. The plan with the decisions is commit `d9d2e5b` on local `main`; **not pushed** (the permission classifier blocked `git push` to `main`; see [process notes](process-notes.md)).
+- On `feat/canvas-first-layout`: new `canvas-zoom.ts` with `zoomAt`, used by pinch, the wheel and the keys. Ctrl/⌘ + wheel and trackpad pinch zoom around the pointer (exponential, capped at one 1.25× step per event); a plain wheel pans when zoomed in and is left to the page at fit; `+`/`=`, `-` and `0` on the focused canvas zoom in, out and fit. Maximum zoom 800 % for pinch, wheel, keys and the numeric field in both hosts.
+- New `tests-platform/canvas-zoom.ts`, run in `projects.browser.ts` after `verifyDrawingInput`: plain wheel at fit not cancelled, Ctrl + wheel to 125 % with the photo point under the pointer within 1 px, plain wheel pans when zoomed, keys to 156.25 %, back, up to 800 % and fit.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed).
+- Process: started `docs/handoff/process-notes.md` and living skills in `.claude/skills/` (`session-ritual`, `signed-commit`, `editor-ui-verify`); `CLAUDE.md` points at both.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests. No screenshots inspected for this commit (no layout change).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · PR #15 merged, Phase 1 step 3 plan
 
