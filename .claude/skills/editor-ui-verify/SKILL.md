@@ -24,7 +24,8 @@ npm run check && npm run build-storybook && npm test && npm run test:files
 ```
 
 `test:app`, `test:sync`, `test:estimates` and Go tests need extra setup (see `CLAUDE.md`); say in
-the handoff when they were not run.
+the handoff when they were not run. Never run `test:app` at the same time as `npm test`: `npm test`
+deletes `test-results/` and `test:app` then fails with ENOENT on its trace files.
 
 ## Proving a change has no visible effect
 
