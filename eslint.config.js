@@ -28,6 +28,14 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   { ...solid, files: ['**/*.tsx'] },
   {
+    files: ['**/*.tsx'],
+    rules: {
+      // `run` and `onRun` take deferred commands that read the current props when they run
+      // (after a click or submit), which is what we want. See docs/plan/lint-disables.md.
+      'solid/reactivity': ['warn', { customReactiveFunctions: ['run', 'onRun'] }],
+    },
+  },
+  {
     files: ['**/*.{js,mjs,ts,tsx}'],
     rules: { 'max-lines': ['error', 400] },
   },

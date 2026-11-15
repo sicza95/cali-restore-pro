@@ -1,5 +1,4 @@
-/* eslint-disable solid/reactivity -- The parent keys this panel by project ID. */
-import { createSignal, For, Show } from 'solid-js';
+import { createSignal, For, Show, untrack } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
 import { scopeContent } from '../../platform/estimates/scopes';
 import {
@@ -31,7 +30,8 @@ export function ProjectInvitations(props: {
 }) {
   const app = useApp();
   const c = () => invitationCopy[app.lang()];
-  const projectPath = '/hosted-projects/' + props.projectId;
+  // The parent keys this panel by project ID, so the path is fixed for this mount.
+  const projectPath = '/hosted-projects/' + untrack(() => props.projectId);
   const path = projectPath + '/invitations';
   const [open, setOpen] = createSignal(false);
   return (
@@ -65,7 +65,7 @@ function InvitationControls(props: {
 }) {
   const app = useApp();
   const c = () => invitationCopy[app.lang()];
-  const sent = useInvitations<SentInvitation>(props.path);
+  const sent = useInvitations<SentInvitation>(untrack(() => props.path));
   return (
     <>
       <Show
@@ -264,8 +264,10 @@ function InvitationControls(props: {
                                 key.signal,
                               )
                             : [];
+                          const vault = props.vault;
+                          const projectId = props.projectId;
                           const context = {
-                            project: props.projectId,
+                            project: projectId,
                             invitation: item.id,
                             sender,
                             recipient: item.recipientId,
@@ -286,12 +288,7 @@ function InvitationControls(props: {
                                     recipientKey(),
                                     context,
                                     scope,
-                                    await scopeContent(
-                                      props.vault,
-                                      props.projectId,
-                                      scope,
-                                      project.revision,
-                                    ),
+                                    await scopeContent(vault, projectId, scope, project.revision),
                                   ),
                                 ),
                               );

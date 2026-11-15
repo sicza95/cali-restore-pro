@@ -1,4 +1,3 @@
-/* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
 import type { PendingAttachment } from '../../platform/vault/project-store';
 import { createSignal, For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';

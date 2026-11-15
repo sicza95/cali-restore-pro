@@ -8,20 +8,27 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15; [ADR 0003](../adr/0003-ipad-and-desktop-only.md)). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../milestones/m16-measured-integration.md)). Milestone records now live in [`docs/milestones/`](../milestones/); see also the [architecture overview](../architecture.md) and [ADRs](../adr/).
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Ratings not re-scored yet after this batch.
-- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1 to 5 done; Phase 4 done. Left: the second half of Phase 3 item 6 (remove file-level lint disables).
+- **Active roadmap phase:** Phase 2 items 1 to 3 done, items 4 and 5 landed on `main` (`0a43106`, `59ce430`, `ba1633b`) but are not ticked in the baseline yet; Phase 3 items 1 to 5 done; Phase 4 done. Phase 3 done.
 - **CI:** one workflow `ci.yml` with four parallel jobs: Frontend checks, Unit tests (Vitest), Go tests, Platform E2E.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:sync`, `test:estimates` (locally, this batch), backup scripts.
 
 ## Next step
 
-The second half of Phase 3 item 6 (file-level lint disables). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
+Phase 3 is done. Tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete, then re-score the baseline ratings (not re-scored since 2026-11-14). Open issues: `gh issue list`.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · File-level lint disables removed (#32)
+
+- Plan: [`docs/plan/lint-disables.md`](../plan/lint-disables.md), pushed first (`ffdd08a`).
+- The eleven `/* eslint-disable solid/reactivity */` file headers are gone. Their 37 findings: 27 deferred commands passed to `run`/`onRun` (now declared once via `customReactiveFunctions` in `eslint.config.js`), 8 props read once at setup that are fixed for the mount (now `untrack(...)` with the reason; each parent checked: keyed `<Show>` or `<For>` rows), and 4 nested reads moved to locals at the start of the command or derivation. Two line disables in `SurfaceWorkspace.tsx` became unused and went; one stays with its reason.
+- Verified: `npm run check`, `test:unit` (210), `npm test` (16), `test:files` (22), `test:estimates` (8), `test:sync` (2), `test:app` (16 passed, 1 skipped) on disposable `calirestore-qa-lint` (removed with volumes), `build-storybook`.
+- Not run: Go tests, physical iPad.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Breadcrumbs kept vault names after lock (#58)
 

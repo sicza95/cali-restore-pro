@@ -1,4 +1,3 @@
-/* eslint-disable solid/reactivity -- Commands read current project props when invoked. */
 import { createSignal, For, Show } from 'solid-js';
 import type { EditorSync } from '../../platform/projects/editor-sync';
 import type { Project, SavedProject } from '../../platform/projects/types';

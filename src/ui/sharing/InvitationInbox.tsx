@@ -1,5 +1,4 @@
-/* eslint-disable solid/reactivity -- The account and vault are fixed for the mounted inbox, and commands run on user input. */
-import { createSignal, For, Show } from 'solid-js';
+import { createSignal, For, Show, untrack } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
 import {
   localSharingKey,
@@ -29,7 +28,8 @@ export function InvitationInbox(props: { vault: LocalVault }) {
   const app = useApp();
   const c = () => invitationCopy[app.lang()];
   const inbox = useInvitations<InboxInvitation>('/invitations');
-  const offline = useOfflineOriginals(props.vault.originalPins());
+  // The vault is fixed for the mounted inbox (the vault section mounts it once unlocked).
+  const offline = useOfflineOriginals(untrack(() => props.vault.originalPins()));
   const [opened, setOpened] = createSignal<{
     id: string;
     project?: SharedProject;

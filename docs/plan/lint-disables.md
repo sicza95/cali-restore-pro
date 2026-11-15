@@ -1,12 +1,12 @@
 # File-level lint disables — Phase 3, item 6 (second half)
 
-15 November 2026 · Status: in progress · Issue: #32 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 3 item 6 and code finding 5
+15 November 2026 · Status: done · Issue: #32 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 3 item 6 and code finding 5
 
 Goal: no file-level `eslint-disable` in `src`, so `solid/reactivity` sees every component again. No behaviour change.
 
 ## Where things stand
 
-Eleven files start with `/* eslint-disable solid/reactivity */`: `ProjectBackup`, `ProjectDetail`, `ProjectKeyTransfer`, `ProjectOriginals`, `ProjectSync`, `ProjectWorkspace` and five in `sharing/`. With the comments removed the rule reports 37 findings of two kinds:
+Eleven files start with `/* eslint-disable solid/reactivity */`: `ProjectBackup`, `ProjectDetail`, `ProjectKeyTransfer`, `ProjectOriginals`, `ProjectSync`, `ProjectWorkspace` and five in `sharing/`. With the comments removed the rule reports 37 findings of three kinds (two of the 37 were already line-disabled elsewhere):
 
 | Kind                                                                                                        | Count | What it is                                                                                                                      |
 | ----------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -24,3 +24,9 @@ Eleven files start with `/* eslint-disable solid/reactivity */`: `ProjectBackup`
 ## Verification
 
 `npm run check` (lint with `--max-warnings 0`), `test:unit`, `npm test`, `test:files`, `test:sync`, `test:app` (invitations and sharing), `build-storybook`.
+
+## Outcome
+
+- No file-level `eslint-disable` in `src`. Three line-level disables remain, each with its reason: two `no-control-regex` in report exports (XML and spreadsheet sanitising) and one `solid/reactivity` for the `recovery.save` callback in `SurfaceWorkspace.tsx`.
+- `eslint.config.js` sets `customReactiveFunctions: ['run', 'onRun']`; eight setup reads use `untrack` with a comment; four nested reads moved to locals.
+- No behaviour change found: every suite passed (`check`, `test:unit` 210, `npm test` 16, `test:files` 22, `test:estimates` 8, `test:sync` 2, `test:app` 16 + 1 skipped, `build-storybook`).
