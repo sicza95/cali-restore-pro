@@ -69,6 +69,7 @@ test('reconciles a committed checkpoint estimate with scoped production download
   const report = (key: string) => page.locator('[data-control-id="report.review.' + key + '"]');
   await page.goto(fixture.path + '/estimates');
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
+  await page.locator('[data-control-id="estimate.step.phases"]').click();
   await phase('newName').fill('Clean plaster');
   await phase('add').click();
   await phase('scopeSurface').selectOption({ label: 'East wall / Plaster' });
@@ -85,6 +86,7 @@ test('reconciles a committed checkpoint estimate with scoped production download
   await phase('productivity').fill('2');
   await expect(phase('hoursOutput')).toHaveValue('2');
   await expect(page.locator('[data-estimate-result="total"]')).toHaveText('€20.00');
+  await page.locator('[data-control-id="estimate.step.issue"]').click();
   await finance('issue').click();
   await expect(page.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
 

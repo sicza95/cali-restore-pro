@@ -34,9 +34,8 @@ export function EstimateSummary(props: {
           )}
         </For>
       </dl>
-      <p class="review-note">
-        {props.latest ? versionLine(props.language, props.latest) : c().noSnapshot} {c().note}
-      </p>
+      <p>{props.latest ? versionLine(props.language, props.latest) : c().noSnapshot}</p>
+      <p class="review-note">{c().note}</p>
       <p role="status">{props.status}</p>
     </section>
   );
