@@ -1,8 +1,13 @@
-import { createSignal, For, Show } from 'solid-js';
+import { createMemo, createSignal, For, Show } from 'solid-js';
 import type { SettingsModel } from '../settings/types';
 import type { DeletionStatus } from '../../../platform/api/types.gen';
 
-export function ProjectLifecycle(props: { model: SettingsModel; project?: string }) {
+export function ProjectLifecycle(props: {
+  model: SettingsModel;
+  project?: string;
+  /** Name of a project this device still holds; hosted names are unreadable on the server. */
+  localName?: (id: string) => string | undefined;
+}) {
   const [trash, setTrash] = createSignal<DeletionStatus[]>();
   const [notice, setNotice] = createSignal<DeletionStatus>();
   const hu = () => props.model.lang() === 'hu';
@@ -25,6 +30,14 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
     }
     if (!props.project) await refresh();
   };
+  const labels = createMemo(() => {
+    let unknown = 0;
+    return (trash() ?? []).map(
+      (entry) =>
+        props.localName?.(entry.id) || (hu() ? 'Törölt projekt ' : 'Deleted project ') + ++unknown,
+    );
+  });
+  const someUnknown = () => (trash() ?? []).some((entry) => !props.localName?.(entry.id));
   const date = (iso: string) =>
     new Intl.DateTimeFormat(props.model.lang(), { dateStyle: 'long', timeStyle: 'short' }).format(
       new Date(iso),
@@ -68,9 +81,7 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
                     {(entry, index) => (
                       <li>
                         <div>
-                          <a href={'/projects/' + entry.id}>
-                            {(hu() ? 'Törölt projekt ' : 'Deleted project ') + (index() + 1)}
-                          </a>
+                          <a href={'/projects/' + entry.id}>{labels()[index()]}</a>
                           <p>{deadlines(entry)}</p>
                           <button
                             data-control-id="project.trash.restore"
@@ -107,6 +118,13 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
                   </For>
                 </ul>
               )}
+            </Show>
+            <Show when={someUnknown()}>
+              <p>
+                {hu()
+                  ? 'Az ezen az eszközön nem tárolt projektek sorszámot kapnak.'
+                  : 'Projects that aren’t on this device are numbered.'}
+              </p>
             </Show>
           </>
         }
