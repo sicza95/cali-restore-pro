@@ -10,6 +10,7 @@ This repository starts with the UI library. It is not a replacement editing engi
 - Maintain at least 44px touch targets, visible keyboard focus, labelled controls and distinct save/sync states.
 - Avoid adding libraries, default components or alternate visual styles without a concrete need. One icon family, one type family.
 - Run `npm run check`, `npm run build-storybook` and `npm test` for UI changes. Inspect landscape and portrait screenshots before delivery. Physical Pencil/Safari testing remains separate.
+- Remaining work is tracked as GitHub issues, grouped in milestones. A commit that finishes an issue ends its message body with `Closes #NN` (`Refs #NN` for partial work); the push to `main` closes the issue. New work found along the way becomes an issue rather than a note.
 - Conventional commits. Do not import legacy application code, real project photos, credentials or runtime data.
 - Every commit must be signed. Use `gh` for GitHub operations and verify the signature before publishing or updating a pull request branch.
 - Follow `docs/plan/README.md` for the platform-first order: identity/rights, settings/admin, encryption, files/projects, sharing/revocation, offline recovery, complete UI, restoration estimates and outputs before image processing/drawing. Pricing means restoration estimates, not subscription billing.

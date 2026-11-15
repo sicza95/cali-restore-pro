@@ -16,6 +16,9 @@ git commit -S -m "<type>(<scope>): <summary>" -m "<body>" -m "Co-Authored-By: Cl
 git log --show-signature -1
 ```
 
+- Link the GitHub issue: the commit that finishes one gets `-m "Closes #NN"` before the
+  Co-Authored-By line (`Refs #NN` for partial work). Pushing to `main` closes it; check with
+  `gh issue view NN --json state`. Find the issue with `gh issue list --milestone "<name>"`.
 - `commit.gpgsign=true` is set; the key is the owner's and only lives on this machine.
 - Run `npx prettier --write` on changed docs first; `npm run check` includes `format:check`.
 - In the Linux VM: never commit; hand the owner the command block instead.
