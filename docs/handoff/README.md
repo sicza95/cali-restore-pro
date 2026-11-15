@@ -8,19 +8,26 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Target devices:** iPad and desktop only (owner decision, 2026-11-15). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 is done and on `main`. Phase 2 (UX and copy) step 1 is planned in [copy audit](../plan/copy-audit.md); the owner accepted all four decisions as recommended.
+- **Active roadmap phase:** Phase 1 is done and on `main`. Phase 2 (UX and copy) step 1, the [copy audit](../plan/copy-audit.md), is done on `copy/task-language` and in review.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Copy audit commit 8 (docs: tick Phase 2 item 1, re-rate UX findings 2 and 3), then open the step's PR. Owner decides on [PR #18](https://github.com/sicza95/cali-restore-pro/pull/18) (trash shows real project names), which targets `copy/task-language`.
+Owner reviews and merges the copy audit PR (fast-forward `main` to its head). Owner also decides on [PR #18](https://github.com/sicza95/cali-restore-pro/pull/18) (trash shows real project names), which targets `copy/task-language`.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 8: done, PR opened
+
+- Pushed commit 7 (`55d8068`); Verified.
+- Ticked Phase 2 item 1 in the quality baseline. UX finding 3 is retired, finding 2 partly (raw floats remain until item 2). The UX rating stays at 4.
+- Opened the copy audit PR into `main` with before and after screenshots (orphan branch `pr-assets/copy-audit`).
+- Verified: `npm run check` (docs only).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 7: guard test
 

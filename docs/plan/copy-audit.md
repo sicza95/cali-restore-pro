@@ -1,6 +1,6 @@
 # Copy audit — Phase 2, step 1
 
-15 November 2026 · Status: in progress · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 2 item 1, UX findings 2 and 3 · Targets: iPad and desktop
+15 November 2026 · Status: done, in review · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 2 item 1, UX findings 2 and 3 · Targets: iPad and desktop
 
 Goal: every screen speaks the conservator's language. Engineering terms become task words, status notes that describe the build (not the user's work) leave the screen, and internal identifiers stop showing. Behaviour, control ids and layouts do not change.
 
@@ -80,6 +80,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
 
 8. **`docs(plan): step 1 done`**
    - Tick Phase 2 item 1 in the quality baseline; re-rate UX findings 2 and 3 (2 keeps the raw floats until item 2). As-built notes here; update the handoff.
+   - As built: item 1 ticked. Finding 3 retired; finding 2 partly retired (raw floats remain). The UX rating stays at 4 until items 3 and 4.
 
 Expected size: copy diffs of about 150 to 250 changed lines in all, a new test of about 80 lines, and the glossary.
 

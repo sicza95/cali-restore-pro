@@ -102,8 +102,8 @@ Weaknesses
 Based on the app screenshots (projects, photo, drawing, checkpoint, estimate, report, admin; landscape, portrait and 390 px).
 
 1. **Direct manipulation is under-presented.** _(Corrected after the re-check; the first version said it was missing.)_ Pointer drawing exists on the drawing canvas, but the inspector leads with "New point horizontal (%)" and "Add point", so typing points reads as the primary path. On an iPad-with-Pencil product the canvas should lead and the form should be an accessibility fallback.
-2. **Internal data is shown to users.** Layer UUIDs (`630298c4-…`), raw floats (`0.00113388 ft²`), "Encrypted input version · r4 · restoration-v1", "Retained commits 13 / 30".
-3. **Developer language in copy.** "Committed phase layer", "Independent mask scope", "Geometry is not connected yet", "Estimate backup/restore is not connected", "Check connection". Users need task language; engineering status belongs in docs.
+2. **Internal data is shown to users.** _(Partly retired 15 November 2026 by the [copy audit](../plan/copy-audit.md): no UUIDs, revision numbers or calculation versions on the audited screens, guarded by `copy-guard.ts`. Raw floats remain until Phase 2 item 2.)_ Was: layer UUIDs (`630298c4-…`), raw floats (`0.00113388 ft²`), "Encrypted input version · r4 · restoration-v1", "Retained commits 13 / 30".
+3. ~~**Developer language in copy.**~~ **Retired 15 November 2026** by the [copy audit](../plan/copy-audit.md) and its [glossary](../copy-glossary.md); the account, vault and admin screens were not audited. Was: "Committed phase layer", "Independent mask scope", "Geometry is not connected yet", "Estimate backup/restore is not connected", "Check connection". Users need task language; engineering status belongs in docs.
 4. **Everything is visible at once.** Estimate review is one 2,600 px column of phases, presets, scope, extras, adjustments and archives. Needs progressive disclosure (steps, collapsible sections, a summary-first layout).
 5. **Navigation is inconsistent.** Some screens use a sidebar, others a top "Menu" button; the estimate page carries a "Projects" page title above "Estimate review"; breadcrumbs are bare underlined links.
 6. **Canvas is small and passive.** On the photo review screen the image is a fraction of the viewport, with pan done via "Left / Right / Up / Down" buttons.
@@ -136,7 +136,7 @@ Each step is meant to be one or a few signed conventional commits, with the hand
 
 Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths (390 px) are not supported for now, so no Phase 2 item adds phone layouts. The existing 390 px test checks stay until the owner decides to remove them.
 
-1. Copy audit: replace engineering terms with task language, move "not connected yet" notes to docs, hide IDs.
+1. [x] Copy audit: replace engineering terms with task language, move "not connected yet" notes to docs, hide IDs. Done in the eight commits of the [copy audit](../plan/copy-audit.md): a [glossary](../copy-glossary.md) in EN and HU, task language on the estimate, editor, report and footer, the backup limit moved to the backup panel (with a fix for its misleading error), no internal ids, a translated save status, and `copy-guard.ts` checking ten screens. The UX rating stays at 4 until the estimate page and app shell (items 3 and 4) land; findings 4 to 6 still hold.
 2. Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals.
 3. Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue).
 4. One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs.
