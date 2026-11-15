@@ -175,7 +175,7 @@ test('encrypted invitation grants separate assessment, summary and full estimate
   await projection.getByRole('button', { name: 'Preview draft' }).click();
   await expect(draft).toContainText('1250.00');
   await expect(draft).toContainText('Private cleaning phase');
-  await expect(draft).toContainText('Freshness was not recorded');
+  await expect(draft).toContainText('whether this estimate was current');
   await expect(draft).toContainText('62.50 EUR/h');
   await draft.getByRole('button', { name: 'Cancel preview' }).click();
   await expect(page.locator('[data-control-id="estimate.finance.snapshot"]')).toHaveCount(0);

@@ -14,13 +14,22 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Copy audit commit 4 (reports and outputs) on `copy/task-language`. Commits 1 to 3 are on the branch; commit 3 is not pushed.
+Copy audit commit 5 (account connection status) on `copy/task-language`. Commits 1 to 4 are on the branch.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 4: reports and outputs
+
+- Pushed commit 3 (`9ea287e`); Verified.
+- Report copy (EN and HU): "Objects and surfaces", "Values only", "Draft", "Preparing the report…", plain older-draft, freshness and earlier-version notes; the page note no longer mentions backups.
+- Departure from the plan: the calculation version and revision rows stay in the preview dialog, because it shows exactly the rows of the downloaded file. Glossary rule 5 now says so.
+- Tests: two lookups updated (one HU).
+- Verified: `npm run check`, `npm run test:files` (21 passed), `npm test` (12 passed), `npm run build-storybook`. Looked at `output-1194`.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 3: editor wording
 

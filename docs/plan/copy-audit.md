@@ -59,6 +59,8 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
 
 4. **`copy(reports): task language in reports and outputs`**
    - `reports/copy.ts` EN and HU: page titles without "review", "Draft review" → "Draft", the backup note removed (it moved in commit 2). "Calculation version" stays in exported CSV, XLSX and PDF rows (an audit value) and leaves the on-screen preview.
+   - As built: "Objects and surfaces" instead of "Report scope", "Values only" instead of "Numeric snapshot", "Draft" instead of "Draft review", and plain wording for the older-draft, freshness and earlier-version notes. "Working with encrypted report data…" is now "Preparing the report…". The page note drops the backup sentence (it moved to the backup panel in commit 2). The page titles changed in commit 2.
+   - Departure: "Calculation version" and the revision rows stay in the preview dialog too. The preview shows the rows of the file that will be downloaded, so hiding them there would make it disagree with the file. Rule 5 of the glossary now says so.
 
 5. **`copy(account): connection status in plain words`**
    - `account-access/constants.ts`: "Platform connection" → "Server"; "Connected" → "Online"; "Check connection" → "Check again". Only if decision 4 keeps the panel.

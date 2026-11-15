@@ -108,7 +108,7 @@ export function ReportReview(props: {
 
   return (
     <div class="review-flow report-review">
-      <p class="review-note">{c().transient}</p>
+      <p class="review-note">{c().note}</p>
       <section class="project-pane" aria-label={c().draft}>
         <div class="review-actions">
           <button

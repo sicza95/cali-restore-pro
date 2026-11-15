@@ -8,7 +8,7 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 2. **A note that describes the build goes in docs, not on screen.** "Not connected yet" and similar status notes are removed. If they are still true, they are recorded in the relevant plan or milestone doc.
 3. **A real limit stays on screen, said once, where the user acts on it.** For example, the backup limit appears on the backup panel, only when the project has something the backup leaves out.
 4. **Never show internal identifiers.** No UUIDs, revision numbers like `r4`, or raw keys. Show a name, a kind and number ("Damage layer 2"), or a version number in words ("Version 4").
-5. **Exported files may keep audit values** (the calculation version, revision numbers) in their data rows. The on-screen preview does not show them.
+5. **Exported files may keep audit values** (the calculation version, revision numbers) in their data rows, and so does the preview of a file, which shows exactly what will be downloaded. Other screens do not show them.
 6. **Hungarian follows the same idea, not the English word.** "Review" was translated as _előnézet_ (preview); where it meant "preview" it stays, where it meant the test harness it goes.
 
 ## Terms
