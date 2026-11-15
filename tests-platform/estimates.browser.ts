@@ -204,6 +204,13 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await page.locator('[data-control-id="project.review.estimates"]').click();
   const phase = (id: string) => page.locator(`[data-control-id="estimate.phase.${id}"]`);
   const finance = (id: string) => page.locator(`[data-control-id="estimate.finance.${id}"]`);
+  const step = (id: string) => page.locator(`[data-control-id="estimate.step.${id}"]`).click();
+  await expect(page.locator('[data-control-id="estimate.step.objects"]')).toHaveAttribute(
+    'aria-current',
+    'step',
+  );
+  await step('phases');
+  await expect(page.locator('#estimate-step-phases')).toBeFocused();
   await phase('newName').fill('Manual cleaning allowance');
   await phase('add').click();
   await phase('scopeSurface').selectOption({ label: 'Object 1 / Surface 1' });
@@ -220,13 +227,19 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await page.getByLabel('Preset name', { exact: true }).fill('Studio hourly');
   await page.getByRole('button', { name: 'Save rate preset', exact: true }).click();
   await expect(page.getByText('Preset saved', { exact: true })).toBeVisible();
+  await step('issue');
   await finance('issue').click();
   await expect(page.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
+  await expect(page.locator('[data-control-id="estimate.step.issue"]')).toContainText(
+    'Version 1 · Issued',
+  );
+  await step('phases');
   await expect(phase('time')).toHaveValue('15');
   await expect(page.locator('[data-estimate-result="total"]')).toHaveText('HUF 630');
   await phase('rate').fill('88');
+  await step('issue');
   await expect(
     page.getByRole('status').filter({ hasText: /^Version 1 · Issued · / }),
   ).toContainText('40');
@@ -305,6 +318,7 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await page.screenshot({ path: info.outputPath('project-backup-gap.png'), fullPage: true });
   await page.locator('[data-control-id="project.review.estimates"]').click();
   await page.getByLabel('App language').selectOption('hu');
+  await step('issue');
   await expect(page.getByRole('button', { name: 'Becslési verzió mentése' })).toBeVisible();
   await expectTaskLanguage(page, 'estimate hu');
   await page.screenshot({ path: info.outputPath('estimate-hu-390.png'), fullPage: true });

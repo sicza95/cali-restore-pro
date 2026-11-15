@@ -83,6 +83,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   const finance = (key: string) => control(page, 'estimate.finance.' + key);
   const report = (key: string) => control(page, 'report.review.' + key);
   const nav = (key: string) => control(page, 'project.review.' + key);
+  const step = (key: string) => control(page, 'estimate.step.' + key).click();
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({
       json: {
@@ -122,6 +123,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(page).toHaveURL(path + '/estimates');
   await expect(nav('estimates')).toHaveAttribute('aria-current', 'page');
   await expect(finance('snapshot')).toBeDisabled();
+  await step('phases');
   await phase('newName').fill('Surface cleaning');
   await phase('newName').press('Enter');
   await expect(phase('name')).toHaveValue('Surface cleaning');
@@ -173,16 +175,20 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(phase('rate')).toHaveValue('12.5');
   await expect(phase('productivity')).toHaveValue('2.5');
   await phase('material').fill('3');
+  await step('extras');
   await finance('newExtra').tap();
   await finance('extraName').fill('Lighting');
   await finance('extraScope').selectOption({ label: 'North wall' });
   await finance('extraMethod').selectOption('hourly');
   await finance('extraHours').fill('-3');
   await expect(finance('extraHours')).toHaveAttribute('aria-invalid', 'true');
+  await expect(control(page, 'estimate.step.extras')).toContainText('Incomplete');
   await expect(finance('snapshot')).toBeDisabled();
+  await step('objects');
   await finance('selection').selectOption('selected');
   await expect(finance('snapshot')).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Object 1', exact: true }).tap();
+  await step('adjustments');
   await finance('newAdjustment').click();
   await finance('adjustmentName').fill('Contingency');
   await finance('adjustmentPercent').fill('101');
@@ -196,13 +202,16 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(finance('taxPercent')).toHaveCount(0);
   await finance('tax').check();
   await expect(finance('taxPercent')).toHaveValue('20');
+  await step('issue');
   await finance('assumptions').fill('Review cleaning access.');
   await finance('snapshot').tap();
   const captured = page.getByRole('status').filter({ hasText: /^Version \d+ · Saved · / });
   await expect(captured).toContainText('12.5');
   await expect(captured).toContainText('Object 1');
   await expect(captured).not.toContainText('Lighting');
+  await step('phases');
   await phase('rate').fill('88');
+  await step('issue');
   await expect(captured).toContainText('12.5');
   await finance('snapshot').tap();
   await expect(finance('version')).toHaveValue('2');
@@ -210,9 +219,15 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(captured).toContainText('12.5');
   await expect(finance('issue')).toBeDisabled();
   await inspectReview(page, info, 'estimate', [
+    'estimate.step.phases',
+    'estimate.finance.snapshot',
+    'estimate.finance.issue',
+  ]);
+  await step('phases');
+  await inspectReview(page, info, 'estimate-phases', [
     'estimate.phase.add',
     'estimate.phase.price',
-    'estimate.finance.snapshot',
+    'estimate.step.issue',
   ]);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
