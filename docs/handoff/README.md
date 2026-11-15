@@ -7,19 +7,26 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `refactor/retire-drawing-adapter` (step 4), from `main` at `ec20f87` (the step 4 plan, pushed and Verified). Before that: `main` at `de28868`. Step 3 landed by fast-forwarding `main` to the [PR #16](https://github.com/sicza95/cali-restore-pro/pull/16) head; `pr-assets/step3` is deleted. The remote `feat/canvas-first-layout` branch still exists (not deleted). Before that, steps 2 and 3 each went through one branch and one PR.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 steps 1 to 3 are done, on `main` and ticked in the quality baseline. Step 4 ([retire the duplicate review components](../plan/editor-retire-adapter.md)) is planned; the owner accepted decisions 1 and 2 (branch `refactor/retire-drawing-adapter` with one PR; remove dead registry ids, giving the reason).
+- **Active roadmap phase:** Phase 1 is done: steps 1 to 4 are ticked in the quality baseline. Step 4 ([retire the duplicate review components](../plan/editor-retire-adapter.md)) is on `refactor/retire-drawing-adapter` and reaches `main` when its PR is fast-forward merged. Next comes Phase 2 (UX and copy).
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Step 4 commit 4: tick Phase 1 item 4 in the quality baseline, re-rate "Two editor implementations", then open the step 4 PR (no screenshots needed; no visible change).
+Owner reviews and merges the step 4 PR by fast-forwarding `main` to its head. Then delete the remote `refactor/retire-drawing-adapter` and `feat/canvas-first-layout` branches, and plan Phase 2 item 1 (copy audit).
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 commit 4, PR opened
+
+- Ticked Phase 1 item 4 in the quality baseline and retired architecture weakness 3 ("Two editor implementations"). The architecture rating stays at 7, since weaknesses 1, 2, 4 and 5 still hold. The plan's status is "done, in review".
+- Opened the step 4 PR (link in the PR list). It has no screenshots: commits 2 and 3 were checked pixel by pixel against the commit before and show no visible change.
+- Verified: `npm run check` on the docs commit. The code commits' suite runs are in the entries below.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 commit 3: one host for the drawing panels
 

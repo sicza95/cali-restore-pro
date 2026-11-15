@@ -1,6 +1,6 @@
 # Retire the duplicate review components — Phase 1, step 4
 
-15 November 2026 · Status: planned, decisions 1 and 2 accepted · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1 item 4 · Follows [canvas-first layout](editor-canvas-first.md)
+15 November 2026 · Status: done, in review · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 1 item 4 · Follows [canvas-first layout](editor-canvas-first.md)
 
 Goal: the surface editor has one implementation. The old form-driven `DrawingReviewAdapter` and everything that exists only to serve it are gone. A parity test proves that the editor that ships still renders every drawing control the registry promises.
 
@@ -55,6 +55,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
 4. **`docs(plan): step 4 done`**
    - Tick Phase 1 item 4 in the quality baseline. Add "As built" notes here, and update the handoff.
    - Re-rate the architecture finding "Two editor implementations" in the baseline (it should retire).
+   - As built: the item is ticked in the quality baseline. Architecture weakness 3 is retired, and the architecture rating stays at 7 because the other four weaknesses still hold.
 
 Expected size: about 250 + 100 lines removed in commit 2, and about 100 to 150 in commit 3. `DrawingWorkspace.tsx` stays at about 330 lines.
 
