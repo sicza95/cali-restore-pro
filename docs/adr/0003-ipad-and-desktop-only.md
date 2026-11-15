@@ -13,7 +13,7 @@ Support iPad in both orientations and desktop browsers. Phone widths are not sup
 ## Consequences
 
 - Layout and screenshot review covers 1194 × 834, 834 × 1194 and desktop widths.
-- The existing 390 px checks in `tests-platform/drawing-review.ts` and `projects.browser.ts` stay until the owner decides whether to remove them (open question in the handoff).
+- The 390 px checks and screenshots are removed from the platform tests (owner decision, 2026-11-15, issue #47). The phone-width CSS (for example the docked tool chip at 640 px and below) is no longer tested.
 - Touch targets stay at least 44 px, because iPad is a touch and Pencil device.
 
 ## Alternatives considered

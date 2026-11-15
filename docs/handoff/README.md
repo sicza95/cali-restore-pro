@@ -19,7 +19,7 @@ Phase 2 item 4 (one app shell on the new router: sidebar in landscape, compact h
 
 ## Open questions for the owner
 
-1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
+None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
 

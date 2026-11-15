@@ -27,7 +27,6 @@ test('auth routes, localization, missing and invalid links remain accessible', a
   for (const viewport of [
     { width: 1194, height: 834 },
     { width: 834, height: 1194 },
-    { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);

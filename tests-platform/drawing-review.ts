@@ -248,7 +248,6 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   for (const viewport of [
     { width: 1194, height: 834 },
     { width: 834, height: 1194 },
-    { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
     await closeDetails(page);
@@ -261,14 +260,6 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     expect(rail.x + rail.width).toBeLessThan(canvas.x + canvas.width / 2);
     if (viewport.width === 1194) expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
     else expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
-    if (viewport.width <= 640) {
-      // At phone width the tool chip docks under the photo instead of covering it.
-      const photo = (await page.locator('.drawing-workspace .cr-opacity-layer').boundingBox())!;
-      const chip = (await page.locator('.drawing-workspace .cr-tool-context').boundingBox())!;
-      expect(chip.y).toBeGreaterThanOrEqual(photo.y + photo.height - 1);
-      expect(chip.y + chip.height).toBeLessThanOrEqual(canvas.y + canvas.height + 1);
-      expect(rail.y + rail.height).toBeLessThanOrEqual(photo.y + photo.height + 1);
-    }
     // At fit the photo fills the canvas on one axis and stays inside it on the other.
     const view = await c('view.canvas').evaluate((element) => ({
       width: element.clientWidth,
@@ -294,7 +285,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     await expect(
       page.locator('[data-control-id="surface.view.surface"] option:checked'),
     ).toHaveText((await page.locator('.app-page-title').textContent())!);
-    // Both iPad orientations and the phone width must pass axe with "Details" closed and open.
+    // Both iPad orientations must pass axe with "Details" closed and open.
     for (const state of ['closed', 'open'] as const) {
       if (state === 'open') {
         await openDetails(page);
