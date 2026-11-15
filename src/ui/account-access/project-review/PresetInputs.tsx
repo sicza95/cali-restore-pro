@@ -22,7 +22,7 @@ export function PresetInputs(props: {
           rate: 'Díj mentése',
           speed: 'Teljesítmény mentése',
           apply: 'Alkalmazás',
-          saved: 'Titkosítva mentve',
+          saved: 'Sablon mentve',
           failed: 'Érvénytelen vagy ütköző sablon',
         }
       : {
@@ -31,7 +31,7 @@ export function PresetInputs(props: {
           rate: 'Save rate preset',
           speed: 'Save productivity preset',
           apply: 'Apply',
-          saved: 'Saved encrypted',
+          saved: 'Preset saved',
           failed: 'Invalid or conflicting preset',
         };
   const latest = () =>

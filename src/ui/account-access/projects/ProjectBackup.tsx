@@ -1,7 +1,7 @@
 /* eslint-disable solid/reactivity -- Backup commands read the current project when invoked. */
 import { createSignal, onCleanup, Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
-import { ReportBackupUnavailable } from '../../../platform/vault/project-backups';
+import { BackupUnavailable } from '../../../platform/vault/project-backups';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../types';
 import { projectCopy } from './project-copy';
@@ -17,8 +17,7 @@ const copy = {
     import: 'Import encrypted backup',
     file: 'Backup file',
     restore: 'Restore as a local copy',
-    reportBackup:
-      'This project has a report draft. Portable backups with report drafts are unavailable.',
+    gap: 'Backups don’t include estimates or report drafts yet. This project has one, so it can’t be backed up for now. Keep it on this device.',
     exportFailed:
       'Backup could not be prepared. Check that all originals are available on this device and the backup fits within 512 MiB.',
     importFailed:
@@ -35,8 +34,7 @@ const copy = {
     import: 'Titkosított biztonsági mentés importálása',
     file: 'Biztonsági mentés fájlja',
     restore: 'Visszaállítás helyi másolatként',
-    reportBackup:
-      'A projekthez jelentéspiszkozat tartozik. A jelentéspiszkozatot tartalmazó hordozható mentés nem érhető el.',
+    gap: 'A biztonsági mentés még nem tartalmazza a becsléseket és a jelentéspiszkozatokat. Ehhez a projekthez tartozik ilyen, ezért egyelőre nem menthető. Tartsa meg ezen az eszközön.',
     exportFailed:
       'Nem sikerült előkészíteni a mentést. Ellenőrizze, hogy minden eredeti fájl elérhető-e ezen az eszközön, és a mentés legfeljebb 512 MiB méretű-e.',
     importFailed:
@@ -64,6 +62,17 @@ export function ProjectBackup(props: Props) {
   const [cancelled, setCancelled] = createSignal(false);
   const [download, setDownload] = createSignal<{ url: string; code: string }>();
   const [saved, setSaved] = createSignal(false);
+  const [gap, setGap] = createSignal(false);
+
+  /** Says up front when the project holds something a backup can't carry yet. */
+  async function checkGap() {
+    if (!props.project) return;
+    try {
+      setGap(!!(await props.vault.projectBackups().gap(props.project)));
+    } catch {
+      setGap(false);
+    }
+  }
 
   function clearDownload() {
     const result = download();
@@ -91,7 +100,7 @@ export function ProjectBackup(props: Props) {
         await work({ signal: controller.signal, progress: setProgress });
       } catch (error) {
         if (controller.signal.aborted) setCancelled(true);
-        else if (error instanceof ReportBackupUnavailable) setError(c().reportBackup);
+        else if (error instanceof BackupUnavailable) setGap(true);
         else setError(props.project ? c().exportFailed : c().importFailed);
       } finally {
         setTransfer(undefined);
@@ -103,7 +112,8 @@ export function ProjectBackup(props: Props) {
     <details
       class="project-backup"
       onToggle={(event) => {
-        if (!event.currentTarget.open) {
+        if (event.currentTarget.open) void checkGap();
+        else {
           transfer()?.abort();
           clearDownload();
         }
@@ -161,7 +171,8 @@ export function ProjectBackup(props: Props) {
           <button
             data-control-id="backup.export"
             class="secondary"
-            disabled={props.busy}
+            disabled={props.busy || gap()}
+            aria-describedby={gap() ? 'project-backup-gap' : undefined}
             onClick={() =>
               execute(async (options) => {
                 const { blob, code } = await props.vault.projectBackups().export(id(), options);
@@ -215,6 +226,11 @@ export function ProjectBackup(props: Props) {
             </Show>
           </div>
         )}
+      </Show>
+      <Show when={gap()}>
+        <p id="project-backup-gap" class="field-help" role="status">
+          {c().gap}
+        </p>
       </Show>
       <Show when={error()}>
         <p role="alert">{error()}</p>
