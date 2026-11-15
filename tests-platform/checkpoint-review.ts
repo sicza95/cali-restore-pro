@@ -117,5 +117,5 @@ export async function verifyCheckpointReview(page: Page, info: TestInfo) {
   }
   expect((await new AxeBuilder({ page }).include('.review-flow').analyze()).violations).toEqual([]);
   await page.setViewportSize({ width: 1194, height: 834 });
-  await page.getByRole('button', { name: 'Photo review', exact: true }).click();
+  await page.getByRole('button', { name: 'Photo setup', exact: true }).click();
 }

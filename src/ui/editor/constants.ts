@@ -1,3 +1,4 @@
+import { saveLabels } from '../controls/save-status/constants';
 import type { EditorCopy } from './types';
 
 export const referencePhoto = '/photos/painted-plaster.png';
@@ -14,7 +15,7 @@ export const editorCopy: EditorCopy = {
   exportUnavailable: 'Export is not available here',
   canvas: 'Assessment canvas',
   maskOpacity: 'Mask opacity',
-  perStrokeSave: 'Per-stroke save',
+  perStrokeSave: 'After each stroke',
   inspector: 'Surface inspector',
   inspectorTabs: 'Inspector',
   layers: 'Layers',
@@ -35,4 +36,6 @@ export const editorCopy: EditorCopy = {
   phaseNote: 'Treatment areas are measured separately.',
   calibration: 'Calibration & units',
   calibrationUnavailable: 'Add a reference photo first',
+  save: saveLabels,
+  retry: 'Retry',
 };

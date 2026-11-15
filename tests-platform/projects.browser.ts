@@ -319,7 +319,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(review('review.cropWidth')).toHaveValue('80');
   await review('review.cropWidth').fill('75');
   await review('review.apply').click();
-  await expect(page.getByText('Calibration needs review after preparation changed.')).toBeVisible();
+  await expect(page.getByText('The preparation changed. Check the calibration.')).toBeVisible();
   await page.screenshot({ path: info.outputPath('surface-reopened.png') });
   await controls('surface.project').click();
   await page

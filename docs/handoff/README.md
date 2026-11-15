@@ -14,13 +14,22 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Copy audit commit 3 (editor: save, not commit) on `copy/task-language`. Commit 2 (estimate page) is committed on the branch.
+Copy audit commit 4 (reports and outputs) on `copy/task-language`. Commits 1 to 3 are on the branch; commit 3 is not pushed.
 
 ## Open questions for the owner
 
 1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 3: editor wording
+
+- Pushed commit 2 (`c67546e`); Verified.
+- Drawing, checkpoint and surface photo copy (EN and HU) follow the glossary: "Save draft", "Save marks: After each stroke / When I choose", "Undo steps kept", "History", "No saved marks yet.", "Several marks"; mode tabs "Photo setup", "Drawing", "Checkpoints"; checkpoint "Save checkpoint", "Restore checkpoint", "Measurements", "Area unit". The HU pattern editor no longer says _előnézeti_ for "review". The app's checkpoint overrides that now match the base were removed.
+- Found and fixed: the editor's save status was English only, said "on this iPad" on every device, and its error label had Storybook's fake "last saved 14:27". `SaveStatus` takes `labels` and `retryLabel`; `EditorCopy` has `save` and `retry` in EN and HU.
+- Tests: four lookups updated (one was a regex the string search missed; see process notes and the `copy-change` skill).
+- Verified: `npm run check`, `npm run test:files` (21 passed), `npm test` (12 passed), `npm run build-storybook`. Looked at `drawing-834-open`, `drawing-834-closed`, `drawing-1194-open` and `checkpoint-1194`.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests. No HU screenshot of the editor (the flows only take one for the estimate page).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Copy audit commit 2: estimate page
 

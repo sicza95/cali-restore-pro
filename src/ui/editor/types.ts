@@ -1,3 +1,4 @@
+import type { SaveLabels } from '../controls/save-status/types';
 export type LayerId = string;
 
 /** One row of the surface model as the editor shell shows it. */
@@ -51,4 +52,7 @@ export type EditorCopy = {
   phaseNote: string;
   calibration: string;
   calibrationUnavailable: string;
+  /** The header's save status text for each state. */
+  save: SaveLabels;
+  retry: string;
 };

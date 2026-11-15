@@ -54,6 +54,8 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green. Co
 3. **`copy(editor): save, not commit, in the surface editor`**
    - `drawing-review/copy.ts` (EN and HU) and `checkpoint-copy.ts`: "Commit draft" → "Save draft"; "Review commit mode" → "Save marks"; "Manual batches" → "When I choose"; "Retained commits" → "Undo steps kept"; "Review history" → "History"; "No committed marks in this review." → "No saved marks yet."
    - Check the canvas chip's "Apply mark" and the draft bar agree with the new words.
+   - As built: also the checkpoint copy (Storybook's base and the app's overrides, which now mostly match the base and were removed), the surface photo copy ("Cancel review", "Alignment review…", "Calibration needs review…", "the saved revision"), the mode tabs ("Photo setup", "Drawing", "Checkpoints") and the pattern editor's HU strings, which used _előnézeti_ for "review" throughout. The save mode reads "Save marks: After each stroke / When I choose"; history names "Several marks" instead of "Draft batch".
+   - Found and fixed: the editor's save status was English only in both languages, said "on this iPad" on every device, and its error label carried Storybook's fake time ("last saved 14:27"). `SaveStatus` now takes `labels` and `retryLabel`; `EditorCopy` has `save` and `retry`, in EN and HU, saying "on this device".
 
 4. **`copy(reports): task language in reports and outputs`**
    - `reports/copy.ts` EN and HU: page titles without "review", "Draft review" → "Draft", the backup note removed (it moved in commit 2). "Calculation version" stays in exported CSV, XLSX and PDF rows (an audit value) and leaves the on-screen preview.
