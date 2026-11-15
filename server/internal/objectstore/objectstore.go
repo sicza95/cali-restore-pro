@@ -1,4 +1,5 @@
-package identity
+// Package objectstore keeps encrypted file parts on the private object volume.
+package objectstore
 
 import (
 	"bytes"
@@ -12,10 +13,10 @@ import (
 
 // Object paths are constructed exclusively from validated, canonical IDs and
 // bounded part indices. The volume is private to the app and worker.
-type fileObjects struct{ root string }
+type Store struct{ Root string }
 
-func (o fileObjects) put(id string, part int, body []byte) error {
-	dir := filepath.Join(o.root, id)
+func (o Store) Put(id string, part int, body []byte) error {
+	dir := filepath.Join(o.Root, id)
 	if err := os.Mkdir(dir, 0700); err != nil && !errors.Is(err, os.ErrExist) {
 		return err
 	}
@@ -39,13 +40,13 @@ func (o fileObjects) put(id string, part int, body []byte) error {
 	if err := os.Rename(tmp, filepath.Join(dir, strconv.Itoa(part))); err != nil {
 		return err
 	}
-	if err := syncFileDirectory(dir); err != nil {
+	if err := SyncDir(dir); err != nil {
 		return err
 	}
-	return syncFileDirectory(o.root)
+	return SyncDir(o.Root)
 }
 
-func syncFileDirectory(dir string) error {
+func SyncDir(dir string) error {
 	f, err := os.Open(dir)
 	if err != nil {
 		return err
@@ -54,8 +55,8 @@ func syncFileDirectory(dir string) error {
 	return f.Sync()
 }
 
-func (o fileObjects) read(id string, part, size int, digest []byte) ([]byte, error) {
-	f, err := os.Open(filepath.Join(o.root, id, strconv.Itoa(part)))
+func (o Store) Read(id string, part, size int, digest []byte) ([]byte, error) {
+	f, err := os.Open(filepath.Join(o.Root, id, strconv.Itoa(part)))
 	if err != nil {
 		return nil, err
 	}

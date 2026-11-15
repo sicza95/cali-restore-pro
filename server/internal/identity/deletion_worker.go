@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
 // The record and file rows survive a failed purge. Bytes are removed before
@@ -74,7 +75,7 @@ func purgeProject(ctx context.Context, tx pgx.Tx, root string) error {
 		}
 	}
 	if len(files) > 0 {
-		if err := syncFileDirectory(root); err != nil {
+		if err := objectstore.SyncDir(root); err != nil {
 			return err
 		}
 	}
