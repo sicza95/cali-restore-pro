@@ -55,9 +55,9 @@ the handoff when they were not run.
 - **Absolutely positioned grid children:** `grid-area: 1 / 1` is not enough; an `auto` end line
   is the container's edge for abspos items. Give explicit end lines (`1 / 1 / 2 / 2`). The phone
   dock in `responsive.css` relies on this.
-- **The inspector body keeps its scroll.** Opening and closing "Enter by number" can leave the
-  short portrait inspector scrolled past the layer list. `LayerPanel` reveals the selected row
-  only when the selection, height or tab changes, so check row visibility after one of those.
+- **Inspector body scroll.** `LayerPanel` reveals the selected row when the selection, height or
+  tab changes and when a disclosure in its body closes (capture-phase `toggle`, which doesn't
+  bubble). It does not reveal on open, so opened fields stay in view.
 - **Background verify chains, last step:** Git Bash's `tail` takes one `-n N` for several files,
   not `-4`; a bad `tail` turns a green chain into exit 1.
 - New controls need an entry in `src/ui/editor/drawing-review/registry.ts`, or

@@ -13,14 +13,20 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Owner reviews the step 3 PR. Before merging, decide whether to fix the inspector scroll (open question 2) on the branch. After merging: fast-forward `main` to the PR head, delete `pr-assets/step3`, then plan Phase 1 step 4 (retire the duplicate review components).
+Owner reviews and merges the step 3 PR. After merging: fast-forward `main` to the PR head, delete `pr-assets/step3`, then plan Phase 1 step 4 (retire the duplicate review components).
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
-2. In the portrait short inspector, opening and closing "Enter by number" leaves the inspector body scrolled past the layer list, so the short state shows no layer row (visible in the 834 and 390 `closed` screenshots). Fix on the step 3 branch before merging (reveal the selected row when the disclosure closes), or carry it into step 4?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3: inspector scroll fixed on the PR branch
+
+- The owner chose to fix the scroll on the step 3 branch. `LayerPanel` now listens for `toggle` in the capture phase on its body (the event doesn't bubble) and reveals the selected row when any disclosure inside the body closes. Opening one is left alone, so its fields stay in view.
+- `drawing-review.ts` checks the row is in view on arrival in the short portrait state, right after "Enter by number" closes. This is the check that failed before the fix.
+- Refreshed the PR screenshots on `pr-assets/step3`.
+- Verified: see the PR body for suite results.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commits 6 and 7 pushed, PR opened
 
