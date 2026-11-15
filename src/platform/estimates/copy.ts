@@ -1,5 +1,4 @@
-type Language = 'en' | 'hu';
-
+import { defineCopy } from '../i18n/define';
 const en = {
   estimates: 'Estimate',
   reports: 'Report',
@@ -260,4 +259,4 @@ const hu: typeof en = {
   adjustmentCount: (_n: number, shown: string) => `${shown} korrekció`,
 };
 export type EstimateCopy = typeof en;
-export const estimateCopy: Record<Language, EstimateCopy> = { en, hu };
+export const estimateCopy = defineCopy({ en, hu });

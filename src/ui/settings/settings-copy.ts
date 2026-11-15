@@ -1,4 +1,5 @@
-export const settingsCopy = {
+import { defineCopy } from '../../platform/i18n/define';
+export const settingsCopy = defineCopy({
   en: {
     profile: 'Account profile',
     preferences: 'Preferences',
@@ -175,4 +176,4 @@ export const settingsCopy = {
     entitlements_changed: 'Hozzáférés vagy kvóta változott',
     delegation_changed: 'Delegált jogosultságok változtak',
   },
-} as const;
+});

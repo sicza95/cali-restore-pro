@@ -1,7 +1,7 @@
 import type { DeletionStatus } from '../../platform/api/types.gen';
-import type { copy } from './constants';
+import type { accountCopy as copy } from './copy';
 
-export type Language = keyof typeof copy;
+export type { Language } from '../../platform/i18n/language';
 export type Message = keyof typeof copy.en;
 export type Translate = (key: Message) => string;
 export type Session = { id: string; createdAt: string; current: boolean };

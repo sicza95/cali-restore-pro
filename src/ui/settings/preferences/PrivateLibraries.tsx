@@ -5,23 +5,7 @@ import { PatternReview } from '../../editor/checkpoint-review/PatternReview';
 import { accountPaths } from '../../router/constants';
 import type { Language } from '../../account-access/types';
 import './libraries.css';
-
-export const libraryCopy = {
-  en: {
-    title: 'Estimate libraries',
-    rates: 'Rate presets',
-    productivity: 'Productivity presets',
-    help: 'Encrypted on this device, separate from projects. Create presets from an estimate phase. Edits never rewrite captured estimate versions.',
-    branding: 'Report branding preferences',
-  },
-  hu: {
-    title: 'Becslési könyvtárak',
-    rates: 'Díjsablonok',
-    productivity: 'Termelékenységi sablonok',
-    help: 'Az eszközön titkosítva, a projektektől külön. A becslési fázisból hozhat létre sablonokat. A módosítás nem írja át a mentett becslést.',
-    branding: 'Jelentésarculat beállításai',
-  },
-};
+import { libraryCopy } from './library-copy';
 
 export function PrivateLibraries(props: { language: Language; vault: LocalVault }) {
   const c = () => libraryCopy[props.language];
@@ -58,9 +42,7 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
             )}
           </For>
           <Show when={failed() || rows.error}>
-            <p role="alert">
-              {props.language === 'hu' ? 'A sablon nem menthető.' : 'Could not save preset.'}
-            </p>
+            <p role="alert">{c().saveFailed}</p>
           </Show>
           <For each={latest()}>
             {(preset) => (
@@ -81,19 +63,17 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
                 }}
               >
                 <label>
-                  {props.language === 'hu' ? 'Sablon neve' : 'Preset name'}
+                  {c().presetName}
                   <input name="name" value={preset.name} required />
                 </label>
                 <label>
-                  {props.language === 'hu' ? 'Érték' : 'Value'}
+                  {c().value}
                   <input name="value" value={preset.value} required />
                 </label>
                 <p>
                   v{preset.version} · {preset.currency} /{preset.unit}
                 </p>
-                <button class="primary">
-                  {props.language === 'hu' ? 'Új verzió mentése' : 'Save new version'}
-                </button>
+                <button class="primary">{c().saveVersion}</button>
                 <button
                   class="secondary"
                   onClick={(e) => {
@@ -104,7 +84,7 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
                       .catch(() => setFailed(true));
                   }}
                 >
-                  {props.language === 'hu' ? 'Archiválás' : 'Archive'}
+                  {c().archive}
                 </button>
               </form>
             )}

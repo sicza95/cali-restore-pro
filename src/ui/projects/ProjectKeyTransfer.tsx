@@ -2,6 +2,7 @@
 import { createSignal, Show } from 'solid-js';
 import type { revisionKeyTransfer } from '../../platform/projects/revision-key-transfer';
 import type { Language } from '../account-access/types';
+import { keyTransferCopy as copy } from './key-transfer-copy';
 
 type Model = ReturnType<typeof revisionKeyTransfer>;
 type Form = {
@@ -9,29 +10,6 @@ type Form = {
   busy: boolean;
   model: Model;
   run: (task: () => Promise<void>) => Promise<boolean>;
-};
-
-const copy = {
-  en: {
-    send: 'Share sync access with a device',
-    recipient: 'Recipient owner account ID',
-    create: 'Create transfer code',
-    secret: 'Transfer code',
-    private: 'Share this code privately with the receiving device. It expires after 15 minutes.',
-    receive: 'Open a synced project on this device',
-    account: 'Your owner account ID',
-    open: 'Open synced project',
-  },
-  hu: {
-    send: 'Szinkronizálási hozzáférés megosztása egy eszközzel',
-    recipient: 'A fogadó tulajdonos fiókazonosítója',
-    create: 'Átviteli kód létrehozása',
-    secret: 'Átviteli kód',
-    private: 'A kódot bizalmasan adja át a fogadó eszköznek. A kód 15 perc után lejár.',
-    receive: 'Szinkronizált projekt megnyitása ezen az eszközön',
-    account: 'Saját tulajdonosi fiókazonosító',
-    open: 'Szinkronizált projekt megnyitása',
-  },
 };
 
 export function SendProjectKey(props: Form & { project: string }) {

@@ -1,13 +1,14 @@
 import { createSignal, Show } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
 import type { DeletionPreflight } from '../../../platform/api/types.gen';
-import { settingsCopy } from '../constants';
+import { settingsCopy } from '../settings-copy';
+import { deletionCopy } from './deletion-copy';
 
 export function AccountDeletion(props: { path: string; pending?: boolean; onChange?: () => void }) {
   const app = useApp();
   const [check, setCheck] = createSignal<DeletionPreflight>();
   const force = () => check()?.forceEligible === true;
-  const hu = () => app.lang() === 'hu';
+  const d = () => deletionCopy[app.lang()];
   const c = () => settingsCopy[app.lang()];
   return (
     <div class="account-panel">
@@ -46,54 +47,28 @@ export function AccountDeletion(props: { path: string; pending?: boolean; onChan
           }}
         >
           <Show when={force()}>
-            <p>
-              {hu()
-                ? 'A kizárólagos tulajdonú projektek befagyasztva maradnak a helyreállítási határidőig. A meglévő együttműködők addig csak a már megosztott tartalmat érhetik el. A társtulajdonosok megtartják projektjeiket, és átvehetik a szerveres tárolást.'
-                : 'Sole-owner projects are frozen until the recovery deadline. Existing collaborators can retrieve their already shared content during that window. Co-owners keep their projects and can take over hosting.'}
-            </p>
+            <p>{d().forceHelp}</p>
           </Show>
           <Show when={!force()}>
             <p>
-              {hu()
-                ? 'Mentse a helyi és függő munkát titkosított projektmentésbe. A fiók 30 napig állítható helyre. A szervermentések legkésőbb a törléstől számított 90. napon járnak le.'
-                : 'Export an encrypted project backup for local and pending work. Account recovery lasts 30 days. Operational backups expire within 90 days of deletion.'}{' '}
-              <a href="/projects">{app.t('projects')}</a>
+              {d().exportHelp} <a href="/projects">{app.t('projects')}</a>
             </p>
           </Show>
           <p>
-            {hu()
-              ? 'A törléshez friss jelszó-megerősítés szükséges.'
-              : 'Deletion requires a recent password confirmation.'}{' '}
-            <a href="/settings/security">{app.t('security')}</a>
+            {d().recentPassword} <a href="/settings/security">{app.t('security')}</a>
           </p>
           <label class="confirmation">
             <input type="checkbox" required />
-            {force()
-              ? hu()
-                ? 'Megerősítem a kényszerített törlést.'
-                : 'I confirm forced deletion.'
-              : hu()
-                ? 'A függő munkát rendeztem, és megerősítem a törlést.'
-                : 'I resolved pending work and confirm deletion.'}
+            {force() ? d().confirmForce : d().confirm}
           </label>
           <Show when={!props.pending}>
             <label class="confirmation">
               <input data-control-id="account.deletion.purge" type="checkbox" name="purge" />
-              {hu() ? 'A helyreállítási időszak kihagyása' : 'Skip live recovery and queue purge'}
+              {d().skipRecovery}
             </label>
           </Show>
           <button data-control-id="account.deletion.apply" class="secondary" disabled={app.busy()}>
-            {props.pending
-              ? hu()
-                ? 'Végleges törlés indítása'
-                : 'Queue live purge'
-              : force()
-                ? hu()
-                  ? 'Fiók kényszerített törlése'
-                  : 'Force account deletion'
-                : hu()
-                  ? 'Fiók törlése'
-                  : 'Delete account'}
+            {props.pending ? d().purge : force() ? d().deleteForced : d().delete}
           </button>
         </form>
       </Show>

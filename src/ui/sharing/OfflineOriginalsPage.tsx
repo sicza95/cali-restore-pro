@@ -9,24 +9,10 @@ import {
   preferenceDefaults,
 } from '../settings/preferences/utils';
 import type { Language } from '../account-access/types';
-import { OfflineOriginals, pinCopy, useOfflineOriginals } from './OfflineOriginals';
+import { OfflineOriginals, useOfflineOriginals } from './OfflineOriginals';
+import { pinCopy } from './pin-copy';
 import './styles.css';
-
-const copy = {
-  en: {
-    help: 'Unlock the vault to see originals pinned on this browser.',
-    unavailable: 'Open Invitations while signed in to set up offline access on this browser.',
-    empty: 'No originals are pinned on this browser.',
-    invitations: 'Back to Invitations',
-  },
-  hu: {
-    help: 'A böngészőben rögzített eredeti fájlokhoz oldja fel a tartalomtárat.',
-    unavailable:
-      'Az offline hozzáférés beállításához bejelentkezés után nyissa meg a Meghívásokat.',
-    empty: 'Ebben a böngészőben nincsenek rögzített eredeti fájlok.',
-    invitations: 'Vissza a meghívásokhoz',
-  },
-};
+import { offlinePageCopy as copy } from './offline-page-copy';
 
 function Shelf(props: { vault: LocalVault; language: Language }) {
   const model = useOfflineOriginals(untrack(() => props.vault.originalPins()));

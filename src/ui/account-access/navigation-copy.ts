@@ -1,10 +1,11 @@
 import { checkpointCopy } from '../editor/checkpoint-review/copy';
-import { pinCopy } from '../sharing/OfflineOriginals';
-import { settingsCopy } from '../settings/constants';
-import { copy } from './constants';
+import { pinCopy } from '../sharing/pin-copy';
+import { settingsCopy } from '../settings/settings-copy';
+import { accountCopy as copy } from './copy';
 import type { Language } from './types';
+import { defineCopy } from '../../platform/i18n/define';
 
-const navigationCopy = {
+const navigationCopy = defineCopy({
   en: {
     unlock: 'Unlock vault',
     'devices/approve': 'Approve a device',
@@ -40,7 +41,7 @@ const navigationCopy = {
     backToProjects: 'Vissza a projektekhez',
     retryAccess: 'Fiókhozzáférés újrapróbálása',
   },
-};
+});
 
 export function navigationText(language: Language) {
   return {

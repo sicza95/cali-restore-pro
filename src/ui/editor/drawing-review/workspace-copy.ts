@@ -1,8 +1,10 @@
 import { saveLabels } from '../../controls/save-status/constants';
 import type { EditorCopy } from '../types';
+import { defineCopy } from '../../../platform/i18n/define';
+import type { Language } from '../../../platform/i18n/language';
 
 /** The editor shell's strings for the application, in English and Hungarian. */
-const shell: Record<'en' | 'hu', EditorCopy> = {
+const shell = defineCopy<EditorCopy>({
   en: {
     language: 'en',
     editor: 'Drawing',
@@ -81,6 +83,6 @@ const shell: Record<'en' | 'hu', EditorCopy> = {
     },
     retry: 'Újrapróbálás',
   },
-};
+});
 
-export const workspaceCopy = (language: 'en' | 'hu') => shell[language];
+export const workspaceCopy = (language: Language) => shell[language];

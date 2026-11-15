@@ -7,6 +7,7 @@ import { workbookEstimate } from '../../platform/reports/workbook-estimate';
 import type { Branding, Draft, ReportSettings } from '../../platform/reports/types';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
+import { parseLanguage } from '../../platform/i18n/language';
 import { loadPreferences } from '../settings/preferences/utils';
 import { prepareSurfaces, selectedSurfaces } from './report-model';
 
@@ -18,7 +19,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
     estimates: estimateRepository(props.vault),
   }));
   const [settings, set] = createStore<ReportSettings>({
-    language: defaults.reportLanguage === 'hu' ? 'hu' : 'en',
+    language: parseLanguage(defaults.reportLanguage),
     unit: 'inherited',
     excluded: [],
     surfaces: {},

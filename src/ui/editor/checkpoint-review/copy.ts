@@ -1,5 +1,4 @@
-import type { Language } from '../../account-access/types';
-
+import { defineCopy } from '../../../platform/i18n/define';
 const en = {
   mode: 'Checkpoints',
   current: 'Current assessment',
@@ -111,4 +110,4 @@ const hu: typeof en = {
   patternError: 'A mintakönyvtár nem menthető vagy nem nyitható meg.',
 };
 export type CheckpointCopy = typeof en;
-export const checkpointCopy: Record<Language, CheckpointCopy> = { en, hu };
+export const checkpointCopy = defineCopy({ en, hu });

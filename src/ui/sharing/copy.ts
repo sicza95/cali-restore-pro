@@ -1,4 +1,5 @@
-export const invitationCopy = {
+import { defineCopy } from '../../platform/i18n/define';
+export const invitationCopy = defineCopy({
   en: {
     editCheckpoints: 'Share selected checkpoints',
     sharedCheckpoints: 'Shared checkpoints',
@@ -95,7 +96,7 @@ export const invitationCopy = {
     active: 'A megosztott tartalom elérhető',
     revoked: 'Hozzáférés visszavonva',
     revoke: 'Hozzáférés visszavonása',
-    revokeConfirm: 'Megszünteted a címzett hozzáférését a megosztott pillanatképhez?',
+    revokeConfirm: 'Megszünteted a címzett hozzáférését a megosztott másolathoz?',
     owners: 'Projekttulajdonosok',
     loadingOwners: 'Projekttulajdonosok betöltése…',
     coOwner: 'Társtulajdonos',
@@ -116,10 +117,10 @@ export const invitationCopy = {
       'A hozzáférés megadása vagy megnyitása előtt ellenőrizd az ujjlenyomatot megbízható csatornán.',
     recipientCode: 'A címzett ellenőrzött ujjlenyomata',
     senderCode: 'A tulajdonos ellenőrzött ujjlenyomata',
-    activate: 'Projektpillanatkép megosztása',
+    activate: 'Projektmásolat megosztása',
     open: 'Megosztott tartalom megnyitása',
     scope:
-      'A projektnév, az objektumok, a felületek és a mértékegységek csak olvasható pillanatképét osztja meg.',
+      'A projektnév, az objektumok, a felületek és a mértékegységek csak olvasható másolatát osztja meg.',
     snapshot: 'Csak olvasható megosztott projekt',
     assessment: 'Állapotfelmérés',
     estimateScope: 'Költségbecslési hozzáférés (mintaadatok)',
@@ -149,4 +150,4 @@ export const invitationCopy = {
       'A meghívókhoz engedélyezd a szerveres tárolást. A projektfájlok ezen az eszközön maradnak.',
     reference: 'Projektazonosító',
   },
-} as const;
+});

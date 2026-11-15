@@ -3,7 +3,8 @@ import { openSharedOriginal } from '../../platform/projects/shared-originals';
 import type { SharedOriginal } from '../../platform/projects/shared-originals';
 import type { Language } from '../account-access/types';
 import { invitationCopy } from './copy';
-import { pinCopy, saveOriginal } from './OfflineOriginals';
+import { saveOriginal } from './OfflineOriginals';
+import { pinCopy } from './pin-copy';
 import type { useOfflineOriginals } from './OfflineOriginals';
 
 export function SharedOriginals(props: {

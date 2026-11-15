@@ -10,7 +10,8 @@ import { isAccountDestination, signInLink } from '../router/routes';
 import { AccessForm } from '../account/access-form/AccessForm';
 import { AccountScreen } from '../account/AccountScreen';
 import { navigationText } from './navigation-copy';
-import { settingsCopy } from '../settings/constants';
+import { settingsCopy } from '../settings/settings-copy';
+import { deletionCopy } from '../settings/profile/deletion-copy';
 import '../settings/styles.css';
 import '../account/access-form/styles.css';
 
@@ -81,12 +82,8 @@ function AccountShell() {
               );
             return (
               <p role="status">
-                {lang() === 'hu' ? 'Helyreállítási határidő' : 'Live recovery deadline'}{' '}
-                {date(receipt().recoverUntil)}.{' '}
-                {lang() === 'hu'
-                  ? 'Szervermentések lejárata legkésőbb'
-                  : 'Operational backups expire by'}{' '}
-                {date(receipt().backupExpiresAt)}.{' '}
+                {deletionCopy[lang()].recoverUntil} {date(receipt().recoverUntil)}.{' '}
+                {deletionCopy[lang()].backupsExpire} {date(receipt().backupExpiresAt)}.{' '}
                 <Show when={view() !== 'admin'}>
                   <a href="/recover-deleted-account">{t('recover-deleted-account')}</a>
                 </Show>

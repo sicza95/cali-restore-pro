@@ -94,9 +94,7 @@ export function AccessForm(props: AccessFormProps) {
         <img src={plaster} width="1152" height="768" alt="" />
         <figcaption>
           <Icon name="photo" size={18} />
-          {props.language === 'hu'
-            ? 'Festett vakolat · Illusztráció'
-            : 'Painted plaster · Illustrative reference'}
+          {props.t('specimen')}
         </figcaption>
       </figure>
     </section>

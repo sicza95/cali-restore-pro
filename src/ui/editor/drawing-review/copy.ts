@@ -1,3 +1,5 @@
+import { defineCopyPairs } from '../../../platform/i18n/define';
+import type { Language } from '../../../platform/i18n/language';
 const messages = {
   recoveryError: [
     'Your unsaved drawing could not be reopened.',
@@ -168,8 +170,7 @@ const messages = {
   ],
 } as const;
 
+const catalogue = defineCopyPairs(messages);
+
 export type DrawingCopy = Record<keyof typeof messages, string>;
-export const drawingCopy = (language: 'en' | 'hu') =>
-  Object.fromEntries(
-    Object.entries(messages).map(([key, value]) => [key, value[language === 'en' ? 0 : 1]]),
-  ) as DrawingCopy;
+export const drawingCopy = (language: Language): DrawingCopy => catalogue[language];

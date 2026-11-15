@@ -1,4 +1,4 @@
-import { settingsCopy } from '../constants';
+import { settingsCopy } from '../settings-copy';
 import { useApp } from '../../app-context/AppContext';
 import { AccountDeletion } from './AccountDeletion';
 

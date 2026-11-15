@@ -1,6 +1,7 @@
 import { checkpointCopy } from '../editor/checkpoint-review/copy';
+import { defineCopy } from '../../platform/i18n/define';
 
-export const surfaceCheckpointCopy = {
+export const surfaceCheckpointCopy = defineCopy({
   en: {
     ...checkpointCopy.en,
     restored: 'Assessment restored. The previous assessment is available as a checkpoint.',
@@ -25,5 +26,5 @@ export const surfaceCheckpointCopy = {
     panX: 'Vízszintes mozgatás',
     panY: 'Függőleges mozgatás',
   },
-};
+});
 export type SurfaceCheckpointCopy = (typeof surfaceCheckpointCopy)['en'];
