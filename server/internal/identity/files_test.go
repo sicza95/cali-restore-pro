@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 func TestPostgresEncryptedFiles(t *testing.T) {
@@ -112,7 +114,7 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 		t.Helper()
 		var invite struct{ ID string }
 		w := want("POST", invitations, alice, recipient, false, 201)
-		if err := json.Unmarshal(w.Body.Bytes(), &invite); err != nil || !uuid(invite.ID) {
+		if err := json.Unmarshal(w.Body.Bytes(), &invite); err != nil || !httpjson.UUID(invite.ID) {
 			t.Fatalf("invalid invitation: %v", err)
 		}
 		return invite.ID

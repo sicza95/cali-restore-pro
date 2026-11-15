@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 // The record and file rows survive a failed purge. Bytes are removed before
@@ -65,7 +66,7 @@ func purgeProject(ctx context.Context, tx pgx.Tx, root string) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		if !uuid(file) {
+		if !httpjson.UUID(file) {
 			return ErrInvalid
 		}
 		if err := os.RemoveAll(filepath.Join(root, file)); err != nil {

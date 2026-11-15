@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type checkpointGrant struct {
@@ -41,7 +42,7 @@ func (h *HTTP) checkpointRoutes(route func(string, bool, http.HandlerFunc)) {
 
 func (h *HTTP) listCheckpoints(w http.ResponseWriter, r *http.Request) {
 	project, id := r.PathValue("project"), r.PathValue("invitation")
-	if !uuid(id) || (project != "" && !uuid(project)) {
+	if !httpjson.UUID(id) || (project != "" && !httpjson.UUID(project)) {
 		failure(w, ErrInvalid)
 		return
 	}
@@ -64,12 +65,12 @@ func (h *HTTP) listCheckpoints(w http.ResponseWriter, r *http.Request) {
 		checkpointFailure(w, err)
 		return
 	}
-	respond(w, http.StatusOK, map[string][]string{"checkpointIds": ids})
+	httpjson.Respond(w, http.StatusOK, map[string][]string{"checkpointIds": ids})
 }
 
 func (h *HTTP) openCheckpoint(w http.ResponseWriter, r *http.Request) {
 	id, checkpoint := r.PathValue("invitation"), r.PathValue("checkpoint")
-	if !uuid(id) || !uuid(checkpoint) {
+	if !httpjson.UUID(id) || !httpjson.UUID(checkpoint) {
 		failure(w, ErrInvalid)
 		return
 	}
@@ -90,19 +91,19 @@ func (h *HTTP) openCheckpoint(w http.ResponseWriter, r *http.Request) {
 		checkpointFailure(w, err)
 		return
 	}
-	respond(w, http.StatusOK, grant)
+	httpjson.Respond(w, http.StatusOK, grant)
 }
 
 func (h *HTTP) changeCheckpoint(w http.ResponseWriter, r *http.Request) {
 	project, id, checkpoint := r.PathValue("project"), r.PathValue("invitation"), r.PathValue("checkpoint")
-	if !uuid(project) || !uuid(id) || !uuid(checkpoint) {
+	if !httpjson.UUID(project) || !httpjson.UUID(id) || !httpjson.UUID(checkpoint) {
 		failure(w, ErrInvalid)
 		return
 	}
 	var grant *checkpointGrant
 	if r.Method == http.MethodPut {
 		grant = &checkpointGrant{}
-		if !decodeBounded(w, r, grant, 3*1024) {
+		if !httpjson.DecodeBounded(w, r, grant, 3*1024) {
 			return
 		}
 		bytes, err := base64.StdEncoding.Strict().DecodeString(grant.Ciphertext)

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 // VerifyRestoredObjects checks current committed metadata against restored
@@ -44,7 +45,7 @@ func (s *Service) VerifyRestoredObjects(ctx context.Context, root string) error 
 	expected := make(map[string]bool, len(files))
 	objects := fileObjects{root: root}
 	for _, file := range files {
-		if !uuid(file.ID) {
+		if !httpjson.UUID(file.ID) {
 			return ErrInvalid
 		}
 		shape := fileShape{SourceBytes: file.SourceBytes, ManifestBytes: file.ManifestBytes}

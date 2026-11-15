@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type revisionKeyTransfer struct {
@@ -59,17 +60,17 @@ func (h *HTTP) revisionKeyRoutes(route func(string, bool, http.HandlerFunc)) {
 	const path = "/api/v1/hosted-projects/{project}/revision-key/{transfer}"
 	handle := func(w http.ResponseWriter, r *http.Request) {
 		project, id, account := r.PathValue("project"), r.PathValue("transfer"), r.Header.Get("X-Sync-Account")
-		if !uuid(project) || !uuid(id) || !uuid(account) {
+		if !httpjson.UUID(project) || !httpjson.UUID(id) || !httpjson.UUID(account) {
 			failure(w, ErrInvalid)
 			return
 		}
 		var key revisionKeyTransfer
 		write := r.Method == http.MethodPut
 		if write {
-			if !decodeBounded(w, r, &key, 1024) {
+			if !httpjson.DecodeBounded(w, r, &key, 1024) {
 				return
 			}
-			if !uuid(key.Recipient) || !uuid(key.Epoch) || !uuid(key.SyncEpoch) ||
+			if !httpjson.UUID(key.Recipient) || !httpjson.UUID(key.Epoch) || !httpjson.UUID(key.SyncEpoch) ||
 				len(key.Salt) != 32 || len(key.Ciphertext) != 82 {
 				failure(w, ErrInvalid)
 				return
@@ -91,7 +92,7 @@ func (h *HTTP) revisionKeyRoutes(route func(string, bool, http.HandlerFunc)) {
 		} else if write {
 			w.WriteHeader(http.StatusNoContent)
 		} else {
-			respond(w, http.StatusOK, key)
+			httpjson.Respond(w, http.StatusOK, key)
 		}
 	}
 	route("GET "+path, true, handle)

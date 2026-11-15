@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 const fileChunkSize = 1 << 20
@@ -277,7 +278,7 @@ func (s *Service) CleanExpiredFiles(ctx context.Context, root string) error {
 	if err != nil {
 		return err
 	}
-	if !uuid(id) {
+	if !httpjson.UUID(id) {
 		return ErrInvalid
 	}
 	if err := os.RemoveAll(filepath.Join(root, id)); err != nil {

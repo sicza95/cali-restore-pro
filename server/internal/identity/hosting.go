@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type hostingTransfer struct {
@@ -113,14 +114,14 @@ func (h *HTTP) hostingRoutes(route func(string, bool, http.HandlerFunc)) {
 		var body struct {
 			ToID string `json:"toId"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		h.changeHosting(w, r, body.ToID, fileAccess.proposeHostingTransfer)
 	})
 	route("POST "+path+"/{transfer}/accept", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct{}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		h.changeHosting(w, r, r.PathValue("transfer"), fileAccess.acceptHostingTransfer)
@@ -129,7 +130,7 @@ func (h *HTTP) hostingRoutes(route func(string, bool, http.HandlerFunc)) {
 
 func (h *HTTP) changeHosting(w http.ResponseWriter, r *http.Request, id string, change func(fileAccess, context.Context, string, string) error) {
 	project := r.PathValue("project")
-	if !uuid(project) || !uuid(id) {
+	if !httpjson.UUID(project) || !httpjson.UUID(id) {
 		failure(w, ErrInvalid)
 		return
 	}
