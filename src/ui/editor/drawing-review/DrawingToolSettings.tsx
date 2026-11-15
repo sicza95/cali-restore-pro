@@ -23,6 +23,11 @@ export function DrawingToolSettings(props: {
   toolOptions?: boolean;
   /** False when the host shows Apply and Cancel itself, through `DrawingToolOptions`. */
   actions?: boolean;
+  /**
+   * One line of help for brush, pen and shape: draw on the photo, or a button that opens numeric
+   * entry. It replaces the path and shape help. `id` lets the canvas point at it.
+   */
+  help?: { id: string; onNumeric: () => void };
   /** Heading level of the tool's name; 3 by default. */
   level?: 2 | 3;
   /** Rendered after the tool's settings and before close path and Apply. */
@@ -38,6 +43,14 @@ export function DrawingToolSettings(props: {
   return (
     <section class="drawing-panel" aria-label={c().tool}>
       <Dynamic component={props.level === 2 ? 'h2' : 'h3'}>{c()[t.tool()]}</Dynamic>
+      <Show when={props.help && drawHelpShown(t, props.reason)}>
+        <p id={props.help!.id} class="drawing-tool-help">
+          {c().drawHelp}{' '}
+          <button class="secondary" type="button" onClick={() => props.help!.onNumeric()}>
+            {c().enterByNumber}
+          </button>
+        </p>
+      </Show>
       <Show when={t.tool() === 'select'}>
         <p>{c().navigateHelp}</p>
       </Show>
@@ -88,7 +101,9 @@ export function DrawingToolSettings(props: {
               when={nodes()}
               fallback={
                 <>
-                  <p>{shape() ? c().shapeHelp : c().pathHelp}</p>
+                  <Show when={!props.help}>
+                    <p>{shape() ? c().shapeHelp : c().pathHelp}</p>
+                  </Show>
                   <Show when={shape() && options()}>
                     <ShapeKind tools={t} copy={c()} />
                   </Show>
@@ -152,6 +167,10 @@ export function DrawingToolSettings(props: {
     </section>
   );
 }
+
+/** True for brush and eraser, and for pen and shape: the tools that draw on the photo. */
+export const drawHelpShown = (tools: DrawingTools, reason: string) =>
+  !reason && (tools.brushing() || (tools.sketching() && tools.tool() !== 'nodes'));
 
 type OptionProps = { tools: DrawingTools; copy: DrawingCopy };
 

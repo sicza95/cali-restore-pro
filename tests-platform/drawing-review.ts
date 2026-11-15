@@ -8,6 +8,17 @@ export function drawingControl(page: Page, key: string) {
   return page.locator(`[data-control-id="${id}"]`);
 }
 
+/**
+ * Opens "Enter by number" when it is closed. It holds the coordinate fields, point editing and
+ * save mode, which Playwright cannot fill or select while the disclosure is closed.
+ */
+export async function openDetails(page: Page) {
+  const details = page.locator('.drawing-workspace details.drawing-details');
+  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open)))
+    await details.locator('> summary').click();
+  await expect(details).toHaveAttribute('open', '');
+}
+
 export async function verifyDrawingReview(page: Page, info: TestInfo) {
   const c = (key: string) => drawingControl(page, key);
   const layer = (name: string) => c('layer.select').filter({ hasText: name });
@@ -22,6 +33,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
 
   await c('mode.drawing').click();
   await expect(page.getByText(/^Committed masks are saved to this surface/)).toBeVisible();
+  await openDetails(page);
   await expect(c('tool.nodes')).toBeDisabled();
   await expect(c('brush.width')).toHaveCount(0);
   await c('tool.select').focus();

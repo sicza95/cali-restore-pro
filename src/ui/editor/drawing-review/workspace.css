@@ -62,6 +62,10 @@
   }
 }
 
+.drawing-tool-help button {
+  padding-inline: 8px;
+}
+
 .drawing-draft-bar {
   margin-bottom: 12px;
 }

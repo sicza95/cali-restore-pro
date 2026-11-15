@@ -4,7 +4,7 @@ import { projectControls } from '../src/ui/account-access/projects/project-contr
 
 import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
 import { verifyCheckpointReview } from './checkpoint-review';
-import { drawingControl, verifyDrawingReview } from './drawing-review';
+import { drawingControl, openDetails, verifyDrawingReview } from './drawing-review';
 import { verifyDetailDrawing, verifyDrawingInput, verifyPointerStroke } from './drawing-input';
 import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
 import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } from './photo-review';
@@ -217,6 +217,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   const drawing = (key: string) => drawingControl(page, key);
   const damage = drawing('layer.select').filter({ hasText: 'Damage mask' }).first();
   const phase = drawing('layer.select').filter({ hasText: 'Independent phase' });
+  await openDetails(page);
   await drawing('history.mode').selectOption('manual');
   await damage.click();
   await drawing('tool.brush').click();

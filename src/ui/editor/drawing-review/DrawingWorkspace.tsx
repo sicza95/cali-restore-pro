@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, on, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, createUniqueId, on, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { EditorWorkspace } from '../editor-workspace/EditorWorkspace';
 import { control, drawingTools, masterId } from './constants';
@@ -13,9 +13,10 @@ import {
   historyLabel,
   ResolveDrawingDraft,
 } from './DrawingHistory';
+import { DrawingDetails, openDetails } from './DrawingDetails';
 import { DrawingNumericEntry } from './DrawingNumericEntry';
 import { sketchActive } from './DrawingSketchActions';
-import { DrawingToolOptions, DrawingToolSettings } from './DrawingToolSettings';
+import { DrawingToolOptions, DrawingToolSettings, drawHelpShown } from './DrawingToolSettings';
 import { DrawingLayers, layerName, toggleFolder } from './DrawingLayers';
 import { workspaceCopy } from './workspace-copy';
 import { drawingSaveState, editorLayers, editorTools } from './workspace-props';
@@ -153,6 +154,8 @@ export function DrawingWorkspace(props: {
     else t.reset();
     return true;
   }
+  const helpId = createUniqueId();
+  let details: HTMLDetailsElement | undefined;
   const help = () => blocked() || (!m.layer().marks.length && !m.draft() ? c().noPaths : '');
 
   return (
@@ -212,6 +215,7 @@ export function DrawingWorkspace(props: {
             original={original()}
             zoom={zoom()}
             onZoom={setZoom}
+            describedBy={drawHelpShown(t, toolReason(t.tool())) ? helpId : undefined}
           >
             {props.children}
           </DrawingCanvas>
@@ -248,15 +252,20 @@ export function DrawingWorkspace(props: {
                 toolOptions={false}
                 actions={false}
                 level={2}
+                help={{ id: helpId, onNumeric: () => details && openDetails(details) }}
               />
-              <details class="drawing-details" open>
-                <summary>{c().details}</summary>
+              <DrawingDetails
+                summary={c().numericEntry}
+                ref={(element) => {
+                  details = element;
+                }}
+              >
                 <DrawingNumericEntry
                   model={m}
                   tools={t}
                   copy={c()}
                   reason={toolReason(t.tool())}
-                  label={c().numericEntry}
+                  label={c().coordinates}
                 />
                 <fieldset disabled={m.busy()} class="drawing-layer-controls">
                   <DrawingHistory
@@ -267,7 +276,7 @@ export function DrawingWorkspace(props: {
                     controls={false}
                   />
                 </fieldset>
-              </details>
+              </DrawingDetails>
             </Show>
           </div>
         }
