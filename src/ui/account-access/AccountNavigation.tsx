@@ -2,7 +2,7 @@ import { createSignal, For, Show } from 'solid-js';
 import { Icon } from '../icon/Icon';
 import type { IconName } from '../icon/types';
 import type { createAccountAccess } from './createAccountAccess';
-import { accountDestinations } from './routes';
+import { accountPaths } from '../router/constants';
 import { navigationText } from './navigation-copy';
 import {
   accountNavigationControls,
@@ -37,7 +37,7 @@ export function AccountNavigation(props: { model: ReturnType<typeof createAccoun
     });
   return (
     <aside class="account-nav">
-      <a class="product-name" href={props.model.account() ? accountDestinations.projects : '/'}>
+      <a class="product-name" href={props.model.account() ? accountPaths.projects : '/'}>
         <Icon name="brand" size={26} />
         <span>
           CaliRestore <strong>Pro</strong>

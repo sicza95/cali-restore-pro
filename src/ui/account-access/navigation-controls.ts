@@ -1,8 +1,8 @@
 import type { ControlContract } from '../control-registry/types';
-import { accountDestinations } from './routes';
+import { accountPaths } from '../router/constants';
 
 const destinations = {
-  ...accountDestinations,
+  ...accountPaths,
   offline: '/offline-originals',
   login: '/login',
   register: '/register',

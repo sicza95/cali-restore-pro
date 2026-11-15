@@ -1,9 +1,9 @@
-import type { publicRoutes } from '../constants';
+import type { PublicRouteName } from '../../router/types';
 import type { Accessor } from 'solid-js';
 import type { Language, Submit, Translate } from '../types';
 
 export type AccessFormProps = {
-  view: 'login' | (typeof publicRoutes)[number];
+  view: 'login' | PublicRouteName;
   language: Language;
   linkToken: string;
   submit: Submit;

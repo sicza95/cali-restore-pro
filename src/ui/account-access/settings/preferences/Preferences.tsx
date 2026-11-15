@@ -1,6 +1,6 @@
 import { createSignal, For, Show, untrack } from 'solid-js';
 import { checkpointCopy } from '../../../editor/checkpoint-review/copy';
-import { accountDestinations } from '../../routes';
+import { accountPaths } from '../../../router/constants';
 import { settingsCopy } from '../constants';
 import type { SettingsProps } from '../types';
 import { loadPreferences, savePreferences } from './utils';
@@ -13,11 +13,7 @@ export function Preferences(props: SettingsProps) {
   const [logo, setLogo] = createSignal(p.logo);
   return (
     <>
-      <a
-        class="project-back"
-        href={accountDestinations.libraries}
-        data-control-id="settings.libraries"
-      >
+      <a class="project-back" href={accountPaths.libraries} data-control-id="settings.libraries">
         {checkpointCopy[props.model.lang()].openLibrary}
       </a>
       <form

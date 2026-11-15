@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { applicationControls } from '../src/ui/account-access/application-controls';
+import { accountPaths, publicRouteNames } from '../src/ui/router/constants';
 import {
-  accountDestinations,
-  accountRoute,
+  parseRoute,
+  projectHref,
+  projectReviewHref,
   signInDestination,
-} from '../src/ui/account-access/routes';
-import { publicRoutes } from '../src/ui/account-access/constants';
-import { projectHref, projectReviewHref } from '../src/ui/account-access/projects/project-route';
+} from '../src/ui/router/routes';
 import { toolRailRegistry } from '../src/ui/controls/tool-rail/constants';
 
 test('application and Storybook control contracts are unique and populated', () => {
@@ -31,11 +31,11 @@ test('application and Storybook control contracts are unique and populated', () 
 });
 
 test('documented account and project entries use the canonical matcher', () => {
-  for (const [route, path] of Object.entries(accountDestinations))
-    expect(accountRoute(path)).toBe(route);
-  for (const route of publicRoutes) expect(accountRoute('/' + route)).toBe(route);
-  expect(accountRoute('/login')).toBe('login');
-  expect(accountRoute('/')).toBe('login');
+  for (const [route, path] of Object.entries(accountPaths))
+    expect(parseRoute(path).name).toBe(route);
+  for (const route of publicRouteNames) expect(parseRoute('/' + route).name).toBe(route);
+  expect(parseRoute('/login').name).toBe('login');
+  expect(parseRoute('/').name).toBe('login');
 
   const project = '00000000-0000-4000-8000-000000000001';
   const surface = '00000000-0000-4000-8000-000000000002';
@@ -46,11 +46,11 @@ test('documented account and project entries use the canonical matcher', () => {
     ...(['estimates', 'reports', 'outputs'] as const).map((key) => projectReviewHref(project, key)),
   ];
   for (const path of paths) {
-    expect(accountRoute(path)).toBe('projects');
+    expect(parseRoute(path).name).toBe('projects');
     expect(signInDestination(path)).toBe(path);
   }
   for (const path of ['/projects/east-chapel', projectHref(project) + '/surfaces/north-wall']) {
-    expect(accountRoute(path)).toBe('notFound');
-    expect(signInDestination(path)).toBe(accountDestinations.security);
+    expect(parseRoute(path).name).toBe('notFound');
+    expect(signInDestination(path)).toBe(accountPaths.security);
   }
 });

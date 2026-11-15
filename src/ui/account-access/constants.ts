@@ -119,15 +119,6 @@ export const copy = {
   },
 };
 
-export const publicRoutes = [
-  'recover-deleted-account',
-  'register',
-  'forgot-password',
-  'reset-password',
-  'verify-email',
-  'confirm-email',
-] as const;
-
 export const authErrorMessages = {
   invalid_or_expired_link: 'invalid',
   invalid_credentials: 'credentials',

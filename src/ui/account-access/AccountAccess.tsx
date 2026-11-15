@@ -7,7 +7,8 @@ import { createAccountAccess } from './createAccountAccess';
 import { InvitationInbox } from './invitations/InvitationInbox';
 import { navigationText } from './navigation-copy';
 import { ProjectWorkspace } from './projects/ProjectWorkspace';
-import { accountDestinations, isAccountDestination, signInLink } from './routes';
+import { accountPaths } from '../router/constants';
+import { isAccountDestination, signInLink } from '../router/routes';
 import { Admin } from './settings/admin/Admin';
 import { Preferences } from './settings/preferences/Preferences';
 import { PrivateLibraries } from './settings/preferences/PrivateLibraries';
@@ -20,7 +21,8 @@ export function AccountAccess() {
   const { account, busy, connection, failed, lang, linkToken, message, submit, t, view } = model;
   const c = () => navigationText(lang());
   const protectedView = isAccountDestination(view) ? view : undefined;
-  const publicView = !isAccountDestination(view) && view !== 'notFound' ? view : undefined;
+  const publicView =
+    !isAccountDestination(view) && view !== 'notFound' && view !== 'offline' ? view : undefined;
   return (
     <div class="account-shell" classList={{ 'account-shell--public': !!publicView }}>
       <AccountNavigation model={model} />
@@ -70,7 +72,7 @@ export function AccountAccess() {
             )}
           </Match>
           <Match when={view === 'notFound'}>
-            <a href={account() ? accountDestinations.projects : '/login'}>
+            <a href={account() ? accountPaths.projects : '/login'}>
               {account() ? c().backToProjects : t('login')}
             </a>
           </Match>
@@ -129,7 +131,7 @@ export function AccountAccess() {
                           language={lang()}
                           entry={view === 'unlock' ? 'unlock' : 'approve'}
                           unlockOnly={view === 'unlock' ? c().unlockHelp : c().approvalHelp}
-                          setupLink={{ href: accountDestinations.security, text: c().vaultSetup }}
+                          setupLink={{ href: accountPaths.security, text: c().vaultSetup }}
                         />
                       </Match>
                       <Match when={view === 'invitations'}>

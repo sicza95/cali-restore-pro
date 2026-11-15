@@ -29,7 +29,7 @@ import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
 import { ProjectReview, ProjectReviewLinks } from '../project-review/ProjectReview';
 import { SurfaceWorkspace } from './SurfaceWorkspace';
-import { followProjectLink, projectHref, projectRoute } from './project-route';
+import { followLink, projectHref, projectLocation } from '../../router/routes';
 import { syncCopy } from './sync-copy';
 import './styles.css';
 
@@ -53,7 +53,7 @@ export function ProjectWorkspace(props: {
       () => ({ rows: [] as SavedProject[], failed: true }),
     ),
   );
-  const [route, setRoute] = createSignal(projectRoute(location.pathname));
+  const [route, setRoute] = createSignal(projectLocation(location.pathname));
   const [sort, setSort] = createSignal('recent');
   const [query, setQuery] = createSignal('');
   const [archived, setArchived] = createSignal(false);
@@ -92,7 +92,7 @@ export function ProjectWorkspace(props: {
     history.pushState(null, '', href);
     pop();
   }
-  const pop = () => setRoute(projectRoute(location.pathname));
+  const pop = () => setRoute(projectLocation(location.pathname));
   window.addEventListener('popstate', pop);
   onCleanup(() => window.removeEventListener('popstate', pop));
   async function run(task: () => Promise<void>) {
@@ -251,7 +251,7 @@ export function ProjectWorkspace(props: {
               class="project-back"
               href="/projects"
               data-control-id="project.library"
-              onClick={(event) => followProjectLink(event, navigate)}
+              onClick={(event) => followLink(event, navigate)}
             >
               {c().back}
             </a>
