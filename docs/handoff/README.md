@@ -4,22 +4,31 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `refactor/retire-drawing-adapter` (step 4), from `main` at `ec20f87` (the step 4 plan, pushed and Verified). Before that: `main` at `de28868`. Step 3 landed by fast-forwarding `main` to the [PR #16](https://github.com/sicza95/cali-restore-pro/pull/16) head; `pr-assets/step3` is deleted. The remote `feat/canvas-first-layout` branch still exists (not deleted). Before that, steps 2 and 3 each went through one branch and one PR.
+- **Branch:** `main` at `2787ff5` (Verified). Step 4 landed by fast-forwarding `main` to the [PR #17](https://github.com/sicza95/cali-restore-pro/pull/17) head, which GitHub marks merged. The remote `refactor/retire-drawing-adapter` and `feat/canvas-first-layout` branches are deleted (both were already in `main`).
+- **Target devices:** iPad and desktop only (owner decision, 2026-11-15). Phone widths are not supported for now.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 is done: steps 1 to 4 are ticked in the quality baseline. Step 4 ([retire the duplicate review components](../plan/editor-retire-adapter.md)) is on `refactor/retire-drawing-adapter` and reaches `main` when its PR is fast-forward merged. Next comes Phase 2 (UX and copy).
+- **Active roadmap phase:** Phase 1 is done and on `main`: steps 1 to 4 are ticked in the quality baseline. Next comes Phase 2 (UX and copy).
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Owner reviews and merges the step 4 PR by fast-forwarding `main` to its head. Then delete the remote `refactor/retire-drawing-adapter` and `feat/canvas-first-layout` branches, and plan Phase 2 item 1 (copy audit).
+Plan Phase 2 item 1 (copy audit) for iPad and desktop.
 
 ## Open questions for the owner
 
-1. Is the 390 px phone layout a supported target, or only iPad and desktop?
+1. Should the 390 px checks and screenshots in `tests-platform/drawing-review.ts` and `projects.browser.ts` be removed now that phones are not a target, or kept as a guard?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 merged, phone width dropped
+
+- Merged [PR #17](https://github.com/sicza95/cali-restore-pro/pull/17) at the owner's request by pushing `2787ff5` to `main`. Before the push: both CI checks passed, all four commits were Verified and the merge was a fast-forward. GitHub marks the PR merged.
+- Owner decision: iPad and desktop only; phones are not supported for now. Recorded in the quality baseline's Phase 2 (item 4 no longer mentions phone) and closed the old open question. The 390 px test checks are unchanged (new open question 1).
+- At the owner's request, deleted the remote `refactor/retire-drawing-adapter` and `feat/canvas-first-layout` branches after checking that both were already in `main`.
+- Verified: nothing run (docs only).
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 commit 4, PR opened
 

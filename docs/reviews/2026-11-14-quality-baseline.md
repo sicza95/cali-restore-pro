@@ -134,10 +134,12 @@ Each step is meant to be one or a few signed conventional commits, with the hand
 
 ### Phase 2 — UX and copy pass
 
+Target devices (owner decision, 2026-11-15): iPad and desktop only. Phone widths (390 px) are not supported for now, so no Phase 2 item adds phone layouts. The existing 390 px test checks stay until the owner decides to remove them.
+
 1. Copy audit: replace engineering terms with task language, move "not connected yet" notes to docs, hide IDs.
 2. Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals.
 3. Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue).
-4. One app shell: sidebar in landscape, compact header + drawer in portrait/phone; real breadcrumbs.
+4. One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs.
 5. Styled file picker, select and button hierarchy (one primary per view).
 
 ### Phase 3 — Code structure
