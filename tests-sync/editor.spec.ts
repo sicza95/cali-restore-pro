@@ -152,7 +152,7 @@ test('the editor recovers offline edits and rotates the project key', async ({
   await second.getByLabel('Currency code').fill('CHF');
   await second.getByRole('button', { name: 'Save settings' }).click();
   await expect(secondSync.getByRole('button', { name: 'Review sync conflict' })).toBeVisible();
-  await second.getByRole('link', { name: 'All projects' }).click();
+  await second.locator('[data-control-id="project.library"]').click();
   await second.getByText('Open a synced project on this device', { exact: true }).click();
   await redeem(code);
   await expect(second.getByRole('alert').first()).toBeVisible();
