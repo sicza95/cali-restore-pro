@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type pendingInvitation struct {
@@ -166,7 +167,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 	const projectInvitations = "/api/v1/hosted-projects/{project}/invitations"
 	route("GET "+projectInvitations, true, func(w http.ResponseWriter, r *http.Request) {
 		project := r.PathValue("project")
-		if !uuid(project) {
+		if !httpjson.UUID(project) {
 			failure(w, ErrInvalid)
 			return
 		}
@@ -184,7 +185,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			fileFailure(w, err)
 			return
 		}
-		respond(w, http.StatusOK, map[string]any{"invitations": list, "originalEpoch": epoch})
+		httpjson.Respond(w, http.StatusOK, map[string]any{"invitations": list, "originalEpoch": epoch})
 	})
 	route("GET /api/v1/invitations", true, func(w http.ResponseWriter, r *http.Request) {
 		var list []pendingInvitation
@@ -197,7 +198,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			failure(w, err)
 			return
 		}
-		respond(w, http.StatusOK, map[string]any{"invitations": list})
+		httpjson.Respond(w, http.StatusOK, map[string]any{"invitations": list})
 	})
 	route("POST "+projectInvitations, true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
@@ -205,12 +206,12 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			CoOwner bool   `json:"coOwner"`
 			invitationScope
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		email, valid := normalizeEmail(body.Email)
 		project := r.PathValue("project")
-		if !valid || !uuid(project) {
+		if !valid || !httpjson.UUID(project) {
 			failure(w, ErrInvalid)
 			return
 		}
@@ -240,7 +241,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 			fileFailure(w, err)
 			return
 		}
-		respond(w, http.StatusCreated, map[string]string{"id": id, "state": "pending"})
+		httpjson.Respond(w, http.StatusCreated, map[string]string{"id": id, "state": "pending"})
 	})
 	route("POST /api/v1/invitations/{invitation}/accept", true, func(w http.ResponseWriter, r *http.Request) {
 		h.changeInvitation(w, r, func(a fileAccess, id string) error {
@@ -254,7 +255,7 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 		route("POST "+projectInvitations+"/{invitation}/"+action, true, func(w http.ResponseWriter, r *http.Request) {
 			h.changeInvitation(w, r, func(a fileAccess, id string) error {
 				project := r.PathValue("project")
-				if !uuid(project) {
+				if !httpjson.UUID(project) {
 					return ErrInvalid
 				}
 				return change(a, r.Context(), project, id)
@@ -265,11 +266,11 @@ func (h *HTTP) invitationRoutes(route func(string, bool, http.HandlerFunc)) {
 
 func (h *HTTP) changeInvitation(w http.ResponseWriter, r *http.Request, change func(fileAccess, string) error) {
 	var body struct{}
-	if !decode(w, r, &body) {
+	if !httpjson.Decode(w, r, &body) {
 		return
 	}
 	id := r.PathValue("invitation")
-	if !uuid(id) {
+	if !httpjson.UUID(id) {
 		failure(w, ErrInvalid)
 		return
 	}

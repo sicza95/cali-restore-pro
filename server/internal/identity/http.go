@@ -3,13 +3,12 @@ package identity
 import (
 	"context"
 	"crypto/subtle"
-	"encoding/json"
 	"errors"
-	"io"
-	"mime"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type HTTP struct {
@@ -45,13 +44,6 @@ func (h *HTTP) setCookie(w http.ResponseWriter, raw string) {
 	http.SetCookie(w, &http.Cookie{Name: h.cookieName, Value: raw, Path: "/", Secure: h.secure, HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: age})
 }
 
-func respond(w http.ResponseWriter, code int, value any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(value)
-}
-
 func failure(w http.ResponseWriter, err error) {
 	status, code := 503, "unavailable"
 	switch {
@@ -73,60 +65,7 @@ func failure(w http.ResponseWriter, err error) {
 		status, code = 429, "try_later"
 		w.Header().Set("Retry-After", "900")
 	}
-	respond(w, status, map[string]string{"error": code})
-}
-
-func decode(w http.ResponseWriter, r *http.Request, dst any) bool {
-	return decodeBounded(w, r, dst, 4096)
-}
-
-func decodeBounded(w http.ResponseWriter, r *http.Request, dst any, limit int64) bool {
-	media, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
-	if err != nil || media != "application/json" {
-		respond(w, 415, map[string]string{"error": "json_required"})
-		return false
-	}
-	r.Body = http.MaxBytesReader(w, r.Body, limit)
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	var body json.RawMessage
-	if err := d.Decode(&body); err != nil {
-		respond(w, 400, map[string]string{"error": "invalid_request"})
-		return false
-	}
-	if len(body) == 0 || body[0] != '{' {
-		respond(w, 400, map[string]string{"error": "invalid_request"})
-		return false
-	}
-	strict := json.NewDecoder(strings.NewReader(string(body)))
-	strict.DisallowUnknownFields()
-	if err := strict.Decode(dst); err != nil {
-		respond(w, 400, map[string]string{"error": "invalid_request"})
-		return false
-	}
-	if err := d.Decode(new(any)); err != io.EOF {
-		respond(w, 400, map[string]string{"error": "invalid_request"})
-		return false
-	}
-	return true
-}
-
-func uuid(value string) bool {
-	if len(value) != 36 {
-		return false
-	}
-	for i, c := range value {
-		if i == 8 || i == 13 || i == 18 || i == 23 {
-			if c != '-' {
-				return false
-			}
-			continue
-		}
-		if !(c >= '0' && c <= '9' || c >= 'a' && c <= 'f') {
-			return false
-		}
-	}
-	return true
+	httpjson.Respond(w, status, map[string]string{"error": code})
 }
 
 func (h *HTTP) Register(mux *http.ServeMux) {
@@ -178,7 +117,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			Email    string `json:"email"`
 			Password string `json:"password"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		raw, err := h.service.Login(r.Context(), body.Email, body.Password, "")
@@ -187,7 +126,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		h.setCookie(w, raw)
-		respond(w, 200, map[string]string{"csrfToken": CSRF(raw)})
+		httpjson.Respond(w, 200, map[string]string{"csrfToken": CSRF(raw)})
 	})
 	route("GET /api/v1/auth/me", true, func(w http.ResponseWriter, r *http.Request) {
 		current, err := h.service.Current(r.Context(), h.raw(r))
@@ -195,7 +134,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			failure(w, err)
 			return
 		}
-		respond(w, 200, struct {
+		httpjson.Respond(w, 200, struct {
 			Account      Account      `json:"account"`
 			Capabilities []Capability `json:"capabilities"`
 			CSRFToken    string       `json:"csrfToken"`
@@ -205,7 +144,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		var body struct {
 			Password string `json:"password"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		current, err := h.service.Current(r.Context(), h.raw(r))
@@ -219,11 +158,11 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		h.setCookie(w, raw)
-		respond(w, 200, map[string]string{"csrfToken": CSRF(raw)})
+		httpjson.Respond(w, 200, map[string]string{"csrfToken": CSRF(raw)})
 	})
 	route("POST /api/v1/auth/logout", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct{}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		if err := h.service.Logout(r.Context(), h.raw(r)); err != nil {
@@ -231,7 +170,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			return
 		}
 		h.setCookie(w, "")
-		respond(w, 200, map[string]bool{"ok": true})
+		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 	route("GET /api/v1/auth/sessions", true, func(w http.ResponseWriter, r *http.Request) {
 		list, err := h.service.Sessions(r.Context(), h.raw(r))
@@ -239,7 +178,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			failure(w, err)
 			return
 		}
-		respond(w, 200, map[string]any{"sessions": list})
+		httpjson.Respond(w, 200, map[string]any{"sessions": list})
 	})
 	route("POST /api/v1/auth/sessions/revoke", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
@@ -247,10 +186,10 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			All       bool   `json:"all"`
 			Confirm   bool   `json:"confirm"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
-		if !body.Confirm || (body.All == (body.SessionID != "")) || (body.SessionID != "" && !uuid(body.SessionID)) {
+		if !body.Confirm || (body.All == (body.SessionID != "")) || (body.SessionID != "" && !httpjson.UUID(body.SessionID)) {
 			failure(w, ErrForbidden)
 			return
 		}
@@ -266,7 +205,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		if body.All || body.SessionID == current.ID {
 			h.setCookie(w, "")
 		}
-		respond(w, 200, map[string]bool{"ok": true})
+		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 	route("POST /api/v1/admin/accounts/{id}/policy", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
@@ -274,10 +213,10 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			State   string `json:"state"`
 			Confirm bool   `json:"confirm"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
-		if !body.Confirm || !uuid(r.PathValue("id")) {
+		if !body.Confirm || !httpjson.UUID(r.PathValue("id")) {
 			failure(w, ErrForbidden)
 			return
 		}
@@ -285,16 +224,16 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			failure(w, err)
 			return
 		}
-		respond(w, 200, map[string]bool{"ok": true})
+		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 	route("POST /api/v1/admin/accounts/{id}/sessions/revoke", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			Confirm bool `json:"confirm"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
-		if !body.Confirm || !uuid(r.PathValue("id")) {
+		if !body.Confirm || !httpjson.UUID(r.PathValue("id")) {
 			failure(w, ErrForbidden)
 			return
 		}
@@ -302,6 +241,6 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			failure(w, err)
 			return
 		}
-		respond(w, 200, map[string]bool{"ok": true})
+		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 }

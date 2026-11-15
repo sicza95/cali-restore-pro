@@ -7,18 +7,20 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 func fileFailure(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, errFileMissing):
-		respond(w, 404, map[string]string{"error": "not_found"})
+		httpjson.Respond(w, 404, map[string]string{"error": "not_found"})
 	case errors.Is(err, errFileQuota):
-		respond(w, 409, map[string]string{"error": "storage_quota_exceeded"})
+		httpjson.Respond(w, 409, map[string]string{"error": "storage_quota_exceeded"})
 	case errors.Is(err, errFileState):
-		respond(w, 409, map[string]string{"error": "file_conflict"})
+		httpjson.Respond(w, 409, map[string]string{"error": "file_conflict"})
 	case errors.Is(err, errOriginalRotationPending):
-		respond(w, 409, map[string]string{"error": "original_rotation_pending"})
+		httpjson.Respond(w, 409, map[string]string{"error": "original_rotation_pending"})
 	default:
 		failure(w, err)
 	}
@@ -34,8 +36,8 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 		route(pattern, true, func(w http.ResponseWriter, r *http.Request) {
 			project, id := r.PathValue("project"), r.PathValue("file")
 			invitation := r.PathValue("invitation")
-			if invitation != "" && (!uuid(invitation) || !uuid(id)) ||
-				invitation == "" && (!uuid(project) || id != "" && !uuid(id)) {
+			if invitation != "" && (!httpjson.UUID(invitation) || !httpjson.UUID(id)) ||
+				invitation == "" && (!httpjson.UUID(project) || id != "" && !httpjson.UUID(id)) {
 				failure(w, ErrInvalid)
 				return
 			}
@@ -43,7 +45,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 			case gate <- struct{}{}:
 				defer func() { <-gate }()
 			default:
-				respond(w, 429, map[string]string{"error": "transfer_busy"})
+				httpjson.Respond(w, 429, map[string]string{"error": "transfer_busy"})
 				return
 			}
 			var reply func()
@@ -75,7 +77,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 	empty := func(w http.ResponseWriter) func() { return func() { w.WriteHeader(http.StatusNoContent) } }
 	handle("PUT "+projects, func(w http.ResponseWriter, r *http.Request, a fileAccess, project, _ string) (func(), error) {
 		var b struct{}
-		if !decode(w, r, &b) {
+		if !httpjson.Decode(w, r, &b) {
 			return nil, nil
 		}
 		if err := a.hosts(r.Context(), project); err == nil {
@@ -98,21 +100,21 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 	})
 	handle("PUT "+files, func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
 		var shape fileShape
-		if !decode(w, r, &shape) {
+		if !httpjson.Decode(w, r, &shape) {
 			return nil, nil
 		}
 		if !shape.valid() {
 			return nil, ErrInvalid
 		}
 		record, err := a.reserve(r.Context(), project, id, shape)
-		return func() { respond(w, 200, record) }, err
+		return func() { httpjson.Respond(w, 200, record) }, err
 	})
 	readFile := func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
 		f, err := a.record(r.Context(), project, id)
 		if err == nil && f.State != "committed" {
 			err = errFileMissing
 		}
-		return func() { respond(w, 200, f) }, err
+		return func() { httpjson.Respond(w, 200, f) }, err
 	}
 	handle("GET "+files, readFile)
 	handle("GET "+shared, readFile)
@@ -132,7 +134,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 	})
 	handle("POST "+files+"/commit", func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
 		var b struct{}
-		if !decode(w, r, &b) {
+		if !httpjson.Decode(w, r, &b) {
 			return nil, nil
 		}
 		f, err := a.record(r.Context(), project, id)

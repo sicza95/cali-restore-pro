@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type AdminAccount struct {
@@ -38,7 +39,7 @@ type AdminOperations struct {
 const pageSize = 20
 
 func (s *Service) AdminAccounts(ctx context.Context, raw, prefix, after string) ([]AdminAccount, error) {
-	if len(prefix) > 254 || strings.ContainsRune(prefix, 0) || (after != "" && !uuid(after)) {
+	if len(prefix) > 254 || strings.ContainsRune(prefix, 0) || (after != "" && !httpjson.UUID(after)) {
 		return nil, ErrInvalid
 	}
 	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})

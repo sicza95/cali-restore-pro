@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type scopeChange struct {
@@ -77,11 +78,11 @@ func (a fileAccess) updateInvitationScopes(ctx context.Context, project, id stri
 
 func (h *HTTP) changeInvitationScopes(w http.ResponseWriter, r *http.Request) {
 	var body scopeChange
-	if !decodeBounded(w, r, &body, 6*1024) {
+	if !httpjson.DecodeBounded(w, r, &body, 6*1024) {
 		return
 	}
 	project, id := r.PathValue("project"), r.PathValue("invitation")
-	if !uuid(project) || !uuid(id) || !body.Previous.valid() || !body.Next.valid() ||
+	if !httpjson.UUID(project) || !httpjson.UUID(id) || !body.Previous.valid() || !body.Next.valid() ||
 		!validScopeEnvelopes(body.Grants) || len(body.Grants) > 0 && !validSharingPoint(body.RecipientKey) {
 		failure(w, ErrInvalid)
 		return

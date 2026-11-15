@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 func TestPostgresProjectRevisions(t *testing.T) {
@@ -80,7 +82,7 @@ func TestPostgresProjectRevisions(t *testing.T) {
 		t.Fatal(err)
 	}
 	empty := read()
-	if empty.Head != nil || !uuid(empty.Epoch) {
+	if empty.Head != nil || !httpjson.UUID(empty.Epoch) {
 		t.Fatalf("invalid initial state: %+v", empty)
 	}
 	write := func(expected int, epoch string, fill byte) revisionWrite {

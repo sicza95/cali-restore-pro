@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 // Expired keys are unusable at the restore boundary even when the worker is
@@ -21,7 +23,7 @@ func (s *Service) ExpireOperationalArchives(ctx context.Context, root string) er
 	for _, entry := range entries {
 		name := entry.Name()
 		id, ext, found := strings.Cut(name, ".")
-		if !found || !uuid(id) || (ext != "bin" && ext != "pending") {
+		if !found || !httpjson.UUID(id) || (ext != "bin" && ext != "pending") {
 			continue
 		}
 		var retained bool
