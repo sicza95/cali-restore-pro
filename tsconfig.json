@@ -27,6 +27,7 @@
     "openapi-ts.config.ts",
     "playwright.config.ts",
     "vite.config.ts",
-    "vite.app.config.ts"
+    "vite.app.config.ts",
+    "vitest.config.ts"
   ]
 }
