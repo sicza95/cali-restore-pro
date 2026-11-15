@@ -324,7 +324,10 @@ export function DrawingCanvas(props: {
         }}
         class="drawing-photo"
         classList={{ 'drawing-photo-ready': !!props.size }}
-        style={{ transform: `translate(${offset().x}%, ${offset().y}%) scale(${zoom()})` }}
+        style={{
+          transform: `translate(${offset().x}%, ${offset().y}%) scale(${zoom()})`,
+          '--drawing-ratio': props.size ? String(props.size.width / props.size.height) : undefined,
+        }}
       >
         {props.children}
         <Show when={props.size && props.source && props.region && !props.original}>

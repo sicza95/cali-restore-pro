@@ -20,8 +20,22 @@
   border-radius: 0;
 }
 
-.drawing-workspace .drawing-photo img {
-  max-height: calc(var(--cr-editor-height) - 200px);
+/* Contain the photo in the canvas box, centred, so one axis always fills it. */
+.drawing-workspace .cr-opacity-layer > .drawing-viewport {
+  container-type: size;
+}
+
+.drawing-workspace .drawing-photo-ready {
+  width: min(100cqw, 100cqh * var(--drawing-ratio));
+  max-width: none;
+  aspect-ratio: var(--drawing-ratio);
+}
+
+.drawing-workspace .drawing-photo-ready img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
 }
 
 .drawing-workspace .cr-tool-context label {
