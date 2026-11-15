@@ -15,13 +15,21 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Fix the flaky account switch in `project-reviews.browser.ts` (#58): it may be a privacy bug. Then the second half of Phase 3 item 6 (file-level lint disables). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
+The second half of Phase 3 item 6 (file-level lint disables). Before that, tick Phase 2 items 4 and 5 in the baseline if the owner confirms the shell and styled-controls work is complete.
 
 ## Open questions for the owner
 
 None open. (2026-11-15: the owner removed the 390 px checks, issue #47.)
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Breadcrumbs kept vault names after lock (#58)
+
+- The flaky check in `project-reviews.browser.ts` was hiding a real bug. The app shell's breadcrumb read project and surface names from a cache in `AppContext` that `ProjectWorkspace` filled with **every** local project's name and that was never cleared. A probe showed: after "Lock vault" the breadcrumb still read "Projects > East Chapel > Outputs", and an archived project's review (which says "unavailable") always named the project once the list loaded. The old check passed only when it ran before the list loaded.
+- Fix: `provideNames(source)` replaces `publishNames`: the names last only as long as the providing component, so they leave the shell when the workspace unmounts (vault locked, signed out, another account). `ProjectWorkspace` now provides only the names the page shows: the route's project and surface, and nothing for an archived project's review.
+- Test: the flow asserts the breadcrumb names the project while unlocked, not after locking, and waits for the project list to load before checking the archived case. Without the fix each check fails 3 of 3; with it the flow passed 20 of 20 (`--repeat-each 20`).
+- Verified: `npm run check`, `test:unit` (210), `npm test` (16), `test:files` (22), `test:estimates` (8), `test:sync` (2), `test:app` (16 passed, 1 skipped) on disposable `calirestore-qa-names` (removed with volumes), `build-storybook`.
+- Not run: Go tests, physical iPad. Not covered by a test: sign-out followed by another sign-in without a reload (same unmount path as locking).
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Colour tokens (#31)
 

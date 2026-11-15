@@ -26,6 +26,8 @@ npm run check && npm run build-storybook && npm test && npm run test:files
 `test:app`, `test:sync`, `test:estimates` and Go tests need extra setup (see `CLAUDE.md`); say in
 the handoff when they were not run. Never run `test:app` at the same time as `npm test`: `npm test`
 deletes `test-results/` and `test:app` then fails with ENOENT on its trace files.
+An absence check (`toHaveCount(0)`, `not.toContainText`) passes at once if the data has not loaded yet:
+wait for a loaded state first (`project-reviews.browser.ts` hid a leak that way, #58).
 
 To prove a visual change is limited to what you intended, copy `test-results/` before and after
 and compare same-named PNGs with `PNG.sync.read` from `playwright-core/lib/utilsBundle.js` (no

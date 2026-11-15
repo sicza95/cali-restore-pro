@@ -336,15 +336,22 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(report('language')).toHaveValue('en');
   await expect(report('studio')).toHaveValue('Chapel Studio');
   await expect(report('compare')).toHaveValue('');
+  const breadcrumbs = page.getByRole('navigation', { name: 'Breadcrumbs' });
+  await expect(breadcrumbs).toContainText('East Chapel');
   await page.getByRole('button', { name: 'Lock vault' }).click();
   await expect(report('preview')).toHaveCount(0);
+  // Project names are vault data: they leave the shell when the vault locks (#58).
+  await expect(breadcrumbs).not.toContainText('East Chapel');
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await page.locator('[data-control-id="project.review.parent"]').click();
   await page.getByRole('button', { name: 'Archive', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Restore project' })).toBeVisible();
   await page.goto(path + '/outputs');
   await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
+  await expect(page.locator('.project-workspace')).toBeVisible();
+  await expect(page.getByText('Opening projects…')).toHaveCount(0);
   await expect(report('preview')).toHaveCount(0);
+  // An archived project's review is unavailable, and the shell doesn't name it either (#58).
   await expect(page.getByText('East Chapel')).toHaveCount(0);
   account = other;
   await page.goto(path + '/estimates?scope=estimate-full');

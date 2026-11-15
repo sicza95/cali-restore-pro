@@ -1,16 +1,7 @@
 import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
 import { useApp } from '../app-context/AppContext';
 /* eslint-disable solid/reactivity -- Project commands are deferred event callbacks, not render effects. */
-import {
-  createEffect,
-  createResource,
-  createMemo,
-  createSignal,
-  Match,
-  Show,
-  Switch,
-  untrack,
-} from 'solid-js';
+import { createResource, createMemo, createSignal, Match, Show, Switch, untrack } from 'solid-js';
 import { localProjects, newProject } from '../../platform/projects/projects';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
@@ -50,16 +41,6 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
       () => ({ rows: [] as SavedProject[], failed: true }),
     ),
   );
-  // The shell's breadcrumbs and title name projects and surfaces; only this screen can read them.
-  createEffect(() => {
-    const names: Record<string, string> = {};
-    for (const project of projects()?.rows ?? []) {
-      names[project.id] = project.name;
-      for (const object of project.objects)
-        for (const surface of object.surfaces) names[surface.id] = surface.name;
-    }
-    app.publishNames(names);
-  });
   const route = () => {
     const current = app.router.route();
     return current.name === 'projects' ? current : undefined;
@@ -79,6 +60,16 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
       if (surface) return { object, surface };
     }
   };
+  // The shell names only what this page shows: not an archived project's review, which says the
+  // project is unavailable. The names leave the shell when this screen unmounts (vault locked).
+  app.provideNames(() => {
+    const project = current();
+    if (!project || (route()?.review && project.archived)) return {};
+    const shown = activeSurface()?.surface;
+    return shown
+      ? { [project.id]: project.name, [shown.id]: shown.name }
+      : { [project.id]: project.name };
+  });
   const visible = () =>
     (projects()?.rows ?? [])
       .filter(
