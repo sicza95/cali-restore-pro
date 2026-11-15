@@ -3,7 +3,7 @@ import type { SavedProject } from '../../../platform/projects/types';
 import { Icon } from '../../icon/Icon';
 import type { Language } from '../types';
 import { projectCopy } from './project-copy';
-import { followProjectLink, projectHref } from './project-route';
+import { followLink, projectHref } from '../../router/routes';
 
 export function ProjectRegister(props: {
   projects: SavedProject[];
@@ -34,7 +34,7 @@ export function ProjectRegister(props: {
             <a
               data-control-id="projects.open"
               href={projectHref(project.id)}
-              onClick={(event) => followProjectLink(event, props.navigate)}
+              onClick={(event) => followLink(event, props.navigate)}
             >
               <Icon name="folder" size={23} />
               <strong>{project.name}</strong>

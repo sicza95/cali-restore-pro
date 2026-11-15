@@ -2,7 +2,7 @@ import { createResource, createSignal, For, Show } from 'solid-js';
 import type { LocalVault } from '../../../../platform/vault/vault';
 import { presetRepository } from '../../../../platform/estimates/persistence';
 import { PatternReview } from '../../../editor/checkpoint-review/PatternReview';
-import { accountDestinations } from '../../routes';
+import { accountPaths } from '../../../router/constants';
 import type { Language } from '../../types';
 import './libraries.css';
 
@@ -110,7 +110,7 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
             )}
           </For>
           <a
-            href={accountDestinations.preferences + '#report-branding'}
+            href={accountPaths.preferences + '#report-branding'}
             data-control-id="libraries.branding"
           >
             {c().branding}

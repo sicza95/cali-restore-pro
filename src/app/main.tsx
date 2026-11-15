@@ -4,6 +4,7 @@ import '../ui/tokens.css';
 import '../ui/account-access/styles.css';
 import '../ui/account-access/shell.css';
 import { AccountAccess } from '../ui/account-access/AccountAccess';
+import { parseRoute } from '../ui/router/routes';
 
 import { OfflineOriginalsPage } from '../ui/account-access/invitations/OfflineOriginalsPage';
 
@@ -18,6 +19,7 @@ window.addEventListener('pageshow', (event) => {
 });
 
 render(
-  () => (location.pathname === '/offline-originals' ? <OfflineOriginalsPage /> : <AccountAccess />),
+  () =>
+    parseRoute(location.pathname).name === 'offline' ? <OfflineOriginalsPage /> : <AccountAccess />,
   document.getElementById('app')!,
 );

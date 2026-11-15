@@ -24,7 +24,7 @@ import { surfaceCopy } from './surface-copy';
 import './surface-styles.css';
 import { ProjectOriginals } from './ProjectOriginals';
 import { projectCopy } from './project-copy';
-import { followProjectLink, projectHref } from './project-route';
+import { followLink, projectHref } from '../../router/routes';
 
 export function SurfaceWorkspace(props: {
   project: SavedProject;
@@ -140,7 +140,7 @@ export function SurfaceWorkspace(props: {
         class="project-back"
         data-control-id="surface.project"
         href={href()}
-        onClick={(event) => followProjectLink(event, props.onNavigate)}
+        onClick={(event) => followLink(event, props.onNavigate)}
       >
         {props.project.name}
       </a>

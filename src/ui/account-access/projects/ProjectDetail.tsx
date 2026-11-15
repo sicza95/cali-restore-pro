@@ -15,7 +15,7 @@ import type { Language } from '../types';
 import { NameForm, UnitsField } from './forms';
 import { ProjectOriginals } from './ProjectOriginals';
 import { projectCopy } from './project-copy';
-import { followProjectLink, projectHref } from './project-route';
+import { followLink, projectHref } from '../../router/routes';
 
 export function ProjectDetail(props: {
   project: SavedProject;
@@ -112,7 +112,7 @@ export function ProjectDetail(props: {
               data-control-id="project.surface"
               href={projectHref(props.project.id, surface().id)}
               onClick={(event) =>
-                followProjectLink(event, (href) => {
+                followLink(event, (href) => {
                   history.replaceState(
                     { projectObject: object().id, projectSurface: surface().id },
                     '',

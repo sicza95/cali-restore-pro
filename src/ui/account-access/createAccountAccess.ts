@@ -8,7 +8,7 @@ import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
 import { copy, sessionEndingActions } from './constants';
 import { authErrorMessage, authFormBody } from './utils';
-import { accountRoute, signInDestination } from './routes';
+import { parseRoute, signInDestination } from '../router/routes';
 import { applyLanguage, storedLanguage } from './presentation';
 import type { DeletionStatus } from '../../platform/api/types.gen';
 import type { Account, Language, Message, Session } from './types';
@@ -16,7 +16,7 @@ import type { Account, Language, Message, Session } from './types';
 export function createAccountAccess() {
   const [lang, setLang] = createSignal<Language>(storedLanguage());
   const t = (key: Message) => copy[lang()][key];
-  const view = accountRoute(window.location.pathname);
+  const view = parseRoute(window.location.pathname).name;
   const linkToken = new URLSearchParams(window.location.hash.slice(1)).get('token') ?? '';
   if (linkToken) {
     document.getElementById('app')?.setAttribute('data-auth-link', '');
