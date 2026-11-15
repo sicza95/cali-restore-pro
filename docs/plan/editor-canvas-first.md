@@ -37,6 +37,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
 2. **`feat(editor): compact zoom controls in the footer`**
    - New `DrawingViewControls.tsx` (keeps `DrawingWorkspace.tsx` under 330 lines): zoom out, a readout that fits when pressed ("140 %", named "Fit · 140 %"), zoom in, and the reference-only toggle. Zoom out and in get new ids (`view.zoomOut`, `view.zoomIn`); the readout keeps `view.fit`.
    - The numeric `view.zoom` field moves into "Enter by number", next to the other exact-value fields, so the keyboard path keeps an exact zoom.
+   - As built: zoom out and in step by 1.25× and keep the photo point at the middle of the canvas where it is. `DrawingCanvas` now scales the pan offset whenever zoom changes from outside (buttons or the numeric field), and leaves it alone when a gesture or key set its own offset. Zoom out is disabled at fit, zoom in at 800 %. The readout's short label is a new `fitShort` copy key ("Fit" / "Igazítás"); `fit` stays "Fit reference" for the unused `DrawingReviewAdapter`. `canvas-zoom.ts` checks the buttons, the readout name and the centre point.
 
 3. **`fix(editor): fit the photo to the canvas`**
    - Replace the `max-height` cap with fitting the photo inside the canvas box (contain, centred), so one axis always fills the canvas. Pointer mapping already reads the photo's bounding box, so input needs no change; check the pen taps in `verifyPointerPath` still land.

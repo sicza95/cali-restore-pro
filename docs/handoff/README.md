@@ -4,7 +4,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
+- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 1). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
 - **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is planned; the owner accepted all five decisions as recommended. Its seven commits go on `feat/canvas-first-layout` for one PR.
@@ -13,13 +13,23 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Owner pushes `main` (plan commit `d9d2e5b`). Then step 3 commit 2 (compact zoom controls in the footer, `DrawingViewControls.tsx`) on `feat/canvas-first-layout`.
+Step 3 commit 3 (`fix(editor): fit the photo to the canvas`) on `feat/canvas-first-layout`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 2: compact zoom controls in the footer
+
+- Pushed `main` (`d9d2e5b`, the step 3 plan) and `feat/canvas-first-layout` at the owner's request.
+- New `DrawingViewControls.tsx`: zoom out (`view.zoomOut`), a readout that fits when pressed (`view.fit`, shows "125 %", named "Fit · 125 %"), zoom in (`view.zoomIn`), then the "Reference only" toggle. The numeric `view.zoom` field moved into "Enter by number" under Coordinates. Both new ids are in `registry.ts`.
+- `DrawingCanvas` scales the pan offset when zoom changes from outside, so the buttons and the numeric field zoom around the middle of the canvas instead of drifting.
+- `tests-platform/canvas-zoom.ts` covers the buttons, the readout name and text, the centre point within 1 px, and zoom out disabled at fit.
+- Fixed before commit: the first screenshots showed the readout and the plus icon white on white (the app's global `button` rule again). `.drawing-zoom .cr-button` now sets `--cr-ink`.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed; rerun after the colour fix). Looked at `drawing-1194-closed`, `drawing-834-open` and `drawing-390-closed`: the footer is one row at every width.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 1: wheel, trackpad and keyboard zoom
 

@@ -34,6 +34,9 @@ the handoff when they were not run.
   the canvas's, so it can read `event.defaultPrevented`.
 - Playwright applies held modifiers (`keyboard.down('Control')`) to `mouse.wheel`, so that is how to
   simulate trackpad pinch.
+- **White on white in the app.** The app's global `button` rule sets white text, and shell buttons
+  (`Button`, `IconButton`) don't set a colour. Storybook looks fine; the app doesn't. Set
+  `color: var(--cr-ink)` on them and always look at the app screenshots.
 - New controls need an entry in `src/ui/editor/drawing-review/registry.ts`, or
   `control-inventory.spec.ts` fails.
 - Keep `DrawingWorkspace.tsx` and `DrawingCanvas.tsx` small; new logic goes in new files (400-line

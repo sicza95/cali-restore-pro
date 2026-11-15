@@ -61,9 +61,13 @@ export function DrawingCanvas(props: {
     y: event.clientY,
   });
   const view = (): CanvasView => ({ zoom: zoom(), offset: offset() });
+  // The zoom a gesture or key asked for with its own offset, so the effect below keeps that offset.
+  let anchored: number | undefined;
   function show(next: CanvasView) {
     setOffset(next.offset);
-    if (next.zoom !== zoom()) props.onZoom(next.zoom * 100);
+    if (next.zoom === zoom()) return;
+    anchored = next.zoom;
+    props.onZoom(next.zoom * 100);
   }
   function point(event: PointerEvent) {
     const frame = props.size!;
@@ -105,10 +109,20 @@ export function DrawingCanvas(props: {
       () => setOffset({ x: 0, y: 0 }),
     ),
   );
-  createEffect(() => {
-    const limit = (zoom() - 1) * 50;
-    setOffset(({ x, y }) => ({ x: clamp(x, -limit, limit), y: clamp(y, -limit, limit) }));
-  });
+  // Zoom set from outside (footer buttons, the numeric field) keeps the point at the middle of
+  // the canvas where it is; every change clamps the offset to the zoomed photo.
+  createEffect(
+    on(zoom, (next, previous = next) => {
+      const limit = (next - 1) * 50;
+      const scale =
+        anchored !== undefined && Math.abs(anchored - next) < 1e-9 ? 1 : next / previous;
+      anchored = undefined;
+      setOffset(({ x, y }) => ({
+        x: clamp(x * scale, -limit, limit),
+        y: clamp(y * scale, -limit, limit),
+      }));
+    }),
+  );
 
   createEffect(
     on(

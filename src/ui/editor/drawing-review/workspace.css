@@ -92,8 +92,22 @@
   align-items: center;
 }
 
-.drawing-workspace-view label:has(input[type='number']) {
-  max-width: 10rem;
+.drawing-zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Inside the app the global button rule sets white text; the shell buttons use the ink colour. */
+.drawing-zoom .cr-button {
+  color: var(--cr-ink);
+}
+
+/* Wide enough for "800 %" so the buttons beside it do not move while zooming. */
+.drawing-zoom-readout {
+  min-width: 5.5rem;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .drawing-workspace-feedback:not(:empty) {

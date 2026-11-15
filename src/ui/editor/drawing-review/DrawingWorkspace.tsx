@@ -7,7 +7,7 @@ import type { DrawingCopy } from './copy';
 import { createDrawingReview } from './createDrawingReview';
 import { createDrawingTools } from './createDrawingTools';
 import { DrawingCanvas } from './DrawingCanvas';
-import { DrawNumber, DrawToggle } from './DrawingFields';
+import { DrawNumber } from './DrawingFields';
 import {
   DrawingDraftBar,
   DrawingHistory,
@@ -18,6 +18,7 @@ import { DrawingDetails, openDetails } from './DrawingDetails';
 import { DrawingNumericEntry } from './DrawingNumericEntry';
 import { sketchActive } from './DrawingSketchActions';
 import { DrawingToolOptions, DrawingToolSettings, drawHelpShown } from './DrawingToolSettings';
+import { DrawingViewControls } from './DrawingViewControls';
 import { DrawingLayers, layerName, toggleFolder } from './DrawingLayers';
 import { workspaceCopy } from './workspace-copy';
 import { drawingSaveState, editorLayers, editorTools } from './workspace-props';
@@ -268,6 +269,16 @@ export function DrawingWorkspace(props: {
                   reason={toolReason(t.tool())}
                   label={c().coordinates}
                 />
+                <div class="drawing-fields">
+                  <DrawNumber
+                    name="view.zoom"
+                    label={c().zoom}
+                    min={100}
+                    max={maxZoom * 100}
+                    value={zoom()}
+                    onValue={setZoom}
+                  />
+                </div>
                 <fieldset disabled={m.busy()} class="drawing-layer-controls">
                   <DrawingHistory
                     model={m}
@@ -282,32 +293,15 @@ export function DrawingWorkspace(props: {
           </div>
         }
         footerStart={
-          <div class="drawing-actions drawing-workspace-view">
-            <Show when={size()}>
-              <DrawToggle
-                name="view.original"
-                label={c().original}
-                checked={original()}
-                onValue={setOriginal}
-              />
-              <DrawNumber
-                name="view.zoom"
-                label={c().zoom}
-                min={100}
-                max={maxZoom * 100}
-                value={zoom()}
-                onValue={setZoom}
-              />
-              <button
-                class="secondary"
-                type="button"
-                data-control-id={control('view.fit')}
-                onClick={() => setZoom(100)}
-              >
-                {c().fit}
-              </button>
-            </Show>
-          </div>
+          <Show when={size()}>
+            <DrawingViewControls
+              copy={c()}
+              zoom={zoom()}
+              onZoom={setZoom}
+              original={original()}
+              onOriginal={setOriginal}
+            />
+          </Show>
         }
       >
         <p class="drawing-feedback drawing-workspace-feedback" role="status">

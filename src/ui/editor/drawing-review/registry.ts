@@ -63,7 +63,9 @@ export const drawingControls: readonly ControlContract[] = [
       ['view.original', 'original', 'Toggle mask overlays and drawing availability'],
       ['view.canvas', 'reference', 'Receive preview pan, stroke and point placement input'],
       ['view.zoom', 'zoom', 'Set local reference zoom'],
-      ['view.fit', 'fit', 'Reset drawing viewport zoom and pan'],
+      ['view.fit', 'fitShort', 'Reset drawing viewport zoom and pan; shows the current zoom'],
+      ['view.zoomOut', 'zoomOut', 'Zoom the drawing viewport out by one step'],
+      ['view.zoomIn', 'zoomIn', 'Zoom the drawing viewport in by one step'],
     ],
   ),
   ...register(
