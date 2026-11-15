@@ -11,6 +11,7 @@ import type { PlanarSurface } from '../../../platform/projects/planar-types';
 import { sameSource } from '../../../platform/projects/planar-state';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { PatternReview } from '../../editor/checkpoint-review/PatternReview';
+import { formatArea, formatNumber, formatPercent } from '../../../platform/format/number';
 import type { Language } from '../types';
 import { drawingCopy } from '../../editor/drawing-review/copy';
 import { layerName } from '../../editor/drawing-review/DrawingLayers';
@@ -63,23 +64,22 @@ export function SurfaceCheckpoints(props: {
       !props.busy
     );
   const units = () => unit() ?? (props.imperial ? 'ft' : 'm');
-  const number = (value: number) =>
-    new Intl.NumberFormat(props.language, { maximumSignificantDigits: 6 }).format(value);
-  const area = (value: number) => number(displayArea(value, units())) + ' ' + units() + '²';
+  const area = (value: number, signed = false) =>
+    formatArea(displayArea(value, units()), `${units()}²`, props.language, signed);
   const format = (row?: Row) =>
     row?.areaM2.value != null
       ? area(row.areaM2.value)
       : row?.percent.value != null
-        ? number(row.percent.value) + '%'
+        ? formatPercent(row.percent.value, props.language)
         : '—';
   const delta = (left?: Row, right?: Row) => {
     if (left?.areaM2.value != null && right?.areaM2.value != null) {
       const change = left.areaM2.value - right.areaM2.value;
-      return (change > 0 ? '+' : '') + area(change);
+      return area(change, true);
     }
     if (left?.percent.value == null || right?.percent.value == null) return '';
     const change = left.percent.value - right.percent.value;
-    return (change > 0 ? '+' : '') + number(change) + ' pp';
+    return formatNumber(change, props.language, 1, true) + ' pp';
   };
 
   createEffect(() => {

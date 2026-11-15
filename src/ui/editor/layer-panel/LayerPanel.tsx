@@ -1,3 +1,4 @@
+import { formatNumber } from '../../../platform/format/number';
 import { For, Show, createEffect, createSignal, createUniqueId, on } from 'solid-js';
 import { Button } from '../../controls/button/Button';
 import { IconButton } from '../../controls/icon-button/IconButton';
@@ -74,7 +75,7 @@ export function LayerPanel(props: LayerPanelProps) {
                 <small>{props.copy.uniqueCoverage}</small>
               </span>
               <Show when={layer()?.area !== undefined}>
-                <Area value={layer()?.area ?? 0} />
+                <Area value={layer()?.area ?? 0} language={props.copy.language} />
               </Show>
             </button>
           }
@@ -102,7 +103,7 @@ export function LayerPanel(props: LayerPanelProps) {
               data-control-id={props.rowControlId?.('select')}
               onClick={() => props.onSelect(folder)}
             >
-              <LayerLabel id={folder} layer={layer()} />
+              <LayerLabel id={folder} layer={layer()} language={props.copy.language} />
             </button>
           </div>
         </Show>
@@ -200,7 +201,7 @@ export function LayerPanel(props: LayerPanelProps) {
                           {master().name}
                         </span>
                         <Show when={master().area !== undefined}>
-                          <Area value={master().area ?? 0} />
+                          <Area value={master().area ?? 0} language={props.copy.language} />
                         </Show>
                       </div>
                     )}
@@ -250,7 +251,7 @@ export function LayerPanel(props: LayerPanelProps) {
                 : props.copy.coverage}
             </span>
             <strong>
-              {share()?.toFixed(1) ?? '—'}
+              {formatNumber(share(), props.copy.language ?? 'en', 1)}
               <Show when={share() !== undefined}>
                 <span>%</span>
               </Show>

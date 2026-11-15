@@ -366,6 +366,7 @@ export function SurfaceWorkspace(props: {
         )}
       </Show>
       <ProjectOriginals
+        language={props.language}
         project={props.project.id}
         surface={props.surface}
         copy={c()}

@@ -34,6 +34,6 @@ export type LayerRowProps = Pick<
   'copy' | 'layers' | 'active' | 'onSelect' | 'onToggleVisible' | 'rowControlId'
 > & { id: LayerId };
 
-export type LayerLabelProps = { id: LayerId; layer?: EditorLayer };
+export type LayerLabelProps = { id: LayerId; layer?: EditorLayer; language?: 'en' | 'hu' };
 
 export type LayerMeasurementsProps = Pick<LayerPanelProps, 'copy' | 'layers'>;

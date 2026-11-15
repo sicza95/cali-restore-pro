@@ -4,6 +4,7 @@ import type { EditorCopy } from '../types';
 /** The editor shell's strings for the application, in English and Hungarian. */
 const shell: Record<'en' | 'hu', EditorCopy> = {
   en: {
+    language: 'en',
     editor: 'Drawing',
     workspaceActions: 'Workspace actions',
     undo: 'Undo',
@@ -39,6 +40,7 @@ const shell: Record<'en' | 'hu', EditorCopy> = {
     retry: 'Retry',
   },
   hu: {
+    language: 'hu',
     editor: 'Rajzolás',
     workspaceActions: 'Munkaterület műveletei',
     undo: 'Visszavonás',

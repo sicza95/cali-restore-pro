@@ -26,7 +26,7 @@ export function LayerLabel(props: LayerLabelProps) {
         </span>
       </Show>
       <Show when={props.layer?.area !== undefined}>
-        <Area value={props.layer?.area ?? 0} />
+        <Area value={props.layer?.area ?? 0} language={props.language} />
       </Show>
     </>
   );
@@ -54,7 +54,7 @@ export function LayerRow(props: LayerRowProps) {
         data-control-id={props.rowControlId?.('select')}
         onClick={() => props.onSelect(props.id)}
       >
-        <LayerLabel id={props.id} layer={layer()} />
+        <LayerLabel id={props.id} layer={layer()} language={props.copy.language} />
       </button>
     </div>
   );

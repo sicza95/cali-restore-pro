@@ -7,11 +7,14 @@ import type { ImportIssue } from '../../../platform/images/types';
 import type { Attachment, ImageRole, Surface } from '../../../platform/projects/types';
 import type { LocalVault } from '../../../platform/vault/vault';
 import type { Copy } from './forms';
+import { formatFileSize } from '../../../platform/format/number';
+import type { Language } from '../types';
 
 export function ProjectOriginals(props: {
   project: string;
   surface: Surface;
   copy: Copy;
+  language: Language;
   vault: LocalVault;
   busy: boolean;
   pendingSource?: string;
@@ -114,7 +117,8 @@ export function ProjectOriginals(props: {
                   <Show when={metadata()}>
                     {(info) => (
                       <small>
-                        {info().size.toLocaleString()} B{info().type ? ' · ' + info().type : ''}
+                        {formatFileSize(info().size, props.language)}
+                        {info().type ? ' · ' + info().type : ''}
                       </small>
                     )}
                   </Show>

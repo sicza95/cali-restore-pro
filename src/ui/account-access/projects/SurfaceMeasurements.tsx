@@ -2,6 +2,7 @@ import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
 import { displayArea, resultStatus } from '../../../platform/projects/planar-measurement';
 import type { PlanarResult } from '../../../platform/projects/planar-measurement';
 import type { PlanarSurface } from '../../../platform/projects/planar-types';
+import { formatArea, formatPercent } from '../../../platform/format/number';
 import type { Language } from '../types';
 import type { SurfaceCopy } from './surface-copy';
 
@@ -44,11 +45,9 @@ export function SurfaceMeasurements(props: {
   });
   const status = () => resultStatus(value(), props.state, props.revision, job());
   const shown = () => (job() === 'idle' && status() !== 'stale' ? value() : undefined);
-  const format = (value: number) =>
-    new Intl.NumberFormat(props.language, { maximumSignificantDigits: 6 }).format(value);
   const area = (value: number | null | undefined) => {
     const unit = props.imperial ? 'ft' : 'm';
-    return value == null ? '—' : format(displayArea(value, unit)) + ' ' + unit + '²';
+    return value == null ? '—' : formatArea(displayArea(value, unit), `${unit}²`, props.language);
   };
   return (
     <section aria-label={props.copy.measurements}>
@@ -62,7 +61,7 @@ export function SurfaceMeasurements(props: {
           <dd>{area(shown()?.damage.areaM2.value)}</dd>
           <Show when={shown()?.damage.percent.value != null}>
             <dt>{props.copy.coverage}</dt>
-            <dd>{format(shown()!.damage.percent.value!)}%</dd>
+            <dd>{formatPercent(shown()!.damage.percent.value, props.language)}</dd>
           </Show>
         </Show>
         <For each={[...(shown()?.layers ?? []), ...(shown()?.categories ?? [])]}>
@@ -81,7 +80,9 @@ export function SurfaceMeasurements(props: {
                 <dt>{label()}</dt>
                 <dd>
                   {area(entry.areaM2.value)}
-                  {entry.percent.value === null ? '' : ' · ' + format(entry.percent.value) + '%'}
+                  {entry.percent.value === null
+                    ? ''
+                    : ' · ' + formatPercent(entry.percent.value, props.language)}
                 </dd>
               </>
             );
