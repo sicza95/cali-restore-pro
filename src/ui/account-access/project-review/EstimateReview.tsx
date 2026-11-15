@@ -8,21 +8,14 @@ import type { SavedProject } from '../../../platform/projects/types';
 import type { Language } from '../types';
 import { estimateCopy } from '../../../platform/estimates/copy';
 import { financeControl as id } from './estimate-controls';
-import { versionLine } from './estimate-version';
-import {
-  createPhases,
-  extraRate,
-  phaseEffort,
-  phaseRate,
-  phaseRateUnit,
-  phaseValid,
-} from './estimate-model';
+import { createPhases, extraRate, phaseValid } from './estimate-model';
 import type { Adjustment, Extra, Phase } from './estimate-model';
 import { Adjustments, Extras } from './FinancialInputs';
 import { ReviewCheck, ReviewSelect, validDecimal } from './fields';
 import { WorkPhases } from './WorkPhases';
 import { PresetInputs } from './PresetInputs';
-import { quantityText } from '../../../platform/estimates/display';
+import { formatHours, formatMoney } from '../../../platform/format/number';
+import { EstimateVersion } from './EstimateVersion';
 import { usePhaseMeasurements } from './usePhaseMeasurements';
 
 export function EstimateReview(props: {
@@ -66,7 +59,6 @@ export function EstimateReview(props: {
       (extra) =>
         extra.included && (!extra.object || scoped().some((object) => object.id === extra.object)),
     );
-  const snapshot = () => versions()[Number(version()) - 1]?.input;
   const input = (): EstimateInput => ({
     schema: 1,
     project: project().id,
@@ -179,6 +171,7 @@ export function EstimateReview(props: {
       <div class="review-grid">
         <WorkPhases
           copy={c()}
+          language={props.language}
           project={project()}
           model={model}
           navigate={props.navigate}
@@ -237,7 +230,9 @@ export function EstimateReview(props: {
                   <>
                     <dt>{c()[key]}</dt>
                     <dd data-estimate-result={key}>
-                      {key === 'hours' ? quantityText(result()?.hours) : (result()?.[key] ?? '—')}
+                      {key === 'hours'
+                        ? formatHours(result()?.hours, props.language)
+                        : formatMoney(result()?.[key], project().settings.currency, props.language)}
                     </dd>
                   </>
                 )}
@@ -282,70 +277,8 @@ export function EstimateReview(props: {
                 value={version()}
                 change={setVersion}
               />
-              <Show when={snapshot()}>
-                {(item) => (
-                  <div class="review-inset" role="status">
-                    <p>
-                      {versionLine(props.language, versions()[Number(version()) - 1])} ·{' '}
-                      {item().currency}
-                    </p>
-                    <p>
-                      {c().total} · {versions()[Number(version()) - 1]?.result.total ?? '—'}
-                    </p>
-                    <p>
-                      {item()
-                        .objects.filter((o) => item().selected.includes(o.id))
-                        .map((o) => o.name)
-                        .join(' · ')}
-                    </p>
-                    <ul>
-                      <For
-                        each={item().phases.filter(
-                          (p) =>
-                            !p.archived &&
-                            item().objects.some(
-                              (o) =>
-                                item().selected.includes(o.id) && o.surfaces.includes(p.surface),
-                            ),
-                        )}
-                      >
-                        {(phase) => (
-                          <li>
-                            {phase.name} · {c()[phase.price]} · {phaseRate(phase)}{' '}
-                            {phaseRateUnit(phase, item().currency)} · {c()[phase.mode]}{' '}
-                            {phaseEffort(phase)} · ×{phase.multiplier}
-                          </li>
-                        )}
-                      </For>
-                      <For
-                        each={item().extras.filter(
-                          (e) => e.included && (!e.object || item().selected.includes(e.object)),
-                        )}
-                      >
-                        {(extra) => (
-                          <li>
-                            {extra.name} · {extraRate(extra)}
-                          </li>
-                        )}
-                      </For>
-                      <For each={item().adjustments}>
-                        {(row) => (
-                          <li>
-                            {row.name} · {row.percent}%
-                          </li>
-                        )}
-                      </For>
-                    </ul>
-                    <Show when={item().tax.enabled}>
-                      <p>
-                        {c().taxTotal} · {item().tax.rate}%
-                      </p>
-                    </Show>
-                    <Show when={item().assumptions}>
-                      <p>{item().assumptions}</p>
-                    </Show>
-                  </div>
-                )}
+              <Show when={versions()[Number(version()) - 1]}>
+                {(saved) => <EstimateVersion language={props.language} saved={saved()} />}
               </Show>
             </Show>
           </section>

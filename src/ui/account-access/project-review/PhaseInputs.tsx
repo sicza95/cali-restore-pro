@@ -14,10 +14,12 @@ import { phaseControl as id } from './estimate-controls';
 import { ReviewNumber, ReviewSelect, validDecimal } from './fields';
 import { changeFactor, changeUnit, convertArea } from '../../../platform/estimates/units';
 import { calculatePhase } from '../../../platform/estimates/calculate';
-import { quantityText } from '../../../platform/estimates/display';
+import { formatArea, formatHours, formatNumber } from '../../../platform/format/number';
+import type { Language } from '../types';
 
 export function PhaseInputs(props: {
   copy: EstimateCopy;
+  language: Language;
   phase: Phase;
   measuring: boolean;
   currency: string;
@@ -54,7 +56,11 @@ export function PhaseInputs(props: {
         <Show when={!props.measuring && p().quantity?.validity === 'valid'}>
           <p class="review-note" data-measured-phase-area>
             {c().measuredArea} ·{' '}
-            {quantityText(convertArea(p().quantity!.area!, 'm²', p().units).round(18))} {p().units}
+            {formatArea(
+              convertArea(p().quantity!.area!, 'm²', p().units).round(18),
+              p().units,
+              props.language,
+            )}
           </p>
         </Show>
         <Show
@@ -119,7 +125,7 @@ export function PhaseInputs(props: {
               <ReviewNumber
                 id={id('hoursOutput')}
                 label={c().hoursOutput + ' · h'}
-                value={quantityText(result()?.hours)}
+                value={formatHours(result()?.hours, props.language)}
                 error=""
                 readOnly
                 change={() => undefined}
@@ -137,7 +143,7 @@ export function PhaseInputs(props: {
           <ReviewNumber
             id={id('productivityOutput')}
             label={c().productivityOutput + ' · ' + p().units + '/h'}
-            value={quantityText(result()?.productivity)}
+            value={formatNumber(result()?.productivity, props.language)}
             error=""
             readOnly
             change={() => undefined}
