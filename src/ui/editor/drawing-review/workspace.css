@@ -61,11 +61,10 @@
 }
 
 @media (max-width: 640px) {
-  /* Clear the 58 px rail at left: 10px so the wrapped chip is never covered. */
+  /* The chip is docked under the photo (see the shell's responsive.css); let it span the bar. */
   .drawing-workspace .cr-tool-context {
-    left: 78px;
-    bottom: 10px;
-    max-width: calc(100% - 88px);
+    max-width: none;
+    padding-block: 6px;
   }
   .drawing-workspace .cr-context-layer {
     display: none;

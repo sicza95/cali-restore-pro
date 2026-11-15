@@ -4,7 +4,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 4, `b9a6c62`). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
+- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 5, `b53d0f5`). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
 - **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is planned; the owner accepted all five decisions as recommended. Its seven commits go on `feat/canvas-first-layout` for one PR.
@@ -13,13 +13,24 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Commit step 3 commit 5 (in the working tree, verified, not committed), then step 3 commit 6 (`fix(editor): phone width`) on `feat/canvas-first-layout`.
+Commit step 3 commit 6 (`fix(editor): phone width`, in the working tree, not committed) on `feat/canvas-first-layout`, then commit 7 (tests and screenshots) and open the step 3 PR.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 5 pushed, commit 6: phone width
+
+- Committed and pushed commit 5 as `b53d0f5` (`feat(surfaces): bring the editor up in drawing mode`); GitHub reports Verified.
+- Commit 6 (in the working tree, **not committed**): at 640 px and below the shell's `.cr-canvas-region` becomes a two-row grid. The photo, rail and labels share row 1; the tool chip docks in row 2 as an opaque bar (no shadow, radius or blur, top rule) instead of floating over the photo. The rail's `max-height` now refers to the photo row, so it scrolls rather than covering the bar. The drawing workspace's old phone offsets for the chip are gone. Storybook's shell gets the same dock at phone width.
+- Footer: at 640 px the shell already hides the mask opacity and per-stroke label, so the drawing footer shows only zoom out, the readout, zoom in and "Reference only". No change needed; the toggle's label wraps to two lines at 390 px.
+- `drawing-review.ts`: at 640 px and below, the chip starts at or below the photo's bottom edge and inside the canvas region, and the rail ends above the photo's bottom edge.
+- Fixed before commit: the first try used `grid-area: 1 / 1`, so the rail still reached 35 px into the bar (see process notes).
+- Looked at `drawing-390-closed` and `drawing-390-tall`: the whole photo is visible, the chip bar wraps to two rows (Shape select; points, Apply mark, Cancel) under it. The rail shows 7 of 8 tools closed and 6 tall and scrolls for the rest.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed).
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 4 pushed, commit 5: compact surface chrome in drawing mode
 

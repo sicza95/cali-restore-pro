@@ -52,6 +52,9 @@ the handoff when they were not run.
 - **Background verify chains:** echo a marker after each step (`&& echo CHECK OK`) and read the
   markers; the task's exit code says nothing when the chain ends with `; tail`. Run
   `npx prettier --write` on touched files first.
+- **Absolutely positioned grid children:** `grid-area: 1 / 1` is not enough; an `auto` end line
+  is the container's edge for abspos items. Give explicit end lines (`1 / 1 / 2 / 2`). The phone
+  dock in `responsive.css` relies on this.
 - New controls need an entry in `src/ui/editor/drawing-review/registry.ts`, or
   `control-inventory.spec.ts` fails.
 - Keep `DrawingWorkspace.tsx` and `DrawingCanvas.tsx` small; new logic goes in new files (400-line

@@ -54,6 +54,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
 
 6. **`fix(editor): phone width`**
    - At 640 px and below the tool chip docks as a bar between the canvas and the inspector instead of floating over the photo, and the footer shows only the zoom controls and the reference toggle. This keeps 390 px working without designing for it (see the open question in the handoff).
+   - As built: the shell's canvas region is a two-row grid at 640 px and below; the photo, rail and labels share row 1 (explicit `1 / 1 / 2 / 2`, since abspos items treat `auto` end lines as the container edge) and the chip is an opaque bar in row 2. The footer already showed only the zoom controls and the toggle at that width.
 
 7. **`test(editor): cover canvas-first layout`**
    - Wheel: Ctrl plus wheel zooms in and the photo point under the pointer stays within 1 px; a plain wheel at fit does not call `preventDefault` (the page scrolls); a plain wheel when zoomed pans.
