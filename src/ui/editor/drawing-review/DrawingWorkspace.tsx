@@ -7,7 +7,12 @@ import { createDrawingReview } from './createDrawingReview';
 import { createDrawingTools } from './createDrawingTools';
 import { DrawingCanvas } from './DrawingCanvas';
 import { DrawNumber, DrawToggle } from './DrawingFields';
-import { DrawingHistory, ResolveDrawingDraft } from './DrawingHistory';
+import {
+  DrawingDraftBar,
+  DrawingHistory,
+  historyLabel,
+  ResolveDrawingDraft,
+} from './DrawingHistory';
 import { DrawingNumericEntry } from './DrawingNumericEntry';
 import { sketchActive } from './DrawingSketchActions';
 import { DrawingToolOptions, DrawingToolSettings } from './DrawingToolSettings';
@@ -175,10 +180,14 @@ export function DrawingWorkspace(props: {
         toolReason={toolReason}
         toolControlId={(tool) => control('tool.' + tool)}
         history={{
-          canUndo: m.canStep(false),
-          canRedo: m.canStep(true),
+          // The inspector's pair sat in a fieldset disabled while saving; keep that.
+          canUndo: !m.busy() && m.canStep(false),
+          canRedo: !m.busy() && m.canStep(true),
           onUndo: () => void m.step(false),
           onRedo: () => void m.step(true),
+          undoLabel: historyLabel(m, c(), false),
+          redoLabel: historyLabel(m, c(), true),
+          controlId: (action) => control('history.' + action),
         }}
         saveState={drawingSaveState(m, props.journal)}
         copy={{
@@ -209,6 +218,18 @@ export function DrawingWorkspace(props: {
         }
         toolOptions={
           <DrawingToolOptions tools={t} copy={c()} reason={toolReason(t.tool())} actions />
+        }
+        inspectorLead={
+          <Show when={size() && props.state}>
+            <fieldset disabled={m.busy()} class="drawing-layer-controls">
+              <DrawingDraftBar
+                model={m}
+                copy={c()}
+                onCommit={commitDraft}
+                onDiscard={discardDraft}
+              />
+            </fieldset>
+          </Show>
         }
         inspectorDetail={
           <div class="drawing-workspace-detail">
@@ -243,6 +264,7 @@ export function DrawingWorkspace(props: {
                     copy={c()}
                     onCommit={commitDraft}
                     onDiscard={discardDraft}
+                    controls={false}
                   />
                 </fieldset>
               </details>
