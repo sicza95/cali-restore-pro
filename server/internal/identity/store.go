@@ -13,6 +13,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 )
 
 var (
@@ -44,7 +45,7 @@ type Session struct {
 }
 
 func New(pool *pgxpool.Pool) (*Service, error) {
-	dummy, err := HashPassword("unavailable-account-dummy-verifier")
+	dummy, err := passhash.Hash("unavailable-account-dummy-verifier")
 	return &Service{pool: pool, slots: make(chan struct{}, 2), dummy: dummy}, err
 }
 
@@ -156,7 +157,7 @@ func (s *Service) checkPasswordState(ctx context.Context, email, password, state
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return a, "", err
 	}
-	matches := VerifyPassword(verifier, password)
+	matches := passhash.Verify(verifier, password)
 	if !matches || err != nil || !valid || a.State != state {
 		return Account{}, "", ErrCredentials
 	}

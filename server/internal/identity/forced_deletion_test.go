@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 )
 
 func TestPostgresForcedAccountDeletion(t *testing.T) {
@@ -38,7 +40,7 @@ func TestPostgresForcedAccountDeletion(t *testing.T) {
 	const trash = "c0000000-0000-4000-8000-000000000003"
 	const file = "f0000000-0000-4000-8000-000000000001"
 	const grant = "a0000000-0000-4000-8000-000000000001"
-	hash, err := HashPassword(testPassword)
+	hash, err := passhash.Hash(testPassword)
 	if err != nil {
 		t.Fatal(err)
 	}

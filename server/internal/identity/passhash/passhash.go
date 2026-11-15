@@ -1,4 +1,5 @@
-package identity
+// Package passhash holds the Argon2id verifier with fixed, reviewed parameters.
+package passhash
 
 import (
 	"crypto/rand"
@@ -13,12 +14,12 @@ import (
 
 const hashPrefix = "$argon2id$v=19$m=19456,t=2,p=1$"
 
-func validPassword(password string) bool {
+func Valid(password string) bool {
 	return utf8.ValidString(password) && utf8.RuneCountInString(password) >= 15 && len(password) <= 1024
 }
 
-func HashPassword(password string) (string, error) {
-	if !validPassword(password) {
+func Hash(password string) (string, error) {
+	if !Valid(password) {
 		return "", errors.New("password must contain at least 15 characters and at most 1024 bytes")
 	}
 	salt := make([]byte, 16)
@@ -31,8 +32,8 @@ func HashPassword(password string) (string, error) {
 
 // Only the fixed, reviewed parameters are accepted. Database corruption cannot
 // request unbounded Argon2 memory or CPU through a verifier string.
-func VerifyPassword(verifier, password string) bool {
-	if !validPassword(password) || !strings.HasPrefix(verifier, hashPrefix) {
+func Verify(verifier, password string) bool {
+	if !Valid(password) || !strings.HasPrefix(verifier, hashPrefix) {
 		return false
 	}
 	parts := strings.Split(strings.TrimPrefix(verifier, hashPrefix), "$")
