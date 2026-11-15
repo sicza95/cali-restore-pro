@@ -1,23 +1,23 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
+import { useApp } from '../../app-context/AppContext';
 import { invitationCopy } from './copy';
-import type { InvitationModel } from './types';
 
 type Owner = { id: string; email: string; host: boolean };
 type HostingTransfer = { id: string; fromId: string; toId: string };
 
 export function ProjectOwners(props: {
-  model: InvitationModel;
   projectPath: string;
   onRemoved: (ownerId: string) => void;
 }) {
-  const c = () => invitationCopy[props.model.lang()];
+  const app = useApp();
+  const c = () => invitationCopy[app.lang()];
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal<'error' | 'hostingQuota' | 'hostingIneligible'>();
   const [data, { refetch }] = createResource(
     () => props.projectPath,
     async (path) => {
       try {
-        return await props.model.request<{
+        return await app.request<{
           owners: Owner[];
           hostingTransfer: HostingTransfer | null;
         }>(path + '/owners');
@@ -26,7 +26,7 @@ export function ProjectOwners(props: {
       }
     },
   );
-  const currentId = () => props.model.account()?.id;
+  const currentId = () => app.account()?.id;
   const currentHost = () => data()?.owners.some((owner) => owner.host && owner.id === currentId());
   const pendingRecipient = () =>
     data()?.owners.find((owner) => owner.id === data()?.hostingTransfer?.toId);
@@ -35,7 +35,7 @@ export function ProjectOwners(props: {
     setBusy(true);
     setFailed(undefined);
     try {
-      await props.model.request(props.projectPath + path, body);
+      await app.request(props.projectPath + path, body);
       if (done) done();
       else await refetch();
     } catch (error) {

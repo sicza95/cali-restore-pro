@@ -1,27 +1,23 @@
 import { createSignal, Show } from 'solid-js';
+import { useApp } from '../../../app-context/AppContext';
 import type { DeletionPreflight } from '../../../../platform/api/types.gen';
-import type { SettingsModel } from '../types';
 import { settingsCopy } from '../constants';
 
-export function AccountDeletion(props: {
-  model: SettingsModel;
-  path: string;
-  pending?: boolean;
-  onChange?: () => void;
-}) {
+export function AccountDeletion(props: { path: string; pending?: boolean; onChange?: () => void }) {
+  const app = useApp();
   const [check, setCheck] = createSignal<DeletionPreflight>();
   const force = () => check()?.forceEligible === true;
-  const hu = () => props.model.lang() === 'hu';
-  const c = () => settingsCopy[props.model.lang()];
+  const hu = () => app.lang() === 'hu';
+  const c = () => settingsCopy[app.lang()];
   return (
     <div class="account-panel">
       <Show when={!props.pending}>
         <button
           data-control-id="account.deletion.preflight"
           class="secondary"
-          disabled={props.model.busy()}
+          disabled={app.busy()}
           onClick={async () => {
-            setCheck(await props.model.read<DeletionPreflight>(props.path + '/deletion-preflight'));
+            setCheck(await app.read<DeletionPreflight>(props.path + '/deletion-preflight'));
           }}
         >
           {c().preflight}
@@ -39,7 +35,7 @@ export function AccountDeletion(props: {
           onSubmit={async (event) => {
             event.preventDefault();
             const purge = props.pending || new FormData(event.currentTarget).has('purge');
-            const result = await props.model.run(
+            const result = await app.run(
               props.path + '/deletion',
               force()
                 ? { confirm: true, force: true, purge }
@@ -61,14 +57,14 @@ export function AccountDeletion(props: {
               {hu()
                 ? 'Mentse a helyi és függő munkát titkosított projektmentésbe. A fiók 30 napig állítható helyre. A szervermentések legkésőbb a törléstől számított 90. napon járnak le.'
                 : 'Export an encrypted project backup for local and pending work. Account recovery lasts 30 days. Operational backups expire within 90 days of deletion.'}{' '}
-              <a href="/projects">{props.model.t('projects')}</a>
+              <a href="/projects">{app.t('projects')}</a>
             </p>
           </Show>
           <p>
             {hu()
               ? 'A törléshez friss jelszó-megerősítés szükséges.'
               : 'Deletion requires a recent password confirmation.'}{' '}
-            <a href="/settings/security">{props.model.t('security')}</a>
+            <a href="/settings/security">{app.t('security')}</a>
           </p>
           <label class="confirmation">
             <input type="checkbox" required />
@@ -86,11 +82,7 @@ export function AccountDeletion(props: {
               {hu() ? 'A helyreállítási időszak kihagyása' : 'Skip live recovery and queue purge'}
             </label>
           </Show>
-          <button
-            data-control-id="account.deletion.apply"
-            class="secondary"
-            disabled={props.model.busy()}
-          >
+          <button data-control-id="account.deletion.apply" class="secondary" disabled={app.busy()}>
             {props.pending
               ? hu()
                 ? 'Végleges törlés indítása'

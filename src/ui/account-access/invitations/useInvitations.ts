@@ -1,7 +1,8 @@
 import { createResource, createSignal } from 'solid-js';
-import type { InvitationModel } from './types';
+import { useApp } from '../../app-context/AppContext';
 
-export function useInvitations<T>(model: InvitationModel, path: string) {
+export function useInvitations<T>(path: string) {
+  const model = useApp();
   const [busy, setBusy] = createSignal(false);
   const [failed, setFailed] = createSignal(false);
   const [result, { refetch }] = createResource<{

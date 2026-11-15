@@ -1,20 +1,21 @@
 import { createSignal, For, Show, untrack } from 'solid-js';
+import { useApp } from '../../../app-context/AppContext';
 import { checkpointCopy } from '../../../editor/checkpoint-review/copy';
 import { accountPaths } from '../../../router/constants';
 import { settingsCopy } from '../constants';
-import type { SettingsProps } from '../types';
 import { loadPreferences, savePreferences } from './utils';
 
-export function Preferences(props: SettingsProps) {
-  const c = () => settingsCopy[props.model.lang()];
-  const id = untrack(() => props.model.account()!.id);
+export function Preferences() {
+  const app = useApp();
+  const c = () => settingsCopy[app.lang()];
+  const id = untrack(() => app.account()!.id);
   const p = loadPreferences(id);
   const [result, setResult] = createSignal<'saved' | 'storageFailed'>();
   const [logo, setLogo] = createSignal(p.logo);
   return (
     <>
       <a class="project-back" href={accountPaths.libraries} data-control-id="settings.libraries">
-        {checkpointCopy[props.model.lang()].openLibrary}
+        {checkpointCopy[app.lang()].openLibrary}
       </a>
       <form
         onSubmit={async (e) => {
@@ -36,7 +37,7 @@ export function Preferences(props: SettingsProps) {
                 reader.readAsDataURL(file);
               });
             }
-            if (props.model.account()?.id !== id) return;
+            if (app.account()?.id !== id) return;
             savePreferences(id, {
               theme: get('theme'),
               opaque: fields.has('opaque'),

@@ -1,7 +1,4 @@
-import type { createAccountAccess } from '../createAccountAccess';
 import type { settingsCopy } from './constants';
-export type SettingsModel = ReturnType<typeof createAccountAccess>;
-export type SettingsProps = { model: SettingsModel };
 export type SettingsKey = keyof typeof settingsCopy.en;
 export type Role = 'member' | 'administrator' | 'superuser';
 export type State = 'active' | 'suspended' | 'pending_verification' | 'pending_deletion';
