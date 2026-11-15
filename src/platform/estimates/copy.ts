@@ -114,6 +114,20 @@ const en = {
   sharedTotal: 'Sample total',
   sharedHours: 'Sample labour',
   sharedRate: 'Sample hourly rate',
+  summary: 'Summary',
+  steps: 'Estimate steps',
+  stepObjects: 'Objects',
+  stepIssue: 'Save and issue',
+  back: 'Back',
+  next: (step: string) => `Next: ${step}`,
+  incomplete: 'Incomplete',
+  none: 'None',
+  notSaved: 'Not saved yet',
+  objectCount: (n: number, shown: string) => (n === 1 ? '1 object' : `${shown} objects`),
+  phaseCount: (n: number, shown: string) => (n === 1 ? '1 phase' : `${shown} phases`),
+  extraCount: (n: number, shown: string) => (n === 1 ? '1 extra' : `${shown} extras`),
+  adjustmentCount: (n: number, shown: string) =>
+    n === 1 ? '1 adjustment' : `${shown} adjustments`,
 };
 const hu: typeof en = {
   estimates: 'Becslés',
@@ -231,6 +245,19 @@ const hu: typeof en = {
   sharedTotal: 'Minta végösszeg',
   sharedHours: 'Minta munkaórák',
   sharedRate: 'Minta óradíj',
+  summary: 'Összesítés',
+  steps: 'A becslés lépései',
+  stepObjects: 'Tárgyak',
+  stepIssue: 'Mentés és kiadás',
+  back: 'Vissza',
+  next: (step: string) => `Tovább: ${step}`,
+  incomplete: 'Hiányos',
+  none: 'Nincs',
+  notSaved: 'Még nincs mentve',
+  objectCount: (_n: number, shown: string) => `${shown} tárgy`,
+  phaseCount: (_n: number, shown: string) => `${shown} fázis`,
+  extraCount: (_n: number, shown: string) => `${shown} tétel`,
+  adjustmentCount: (_n: number, shown: string) => `${shown} korrekció`,
 };
 export type EstimateCopy = typeof en;
 export const estimateCopy: Record<Language, EstimateCopy> = { en, hu };

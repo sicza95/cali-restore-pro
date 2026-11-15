@@ -256,7 +256,7 @@ export function WorkPhases(props: {
             onInput={(e) => setName(e.currentTarget.value)}
           />
         </label>
-        <button data-control-id={id('add')} disabled={!name().trim()}>
+        <button class="secondary" data-control-id={id('add')} disabled={!name().trim()}>
           {c().add}
         </button>
       </form>

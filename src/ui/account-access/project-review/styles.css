@@ -199,3 +199,79 @@
 .report-notes {
   white-space: pre-wrap;
 }
+.estimate-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 12px 16px;
+  margin: 0;
+}
+.estimate-totals > div {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+}
+.estimate-totals dt {
+  color: var(--cr-muted);
+  font-size: 14px;
+}
+.estimate-totals dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.estimate-totals .estimate-total dd {
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+.estimate-summary p[role='status']:empty {
+  display: none;
+}
+.estimate-steps ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.estimate-steps button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 8px;
+  inline-size: 100%;
+  block-size: 100%;
+  padding: 10px 12px;
+  text-align: start;
+  border: 1px solid transparent;
+}
+.estimate-steps button[aria-current='step'] {
+  background: var(--cr-selected);
+  border-color: var(--cr-accent);
+}
+.estimate-step-number {
+  grid-row: span 2;
+  color: var(--cr-muted);
+  font-variant-numeric: tabular-nums;
+}
+.estimate-steps small {
+  color: var(--cr-muted);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.estimate-steps small.estimate-step-incomplete {
+  color: var(--cr-negative);
+}
+.estimate-step:focus {
+  outline: none;
+}
+.estimate-step:focus-visible {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 4px;
+}
+.estimate-step-actions {
+  justify-content: flex-end;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--cr-rule);
+}
