@@ -1,22 +1,19 @@
-import { createSignal, For, Show, onMount } from 'solid-js';
+import { createSignal, For, Show } from 'solid-js';
 import type { LocalVault } from '../../../platform/vault/vault';
-import type { EstimateInput, EstimateSnapshot } from '../../../platform/estimates/types';
-import { calculate } from '../../../platform/estimates/calculate';
-import { snapshot as makeSnapshot } from '../../../platform/estimates/snapshots';
-import { estimateRepository } from '../../../platform/estimates/persistence';
 import type { SavedProject } from '../../../platform/projects/types';
 import type { Language } from '../types';
 import { estimateCopy } from '../../../platform/estimates/copy';
+import { formatNumber, formatPercent } from '../../../platform/format/number';
 import { financeControl as id } from './estimate-controls';
-import { createPhases, extraRate, phaseValid } from './estimate-model';
-import type { Adjustment, Extra, Phase } from './estimate-model';
 import { Adjustments, Extras } from './FinancialInputs';
-import { ReviewCheck, ReviewSelect, validDecimal } from './fields';
+import { ReviewCheck, ReviewSelect } from './fields';
 import { WorkPhases } from './WorkPhases';
 import { PresetInputs } from './PresetInputs';
-import { formatHours, formatMoney } from '../../../platform/format/number';
-import { EstimateVersion } from './EstimateVersion';
-import { usePhaseMeasurements } from './usePhaseMeasurements';
+import { EstimateSummary } from './EstimateSummary';
+import { EstimateIssue, EstimateIssueActions } from './EstimateIssue';
+import { EstimateStepNav, EstimateStepPanel, focusStep } from './EstimateSteps';
+import type { EstimateStep } from './EstimateSteps';
+import { useEstimateDraft } from './useEstimateDraft';
 
 export function EstimateReview(props: {
   vault: LocalVault;
@@ -26,158 +23,102 @@ export function EstimateReview(props: {
 }) {
   const c = () => estimateCopy[props.language];
   const project = () => props.project;
-  const model = createPhases(() => (project().settings.units === 'imperial' ? 'ft²' : 'm²'));
-  const measuring = usePhaseMeasurements(project, () => props.vault, model);
-  const [selection, setSelection] = createSignal<'whole' | 'selected'>('whole');
-  const [objects, setObjects] = createSignal<string[]>([]);
-  const [extras, setExtras] = createSignal<Extra[]>([]);
-  const [adjustments, setAdjustments] = createSignal<Adjustment[]>([]);
-  const [taxed, setTaxed] = createSignal(false);
-  const [tax, setTax] = createSignal('');
-  const [assumptions, setAssumptions] = createSignal('');
-  const [versions, setVersions] = createSignal<EstimateSnapshot[]>([]);
-  const [storedRevision, setStoredRevision] = createSignal(0);
-  const [ready, setReady] = createSignal(false);
-  const [busy, setBusy] = createSignal(false);
-  const [status, setStatus] = createSignal('');
-  const [priceCurrency, setPriceCurrency] = createSignal(project().settings.currency);
-  const [version, setVersion] = createSignal('');
-  const scoped = () =>
-    project().objects.filter((object) => selection() === 'whole' || objects().includes(object.id));
-  const selectedPhases = () =>
-    model
-      .active()
-      .filter(
-        (phase) =>
-          !phase.surface ||
-          scoped().some((object) =>
-            object.surfaces.some((surface) => surface.id === phase.surface),
-          ),
-      );
-  const selectedExtras = () =>
-    extras().filter(
-      (extra) =>
-        extra.included && (!extra.object || scoped().some((object) => object.id === extra.object)),
-    );
-  const input = (): EstimateInput => ({
-    schema: 1,
-    project: project().id,
-    revision: project().revision,
-    currency: project().settings.currency,
-    priceCurrency: priceCurrency(),
-    objects: project().objects.map((o) => ({
-      id: o.id,
-      name: o.name,
-      surfaces: o.surfaces.map((s) => s.id),
-    })),
-    selected: scoped().map((o) => o.id),
-    phases: JSON.parse(
-      JSON.stringify(
-        model.rows.map((phase) =>
-          measuring() ? { ...phase, measurement: 'missing', quantity: undefined } : phase,
-        ),
-      ),
-    ) as Phase[],
-    extras: extras(),
-    adjustments: adjustments(),
-    tax: { enabled: taxed(), rate: tax() },
-    assumptions: assumptions(),
-  });
-  const result = () => {
-    try {
-      return calculate(input());
-    } catch {
-      return undefined;
+  const d = useEstimateDraft(project, () => props.vault, c);
+  const model = d.model;
+  const [step, setStep] = createSignal<EstimateStep>('objects');
+  const go = (next: EstimateStep) => {
+    setStep(next);
+    focusStep(next);
+  };
+  const count = (n: number, words: (n: number, shown: string) => string) =>
+    n ? words(n, formatNumber(n, props.language, 0)) : c().none;
+  const latest = () => d.versions()[d.versions().length - 1];
+  const state = (key: EstimateStep): string => {
+    switch (key) {
+      case 'objects':
+        return d.selection() === 'whole' ? c().whole : count(d.scoped().length, c().objectCount);
+      case 'phases':
+        return count(model.active().length, c().phaseCount);
+      case 'extras':
+        return count(d.extras().filter((row) => row.included).length, c().extraCount);
+      case 'adjustments': {
+        const rows = count(d.adjustments().length, c().adjustmentCount);
+        return d.taxed()
+          ? rows + ' · ' + c().taxTotal + ' ' + formatPercent(d.tax(), props.language)
+          : rows;
+      }
+      case 'issue': {
+        const saved = latest();
+        if (!saved) return c().notSaved;
+        return (
+          c().versionName(saved.version) + ' · ' + (saved.issued ? c().issuedState : c().savedState)
+        );
+      }
     }
   };
-  onMount(async () => {
-    try {
-      const saved = await estimateRepository(props.vault).load(project().id);
-      if (saved) {
-        const draft = saved.document.draft;
-        model.replace(draft.phases);
-        setExtras(draft.extras);
-        setAdjustments(draft.adjustments);
-        setSelection('selected');
-        setObjects(draft.selected);
-        setTaxed(draft.tax.enabled);
-        setTax(draft.tax.rate);
-        setAssumptions(draft.assumptions);
-        setPriceCurrency(draft.priceCurrency);
-        setVersions(saved.document.snapshots);
-        setStoredRevision(saved.revision);
-        setVersion(String(saved.document.snapshots.length));
-      }
-      setReady(true);
-    } catch {
-      setStatus(c().saveFailed);
-    }
-  });
-  const valid = () =>
-    ready() &&
-    !busy() &&
-    !measuring() &&
-    !!result() &&
-    scoped().length > 0 &&
-    (selectedPhases().length > 0 || selectedExtras().length > 0) &&
-    selectedPhases().every(phaseValid) &&
-    selectedExtras().every(
-      (extra) =>
-        !!extra.name.trim() &&
-        validDecimal(extraRate(extra)) &&
-        validDecimal(extra.hours, 0, undefined, extra.method === 'hourly'),
-    ) &&
-    adjustments().every((row) => !!row.name.trim() && validDecimal(row.percent, -100, 100)) &&
-    (!taxed() || validDecimal(tax(), 0, 100));
-  async function capture(issued = false) {
-    if (!valid()) return;
-    setBusy(true);
-    setStatus('');
-    try {
-      const draft = input();
-      const next = [...versions(), makeSnapshot(draft, versions().length + 1, issued)];
-      const revision = await estimateRepository(props.vault).save(project().id, storedRevision(), {
-        schema: 1,
-        draft,
-        snapshots: next,
-      });
-      setStoredRevision(revision);
-      setVersions(next);
-      setVersion(String(next.length));
-      setStatus(c().saved);
-    } catch {
-      setStatus(c().saveFailed);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const incomplete = (key: EstimateStep) => key !== 'issue' && !d.complete[key]();
   return (
     <div class="review-flow estimate-review">
-      <p class="review-note">{c().note}</p>
-      <p role="status">{status()}</p>
-      <Show when={priceCurrency() !== project().settings.currency}>
+      <Show when={d.priceCurrency() !== project().settings.currency}>
         <p role="alert">{c().reprice}</p>
-        <button
-          type="button"
-          onClick={() => {
-            for (const phase of model.rows) model.update(phase.id, { rate: {}, material: '' });
-            setExtras((rows) => rows.map((row) => ({ ...row, rate: {} })));
-            setPriceCurrency(project().settings.currency);
-          }}
-        >
+        <button type="button" onClick={d.reprice}>
           {c().newPrices}
         </button>
       </Show>
-      <div class="review-grid">
-        <WorkPhases
-          copy={c()}
-          language={props.language}
-          project={project()}
-          model={model}
-          navigate={props.navigate}
-          measuring={measuring()}
-        />
-        <div class="review-flow">
+      <EstimateSummary
+        copy={c()}
+        language={props.language}
+        currency={project().settings.currency}
+        result={d.result()}
+        latest={latest()}
+        status={d.status()}
+      />
+      <EstimateStepNav copy={c()} current={step()} state={state} incomplete={incomplete} go={go} />
+      <EstimateStepPanel copy={c()} current={step()} go={go} step="objects">
+        <section class="project-pane">
+          <h3>{c().selection}</h3>
+          <p>
+            {c().currency} · <strong>{project().settings.currency}</strong>
+          </p>
+          <ReviewSelect
+            id={id('selection')}
+            label={c().choose}
+            value={d.selection()}
+            options={['whole', 'selected']}
+            text={(key) => c()[key]}
+            change={d.setSelection}
+          />
+          <Show when={d.selection() === 'selected'}>
+            <For each={project().objects}>
+              {(object) => (
+                <ReviewCheck
+                  id={id('choose')}
+                  checked={d.objects().includes(object.id)}
+                  change={(selected) =>
+                    d.setObjects((previous) =>
+                      selected
+                        ? [...previous, object.id]
+                        : previous.filter((key) => key !== object.id),
+                    )
+                  }
+                >
+                  {object.name}
+                </ReviewCheck>
+              )}
+            </For>
+          </Show>
+        </section>
+      </EstimateStepPanel>
+      <EstimateStepPanel copy={c()} current={step()} go={go} step="phases">
+        <div class="review-grid">
+          <WorkPhases
+            copy={c()}
+            language={props.language}
+            project={project()}
+            model={model}
+            navigate={props.navigate}
+            measuring={d.measuring()}
+          />
           <Show when={model.current()}>
             {(phase) => (
               <PresetInputs
@@ -189,109 +130,16 @@ export function EstimateReview(props: {
               />
             )}
           </Show>
-          <section class="project-pane">
-            <h3>{c().selection}</h3>
-            <p>
-              {c().currency} · <strong>{project().settings.currency}</strong>
-            </p>
-            <ReviewSelect
-              id={id('selection')}
-              label={c().choose}
-              value={selection()}
-              options={['whole', 'selected']}
-              text={(key) => c()[key]}
-              change={setSelection}
-            />
-            <Show when={selection() === 'selected'}>
-              <For each={project().objects}>
-                {(object) => (
-                  <ReviewCheck
-                    id={id('choose')}
-                    checked={objects().includes(object.id)}
-                    change={(selected) =>
-                      setObjects((previous) =>
-                        selected
-                          ? [...previous, object.id]
-                          : previous.filter((key) => key !== object.id),
-                      )
-                    }
-                  >
-                    {object.name}
-                  </ReviewCheck>
-                )}
-              </For>
-            </Show>
-          </section>
-          <section class="project-pane">
-            <h3>{c().results}</h3>
-            <dl class="review-facts">
-              <For each={['hours', 'subtotal', 'beforeTax', 'taxTotal', 'total'] as const}>
-                {(key) => (
-                  <>
-                    <dt>{c()[key]}</dt>
-                    <dd data-estimate-result={key}>
-                      {key === 'hours'
-                        ? formatHours(result()?.hours, props.language)
-                        : formatMoney(result()?.[key], project().settings.currency, props.language)}
-                    </dd>
-                  </>
-                )}
-              </For>
-            </dl>
-            <label>
-              {c().assumptions}
-              <textarea
-                data-control-id={id('assumptions')}
-                maxlength="1000"
-                value={assumptions()}
-                onInput={(e) => setAssumptions(e.currentTarget.value)}
-              />
-            </label>
-            <Show when={!valid()}>
-              <p>{c().validation}</p>
-            </Show>
-            <div class="review-actions">
-              <button
-                type="button"
-                data-control-id={id('snapshot')}
-                disabled={!valid()}
-                onClick={() => void capture()}
-              >
-                {c().snapshot}
-              </button>
-              <button
-                type="button"
-                class="secondary"
-                data-control-id={id('issue')}
-                disabled={!valid() || !result()?.complete}
-                onClick={() => void capture(true)}
-              >
-                {c().issue}
-              </button>
-            </div>
-            <Show when={versions().length} fallback={<p>{c().noSnapshot}</p>}>
-              <ReviewSelect
-                id={id('version')}
-                label={c().version}
-                options={versions().map((_, index) => String(index + 1))}
-                value={version()}
-                change={setVersion}
-              />
-              <Show when={versions()[Number(version()) - 1]}>
-                {(saved) => <EstimateVersion language={props.language} saved={saved()} />}
-              </Show>
-            </Show>
-          </section>
         </div>
-      </div>
-      <div class="review-grid">
+      </EstimateStepPanel>
+      <EstimateStepPanel copy={c()} current={step()} go={go} step="extras">
         <Extras
           copy={c()}
-          rows={extras()}
+          rows={d.extras()}
           objects={project().objects}
           currency={project().settings.currency}
           add={() =>
-            setExtras((rows) => [
+            d.setExtras((rows) => [
               ...rows,
               {
                 id: crypto.randomUUID(),
@@ -305,28 +153,42 @@ export function EstimateReview(props: {
             ])
           }
           update={(id, change) =>
-            setExtras((rows) => rows.map((row) => (row.id === id ? { ...row, ...change } : row)))
+            d.setExtras((rows) => rows.map((row) => (row.id === id ? { ...row, ...change } : row)))
           }
-          remove={(id) => setExtras((rows) => rows.filter((row) => row.id !== id))}
+          remove={(id) => d.setExtras((rows) => rows.filter((row) => row.id !== id))}
         />
+      </EstimateStepPanel>
+      <EstimateStepPanel copy={c()} current={step()} go={go} step="adjustments">
         <Adjustments
           copy={c()}
-          rows={adjustments()}
-          taxed={taxed()}
-          taxRate={tax()}
+          rows={d.adjustments()}
+          taxed={d.taxed()}
+          taxRate={d.tax()}
           add={() =>
-            setAdjustments((rows) => [...rows, { id: crypto.randomUUID(), name: '', percent: '' }])
+            d.setAdjustments((rows) => [
+              ...rows,
+              { id: crypto.randomUUID(), name: '', percent: '' },
+            ])
           }
           update={(id, change) =>
-            setAdjustments((rows) =>
+            d.setAdjustments((rows) =>
               rows.map((row) => (row.id === id ? { ...row, ...change } : row)),
             )
           }
-          remove={(id) => setAdjustments((rows) => rows.filter((row) => row.id !== id))}
-          setTaxed={setTaxed}
-          setTaxRate={setTax}
+          remove={(id) => d.setAdjustments((rows) => rows.filter((row) => row.id !== id))}
+          setTaxed={d.setTaxed}
+          setTaxRate={d.setTax}
         />
-      </div>
+      </EstimateStepPanel>
+      <EstimateStepPanel
+        current={step()}
+        go={go}
+        copy={c()}
+        step="issue"
+        primary={<EstimateIssueActions copy={c()} draft={d} />}
+      >
+        <EstimateIssue copy={c()} language={props.language} draft={d} />
+      </EstimateStepPanel>
     </div>
   );
 }

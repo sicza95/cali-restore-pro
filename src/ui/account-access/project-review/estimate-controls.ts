@@ -57,8 +57,19 @@ const finance = [
   'version',
   'issue',
 ] as const satisfies readonly (keyof EstimateCopy)[];
+const steps = ['objects', 'phases', 'extras', 'adjustments', 'issue', 'back', 'next'] as const;
 export const phaseControl = (key: (typeof phases)[number]) => 'estimate.phase.' + key;
 export const financeControl = (key: (typeof finance)[number]) => 'estimate.finance.' + key;
+export const stepControl = (key: (typeof steps)[number]) => 'estimate.step.' + key;
+const stepLabel = {
+  objects: 'stepObjects',
+  phases: 'phases',
+  extras: 'extras',
+  adjustments: 'adjustments',
+  issue: 'stepIssue',
+  back: 'back',
+  next: 'next',
+} as const satisfies Record<(typeof steps)[number], keyof EstimateCopy>;
 
 export const estimateControls: readonly ControlContract[] = [
   ...phases.map((key): ControlContract => ({
@@ -98,6 +109,23 @@ export const estimateControls: readonly ControlContract[] = [
       failure: 'Show field validation and inhibit capture',
       empty: 'Show missing results and empty review versions',
       locked: 'Clear financial review',
+    },
+  })),
+  ...steps.map((key): ControlContract => ({
+    id: stepControl(key),
+    labelKey: stepLabel[key],
+    helpKey: 'incomplete',
+    command: 'Show estimate step ' + key,
+    permission: 'Unlocked account-local project author',
+    prerequisite: 'Estimate route open',
+    valueSource: 'Estimate draft in memory',
+    behavior: 'functional',
+    owner: 'M-09',
+    composition: 'Estimate · Steps',
+    unavailable: {
+      failure: 'Mark the step incomplete',
+      empty: 'Show the step with its empty state',
+      locked: 'Clear the estimate',
     },
   })),
 ];
