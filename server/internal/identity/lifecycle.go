@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 )
 
 var ErrLink = errors.New("invalid, expired or used link")
@@ -43,7 +44,7 @@ func (s *Service) hash(ctx context.Context, password string) (string, error) {
 	default:
 		return "", ErrLimited
 	}
-	return HashPassword(password)
+	return passhash.Hash(password)
 }
 
 type mailPayload struct{ To, Language, Purpose, Token string }
@@ -80,7 +81,7 @@ func (s *Service) issue(ctx context.Context, tx pgx.Tx, id, to, lang, purpose st
 
 func (s *Service) RegisterAccount(ctx context.Context, email, password, lang string) error {
 	email, valid := normalizeEmail(email)
-	if !valid || !validPassword(password) {
+	if !valid || !passhash.Valid(password) {
 		return ErrCredentials
 	}
 	if err := s.rate(ctx, email); err != nil {
@@ -156,7 +157,7 @@ func (s *Service) ConsumeLink(ctx context.Context, raw, purpose, password string
 	var verifier string
 	var err error
 	if purpose == "reset" {
-		if !validPassword(password) {
+		if !passhash.Valid(password) {
 			return ErrCredentials
 		}
 		verifier, err = s.hash(ctx, password)
@@ -236,7 +237,7 @@ func (s *Service) ChangeCredential(ctx context.Context, raw, password, email str
 	// again inside the serialized transaction to close revocation races.
 	var verifier string
 	if password != "" {
-		if !validPassword(password) {
+		if !passhash.Valid(password) {
 			return ErrCredentials
 		}
 		verifier, err = s.hash(ctx, password)

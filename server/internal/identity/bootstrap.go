@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
 )
 
 func pgErrCode(err error) string {
@@ -24,7 +25,7 @@ func Bootstrap(ctx context.Context, pool *pgxpool.Pool, email, password string) 
 	if !ok {
 		return errors.New("invalid bootstrap email")
 	}
-	hash, err := HashPassword(password)
+	hash, err := passhash.Hash(password)
 	if err != nil {
 		return err
 	}
