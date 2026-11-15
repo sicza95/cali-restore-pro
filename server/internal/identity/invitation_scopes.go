@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type scopeEnvelope struct {
@@ -48,7 +49,7 @@ func (a fileAccess) linkScopes(ctx context.Context, id string, grants []scopeEnv
 func (h *HTTP) scopeRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("GET /api/v1/invitations/{invitation}/scopes/{scope}", true, func(w http.ResponseWriter, r *http.Request) {
 		id, scope := r.PathValue("invitation"), r.PathValue("scope")
-		if !uuid(id) || !validOptionalScope(scope) {
+		if !httpjson.UUID(id) || !validOptionalScope(scope) {
 			failure(w, ErrInvalid)
 			return
 		}
@@ -74,7 +75,7 @@ func (h *HTTP) scopeRoutes(route func(string, bool, http.HandlerFunc)) {
 			fileFailure(w, err)
 			return
 		}
-		respond(w, http.StatusOK, grant)
+		httpjson.Respond(w, http.StatusOK, grant)
 	})
 	route("POST /api/v1/hosted-projects/{project}/invitations/{invitation}/scopes", true, h.changeInvitationScopes)
 }

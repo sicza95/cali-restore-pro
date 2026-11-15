@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 func validSharingPoint(text string) bool {
@@ -72,7 +73,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 		var body struct {
 			PublicKey string `json:"publicKey"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		if !validSharingPoint(body.PublicKey) {
@@ -104,7 +105,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			originalGrant
 			Scopes []scopeEnvelope `json:"scopes"`
 		}
-		if !decodeBounded(w, r, &body, 104*1024) {
+		if !httpjson.DecodeBounded(w, r, &body, 104*1024) {
 			return
 		}
 		maxBytes := 384
@@ -125,19 +126,19 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			failure(w, ErrInvalid)
 			return
 		}
-		if len(body.SourceIDs) > 64 || body.Epoch != "" && !uuid(body.Epoch) {
+		if len(body.SourceIDs) > 64 || body.Epoch != "" && !httpjson.UUID(body.Epoch) {
 			failure(w, ErrInvalid)
 			return
 		}
 		for _, file := range append(append([]string(nil), body.FileIDs...), body.SourceIDs...) {
-			if !uuid(file) {
+			if !httpjson.UUID(file) {
 				failure(w, ErrInvalid)
 				return
 			}
 		}
 		project, id := r.PathValue("project"), r.PathValue("invitation")
 		ciphertext, err := base64.StdEncoding.Strict().DecodeString(body.Ciphertext)
-		if !uuid(project) || !uuid(id) || !validSharingPoint(body.RecipientKey) ||
+		if !httpjson.UUID(project) || !httpjson.UUID(id) || !validSharingPoint(body.RecipientKey) ||
 			!validSharingPoint(body.Encapsulation) || err != nil || len(ciphertext) < 16 ||
 			len(ciphertext) > maxBytes || base64.StdEncoding.EncodeToString(ciphertext) != body.Ciphertext {
 			failure(w, ErrInvalid)
@@ -163,7 +164,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("POST "+invitation+"/rotate-originals", true, change)
 	read := func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("invitation")
-		if !uuid(id) {
+		if !httpjson.UUID(id) {
 			failure(w, ErrInvalid)
 			return
 		}
@@ -184,7 +185,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			fileFailure(w, err)
 			return
 		}
-		respond(w, http.StatusOK, grant)
+		httpjson.Respond(w, http.StatusOK, grant)
 	}
 	route("GET /api/v1/invitations/{invitation}/fixture", true, read)
 	route("GET /api/v1/invitations/{invitation}/content", true, read)

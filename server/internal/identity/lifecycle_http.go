@@ -3,6 +3,8 @@ package identity
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 func (h *HTTP) lifecycleRoutes(route func(string, bool, http.HandlerFunc)) {
@@ -16,7 +18,7 @@ func (h *HTTP) lifecycleRoutes(route func(string, bool, http.HandlerFunc)) {
 				Confirm  bool   `json:"confirm"`
 			}
 			var fields map[string]json.RawMessage
-			if !decode(w, r, &fields) {
+			if !httpjson.Decode(w, r, &fields) {
 				return
 			}
 			allowed := map[string]bool{}
@@ -40,19 +42,19 @@ func (h *HTTP) lifecycleRoutes(route func(string, bool, http.HandlerFunc)) {
 			for _, key := range required {
 				allowed[key] = true
 				if _, ok := fields[key]; !ok {
-					respond(w, 400, map[string]string{"error": "invalid_request"})
+					httpjson.Respond(w, 400, map[string]string{"error": "invalid_request"})
 					return
 				}
 			}
 			for key, value := range fields {
 				if !allowed[key] || string(value) == "null" {
-					respond(w, 400, map[string]string{"error": "invalid_request"})
+					httpjson.Respond(w, 400, map[string]string{"error": "invalid_request"})
 					return
 				}
 			}
 			encoded, _ := json.Marshal(fields)
 			if json.Unmarshal(encoded, &body) != nil || (body.Language != "" && body.Language != "en" && body.Language != "hu") {
-				respond(w, 400, map[string]string{"error": "invalid_request"})
+				httpjson.Respond(w, 400, map[string]string{"error": "invalid_request"})
 				return
 			}
 			var err error
@@ -86,7 +88,7 @@ func (h *HTTP) lifecycleRoutes(route func(string, bool, http.HandlerFunc)) {
 				h.setCookie(w, "")
 			}
 			// Accepted means durable transaction, never a claim of SMTP delivery.
-			respond(w, 200, map[string]bool{"ok": true})
+			httpjson.Respond(w, 200, map[string]bool{"ok": true})
 		})
 	}
 }

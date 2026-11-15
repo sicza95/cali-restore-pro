@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 var (
@@ -79,7 +80,7 @@ func (h *HTTP) ownerRoutes(route func(string, bool, http.HandlerFunc)) {
 	const path = "/api/v1/hosted-projects/{project}/owners"
 	route("GET "+path, true, func(w http.ResponseWriter, r *http.Request) {
 		project := r.PathValue("project")
-		if !uuid(project) {
+		if !httpjson.UUID(project) {
 			failure(w, ErrInvalid)
 			return
 		}
@@ -98,15 +99,15 @@ func (h *HTTP) ownerRoutes(route func(string, bool, http.HandlerFunc)) {
 			fileFailure(w, err)
 			return
 		}
-		respond(w, http.StatusOK, map[string]any{"owners": owners, "hostingTransfer": transfer})
+		httpjson.Respond(w, http.StatusOK, map[string]any{"owners": owners, "hostingTransfer": transfer})
 	})
 	route("POST "+path+"/{owner}/remove", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct{}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		project, owner := r.PathValue("project"), r.PathValue("owner")
-		if !uuid(project) || !uuid(owner) {
+		if !httpjson.UUID(project) || !httpjson.UUID(owner) {
 			failure(w, ErrInvalid)
 			return
 		}
@@ -115,9 +116,9 @@ func (h *HTTP) ownerRoutes(route func(string, bool, http.HandlerFunc)) {
 		})
 		switch {
 		case errors.Is(err, errLastOwner):
-			respond(w, 409, map[string]string{"error": "last_project_owner"})
+			httpjson.Respond(w, 409, map[string]string{"error": "last_project_owner"})
 		case errors.Is(err, errHostOwner):
-			respond(w, 409, map[string]string{"error": "owner_is_project_host"})
+			httpjson.Respond(w, 409, map[string]string{"error": "owner_is_project_host"})
 		case err != nil:
 			fileFailure(w, err)
 		default:

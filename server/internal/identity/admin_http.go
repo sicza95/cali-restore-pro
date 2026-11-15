@@ -1,6 +1,10 @@
 package identity
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+)
 
 func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("GET /api/v1/admin/accounts", true, func(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +22,7 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 		if accounts == nil {
 			accounts = []AdminAccount{}
 		}
-		respond(w, 200, map[string]any{"accounts": accounts, "next": next})
+		httpjson.Respond(w, 200, map[string]any{"accounts": accounts, "next": next})
 	})
 	route("GET /api/v1/admin/operations", true, func(w http.ResponseWriter, r *http.Request) {
 		result, err := h.service.Operations(r.Context(), h.raw(r))
@@ -26,7 +30,7 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 			failure(w, err)
 			return
 		}
-		respond(w, 200, result)
+		httpjson.Respond(w, 200, result)
 	})
 	route("POST /api/v1/admin/accounts/{id}/controls", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
@@ -37,10 +41,10 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 			} `json:"entitlement"`
 			Permissions *int `json:"permissions"`
 		}
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
-		if !body.Confirm || !uuid(r.PathValue("id")) {
+		if !body.Confirm || !httpjson.UUID(r.PathValue("id")) {
 			failure(w, ErrForbidden)
 			return
 		}
@@ -56,7 +60,7 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 			failure(w, err)
 			return
 		}
-		respond(w, 200, map[string]bool{"ok": true})
+		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 	for _, path := range []string{"GET /api/v1/account/deletion-preflight", "GET /api/v1/admin/accounts/{id}/deletion-preflight"} {
 		route(path, true, func(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +70,7 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 				return
 			}
 			id := r.PathValue("id")
-			if id != "" && (!uuid(id) || !actor.Account.Allows(ManageRoles)) {
+			if id != "" && (!httpjson.UUID(id) || !actor.Account.Allows(ManageRoles)) {
 				failure(w, ErrForbidden)
 				return
 			}
@@ -78,7 +82,7 @@ func (h *HTTP) adminRoutes(route func(string, bool, http.HandlerFunc)) {
 				failure(w, err)
 				return
 			}
-			respond(w, 200, map[string]any{"eligible": reason == "", "reason": reason,
+			httpjson.Respond(w, 200, map[string]any{"eligible": reason == "", "reason": reason,
 				"forceEligible": reason == "hosted_projects_require_continuity" &&
 					id != actor.Account.ID && actor.Account.Role == "superuser"})
 		})

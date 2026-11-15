@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 type originalGrant struct {
@@ -129,7 +130,7 @@ func (a fileAccess) rotateOriginals(ctx context.Context, project, id, recipientK
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return err
 	}
-	if grant.Format != "project-v1" || !uuid(files.Epoch) ||
+	if grant.Format != "project-v1" || !httpjson.UUID(files.Epoch) ||
 		len(files.SourceIDs) == 0 || len(files.SourceIDs) != len(files.FileIDs) {
 		return ErrInvalid
 	}

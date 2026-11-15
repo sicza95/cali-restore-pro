@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 var (
@@ -108,18 +109,18 @@ func (h *HTTP) revisionRoutes(route func(string, bool, http.HandlerFunc)) {
 	const path = "/api/v1/hosted-projects/{project}/revision"
 	handle := func(w http.ResponseWriter, r *http.Request) {
 		project, account := r.PathValue("project"), r.Header.Get("X-Sync-Account")
-		if !uuid(project) || !uuid(account) {
+		if !httpjson.UUID(project) || !httpjson.UUID(account) {
 			failure(w, ErrInvalid)
 			return
 		}
 		var next *revisionWrite
 		if r.Method == http.MethodPut {
 			next = new(revisionWrite)
-			if !decodeBounded(w, r, next, 90*1024) {
+			if !httpjson.DecodeBounded(w, r, next, 90*1024) {
 				return
 			}
 			if next.Expected == nil || *next.Expected < 0 || *next.Expected >= 2147483647 ||
-				!uuid(next.Epoch) || len(next.Salt) != 32 || len(next.Ciphertext) < 16 || len(next.Ciphertext) > 65552 {
+				!httpjson.UUID(next.Epoch) || len(next.Salt) != 32 || len(next.Ciphertext) < 16 || len(next.Ciphertext) > 65552 {
 				failure(w, ErrInvalid)
 				return
 			}
@@ -135,13 +136,13 @@ func (h *HTTP) revisionRoutes(route func(string, bool, http.HandlerFunc)) {
 		})
 		switch {
 		case errors.Is(err, errRevisionConflict):
-			respond(w, 409, map[string]string{"error": "revision_conflict"})
+			httpjson.Respond(w, 409, map[string]string{"error": "revision_conflict"})
 		case errors.Is(err, errRevisionEpoch):
-			respond(w, 409, map[string]string{"error": "revision_epoch_changed"})
+			httpjson.Respond(w, 409, map[string]string{"error": "revision_epoch_changed"})
 		case err != nil:
 			fileFailure(w, err)
 		default:
-			respond(w, 200, state)
+			httpjson.Respond(w, 200, state)
 		}
 	}
 	route("GET "+path, true, handle)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 )
 
 func (s *Service) recoverAccount(ctx context.Context, email, password string) error {
@@ -53,7 +54,7 @@ func (s *Service) recoverAccount(ctx context.Context, email, password string) er
 func (h *HTTP) deletionRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("POST /api/v1/auth/recover-deleted-account", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct{ Email, Password string }
-		if !decode(w, r, &body) {
+		if !httpjson.Decode(w, r, &body) {
 			return
 		}
 		if err := h.service.recoverAccount(r.Context(), body.Email, body.Password); err != nil {
@@ -84,7 +85,7 @@ func (h *HTTP) deletionRoutes(route func(string, bool, http.HandlerFunc)) {
 		if list == nil {
 			list = []deletionStatus{}
 		}
-		respond(w, 200, list)
+		httpjson.Respond(w, 200, list)
 	})
 	route("POST /api/v1/hosted-projects/{project}/deletion", true, h.changeProjectDeletion)
 }
@@ -96,11 +97,11 @@ func (h *HTTP) changeAccountDeletion(w http.ResponseWriter, r *http.Request) {
 		Purge               bool `json:"purge"`
 		Force               bool `json:"force"`
 	}
-	if !decode(w, r, &body) {
+	if !httpjson.Decode(w, r, &body) {
 		return
 	}
 	id := r.PathValue("id")
-	if !body.Confirm || !body.Force && !body.PendingWorkResolved || body.Force && id == "" || id != "" && !uuid(id) {
+	if !body.Confirm || !body.Force && !body.PendingWorkResolved || body.Force && id == "" || id != "" && !httpjson.UUID(id) {
 		failure(w, ErrInvalid)
 		return
 	}
@@ -132,7 +133,7 @@ func (h *HTTP) changeAccountDeletion(w http.ResponseWriter, r *http.Request) {
 	if r.PathValue("id") == "" {
 		h.setCookie(w, "")
 	}
-	respond(w, 200, result)
+	httpjson.Respond(w, 200, result)
 }
 
 func (h *HTTP) changeProjectDeletion(w http.ResponseWriter, r *http.Request) {
@@ -140,11 +141,11 @@ func (h *HTTP) changeProjectDeletion(w http.ResponseWriter, r *http.Request) {
 		Action  string `json:"action"`
 		Confirm bool   `json:"confirm"`
 	}
-	if !decode(w, r, &body) {
+	if !httpjson.Decode(w, r, &body) {
 		return
 	}
 	project := r.PathValue("project")
-	if !uuid(project) || !body.Confirm || (body.Action != "delete" && body.Action != "purge" && body.Action != "recover") {
+	if !httpjson.UUID(project) || !body.Confirm || (body.Action != "delete" && body.Action != "purge" && body.Action != "recover") {
 		failure(w, ErrInvalid)
 		return
 	}
@@ -162,5 +163,5 @@ func (h *HTTP) changeProjectDeletion(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	respond(w, 200, result)
+	httpjson.Respond(w, 200, result)
 }
