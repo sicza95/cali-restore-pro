@@ -20,6 +20,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sicza95/cali-restore-pro/server/internal/config"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity"
+	"github.com/sicza95/cali-restore-pro/server/internal/mailer"
 	"github.com/sicza95/cali-restore-pro/server/internal/platform"
 	"github.com/sicza95/cali-restore-pro/server/migrations"
 )
@@ -146,7 +147,7 @@ func run(ctx context.Context, args []string) error {
 			}
 			password = strings.TrimRight(string(data), "\r\n")
 		}
-		send := identity.SMTPTransport(address, from, os.Getenv("SMTP_USERNAME"), password, c.Mode == "production")
+		send := mailer.SMTPTransport(address, from, os.Getenv("SMTP_USERNAME"), password, c.Mode == "production")
 		return worker(ctx, c, ready, func(ctx context.Context) error {
 			archives := identities.ExpireOperationalArchives(ctx, "/data/operational-backups")
 			var retired bool
