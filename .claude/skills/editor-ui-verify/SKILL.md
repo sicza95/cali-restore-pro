@@ -28,6 +28,9 @@ the handoff when they were not run.
 
 ## Traps
 
+- **Don't edit files while the verify chain runs.** `format:check` reads the half-edited file and
+  stops the chain. Finish edits and `prettier --write` first.
+
 - **A plain wheel at fit scrolls the page.** Any test that wheels and then uses client
   coordinates must re-measure (`boundingBox()`) afterwards.
 - **Checking whether the canvas cancelled a wheel:** a passive `window` wheel listener runs after

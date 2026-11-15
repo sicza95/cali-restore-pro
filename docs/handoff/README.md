@@ -4,7 +4,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `main` at `de28868`. Step 3 landed by fast-forwarding `main` to the [PR #16](https://github.com/sicza95/cali-restore-pro/pull/16) head; `pr-assets/step3` is deleted. The remote `feat/canvas-first-layout` branch still exists (not deleted). Before that, steps 2 and 3 each went through one branch and one PR.
+- **Branch:** `refactor/retire-drawing-adapter` (step 4), from `main` at `ec20f87` (the step 4 plan, pushed and Verified). Before that: `main` at `de28868`. Step 3 landed by fast-forwarding `main` to the [PR #16](https://github.com/sicza95/cali-restore-pro/pull/16) head; `pr-assets/step3` is deleted. The remote `feat/canvas-first-layout` branch still exists (not deleted). Before that, steps 2 and 3 each went through one branch and one PR.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
 - **Active roadmap phase:** Phase 1 steps 1 to 3 are done, on `main` and ticked in the quality baseline. Step 4 ([retire the duplicate review components](../plan/editor-retire-adapter.md)) is planned; the owner accepted decisions 1 and 2 (branch `refactor/retire-drawing-adapter` with one PR; remove dead registry ids, giving the reason).
@@ -13,13 +13,20 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Push the plan commit to `main` (owner). Then step 4 commit 1, the parity test, on `refactor/retire-drawing-adapter`.
+Step 4 commit 2: delete `DrawingReviewAdapter` and its adapter-only CSS on `refactor/retire-drawing-adapter`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 commit 1: parity test
+
+- Pushed the step 4 plan (`ec20f87`) to `main`; GitHub reports Verified. Created `refactor/retire-drawing-adapter`.
+- `tests-platform/drawing-review.ts` adds `recordDrawingControls` (a `MutationObserver` over the whole flow) and `expectDrawingParity`. It runs at the end of `verifyDrawingReview` and asserts that the rendered `surface.draw.*` ids equal the registry. Result: all 67 ids, no gaps, no dead ids. A negative run with a fake registered id failed as expected.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` and `npm run test:files` (21 passed); `npm test` 12 passed.
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests. Committed on the branch, not pushed.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 merged, step 4 planned
 

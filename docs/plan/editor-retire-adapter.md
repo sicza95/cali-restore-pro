@@ -33,6 +33,8 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
    - At the end it asserts that the recorded set equals the ids in `drawingControls`, and prints the missing and the unregistered ones.
    - If ids are missing, each one is either a real gap (render it in the workspace, in this commit) or dead (remove it from the registry in commit 2, with the reason). Decision 2 covers the dead ones.
 
+   - As built: one `MutationObserver`, installed at the start of `verifyDrawingReview`, records every `surface.draw.*` id that is rendered or renamed during the whole flow. This catches dialogs and per-tool settings without new checkpoints. It found all 67 registered ids and no unregistered ones, so there were no gaps to fix and no dead ids for commit 2. A negative run with a fake registered id failed as expected.
+
 2. **`refactor(editor): delete DrawingReviewAdapter`**
    - Delete `DrawingReviewAdapter.tsx` and the adapter-only rules in `styles.css` (list above; confirm each with a repo-wide search before removing it).
    - `registry.ts`: change `composition` to name the workspace, and drop any ids that commit 1 found dead.
