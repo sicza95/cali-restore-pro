@@ -257,7 +257,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(report('download')).toBeEnabled();
   await expect(draft).toHaveAccessibleName('Restaurálási jelentés');
   await expect(draft.locator('article')).toHaveAttribute('lang', 'hu');
-  await expect(draft).toContainText('Numerikus pillanatkép');
+  await expect(draft).toContainText('Csak értékek');
   await expect(draft).toContainText('Ehhez a verzióhoz nincs mérés.');
   await expect(draft).toContainText('Chapel Studio');
   await expect(draft).toContainText('Referenciafotó 1');
