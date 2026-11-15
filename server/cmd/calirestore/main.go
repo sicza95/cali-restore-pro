@@ -21,6 +21,7 @@ import (
 	"github.com/sicza95/cali-restore-pro/server/internal/config"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/mailer"
+	"github.com/sicza95/cali-restore-pro/server/internal/oparchive"
 	"github.com/sicza95/cali-restore-pro/server/internal/platform"
 	"github.com/sicza95/cali-restore-pro/server/migrations"
 )
@@ -149,7 +150,7 @@ func run(ctx context.Context, args []string) error {
 		}
 		send := mailer.SMTPTransport(address, from, os.Getenv("SMTP_USERNAME"), password, c.Mode == "production")
 		return worker(ctx, c, ready, func(ctx context.Context) error {
-			archives := identities.ExpireOperationalArchives(ctx, "/data/operational-backups")
+			archives := oparchive.Expire(ctx, pool, "/data/operational-backups")
 			var retired bool
 			err := pool.QueryRow(ctx, "SELECT coalesce(current_setting('calirestore.authority_retired',true),'')='on'").Scan(&retired)
 			if err != nil || retired {
