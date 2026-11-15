@@ -7,19 +7,25 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. Step 2 commit 1 is on `main`; commits 2 to 6 are on `feat/pointer-drawing-first` in [PR #15](https://github.com/sicza95/cali-restore-pro/pull/15), awaiting the owner's review.
+- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is planned; the owner accepted all five decisions as recommended. Its seven commits go on `feat/canvas-first-layout` for one PR.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Owner reviews [PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) (step 2 commits 2 to 6; screenshots come from `npm run test:files`) and merges it. Then plan Phase 1 step 3 (canvas-first layout: gesture and wheel zoom, portrait inspector height, the cramped 390 px footer).
+Step 3 commit 1 (wheel, trackpad and keyboard zoom) on `feat/canvas-first-layout`; see the latest log entry for its state.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · PR #15 merged, Phase 1 step 3 plan
+
+- Reviewed and merged [PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) by fast-forwarding `main` to `e2014fa`, as PR #14 was, so the signed commits keep their signatures (all six checked Verified). Both CI checks passed. No blocking findings.
+- Wrote [`docs/plan/editor-canvas-first.md`](../plan/editor-canvas-first.md): wheel, trackpad and keyboard zoom through one zoom helper, compact footer zoom controls (the numeric zoom moves into "Enter by number"), the photo fitted to the canvas, a two-height portrait inspector, a compact surface page row in drawing mode, a docked chip at phone width, and tests. Five decisions; the owner accepted all as recommended (800 % max zoom, Ctrl/⌘ + wheel zooms, two-height inspector, compact surface chrome in commit 5, one PR).
+- No code changed, no tests run.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 6: tests for pointer-first drawing
 
