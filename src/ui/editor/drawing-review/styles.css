@@ -84,6 +84,9 @@
   border: 1px solid var(--cr-rule);
   border-radius: var(--cr-panel-radius);
 }
+.drawing-viewport:focus:not(:focus-visible) {
+  outline: none;
+}
 .drawing-viewport p {
   padding: 12px;
   text-align: center;

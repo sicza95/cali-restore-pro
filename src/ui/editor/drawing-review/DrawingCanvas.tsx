@@ -109,6 +109,8 @@ export function DrawingCanvas(props: {
 
   function capture(event: PointerEvent) {
     event.preventDefault();
+    // Cancelling pointerdown also cancels the focus change, so focus the canvas for Enter and Escape.
+    viewport.focus({ preventScroll: true });
     viewport.setPointerCapture(event.pointerId);
   }
   function pressure(event: PointerEvent) {
@@ -255,6 +257,7 @@ export function DrawingCanvas(props: {
       }}
       class="drawing-viewport"
       data-control-id={control('view.canvas')}
+      tabIndex={-1}
       classList={{
         'drawing-pannable': t.tool() === 'hand' && zoom() > 1,
         'drawing-markable': props.canDraw && (t.brushing() || t.sketching()),

@@ -162,6 +162,8 @@ const messages = {
   changed: ['Preview updated', 'Előnézet frissítve'],
   committed: ['Saved to this surface', 'Mentve a felületre'],
   discarded: ['Draft discarded', 'Vázlat elvetve'],
+  pointUnit: ['point', 'pont'],
+  pointsUnit: ['points', 'pont'],
   noSketch: [
     'Point edits and unfinished marks clear when leaving the tool or layer.',
     'A pontmódosítások és a befejezetlen rajzjelek eszköz- vagy rétegváltáskor törlődnek.',
