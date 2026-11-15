@@ -2,12 +2,6 @@ import type { Matrix } from '../../platform/projects/planar-types';
 import { fields, lineKeys, toolFields } from './surface-review-controls';
 import type { ReviewTool } from './surface-review-controls';
 
-export const nudge = {
-  left: [-24, 0],
-  right: [24, 0],
-  up: [0, -24],
-  down: [0, 24],
-} as const;
 export type Point = { x: string; y: string };
 type Segment = { start: Point; end: Point };
 const point = (x: number, y: number): Point => ({ x: String(x), y: String(y) });

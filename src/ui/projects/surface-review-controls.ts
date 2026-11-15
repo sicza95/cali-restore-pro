@@ -1,7 +1,6 @@
 import type { ControlContract } from '../control-registry/types';
 
 export const tools = ['prepare', 'align', 'calibrate'] as const;
-export const directions = ['left', 'right', 'up', 'down'] as const;
 export const pairKeys = ['pairOne', 'pairTwo'] as const;
 export const lineKeys = ['horizontal', 'vertical'] as const;
 export type ReviewTool = (typeof tools)[number];
@@ -27,17 +26,7 @@ export const toolFields: Record<ReviewTool, readonly ReviewField[]> = {
   calibrate: ['width', 'height'],
 };
 
-const photo = [
-  'photo',
-  'previous',
-  'next',
-  'surface',
-  'zoom',
-  'fit',
-  'rotate',
-  'focus',
-  ...directions.map((direction) => 'pan.' + direction),
-];
+const photo = ['photo', 'previous', 'next', 'surface', 'zoom', 'fit', 'rotate', 'focus', 'canvas'];
 const review = [
   ...tools,
   ...Object.keys(fields),
@@ -77,7 +66,7 @@ export const surfaceControls: readonly ControlContract[] = [
     helpKey: 'previewUnavailable',
     command:
       key === 'surface' ? 'Navigate to authorized opaque surface route' : 'Change local photo view',
-    owner: key === 'surface' ? 'M-05' : key.startsWith('pan.') ? 'M-14' : 'M-12',
+    owner: key === 'surface' ? 'M-05' : key === 'canvas' ? 'M-14' : 'M-12',
     composition: 'Surface workspace',
     permission: 'Authorized project and unlocked vault',
     prerequisite: 'Authorized surface and applicable photo or viewport',

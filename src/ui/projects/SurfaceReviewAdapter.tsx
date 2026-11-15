@@ -1,4 +1,13 @@
-import { createMemo, createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import {
+  createMemo,
+  createResource,
+  createSignal,
+  createUniqueId,
+  For,
+  onCleanup,
+  Show,
+  untrack,
+} from 'solid-js';
 import { detailMapping } from '../../platform/projects/planar-alignment';
 import { newPlanarSurface, photoFrame, sameSource } from '../../platform/projects/planar-state';
 import { preparationMatrix } from '../../platform/projects/planar-transform';
@@ -10,7 +19,8 @@ import type { SurfaceCopy } from './surface-copy';
 import { SurfaceCalibrationFields } from './SurfaceCalibrationFields';
 import { SurfaceAlignmentFields } from './SurfaceAlignmentFields';
 import { SurfaceToolReasons } from './SurfaceToolReasons';
-import { SurfacePanControls } from './SurfacePanControls';
+import { SurfaceViewControls } from './SurfaceViewControls';
+import { usePhotoGestures } from './usePhotoGestures';
 import { SurfacePhoto } from './SurfacePhoto';
 import { SurfaceReviewGuides } from './SurfaceReviewGuides';
 import { tools } from './surface-review-controls';
@@ -63,8 +73,20 @@ export function SurfaceReviewAdapter(props: {
   const [zoom, setZoom] = createSignal(100);
   const [rotate, setRotate] = createSignal(0);
   const [pan, setPan] = createSignal({ x: 0, y: 0 });
-  const panLimit = () => (96 * zoom()) / 100;
-  const boundPan = (value: number) => Math.max(-panLimit(), Math.min(panLimit(), value));
+  const fitView = () => {
+    setZoom(100);
+    setPan({ x: 0, y: 0 });
+  };
+  const gestures = usePhotoGestures({
+    view: () => ({ ...pan(), zoom: zoom() }),
+    set: (view) => {
+      setZoom(view.zoom);
+      setPan({ x: view.x, y: view.y });
+    },
+    fit: fitView,
+    enabled: () => !!size(),
+  });
+  const hintId = createUniqueId();
   const toolButtons: Partial<Record<ReviewTool, HTMLButtonElement>> = {};
   const unavailable = (key: ReviewTool) => {
     if (!size()) return props.photo ? props.copy.previewUnavailable : props.copy.empty;
@@ -153,7 +175,24 @@ export function SurfaceReviewAdapter(props: {
         </For>
       </div>
       <section class="surface-stage" aria-label={props.copy.photo}>
-        <div class="surface-canvas" classList={{ 'surface-compare': compare() }}>
+        <div
+          ref={gestures.ref}
+          class="surface-canvas"
+          classList={{ 'surface-compare': compare() }}
+          data-control-id="surface.view.canvas"
+          role="group"
+          aria-label={props.copy.canvas}
+          aria-describedby={hintId}
+          aria-keyshortcuts={
+            size() ? 'ArrowLeft ArrowRight ArrowUp ArrowDown Plus Minus 0' : undefined
+          }
+          tabIndex={size() ? 0 : -1}
+          onPointerDown={gestures.onPointerDown}
+          onPointerMove={gestures.onPointerMove}
+          onPointerUp={gestures.onPointerUp}
+          onPointerCancel={gestures.onPointerCancel}
+          onKeyDown={gestures.onKeyDown}
+        >
           <Show when={props.photo} fallback={<p>{props.copy.empty}</p>}>
             {(photo) => (
               <SurfacePhoto
@@ -205,55 +244,19 @@ export function SurfaceReviewAdapter(props: {
             )}
           </Show>
         </div>
-        <div class="surface-actions">
-          <label>
-            {props.copy.zoom}
-            <input
-              data-control-id="surface.view.zoom"
-              type="range"
-              min="50"
-              max="250"
-              value={zoom()}
-              disabled={!size()}
-              onInput={(e) => setZoom(e.currentTarget.valueAsNumber)}
-            />
-          </label>
-          <button
-            type="button"
-            class="secondary"
-            data-control-id="surface.view.fit"
-            disabled={!size()}
-            onClick={() => {
-              setZoom(100);
-              setRotate(0);
-              setPan({ x: 0, y: 0 });
-            }}
-          >
-            {props.copy.fit}
-          </button>
-          <button
-            type="button"
-            class="secondary"
-            data-control-id="surface.view.rotate"
-            disabled={!size()}
-            onClick={() => setRotate((value) => (value + 90) % 360)}
-          >
-            {props.copy.rotate}
-          </button>
-          <button
-            type="button"
-            class="secondary"
-            data-control-id="surface.view.focus"
-            aria-pressed={focus()}
-            onClick={() => setFocus(!focus())}
-          >
-            {props.copy.focus}
-          </button>
-        </div>
-        <SurfacePanControls
+        <SurfaceViewControls
           copy={props.copy}
           disabled={!size()}
-          move={(dx, dy) => setPan(({ x, y }) => ({ x: boundPan(x + dx), y: boundPan(y + dy) }))}
+          zoom={zoom()}
+          setZoom={setZoom}
+          fit={() => {
+            fitView();
+            setRotate(0);
+          }}
+          rotate={() => setRotate((value) => (value + 90) % 360)}
+          focus={focus()}
+          setFocus={setFocus}
+          hintId={hintId}
         />
       </section>
       <section
