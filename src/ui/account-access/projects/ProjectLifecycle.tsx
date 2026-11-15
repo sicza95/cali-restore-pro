@@ -65,10 +65,12 @@ export function ProjectLifecycle(props: { model: SettingsModel; project?: string
                     each={entries()}
                     fallback={<li>{hu() ? 'A kuka üres.' : 'Trash is empty.'}</li>}
                   >
-                    {(entry) => (
+                    {(entry, index) => (
                       <li>
                         <div>
-                          <a href={'/projects/' + entry.id}>{entry.id}</a>
+                          <a href={'/projects/' + entry.id}>
+                            {(hu() ? 'Törölt projekt ' : 'Deleted project ') + (index() + 1)}
+                          </a>
                           <p>{deadlines(entry)}</p>
                           <button
                             data-control-id="project.trash.restore"

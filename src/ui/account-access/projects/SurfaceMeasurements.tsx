@@ -67,11 +67,18 @@ export function SurfaceMeasurements(props: {
         </Show>
         <For each={[...(shown()?.layers ?? []), ...(shown()?.categories ?? [])]}>
           {(entry) => {
-            const row = () =>
-              props.state.drawing?.find((layer) => (layer.key ?? String(layer.id)) === entry.id);
+            /** The layer's name; else its kind and number, never its internal id. */
+            const label = () => {
+              const rows = props.state.drawing ?? [];
+              const row = rows.find((layer) => (layer.key ?? String(layer.id)) === entry.id);
+              if (row?.name) return row.name;
+              const kind = row?.kind ?? 'damage';
+              const same = rows.filter((layer) => layer.kind === kind);
+              return props.copy.unnamed(kind, row ? same.indexOf(row) + 1 : same.length + 1);
+            };
             return (
               <>
-                <dt>{row()?.name || entry.id}</dt>
+                <dt>{label()}</dt>
                 <dd>
                   {area(entry.areaM2.value)}
                   {entry.percent.value === null ? '' : ' · ' + format(entry.percent.value) + '%'}

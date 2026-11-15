@@ -218,9 +218,7 @@ export function InvitationInbox(props: { model: InvitationModel; vault: LocalVau
                       {(project) => (
                         <section class="shared-project" aria-label={c().snapshot}>
                           <h2>{project().name}</h2>
-                          <p>
-                            {c().snapshot} · {c().revision} {project().revision}
-                          </p>
+                          <p>{c().snapshot}</p>
                           <p>{estimateCopy[props.model.lang()].assessmentOnly}</p>
                           <For each={project().objects}>
                             {(object) => (

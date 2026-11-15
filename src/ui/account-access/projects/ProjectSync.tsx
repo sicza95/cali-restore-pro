@@ -149,9 +149,9 @@ function CopyPreview(props: { title: string; project: Project; language: Languag
                       <Show when={surface.images.length}>
                         <ul>
                           <For each={surface.images}>
-                            {(image) => (
+                            {(image, index) => (
                               <li>
-                                {c()[image.role]} · {image.id}
+                                {c()[image.role]} {index() + 1}
                               </li>
                             )}
                           </For>
