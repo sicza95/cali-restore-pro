@@ -1,8 +1,8 @@
 # Platform-first implementation plan
 
-5 November 2026 · PR #7 merged · [M-03 vault implementation](../m03-client-vault.md)
+5 November 2026 · PR #7 merged · [M-03 vault implementation](../milestones/m03-client-vault.md)
 
-M-00 adds the Go/PostgreSQL Compose substrate while retaining the UI library. See [operations](../../deploy/README.md) and [verification evidence](../m00-verification.md). M-01 is split into M-01a identity core and M-01b registration/mail/auth screens so each has a bounded review. See the [identity core contract](../m01a-identity.md) and [account lifecycle evidence](../m01b-account-lifecycle.md).
+M-00 adds the Go/PostgreSQL Compose substrate while retaining the UI library. See [operations](../../deploy/README.md) and [verification evidence](../milestones/m00-verification.md). M-01 is split into M-01a identity core and M-01b registration/mail/auth screens so each has a bounded review. See the [identity core contract](../milestones/m01a-identity.md) and [account lifecycle evidence](../milestones/m01b-account-lifecycle.md).
 
 Build the complete application around the existing SolidJS UI foundation before implementing image processing or drawing. Identity and authorization are the first functional slice. A small Docker/API/database bootstrap comes immediately before it so identity is built against real persistence and deployment boundaries. Pricing means **restoration-work estimates**; subscription billing and payments are outside this plan.
 
@@ -66,19 +66,19 @@ M-01 was delivered in two named sub-milestones. **M-01a** delivers database acco
 
 ## Before drawing starts
 
-M-09's [bounded implementation and M-10 handoff](../m09-restoration-estimates.md) records real client calculations, encrypted device-local estimates/presets and scoped projections. Recovery, sync and collaborative edit gates remain open; it is not full milestone acceptance.
+M-09's [bounded implementation and M-10 handoff](../milestones/m09-restoration-estimates.md) records real client calculations, encrypted device-local estimates/presets and scoped projections. Recovery, sync and collaborative edit gates remain open; it is not full milestone acceptance.
 
 M-11 is the platform completion checkpoint. A user can register, unlock, manage files and projects, share/revoke access, use settings and administration, recover offline work, enter an estimate, and create fixture-based outputs. The entire tool UI is navigable and every control has a recorded owner and availability state. No action claims to have drawn, calibrated, aligned or measured real image content.
 
-M-10's [report and export workflow handoff](../m10-reports-and-exports.md) records encrypted draft configuration, scoped estimate preview evidence and the encoder boundary for M-11.
+M-10's [report and export workflow handoff](../milestones/m10-reports-and-exports.md) records encrypted draft configuration, scoped estimate preview evidence and the encoder boundary for M-11.
 
-M-11's [client export evidence and M-12 handoff](../m11-client-exports.md) records verified fixture downloads in all five formats and the remaining real-measurement and device gates.
+M-11's [client export evidence and M-12 handoff](../milestones/m11-client-exports.md) records verified fixture downloads in all five formats and the remaining real-measurement and device gates.
 
-[M-12 image import evidence](../m12-image-import.md) records the working pixel contract, supported decoder variants and remaining device gates.
+[M-12 image import evidence](../milestones/m12-image-import.md) records the working pixel contract, supported decoder variants and remaining device gates.
 
-[M-13 planar assessment evidence](../m13-planar-assessment.md) records the saved coordinate, calibration and measurement contract and the independent reference cases.
+[M-13 planar assessment evidence](../milestones/m13-planar-assessment.md) records the saved coordinate, calibration and measurement contract and the independent reference cases.
 
-[M-14 mask authoring evidence](../m14-mask-authoring.md) records the drawing geometry, viewport gestures and encrypted commit workflows.
+[M-14 mask authoring evidence](../milestones/m14-mask-authoring.md) records the drawing geometry, viewport gestures and encrypted commit workflows.
 
 M-12 starts complex image work. M-13/M-14 build the actual measurement/drawing system against existing versioned contracts. M-16 replaces fixture providers in the production path, reruns the earlier workflow/access/export checks on real content and qualifies release. Final measurement claims remain unavailable until their source revision, calibration and engine results are valid.
 

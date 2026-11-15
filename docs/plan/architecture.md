@@ -2,7 +2,7 @@
 
 Status: implementation proposal, 4 November 2026. See the [milestones](README.md) for delivery order and the [access contract](access-and-encryption.md) for security semantics.
 
-M-00 now implements the Go/PostgreSQL Compose substrate described below. [Operations](../../deploy/README.md), [pinned versions](../../deploy/versions.md) and [evidence](../m00-verification.md) record the concrete boundary; later application and recovery behavior remains proposed.
+M-00 now implements the Go/PostgreSQL Compose substrate described below. [Operations](../../deploy/README.md), [pinned versions](../../deploy/versions.md) and [evidence](../milestones/m00-verification.md) record the concrete boundary; later application and recovery behavior remains proposed.
 
 ## Backend choice
 

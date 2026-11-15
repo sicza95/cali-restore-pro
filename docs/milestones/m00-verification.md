@@ -42,9 +42,9 @@ Landscape/portrait Storybook screenshots and product screenshots were opened for
 
 Product screenshots are generated under `test-results/platform/`; Storybook screenshots remain under the existing `test-results/ui-*` paths. Inspector screenshots/report live in ignored `.taste-skill/inspect/`. Two product screenshots are copied below for review; remaining runtime/test artifacts and generated development secrets are not committed. Failure traces are generated in the browser output directory.
 
-![M-00 product connection screen, landscape light](evidence/m00/landscape-light.png)
+![M-00 product connection screen, landscape light](../evidence/m00/landscape-light.png)
 
-![M-00 product connection screen, portrait dark](evidence/m00/portrait-dark.png)
+![M-00 product connection screen, portrait dark](../evidence/m00/portrait-dark.png)
 
 ## PRIV-06 partial boundary
 

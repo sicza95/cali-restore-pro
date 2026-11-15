@@ -51,7 +51,7 @@ tests/            Browser interactions, layouts and accessibility
 docs/             Agreed visual direction and boundaries
 ```
 
-M-00 adds a Go/PostgreSQL platform substrate alongside this UI library. M-01a adds [server identity/session APIs and operator superuser bootstrap](docs/m01a-identity.md). M-01b adds [registration, credential recovery, localized mail and account security screens](docs/m01b-account-lifecycle.md). Project, encryption and editing workflows are later milestones. No legacy application code or project formats are imported.
+M-00 adds a Go/PostgreSQL platform substrate alongside this UI library. M-01a adds [server identity/session APIs and operator superuser bootstrap](docs/milestones/m01a-identity.md). M-01b adds [registration, credential recovery, localized mail and account security screens](docs/milestones/m01b-account-lifecycle.md). Project, encryption and editing workflows are later milestones. No legacy application code or project formats are imported.
 
 ## Run the platform
 
@@ -68,4 +68,4 @@ Use `npm run dev:start -- --isolated` to start a separate stack with its own dat
 
 ## Platform implementation plan
 
-The [platform-first implementation plan](docs/plan/README.md) defines Docker deployment, the Go/PostgreSQL backend, identity and superuser management, encryption, files, projects, sharing/revocation, offline recovery, administration, estimates and complete tool UI. Image processing and the drawing engine come in the final phase. Each milestone gets its own PR; [M-00 evidence](docs/m00-verification.md) distinguishes the substrate from later application behavior.
+The [platform-first implementation plan](docs/plan/README.md) defines Docker deployment, the Go/PostgreSQL backend, identity and superuser management, encryption, files, projects, sharing/revocation, offline recovery, administration, estimates and complete tool UI. Image processing and the drawing engine come in the final phase. Each milestone gets its own PR; [M-00 evidence](docs/milestones/m00-verification.md) distinguishes the substrate from later application behavior.

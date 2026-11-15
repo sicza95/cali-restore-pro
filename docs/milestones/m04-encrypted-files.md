@@ -33,7 +33,7 @@ or physical iPad workload.
 
 ### Hosting and transfer
 
-The [OpenAPI contract](../contracts/openapi.json) defines owner-only hosted project creation,
+The [OpenAPI contract](../../contracts/openapi.json) defines owner-only hosted project creation,
 reservation, part upload, commit, retrieval, and cancellation. No platform role grants access to
 another account's files. Hosting is explicit and requires an active account with the broader
 feature entitlement and a positive quota. Each file is a new immutable resource with a

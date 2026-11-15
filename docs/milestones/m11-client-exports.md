@@ -21,7 +21,7 @@ The owner can download the detached report preview from Reports or Outputs. An i
 
 ## M-12 handoff and remaining gates
 
-1. Take the signed M-11 evidence commit as the baseline. Read the [implementation plan](plan/README.md), [M-10 report handoff](m10-reports-and-exports.md) and [coverage matrix](plan/requirements-coverage.md).
+1. Take the signed M-11 evidence commit as the baseline. Read the [implementation plan](../plan/README.md), [M-10 report handoff](m10-reports-and-exports.md) and [coverage matrix](../plan/requirements-coverage.md).
 2. Implement bounded originals, proxies/tiles, orientation and color, worker cancellation and evidence for each supported import variant. Keep originals encrypted. Keep source metadata out of normal exports unless an authorized user explicitly requests a permitted field.
 3. M-16 must connect and verify real selected-revision geometry, scale, calibration, maps and reference pixels. Test physical iPad/Safari, real output extent, high-resolution memory limits and workbook recalculation in supported spreadsheet applications. The M-11 fixture evidence does not qualify final measured outputs.
 4. Carry forward the M-09/M-10 recovery, sync, report/estimate deletion reachability and collaboration limits. The owner draft export adds no recipient report authorization, server-side plaintext rendering or portable-store recovery.

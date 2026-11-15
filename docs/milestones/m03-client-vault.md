@@ -32,6 +32,6 @@ The fixed v1 vector in tests-platform/fixtures/vault-v1.json uses account 100000
 
 The browser suite uses real Web Crypto, IndexedDB, downloads, separate browser contexts and same-origin tabs. Only account API responses are fixtures. It injects an IndexedDB abort after the put succeeds but before commit, and confirms the previous snapshot survives a reload. A separate test rejects a stale tab write. The Go log test feeds private diagnostic text to the HTTP logger and verifies that only the three allowed event fields are emitted.
 
-Layout evidence from Chromium: [iPad landscape, unlocked](evidence/m03/vault-landscape.png) and [iPad portrait, locked](evidence/m03/vault-portrait.png). The vault follows the existing Account Security section and theme, with separate controls for local unlock, backup and account sign-in.
+Layout evidence from Chromium: [iPad landscape, unlocked](../evidence/m03/vault-landscape.png) and [iPad portrait, locked](../evidence/m03/vault-portrait.png). The vault follows the existing Account Security section and theme, with separate controls for local unlock, backup and account sign-in.
 
 Executed locally: npm check, production and Storybook builds, 11 Storybook browser tests against the built output, five vault and two settings browser tests, and go test ./... using the existing test image with networking disabled. Database-dependent integration coverage remains in CI.
