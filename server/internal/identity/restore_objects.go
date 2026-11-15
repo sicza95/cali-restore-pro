@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
 // VerifyRestoredObjects checks current committed metadata against restored
@@ -43,7 +44,7 @@ func (s *Service) VerifyRestoredObjects(ctx context.Context, root string) error 
 		return err
 	}
 	expected := make(map[string]bool, len(files))
-	objects := fileObjects{root: root}
+	objects := objectstore.Store{Root: root}
 	for _, file := range files {
 		if !httpjson.UUID(file.ID) {
 			return ErrInvalid
@@ -65,10 +66,10 @@ func (s *Service) VerifyRestoredObjects(ctx context.Context, root string) error 
 			}
 		}
 	}
-	return syncFileDirectory(root)
+	return objectstore.SyncDir(root)
 }
 
-func verifyRestoredFile(ctx context.Context, s *Service, objects fileObjects, id string, shape fileShape) error {
+func verifyRestoredFile(ctx context.Context, s *Service, objects objectstore.Store, id string, shape fileShape) error {
 	rows, err := s.pool.Query(ctx, `SELECT part,digest FROM encrypted_parts WHERE file_id=$1 ORDER BY part`, id)
 	if err != nil {
 		return err
@@ -84,7 +85,7 @@ func verifyRestoredFile(ctx context.Context, s *Service, objects fileObjects, id
 		if part != next || shape.partSize(part) == 0 {
 			return errors.New("invalid restored object metadata")
 		}
-		if _, err := objects.read(id, part, shape.partSize(part), hash); err != nil {
+		if _, err := objects.Read(id, part, shape.partSize(part), hash); err != nil {
 			return err
 		}
 		next++

@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
+	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
 )
 
 func fileFailure(w http.ResponseWriter, err error) {
@@ -26,7 +27,7 @@ func fileFailure(w http.ResponseWriter, err error) {
 	}
 }
 
-func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fileObjects) {
+func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects objectstore.Store) {
 	const projects = "/api/v1/hosted-projects/{project}"
 	const files = projects + "/files/{file}"
 	const parts = files + "/parts/{part}"
@@ -191,7 +192,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects fi
 		if err := a.tx.QueryRow(r.Context(), `SELECT digest FROM encrypted_parts WHERE file_id=$1 AND part=$2`, id, part).Scan(&digest); err != nil {
 			return nil, err
 		}
-		body, err := objects.read(id, part, size, digest)
+		body, err := objects.Read(id, part, size, digest)
 		return func() {
 			w.Header().Set("Content-Type", "application/octet-stream")
 			w.Header().Set("X-Ciphertext-SHA256", hex.EncodeToString(digest))
