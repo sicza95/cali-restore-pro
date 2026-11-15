@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { drawingControl, openDetails } from './drawing-review';
+import { closeDetails, drawingControl, openDetails } from './drawing-review';
 
 export async function verifyDrawingInput(page: Page) {
   const c = (key: string) => drawingControl(page, key);
@@ -144,27 +144,69 @@ export async function verifyPointerStroke(page: Page) {
   await expect(c('history.undo')).toHaveAccessibleName(/^Undo · Brush stroke · /);
   await c('history.undo').click();
   await expect.poll(marks).toBe(before);
+  await c('tool.select').click();
+}
 
-  // Pen taps on the photo; Enter on the canvas applies the path and Escape cancels the next one.
+/**
+ * With "Enter by number" closed: pen taps applied from the chip and with Enter, a sketch cancelled
+ * with Escape, and a rectangle from two corner taps. Each applied mark is undone again.
+ */
+export async function verifyPointerPath(page: Page) {
+  const c = (key: string) => drawingControl(page, key);
+  const selected = page.locator(
+    '[data-control-id="surface.draw.layer.select"][aria-pressed="true"]',
+  );
+  const marks = async () => Number((await selected.textContent())?.match(/(\d+) · Mark/)?.[1]);
   const count = page.locator('.cr-tool-context .drawing-sketch-count');
+  await closeDetails(page);
+  await expect(c('history.mode')).toHaveValue('stroke');
+  const before = await marks();
+  expect(before).not.toBeNaN();
+
   await c('tool.pen').click();
-  for (const [x, y] of [
-    [0.3, 0.3],
-    [0.6, 0.35],
-    [0.45, 0.7],
-  ] as const)
-    await page.mouse.click(...at(x, y));
-  await expect(count).toHaveText('3 points');
+  await c('view.canvas').scrollIntoViewIfNeeded();
+  const box = (await page.locator('.drawing-photo img').boundingBox())!;
+  const tap = (x: number, y: number) =>
+    page.mouse.click(box.x + x * box.width, box.y + y * box.height);
+  const triangle = async () => {
+    await tap(0.3, 0.3);
+    await tap(0.6, 0.35);
+    await tap(0.45, 0.7);
+    await expect(count).toHaveText('3 points');
+  };
+  const undo = async () => {
+    await c('history.undo').click();
+    await expect.poll(marks).toBe(before);
+  };
+
+  await expect(count).toHaveText('0 points');
+  await expect(c('path.apply')).toBeDisabled();
+  await triangle();
+  await c('path.apply').click();
+  await expect.poll(marks).toBe(before + 1);
+  await expect(count).toHaveText('0 points');
+  await undo();
+
+  await triangle();
   await expect(c('view.canvas')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect.poll(marks).toBe(before + 1);
-  await c('history.undo').click();
-  await expect.poll(marks).toBe(before);
-  await page.mouse.click(...at(0.3, 0.3));
-  await page.mouse.click(...at(0.6, 0.35));
+  await undo();
+
+  await tap(0.3, 0.3);
+  await tap(0.6, 0.35);
   await expect(count).toHaveText('2 points');
   await page.keyboard.press('Escape');
   await expect(count).toHaveText('0 points');
   await expect.poll(marks).toBe(before);
+
+  await c('tool.shape').click();
+  await c('shape.kind').selectOption('rectangle');
+  await tap(0.25, 0.25);
+  await tap(0.55, 0.6);
+  await expect(count).toHaveText('2 points');
+  await c('path.apply').click();
+  await expect.poll(marks).toBe(before + 1);
+  await undo();
   await c('tool.select').click();
 }
