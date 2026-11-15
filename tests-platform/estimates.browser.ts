@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { input } from '../tests-estimates/fixtures';
+import { expectTaskLanguage } from './copy-guard';
 
 test('encrypted estimate and preset persistence, immutable versions, isolation and lock', async ({
   page,
@@ -236,6 +237,7 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   ]) {
     await page.setViewportSize(viewport);
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
+    await expectTaskLanguage(page, `estimate ${viewport.width}`);
     await page.screenshot({
       path: info.outputPath(`estimate-${viewport.width}.png`),
       fullPage: true,
@@ -299,9 +301,11 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
     page.getByText('Backups don’t include estimates or report drafts yet.'),
   ).toBeVisible();
   await expect(page.locator('[data-control-id="backup.export"]')).toBeDisabled();
+  await expectTaskLanguage(page, 'project backup gap');
   await page.screenshot({ path: info.outputPath('project-backup-gap.png'), fullPage: true });
   await page.locator('[data-control-id="project.review.estimates"]').click();
   await page.getByLabel('App language').selectOption('hu');
   await expect(page.getByRole('button', { name: 'Becslési verzió mentése' })).toBeVisible();
+  await expectTaskLanguage(page, 'estimate hu');
   await page.screenshot({ path: info.outputPath('estimate-hu-390.png'), fullPage: true });
 });

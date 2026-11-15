@@ -16,6 +16,7 @@ import { projectTable, revisionQueueTable } from '../src/platform/vault/store';
 import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } from './photo-review';
 import { dng } from './fixtures/images';
 import { setupRememberedVault } from './vault-setup';
+import { expectTaskLanguage } from './copy-guard';
 
 test.use({ hasTouch: true });
 
@@ -263,6 +264,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(drawingControl(page, 'tool.brush')).toBeDisabled();
   await drawingControl(page, 'mode.photo').click();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await expectTaskLanguage(page, 'project landscape');
   await page.screenshot({ path: info.outputPath('projects-landscape.png'), fullPage: true });
   await page.goBack();
   await expect(page).toHaveURL(projectPath);
@@ -320,6 +322,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await review('review.cropWidth').fill('75');
   await review('review.apply').click();
   await expect(page.getByText('The preparation changed. Check the calibration.')).toBeVisible();
+  await expectTaskLanguage(page, 'surface reopened');
   await page.screenshot({ path: info.outputPath('surface-reopened.png') });
   await controls('surface.project').click();
   await page

@@ -1,6 +1,7 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { drawingControls } from '../src/ui/editor/drawing-review/registry';
+import { expectTaskLanguage } from './copy-guard';
 
 export function drawingControl(page: Page, key: string) {
   const id = 'surface.draw.' + key;
@@ -300,6 +301,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
         await touchTargets(['point.x']);
         await page.evaluate(() => window.scrollTo(0, 0));
       }
+      await expectTaskLanguage(page, `drawing ${viewport.width} ${state}`);
       await page.screenshot({
         path: info.outputPath(`drawing-${viewport.width}-${state}.png`),
         fullPage: true,

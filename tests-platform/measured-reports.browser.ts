@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { orientedJpeg } from './fixtures/images';
+import { expectTaskLanguage } from './copy-guard';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 
@@ -116,6 +117,7 @@ test('reconciles a committed checkpoint estimate with scoped production download
       'scrollWidth',
       await dialog.locator('.report-scroll').evaluate((node) => node.clientWidth),
     );
+    await expectTaskLanguage(page, 'measured ' + viewport.width);
     await page.screenshot({ path: info.outputPath('measured-' + viewport.width + '.png') });
   }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
