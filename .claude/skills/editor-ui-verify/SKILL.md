@@ -26,6 +26,17 @@ npm run check && npm run build-storybook && npm test && npm run test:files
 `test:app`, `test:sync`, `test:estimates` and Go tests need extra setup (see `CLAUDE.md`); say in
 the handoff when they were not run.
 
+## Proving a change has no visible effect
+
+1. Before the change, copy `test-results/**/drawing-*.png` to `../.analysis/claude-tmp/<step>-base/`.
+2. After `test:files`, copy them to `<step>-after/` and run
+   `node ../.analysis/claude-tmp/pixdiff.cjs "$PWD" <base> <after> <files…>`. It decodes the PNGs in
+   system Chrome (`channel: 'chrome'`; Playwright's bundled browser isn't installed) and prints the
+   differing pixels. Byte equality alone isn't enough, since PNG bytes vary.
+3. Run the same flow twice on the new code to see the noise. Known noise: `drawing-390-closed.png`
+   rows 508 to 551 change between identical runs, and antialiased photo or mask edges can differ by
+   one unit in a few dozen pixels. A real layout change moves whole regions.
+
 ## Traps
 
 - **Don't edit files while the verify chain runs.** `format:check` reads the half-edited file and

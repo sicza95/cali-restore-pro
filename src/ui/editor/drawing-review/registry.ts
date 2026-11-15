@@ -23,7 +23,7 @@ function register(
     valueSource,
     behavior: 'review',
     owner,
-    composition: 'Authorized surface drawing review adapter',
+    composition: 'Authorized surface drawing workspace on EditorWorkspace',
     unavailable: {
       failure,
       empty:

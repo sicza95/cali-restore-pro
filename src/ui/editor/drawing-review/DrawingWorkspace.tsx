@@ -32,8 +32,8 @@ import './styles.css';
 import './workspace.css';
 
 /**
- * The application's drawing review, rendered through the editor shell. The model, tools,
- * canvas and every `surface.draw.*` control are the ones `DrawingReviewAdapter` uses.
+ * The application's drawing review, rendered through the editor shell. It owns the model, the
+ * tools and the canvas; every `surface.draw.*` control it renders is in `registry.ts`.
  */
 export function DrawingWorkspace(props: {
   active: boolean;

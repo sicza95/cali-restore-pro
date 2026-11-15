@@ -41,6 +41,8 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
    - Update the doc comments that mention the adapter (`DrawingWorkspace.tsx`, `DrawingHistory.tsx`, `DrawingToolSettings.tsx`, `DrawingLayers.tsx`).
    - Check: `npm run check` (TypeScript and ESLint find the leftovers), `npm run build-storybook`, `test:files` parity still green.
 
+   - As built: deleted `DrawingReviewAdapter.tsx` (249 lines) and 74 lines of `styles.css`: `.drawing-review`, `.drawing-rail`, `.drawing-stage`, `.drawing-view`, `.drawing-inspector`, `.drawing-management` and the three media queries that only placed them. `.drawing-transient` keeps its `grid-area: label` for now, because the workspace uses the class; commit 3 removes it, with the screenshot check. No registry ids were dead (commit 1), so only `composition` changed. The host-prop comments in `DrawingHistory`, `DrawingLayers` and `DrawingToolSettings` go with those props in commit 3. Screenshots against `f79525e`: five byte-identical; three differ only in run-to-run noise (see `editor-ui-verify`).
+
 3. **`refactor(editor): one host for the drawing panels`**
    - `DrawingLayers`: remove `list` and the list branch the workspace never renders (the shell's `LayerPanel` lists layers).
    - `DrawingHistory`: remove `controls` and the draft controls it hides (`DrawingDraftBar` in the inspector lead holds them).

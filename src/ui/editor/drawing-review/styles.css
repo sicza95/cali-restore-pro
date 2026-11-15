@@ -10,7 +10,6 @@
   border-bottom: 1px solid var(--cr-rule);
 }
 .surface-mode button,
-.drawing-rail button,
 .drawing-layer-select {
   border: 1px solid transparent;
 }
@@ -29,50 +28,15 @@
   border-bottom-color: var(--cr-accent);
   color: var(--cr-ink);
 }
-.drawing-rail button[aria-pressed='true'],
 .drawing-layer-select[aria-pressed='true'] {
   background: var(--cr-selected);
   border-color: var(--cr-accent);
-}
-.drawing-review {
-  display: grid;
-  grid-template-columns: 54px minmax(0, 1fr) minmax(235px, 31%);
-  grid-template-areas: 'label label label' 'rail canvas inspector';
-  align-items: start;
-  gap: 8px;
 }
 .drawing-transient {
   grid-area: label;
   margin: 0;
   padding-block: 2px 6px;
   color: var(--cr-muted);
-}
-.drawing-rail {
-  grid-area: rail;
-  display: grid;
-  gap: 4px;
-  padding: 4px;
-  background: var(--cr-surface);
-  border: 1px solid var(--cr-rule);
-  border-radius: var(--cr-radius);
-}
-.drawing-review :is(button, input, select, summary) {
-  min-inline-size: var(--cr-touch);
-  min-block-size: var(--cr-touch);
-}
-.drawing-review .drawing-icon {
-  display: grid;
-  place-items: center;
-  inline-size: var(--cr-touch);
-  padding: 0;
-}
-.drawing-rail button[aria-disabled='true'] {
-  color: var(--cr-muted);
-  cursor: default;
-}
-.drawing-stage {
-  grid-area: canvas;
-  min-width: 0;
 }
 .drawing-viewport {
   position: relative;
@@ -157,12 +121,6 @@
 .drawing-cursor {
   stroke-width: 1;
 }
-.drawing-view {
-  margin-top: 8px;
-}
-.drawing-view label:has(input[type='number']) {
-  max-width: 10rem;
-}
 .drawing-help,
 .drawing-feedback {
   font-size: 0.875rem;
@@ -173,20 +131,10 @@
 .drawing-feedback {
   color: var(--cr-accent);
 }
-.drawing-inspector {
-  grid-area: inspector;
-  display: grid;
-  min-width: 0;
-  gap: 8px;
-}
 .drawing-panel,
-.drawing-management,
 .drawing-properties {
   display: grid;
   gap: 8px;
-}
-.drawing-management {
-  min-width: 0;
 }
 .drawing-panel {
   padding: 12px;
@@ -256,26 +204,4 @@
 }
 .drawing-dialog::backdrop {
   background: rgb(0 0 0 / 48%);
-}
-@media (min-width: 951px) and (min-height: 720px) {
-  .drawing-stage,
-  .drawing-rail {
-    position: sticky;
-    top: 12px;
-  }
-}
-@media (max-width: 950px) {
-  .drawing-review {
-    grid-template-columns: 54px minmax(0, 1fr);
-    grid-template-areas: 'label label' 'rail canvas' 'inspector inspector';
-  }
-  .drawing-inspector {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
-}
-@media (max-width: 540px) {
-  .drawing-inspector {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }

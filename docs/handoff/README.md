@@ -13,13 +13,20 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Step 4 commit 2: delete `DrawingReviewAdapter` and its adapter-only CSS on `refactor/retire-drawing-adapter`.
+Step 4 commit 3: one host for the drawing panels (remove `list`, `controls`, `actions`, `toolOptions`, the `numeric` slot, `.drawing-transient`'s `grid-area` and copy keys with no reader), on `refactor/retire-drawing-adapter`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 commit 2: adapter deleted
+
+- Pushed `refactor/retire-drawing-adapter` with commit 1 (`f79525e`); Verified.
+- Deleted `DrawingReviewAdapter.tsx` and its adapter-only CSS (326 lines in all). The registry's `composition` now names the workspace, and the `DrawingWorkspace` doc comment no longer names the adapter.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed; parity green). Screenshots against commit 1: no visible change (five identical; three show only run-to-run noise, confirmed by a second run on the same code).
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests. Committed on the branch, not pushed.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 4 commit 1: parity test
 
