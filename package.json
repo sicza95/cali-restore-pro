@@ -32,6 +32,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "playwright test",
+    "test:unit": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run format:check"
   },
   "dependencies": {
@@ -51,6 +52,7 @@
     "@types/node": "24.12.2",
     "eslint": "10.14.0",
     "eslint-plugin-solid": "0.18.1",
+    "fake-indexeddb": "6.2.6",
     "playwright-core": "1.62.1",
     "prettier": "3.9.10",
     "storybook": "10.6.5",
@@ -58,6 +60,7 @@
     "typescript": "6.0.2",
     "typescript-eslint": "8.72.1",
     "vite": "7.3.7",
-    "vite-plugin-solid": "2.11.12"
+    "vite-plugin-solid": "2.11.12",
+    "vitest": "5.0.5"
   }
 }
