@@ -32,6 +32,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
    - A non-passive `wheel` listener on the viewport: Ctrl or ⌘ plus wheel, and trackpad pinch (which browsers report as Ctrl plus wheel), zooms around the pointer. A plain wheel pans when zoomed in and is left alone at fit, so the page still scrolls past the editor.
    - With focus on the canvas: `+` and `=` zoom in, `-` zooms out, `0` fits. They go through the existing shortcut handler, after the field guard, so typing in fields is unaffected.
    - Maximum zoom 800 % (decision 1).
+   - As built: the keys are handled on the canvas's own `keydown` (only when the canvas itself has focus, so fields never see them) and cancel the event, so the workspace shortcut handler skips them. The numeric `view.zoom` field's maximum is 800 % in both hosts. `tests-platform/canvas-zoom.ts` covers wheel and keys already in this commit; commit 7 adds the rest.
 
 2. **`feat(editor): compact zoom controls in the footer`**
    - New `DrawingViewControls.tsx` (keeps `DrawingWorkspace.tsx` under 330 lines): zoom out, a readout that fits when pressed ("140 %", named "Fit · 140 %"), zoom in, and the reference-only toggle. Zoom out and in get new ids (`view.zoomOut`, `view.zoomIn`); the readout keeps `view.fit`.
