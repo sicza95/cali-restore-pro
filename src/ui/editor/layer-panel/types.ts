@@ -9,6 +9,8 @@ export type LayerPanelProps = {
   onSelect: (layer: LayerId) => void;
   onToggleVisible: (layer: LayerId) => void;
   onCalibrate?: () => void;
+  /** Rendered above the layer list. */
+  lead?: JSX.Element;
   /** Rendered below the layer list. */
   detail?: JSX.Element;
   /**

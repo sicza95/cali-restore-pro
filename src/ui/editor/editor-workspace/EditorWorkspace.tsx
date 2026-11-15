@@ -69,14 +69,16 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
           <IconButton
             variant="ghost"
             icon="undo"
-            label={copy().undo}
+            label={props.history.undoLabel ?? copy().undo}
+            data-control-id={props.history.controlId?.('undo')}
             disabled={!props.history.canUndo}
             onClick={() => props.history.onUndo()}
           />
           <IconButton
             variant="ghost"
             icon="redo"
-            label={copy().redo}
+            label={props.history.redoLabel ?? copy().redo}
+            data-control-id={props.history.controlId?.('redo')}
             disabled={!props.history.canRedo}
             onClick={() => props.history.onRedo()}
           />
@@ -135,6 +137,7 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
             }
             onCalibrate={props.onCalibrate && (() => props.onCalibrate?.())}
             detail={props.inspectorDetail}
+            lead={props.inspectorLead}
           />
         </Show>
       </div>

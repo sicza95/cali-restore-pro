@@ -7,19 +7,28 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`, commits 2 (Apply and Cancel in the chip) and 3 (one layer list) are on `feat/pointer-drawing-first`; the owner accepted decisions 1 to 3 as recommended.
+- **Active roadmap phase:** Phase 1 step 1 ([editor convergence](../plan/editor-convergence.md)) is done and ticked in the quality baseline. Phase 1 step 2 ([pointer drawing first](../plan/editor-pointer-first.md)) is in progress: commit 1 (inspector split) is on `main`, commits 2 to 4 (Apply and Cancel in the chip, one layer list, drafts and history outside Details) are on `feat/pointer-drawing-first`; the owner accepted decisions 1 to 3 as recommended.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-On `feat/pointer-drawing-first`, start commit 4 of [pointer drawing first](../plan/editor-pointer-first.md): the shell's header undo and redo take the descriptive names and `history.*` ids, and a draft bar with Commit and Discard shows above the layer list; save mode and the history log stay in "Details".
+On `feat/pointer-drawing-first`, start commit 5 of [pointer drawing first](../plan/editor-pointer-first.md): close "Details" by default and rename it "Enter by number", add the one-line help with a button that opens it, and hide the inspector footer when nothing in it applies.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 4: drafts and history outside Details
+
+- `EditorHistory` gained optional `undoLabel`, `redoLabel` and `controlId`. In the drawing workspace the shell's header undo and redo carry the descriptive names ("Undo · Brush stroke · Master mask") and the `history.undo` and `history.redo` ids. They are disabled while saving, as the inspector pair was inside its busy fieldset.
+- `EditorWorkspace` gained `inspectorLead`, passed to `LayerPanel` as `lead` and rendered above the layer list. The drawing puts a draft bar there (`DrawingDraftBar`: layer, pending count, Commit, Discard) while the selected layer has a draft. Commit is the inspector's only primary button.
+- `DrawingHistory` takes `controls={false}` in the workspace, so "Details" keeps save mode, the retained-history line and the locked notice. The unused adapter keeps the full history panel. Label text is shared through `historyLabel`.
+- The shell hides redo at 640 px and below; the drawing workspace shows it again, because the header pair is now the only redo button.
+- Verified: `npm run check`, `npm test` (12), `npm run test:files` (21), `npm run build-storybook`. Temporary screenshots (not committed) of the inspector with a pending draft at 1194 px and of the header at 390 px.
+- Not verified: `test:app`, dark theme in the app.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 2 commit 3: one layer list
 

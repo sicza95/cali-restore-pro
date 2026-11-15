@@ -56,6 +56,14 @@
   .drawing-workspace .cr-context-layer {
     display: none;
   }
+  /* The shell hides redo at phone width; the drawing has no other redo button now. */
+  .drawing-workspace .cr-header-tools > button:nth-child(2) {
+    display: inline-flex;
+  }
+}
+
+.drawing-draft-bar {
+  margin-bottom: 12px;
 }
 
 .drawing-workspace .cr-tool-context input[type='number'] {

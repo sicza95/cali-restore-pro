@@ -10,6 +10,11 @@ export type EditorHistory = {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  /** Accessible names that say what will be undone or redone, for example "Undo · Brush stroke". */
+  undoLabel?: string;
+  redoLabel?: string;
+  /** The undo and redo buttons' `data-control-id`. */
+  controlId?: (action: 'undo' | 'redo') => string;
 };
 
 /**
@@ -56,6 +61,8 @@ export interface EditorWorkspaceProps<T extends string = Tool> {
   canvas: JSX.Element;
   toolOptions?: JSX.Element;
   inspectorDetail?: JSX.Element;
+  /** Rendered in the Layers tab above the layer list. */
+  inspectorLead?: JSX.Element;
   footerStart?: JSX.Element;
   /** Notices and dialogs, rendered last inside the root. */
   children?: JSX.Element;

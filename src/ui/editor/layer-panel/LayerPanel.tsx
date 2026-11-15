@@ -147,6 +147,7 @@ export function LayerPanel(props: LayerPanelProps) {
             when={tab() === 'layers'}
             fallback={<LayerMeasurements copy={props.copy} layers={props.layers} />}
           >
+            {props.lead}
             <Show
               when={props.tree}
               fallback={
