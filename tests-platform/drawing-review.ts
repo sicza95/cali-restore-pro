@@ -91,7 +91,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   };
 
   await c('mode.drawing').click();
-  await expect(page.getByText(/^Committed masks are saved to this surface/)).toBeVisible();
+  await expect(page.getByText(/^Masks are saved to this surface/)).toBeVisible();
   await openDetails(page);
   // The exact zoom field sits in "Enter by number" with the other exact values, not the footer.
   await expect(page.locator('.drawing-details').locator(c('view.zoom'))).toHaveCount(1);
@@ -180,7 +180,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('resolve.commit').click();
   await expect(c('point.mark')).toBeVisible();
   await expect(selected()).toContainText('2 · Mark');
-  await expect(c('history.undo')).toHaveAccessibleName('Undo · Draft batch · Damage mask');
+  await expect(c('history.undo')).toHaveAccessibleName('Undo · Several marks · Damage mask');
   await c('history.undo').click();
   await expect(selected()).toContainText('0 · Mark');
   await c('history.redo').click();

@@ -1,10 +1,11 @@
 import { Show } from 'solid-js';
 import { Icon } from '../../icon/Icon';
 import { Button } from '../button/Button';
-import { saveStates } from './constants';
+import { saveIcons, saveLabels } from './constants';
 import type { SaveStatusProps } from './types';
 
 export function SaveStatus(props: SaveStatusProps) {
+  const text = () => (props.labels ?? saveLabels)[props.state];
   return (
     <div
       class="cr-save"
@@ -13,12 +14,12 @@ export function SaveStatus(props: SaveStatusProps) {
       aria-atomic="true"
       title={props.detail}
     >
-      <Icon name={saveStates[props.state].icon} size={16} />
-      <span class="cr-save-long">{saveStates[props.state].label}</span>
-      <span class="cr-save-short">{saveStates[props.state].compact}</span>
+      <Icon name={saveIcons[props.state]} size={16} />
+      <span class="cr-save-long">{text().label}</span>
+      <span class="cr-save-short">{text().compact}</span>
       <Show when={props.state === 'error' && props.onRetry}>
         <Button variant="ghost" onClick={() => props.onRetry?.()}>
-          Retry
+          {props.retryLabel ?? 'Retry'}
         </Button>
       </Show>
     </div>

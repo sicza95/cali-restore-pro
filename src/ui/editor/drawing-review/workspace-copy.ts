@@ -1,9 +1,10 @@
+import { saveLabels } from '../../controls/save-status/constants';
 import type { EditorCopy } from '../types';
 
 /** The editor shell's strings for the application, in English and Hungarian. */
 const shell: Record<'en' | 'hu', EditorCopy> = {
   en: {
-    editor: 'Drawing review',
+    editor: 'Drawing',
     workspaceActions: 'Workspace actions',
     undo: 'Undo',
     redo: 'Redo',
@@ -13,7 +14,7 @@ const shell: Record<'en' | 'hu', EditorCopy> = {
     exportUnavailable: 'Export is not available here',
     canvas: 'Mapping reference',
     maskOpacity: 'Mask opacity',
-    perStrokeSave: 'Per-stroke save',
+    perStrokeSave: 'After each stroke',
     inspector: 'Surface inspector',
     inspectorTabs: 'Inspector',
     layers: 'Layers',
@@ -34,9 +35,11 @@ const shell: Record<'en' | 'hu', EditorCopy> = {
     phaseNote: 'Treatment areas are measured separately.',
     calibration: 'Calibration & units',
     calibrationUnavailable: 'Add a reference photo first',
+    save: saveLabels,
+    retry: 'Retry',
   },
   hu: {
-    editor: 'Rajz ellenőrzése',
+    editor: 'Rajzolás',
     workspaceActions: 'Munkaterület műveletei',
     undo: 'Visszavonás',
     redo: 'Újra',
@@ -46,7 +49,7 @@ const shell: Record<'en' | 'hu', EditorCopy> = {
     exportUnavailable: 'Az exportálás itt nem érhető el',
     canvas: 'Térképezési referencia',
     maskOpacity: 'Maszk átlátszatlansága',
-    perStrokeSave: 'Mentés vonásonként',
+    perStrokeSave: 'Minden vonás után',
     inspector: 'Felület adatai',
     inspectorTabs: 'Adatok',
     layers: 'Rétegek',
@@ -67,6 +70,14 @@ const shell: Record<'en' | 'hu', EditorCopy> = {
     phaseNote: 'A kezelési területeket külön mérjük.',
     calibration: 'Kalibrálás és mértékegységek',
     calibrationUnavailable: 'Előbb adjon hozzá referenciafotót',
+    save: {
+      saved: { label: 'Mentve ezen az eszközön', compact: 'Mentve' },
+      saving: { label: 'Mentés ezen az eszközön…', compact: 'Mentés…' },
+      offline: { label: 'Offline · mentve ezen az eszközön', compact: 'Offline · mentve' },
+      draft: { label: 'Vázlat mentve ezen az eszközön', compact: 'Vázlat mentve' },
+      error: { label: 'A mentés nem sikerült', compact: 'A mentés nem sikerült' },
+    },
+    retry: 'Újrapróbálás',
   },
 };
 
