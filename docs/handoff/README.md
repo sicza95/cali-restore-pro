@@ -7,13 +7,13 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 - **Branch:** `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
-- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. Step 2 commit 1 is on `main`; commits 2 to 6 are on `feat/pointer-drawing-first`, pushed, with no PR yet.
+- **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. Step 2 commit 1 is on `main`; commits 2 to 6 are on `feat/pointer-drawing-first` in [PR #15](https://github.com/sicza95/cali-restore-pro/pull/15), awaiting the owner's review.
 - **Suite status:** see the latest log entry.
 - **Not run:** `test:app` (since commit 1), `test:sync`, `test:estimates`, Go tests, backup and smoke scripts.
 
 ## Next step
 
-Open the PR for `feat/pointer-drawing-first` (step 2 commits 2 to 6) with the closed and open screenshots at 1194, 834 and 390 px, and merge after the owner's review. Then plan Phase 1 step 3 (canvas-first layout: gesture and wheel zoom, portrait inspector height, the cramped 390 px footer).
+Owner reviews [PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) (step 2 commits 2 to 6; screenshots come from `npm run test:files`) and merges it. Then plan Phase 1 step 3 (canvas-first layout: gesture and wheel zoom, portrait inspector height, the cramped 390 px footer).
 
 ## Open questions for the owner
 
