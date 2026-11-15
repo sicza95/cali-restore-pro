@@ -1,6 +1,6 @@
 # Number and unit formatting — Phase 2, step 2
 
-15 November 2026 · Status: planned · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 2 item 2, UX finding 2 · Targets: iPad and desktop
+15 November 2026 · Status: done, in review · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 2 item 2, UX finding 2 · Targets: iPad and desktop
 
 Goal: every number on screen is rounded for its unit and written the way the reader's language writes numbers. No raw floats such as `0.00113388 ft²`, no `1.5` in Hungarian where `1,5` belongs, no money as a bare `1234.5`. Calculations, saved data and machine-readable exports (CSV, XLSX) do not change.
 
@@ -46,8 +46,16 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
 2. **`feat(format): shared number and unit formatter`** — the module and a Node-only test (`tests/number-format.spec.ts`, run by `npm test`) covering EN and HU decimals, grouping, small and large values, zero, negatives, missing values, money and rates.
 3. **`fix(ui): format measured areas and percentages`** — surface measurements, checkpoints (including signed deltas), the measured phase area, the editor's `Area`, coverage and calibration area, file sizes. The editor gets the language through `EditorCopy`.
 4. **`fix(estimates): format money, hours and rates`** — estimate results, the saved version list, the report's estimate section; test lookups that read `430` or `20.00` updated.
+   - As built: also the shared estimate view (`SharedEstimateProjection.tsx`) and the private preset list, which echoed `40 HUF /hourly`; both were missed by the first search because they print decimal strings without `toFixed`. The saved version summary moved to `EstimateVersion.tsx` (`EstimateReview.tsx` 399 → 331 lines). The measured phase area moved here from commit 3, since it lives in `PhaseInputs.tsx`.
 5. **`fix(reports): format the report preview and visual exports`** — `ReportPreview.tsx` and `export-visual.ts` use the unit-aware formatter; CSV and XLSX unchanged.
+   - As built: one `cellText(value, unit, language)` in `src/platform/reports/cell-text.ts` reads the unit (area, length, `%`, `h`, currency, currency/unit) and picks the formatter.
 6. **`test(copy): no raw floats on screen`** — `copy-guard.ts` also fails on a number with five or more fraction digits; a negative run with the old formatter must fail.
+   - As built: negative run with a raw `0.00113388` on the estimate page failed `estimate 1194`. No guarded screen shows a calibrated surface measurement, so the measurement screens are covered by the formatter tests, not the guard.
+
+## Follow-ups
+
+- Dates: the report preview still shows ISO timestamps ("Checkpoint captured 2026-11-15T14:45:17.592Z"), and the shared estimate prints its raw freshness value ("current").
+- The invitation scope samples in `sharing-scopes.ts` are fixed English strings ("1,250 EUR").
 
 ## Verification
 
