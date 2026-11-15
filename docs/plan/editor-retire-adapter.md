@@ -50,6 +50,8 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
    - `copy.ts`: delete the keys with no reader left (find them with a search after the removals), in EN and HU together.
    - Check: `test:files` screenshots `drawing-{1194,834,390}-{closed,open}.png` and `drawing-{834,390}-tall.png` look the same as at `de28868`. The parity test is green. Axe passes at each width.
 
+   - As built: 197 lines removed, 21 added. `DrawingLayers` lost its list (the row memo, the `Icon` import and the `.drawing-layers` / `.drawing-layer-select` styles). `DrawingHistory` takes only `model` and `copy`. `DrawingToolSettings` always renders an `h2` and always takes `help`, so the `level` prop, `Dynamic` and the path and shape help fallback went too, along with `toolOptions`, `actions` and `numeric`. `DrawingToolOptions` lost `actions` (always on). `.drawing-transient` lost the adapter's `grid-area`. Copy: `fit`, `pathHelp`, `shapeHelp` and `collapse` had no reader left and are gone in EN and HU (`checkpointChange` and `photoChange` look unread but are history actions from `surface-journal.ts`, read through `c()[item.action]`). Screenshots against commit 2: seven pixel-identical, `drawing-834-closed` shows the same 16 antialiased pixels as before.
+
 4. **`docs(plan): step 4 done`**
    - Tick Phase 1 item 4 in the quality baseline. Add "As built" notes here, and update the handoff.
    - Re-rate the architecture finding "Two editor implementations" in the baseline (it should retire).

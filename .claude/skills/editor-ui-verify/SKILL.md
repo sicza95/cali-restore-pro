@@ -37,7 +37,16 @@ the handoff when they were not run.
    rows 508 to 551 change between identical runs, and antialiased photo or mask edges can differ by
    one unit in a few dozen pixels. A real layout change moves whole regions.
 
+## Finding unread copy keys
+
+`node ../.analysis/claude-tmp/unread-copy.cjs "$PWD"` lists `drawing-review/copy.ts` keys with no
+`.key` reader under `src` and no string literal in the files that index the copy dynamically.
+Check each result by hand: `checkpointChange` and `photoChange` come from `surface-journal.ts`, and a
+key can look read through another copy object with the same name (`SurfaceCopy.fit`).
+
 ## Traps
+
+- **Inline scripts lose backslashes.** Heredocs through the Bash tool can drop `\\` in regexes. Write helper scripts with the Write tool.
 
 - **Don't edit files while the verify chain runs.** `format:check` reads the half-edited file and
   stops the chain. Finish edits and `prettier --write` first.
