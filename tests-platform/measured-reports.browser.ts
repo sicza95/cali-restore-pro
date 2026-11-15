@@ -126,7 +126,7 @@ test('reconciles a committed checkpoint estimate with scoped production download
   const text = await readFile((await (await download).path())!, 'utf8');
   expect(text.match(/data:image\/jpeg;base64,/g)).toHaveLength(1);
   expect(text).toContain('Initial on-site survey');
-  expect(text).toContain('Estimate total · 20 EUR');
+  expect(text).toContain('Estimate total · €20.00');
   for (const privateText of ['PRIVATE-', '#abcdef', 'Reference photo 2', ...fixture.privateIds])
     expect(text).not.toContain(privateText);
   await report('cancel').click();
