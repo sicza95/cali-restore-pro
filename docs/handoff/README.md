@@ -4,7 +4,7 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Current state
 
-- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 1). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
+- **Branch:** `feat/canvas-first-layout` (step 3, one PR; pushed up to commit 3). Before that: `main`, pushing directly per `AGENTS.md`; step 2 commits 2 to 6 go on `feat/pointer-drawing-first` and land through one PR. Convergence commit 4 landed through [PR #14](https://github.com/sicza95/cali-restore-pro/pull/14); commit 5 went straight to `main`.
 - **Last milestone:** M-16 measured estimates and draft outputs ([evidence](../m16-measured-integration.md)), followed by `3c33d33` workspace/shell refresh and dev launcher, then `d2f0e33` onboarding docs.
 - **Quality baseline:** [2026-11-14 review](../reviews/2026-11-14-quality-baseline.md) — code 7, architecture 7, UX 4, UI 5. Re-checked against fresh screenshots from `d2f0e33`; ratings unchanged, one finding corrected, one retired.
 - **Active roadmap phase:** Phase 1 steps 1 ([editor convergence](../plan/editor-convergence.md)) and 2 ([pointer drawing first](../plan/editor-pointer-first.md)) are done and ticked in the quality baseline. All of step 2 is on `main` ([PR #15](https://github.com/sicza95/cali-restore-pro/pull/15) merged as `e2014fa`). Step 3 ([canvas-first layout](../plan/editor-canvas-first.md)) is planned; the owner accepted all five decisions as recommended. Its seven commits go on `feat/canvas-first-layout` for one PR.
@@ -13,13 +13,23 @@ Shared by Codex and Claude. Update at the end of every working session. Newest e
 
 ## Next step
 
-Step 3 commit 3 (`fix(editor): fit the photo to the canvas`) on `feat/canvas-first-layout`.
+Step 3 commit 4 (`feat(editor): portrait inspector height`) on `feat/canvas-first-layout`.
 
 ## Open questions for the owner
 
 1. Is the 390 px phone layout a supported target, or only iPad and desktop?
+2. At fit, the floating tool rail now covers about 70 px of the photo's left edge (landscape photos fill the canvas width). Pan is off at fit, so that strip is only reachable after zooming in. Accept it, or inset the fit box to clear the rail?
 
 ## Log
+
+### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 3: fit the photo to the canvas
+
+- Pushed `feat/canvas-first-layout` at `a19167d` (commit 2) at the owner's request; Verified.
+- The photo is contained in the canvas box and centred: the workspace viewport is a size container, and `.drawing-photo` is sized by `min(100cqw, 100cqh * ratio)` with `aspect-ratio`, from a `--drawing-ratio` variable `DrawingCanvas` sets from the source frame. The `max-height: calc(var(--cr-editor-height) - 200px)` cap is gone. Pointer mapping reads the photo's box, so input code is unchanged.
+- `test:files` caught one fallout: `verifyDetailDrawing` tapped the photo at 6 % / 6 %, which now lands on the tool rail's Navigate button. The tap moved to the top-right corner (94 % / 6 %). `verifyPointerPath` passed unchanged.
+- Verified: `npm run check`, `npm run build-storybook`, `npm test` (12 passed), `npm run test:files` (21 passed after the test fix). Looked at `drawing-1194-closed`, `drawing-834-closed` and `drawing-390-closed`: the photo fills the canvas width at every width; at 834 px the 100 px band above the photo is gone and the photo is centred vertically. At 390 px the chip still covers the photo (commit 6).
+- Open question for the owner: the rail now covers the photo's left edge at fit (see above).
+- Not run: `test:app`, `test:sync`, `test:estimates`, Go tests.
 
 ### 2026-11-15 · Claude (Claude Code on the owner's Windows machine) · Step 3 commit 2: compact zoom controls in the footer
 

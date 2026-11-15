@@ -37,6 +37,9 @@ the handoff when they were not run.
 - **White on white in the app.** The app's global `button` rule sets white text, and shell buttons
   (`Button`, `IconButton`) don't set a colour. Storybook looks fine; the app doesn't. Set
   `color: var(--cr-ink)` on them and always look at the app screenshots.
+- **The tool rail covers the photo's left edge.** The photo is fitted to the canvas (step 3 commit 3),
+  so taps by photo percentage near the left edge hit rail buttons. Tap clear of it; when a tap draws
+  nothing, check `document.elementFromPoint` at the tap point first.
 - New controls need an entry in `src/ui/editor/drawing-review/registry.ts`, or
   `control-inventory.spec.ts` fails.
 - Keep `DrawingWorkspace.tsx` and `DrawingCanvas.tsx` small; new logic goes in new files (400-line

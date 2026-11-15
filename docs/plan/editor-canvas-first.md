@@ -41,6 +41,7 @@ Each commit keeps `npm run check`, `npm test` and `npm run test:files` green.
 
 3. **`fix(editor): fit the photo to the canvas`**
    - Replace the `max-height` cap with fitting the photo inside the canvas box (contain, centred), so one axis always fills the canvas. Pointer mapping already reads the photo's bounding box, so input needs no change; check the pen taps in `verifyPointerPath` still land.
+   - As built: the viewport becomes a size container in the workspace, and `.drawing-photo` gets `width: min(100cqw, 100cqh * ratio)` and `aspect-ratio` from a `--drawing-ratio` variable that `DrawingCanvas` sets from the source frame. The unused `DrawingReviewAdapter` keeps its old cap. Because the photo now reaches the canvas edges, the floating tool rail covers the photo's left edge at fit; `verifyDetailDrawing` tapped at 6 % / 6 %, which now hits the Navigate button, so its corner tap moved to the top-right.
 
 4. **`feat(editor): portrait inspector height`**
    - At 960 px and below the inspector row height comes from a state the drawing owns (decision 3: two heights). A grip button at the top of the inspector (`view.inspector`, `aria-expanded`, 44 px) switches between a short state (tabs, draft bar and the selected layer) and a tall one (about 60 % of the editor). Focus mode keeps hiding it entirely.

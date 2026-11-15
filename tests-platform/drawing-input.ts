@@ -111,7 +111,8 @@ export async function verifyDetailDrawing(page: Page) {
   const img = page.locator('.drawing-photo img');
   await img.scrollIntoViewIfNeeded();
   const box = (await img.boundingBox())!;
-  await page.mouse.click(box.x + box.width * 0.06, box.y + box.height * 0.06);
+  // Top-right corner: the photo fills the canvas width, so the tool rail covers its left edge.
+  await page.mouse.click(box.x + box.width * 0.94, box.y + box.height * 0.06);
   await expect(row).toContainText('3 · Mark');
   await page.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.5);
   await expect(row).toContainText('4 · Mark');
