@@ -1,7 +1,7 @@
 /* eslint-disable solid/reactivity -- Form submissions read the current props. */
 import { createSignal, Show } from 'solid-js';
-import type { revisionKeyTransfer } from '../../../platform/projects/revision-key-transfer';
-import type { Language } from '../types';
+import type { revisionKeyTransfer } from '../../platform/projects/revision-key-transfer';
+import type { Language } from '../account-access/types';
 
 type Model = ReturnType<typeof revisionKeyTransfer>;
 type Form = {

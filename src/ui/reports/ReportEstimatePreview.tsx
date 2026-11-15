@@ -1,9 +1,9 @@
 import { For, Show } from 'solid-js';
-import type { ReportEstimate } from '../../../platform/reports/estimate';
-import { formatHours, formatMoney, formatRate } from '../../../platform/format/number';
-import type { Language } from '../types';
-import { estimateCopy } from '../../../platform/estimates/copy';
-import { reportCopy } from '../../../platform/reports/copy';
+import type { ReportEstimate } from '../../platform/reports/estimate';
+import { formatHours, formatMoney, formatRate } from '../../platform/format/number';
+import type { Language } from '../account-access/types';
+import { estimateCopy } from '../../platform/estimates/copy';
+import { reportCopy } from '../../platform/reports/copy';
 
 export function ReportEstimatePreview(props: { estimate: ReportEstimate; language: Language }) {
   const c = () => reportCopy[props.language];

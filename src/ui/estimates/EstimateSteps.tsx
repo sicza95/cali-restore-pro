@@ -1,6 +1,6 @@
 import { For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
+import type { EstimateCopy } from '../../platform/estimates/copy';
 import { stepControl } from './estimate-controls';
 
 export const estimateSteps = ['objects', 'phases', 'extras', 'adjustments', 'issue'] as const;

@@ -1,16 +1,13 @@
 import { createSignal, For, Show, untrack } from 'solid-js';
-import type { SavedProject } from '../../../platform/projects/types';
+import type { SavedProject } from '../../platform/projects/types';
 import { followProjectLink, projectHref } from '../projects/project-route';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
+import type { EstimateCopy } from '../../platform/estimates/copy';
 import { phaseControl as id } from './estimate-controls';
-import { ReviewSelect } from './fields';
-import {
-  assessmentVersions,
-  selectAssessment,
-} from '../../../platform/projects/assessment-selection';
+import { ReviewSelect } from '../project-review/fields';
+import { assessmentVersions, selectAssessment } from '../../platform/projects/assessment-selection';
 import { PhaseInputs } from './PhaseInputs';
 import type { Phase, PhaseModel } from './estimate-model';
-import type { Language } from '../types';
+import type { Language } from '../account-access/types';
 
 function PhaseDetails(props: {
   copy: EstimateCopy;

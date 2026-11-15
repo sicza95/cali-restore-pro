@@ -1,9 +1,9 @@
 import { Show, untrack } from 'solid-js';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
-import type { Language } from '../types';
+import type { EstimateCopy } from '../../platform/estimates/copy';
+import type { Language } from '../account-access/types';
 import { financeControl as id } from './estimate-controls';
 import { EstimateVersion } from './EstimateVersion';
-import { ReviewSelect } from './fields';
+import { ReviewSelect } from '../project-review/fields';
 import type { EstimateDraft } from './useEstimateDraft';
 
 /** Last step: assumptions, what still blocks saving, and the saved versions. */

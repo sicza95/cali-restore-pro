@@ -1,4 +1,4 @@
-import type { Message, Translate } from '../types';
+import type { Message, Translate } from '../../account-access/types';
 
 export type SubmitButtonProps = {
   t: Translate;

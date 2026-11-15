@@ -4,13 +4,13 @@ import { accountPaths } from '../router/constants';
 import type { AccountDestination } from '../router/types';
 import { AccountSecurity } from './account-security/AccountSecurity';
 import { VaultSection } from './account-security/VaultSection';
-import { InvitationInbox } from './invitations/InvitationInbox';
-import { navigationText } from './navigation-copy';
-import { ProjectWorkspace } from './projects/ProjectWorkspace';
-import { Admin } from './settings/admin/Admin';
-import { Preferences } from './settings/preferences/Preferences';
-import { PrivateLibraries } from './settings/preferences/PrivateLibraries';
-import { Profile } from './settings/profile/Profile';
+import { InvitationInbox } from '../sharing/InvitationInbox';
+import { navigationText } from '../account-access/navigation-copy';
+import { ProjectWorkspace } from '../projects/ProjectWorkspace';
+import { Admin } from '../settings/admin/Admin';
+import { Preferences } from '../settings/preferences/Preferences';
+import { PrivateLibraries } from '../settings/preferences/PrivateLibraries';
+import { Profile } from '../settings/profile/Profile';
 
 /** The screen of a signed-in destination, rendered once its route guard allows it. */
 export function AccountScreen(props: { destination: AccountDestination; account: string }) {

@@ -1,10 +1,10 @@
 import { For, Show } from 'solid-js';
-import type { RestorationObject } from '../../../platform/projects/types';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
+import type { RestorationObject } from '../../platform/projects/types';
+import type { EstimateCopy } from '../../platform/estimates/copy';
 import { financeControl as id } from './estimate-controls';
 import { extraRate } from './estimate-model';
 import type { Adjustment, Extra } from './estimate-model';
-import { ReviewCheck, ReviewNumber, ReviewSelect } from './fields';
+import { ReviewCheck, ReviewNumber, ReviewSelect } from '../project-review/fields';
 
 export function Extras(props: {
   copy: EstimateCopy;

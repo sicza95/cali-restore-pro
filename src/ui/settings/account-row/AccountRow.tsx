@@ -1,7 +1,7 @@
 import { AccountDeletion } from '../profile/AccountDeletion';
-import { useApp } from '../../../app-context/AppContext';
+import { useApp } from '../../app-context/AppContext';
 import { For, Show } from 'solid-js';
-import { ConfirmField } from '../../confirm-field/ConfirmField';
+import { ConfirmField } from '../../account/confirm-field/ConfirmField';
 import { settingsCopy } from '../constants';
 import type { AdminAccount } from '../types';
 

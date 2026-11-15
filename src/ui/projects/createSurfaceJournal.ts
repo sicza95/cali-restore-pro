@@ -4,11 +4,11 @@ import {
   journalHead,
   journalText,
   openJournal,
-} from '../../../platform/projects/surface-journal';
-import type { SurfaceJournal } from '../../../platform/projects/surface-journal';
-import type { PlanarSurface } from '../../../platform/projects/planar-types';
-import type { JournalRef, JournalWrite } from '../../../platform/vault/project-store';
-import type { LocalVault } from '../../../platform/vault/vault';
+} from '../../platform/projects/surface-journal';
+import type { SurfaceJournal } from '../../platform/projects/surface-journal';
+import type { PlanarSurface } from '../../platform/projects/planar-types';
+import type { JournalRef, JournalWrite } from '../../platform/vault/project-store';
+import type { LocalVault } from '../../platform/vault/vault';
 
 export function createSurfaceJournal(options: {
   vault: () => LocalVault;

@@ -1,5 +1,5 @@
 import { createResource, createSignal } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
+import { useApp } from '../app-context/AppContext';
 
 export function useInvitations<T>(path: string) {
   const model = useApp();

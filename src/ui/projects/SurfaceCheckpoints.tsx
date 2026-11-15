@@ -3,18 +3,18 @@ import {
   captureCheckpoint,
   checkpointLimit,
   restoreCheckpoint,
-} from '../../../platform/projects/assessment-checkpoints';
-import type { AssessmentCheckpoint } from '../../../platform/projects/assessment-checkpoints';
-import type { CheckpointComparison } from '../../../platform/projects/checkpoint.worker';
-import { displayArea } from '../../../platform/projects/planar-measurement';
-import type { PlanarSurface } from '../../../platform/projects/planar-types';
-import { sameSource } from '../../../platform/projects/planar-state';
-import type { LocalVault } from '../../../platform/vault/vault';
-import { PatternReview } from '../../editor/checkpoint-review/PatternReview';
-import { formatArea, formatNumber, formatPercent } from '../../../platform/format/number';
-import type { Language } from '../types';
-import { drawingCopy } from '../../editor/drawing-review/copy';
-import { layerName } from '../../editor/drawing-review/DrawingLayers';
+} from '../../platform/projects/assessment-checkpoints';
+import type { AssessmentCheckpoint } from '../../platform/projects/assessment-checkpoints';
+import type { CheckpointComparison } from '../../platform/projects/checkpoint.worker';
+import { displayArea } from '../../platform/projects/planar-measurement';
+import type { PlanarSurface } from '../../platform/projects/planar-types';
+import { sameSource } from '../../platform/projects/planar-state';
+import type { LocalVault } from '../../platform/vault/vault';
+import { PatternReview } from '../editor/checkpoint-review/PatternReview';
+import { formatArea, formatNumber, formatPercent } from '../../platform/format/number';
+import type { Language } from '../account-access/types';
+import { drawingCopy } from '../editor/drawing-review/copy';
+import { layerName } from '../editor/drawing-review/DrawingLayers';
 import { surfaceCheckpointCopy } from './checkpoint-copy';
 import { CheckpointMaps } from './CheckpointMaps';
 import { surfaceCopy } from './surface-copy';
@@ -90,7 +90,7 @@ export function SurfaceCheckpoints(props: {
     let worker: Worker;
     try {
       worker = new Worker(
-        new URL('../../../platform/projects/checkpoint.worker.ts', import.meta.url),
+        new URL('../../platform/projects/checkpoint.worker.ts', import.meta.url),
         { type: 'module' },
       );
     } catch {

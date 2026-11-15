@@ -1,14 +1,14 @@
 import { createSignal, onMount } from 'solid-js';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { EstimateInput, EstimateSnapshot } from '../../../platform/estimates/types';
-import { calculate } from '../../../platform/estimates/calculate';
-import { snapshot as makeSnapshot } from '../../../platform/estimates/snapshots';
-import { estimateRepository } from '../../../platform/estimates/persistence';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { EstimateInput, EstimateSnapshot } from '../../platform/estimates/types';
+import { calculate } from '../../platform/estimates/calculate';
+import { snapshot as makeSnapshot } from '../../platform/estimates/snapshots';
+import { estimateRepository } from '../../platform/estimates/persistence';
+import type { SavedProject } from '../../platform/projects/types';
+import type { EstimateCopy } from '../../platform/estimates/copy';
 import { createPhases, extraRate, phaseValid } from './estimate-model';
 import type { Adjustment, Extra, Phase } from './estimate-model';
-import { validDecimal } from './fields';
+import { validDecimal } from '../project-review/fields';
 import { usePhaseMeasurements } from './usePhaseMeasurements';
 
 /** The estimate being edited: inputs, live result, validity and saved versions. */

@@ -1,9 +1,9 @@
 /* eslint-disable solid/reactivity -- Backup commands read the current project when invoked. */
 import { createSignal, onCleanup, Show } from 'solid-js';
-import type { SavedProject } from '../../../platform/projects/types';
-import { BackupUnavailable } from '../../../platform/vault/project-backups';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { Language } from '../types';
+import type { SavedProject } from '../../platform/projects/types';
+import { BackupUnavailable } from '../../platform/vault/project-backups';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { Language } from '../account-access/types';
 import { projectCopy } from './project-copy';
 
 const copy = {

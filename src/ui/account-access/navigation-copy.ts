@@ -1,6 +1,6 @@
 import { checkpointCopy } from '../editor/checkpoint-review/copy';
-import { pinCopy } from './invitations/OfflineOriginals';
-import { settingsCopy } from './settings/constants';
+import { pinCopy } from '../sharing/OfflineOriginals';
+import { settingsCopy } from '../settings/constants';
 import { copy } from './constants';
 import type { Language } from './types';
 

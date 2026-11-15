@@ -1,12 +1,12 @@
 import { createSignal, For, Show } from 'solid-js';
-import type { LocalVault } from '../../../platform/vault/vault';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { Language } from '../types';
-import { estimateCopy } from '../../../platform/estimates/copy';
-import { formatNumber, formatPercent } from '../../../platform/format/number';
+import type { LocalVault } from '../../platform/vault/vault';
+import type { SavedProject } from '../../platform/projects/types';
+import type { Language } from '../account-access/types';
+import { estimateCopy } from '../../platform/estimates/copy';
+import { formatNumber, formatPercent } from '../../platform/format/number';
 import { financeControl as id } from './estimate-controls';
 import { Adjustments, Extras } from './FinancialInputs';
-import { ReviewCheck, ReviewSelect } from './fields';
+import { ReviewCheck, ReviewSelect } from '../project-review/fields';
 import { WorkPhases } from './WorkPhases';
 import { PresetInputs } from './PresetInputs';
 import { EstimateSummary } from './EstimateSummary';

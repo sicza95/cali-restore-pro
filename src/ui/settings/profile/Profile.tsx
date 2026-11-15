@@ -1,5 +1,5 @@
 import { settingsCopy } from '../constants';
-import { useApp } from '../../../app-context/AppContext';
+import { useApp } from '../../app-context/AppContext';
 import { AccountDeletion } from './AccountDeletion';
 
 export function Profile() {

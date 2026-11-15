@@ -1,8 +1,8 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
-import { revisionKeyTransfer } from '../../../platform/projects/revision-key-transfer';
-import { editorSync } from '../../../platform/projects/editor-sync';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { LocalVault } from '../../../platform/vault/vault';
+import { revisionKeyTransfer } from '../../platform/projects/revision-key-transfer';
+import { editorSync } from '../../platform/projects/editor-sync';
+import type { SavedProject } from '../../platform/projects/types';
+import type { LocalVault } from '../../platform/vault/vault';
 
 export function useEditorSync(vault: LocalVault, csrf: () => string) {
   const sync = editorSync(vault);

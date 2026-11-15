@@ -1,6 +1,6 @@
-import type { ControlContract } from '../../control-registry/types';
-import type { ReportCopy } from '../../../platform/reports/copy';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
+import type { ControlContract } from '../control-registry/types';
+import type { ReportCopy } from '../../platform/reports/copy';
+import type { EstimateCopy } from '../../platform/estimates/copy';
 
 const reportKeys = [
   'includeObject',

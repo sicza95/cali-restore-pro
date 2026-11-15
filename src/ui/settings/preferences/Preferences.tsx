@@ -1,7 +1,7 @@
 import { createSignal, For, Show, untrack } from 'solid-js';
-import { useApp } from '../../../app-context/AppContext';
-import { checkpointCopy } from '../../../editor/checkpoint-review/copy';
-import { accountPaths } from '../../../router/constants';
+import { useApp } from '../../app-context/AppContext';
+import { checkpointCopy } from '../../editor/checkpoint-review/copy';
+import { accountPaths } from '../../router/constants';
 import { settingsCopy } from '../constants';
 import { loadPreferences, savePreferences } from './utils';
 

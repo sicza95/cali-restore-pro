@@ -1,7 +1,7 @@
 import { createSignal, For, onCleanup, Show } from 'solid-js';
-import { openSharedOriginal } from '../../../platform/projects/shared-originals';
-import type { SharedOriginal } from '../../../platform/projects/shared-originals';
-import type { Language } from '../types';
+import { openSharedOriginal } from '../../platform/projects/shared-originals';
+import type { SharedOriginal } from '../../platform/projects/shared-originals';
+import type { Language } from '../account-access/types';
 import { invitationCopy } from './copy';
 import { pinCopy, saveOriginal } from './OfflineOriginals';
 import type { useOfflineOriginals } from './OfflineOriginals';

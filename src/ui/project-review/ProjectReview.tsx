@@ -1,14 +1,14 @@
 import { For, Show } from 'solid-js';
-import type { SavedProject } from '../../../platform/projects/types';
-import type { Language } from '../types';
+import type { SavedProject } from '../../platform/projects/types';
+import type { Language } from '../account-access/types';
 import { followProjectLink, projectReviewHref } from '../projects/project-route';
-import { estimateCopy } from '../../../platform/estimates/copy';
-import { reviewRoutes, routeControl } from './report-controls';
-import type { ReviewRoute } from './report-controls';
-import { EstimateReview } from './EstimateReview';
-import { ReportReview } from './ReportReview';
+import { estimateCopy } from '../../platform/estimates/copy';
+import { reviewRoutes, routeControl } from '../reports/report-controls';
+import type { ReviewRoute } from '../reports/report-controls';
+import { EstimateReview } from '../estimates/EstimateReview';
+import { ReportReview } from '../reports/ReportReview';
 import './styles.css';
-import type { LocalVault } from '../../../platform/vault/vault';
+import type { LocalVault } from '../../platform/vault/vault';
 
 export function ProjectReviewLinks(props: {
   project: string;

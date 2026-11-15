@@ -1,5 +1,5 @@
-import type { ControlContract } from '../../control-registry/types';
-import type { EstimateCopy } from '../../../platform/estimates/copy';
+import type { ControlContract } from '../control-registry/types';
+import type { EstimateCopy } from '../../platform/estimates/copy';
 
 const phases = [
   'add',

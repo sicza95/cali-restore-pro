@@ -1,30 +1,30 @@
-import type { JournalWrite, PendingAttachment } from '../../../platform/vault/project-store';
+import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
 import { createMemo, createResource, createSignal, For, Show } from 'solid-js';
 import type {
   SavedProject,
   Surface,
   RestorationObject,
   Attachment,
-} from '../../../platform/projects/types';
-import type { LocalVault } from '../../../platform/vault/vault';
-import { updateSurfaceImages } from '../../../platform/projects/surface-attachments';
-import type { PlanarSurface } from '../../../platform/projects/planar-types';
+} from '../../platform/projects/types';
+import type { LocalVault } from '../../platform/vault/vault';
+import { updateSurfaceImages } from '../../platform/projects/surface-attachments';
+import type { PlanarSurface } from '../../platform/projects/planar-types';
 import { SurfaceMeasurements } from './SurfaceMeasurements';
-import type { Language } from '../types';
+import type { Language } from '../account-access/types';
 import { createSurfaceJournal } from './createSurfaceJournal';
-import { photoHistory, recordHistory } from '../../../platform/projects/surface-journal';
+import { photoHistory, recordHistory } from '../../platform/projects/surface-journal';
 import { SurfaceCheckpoints } from './SurfaceCheckpoints';
-import { checkpointCopy } from '../../editor/checkpoint-review/copy';
-import { control as drawingControl } from '../../editor/drawing-review/constants';
-import { drawingCopy } from '../../editor/drawing-review/copy';
+import { checkpointCopy } from '../editor/checkpoint-review/copy';
+import { control as drawingControl } from '../editor/drawing-review/constants';
+import { drawingCopy } from '../editor/drawing-review/copy';
 import { SurfaceReviewAdapter } from './SurfaceReviewAdapter';
 import { SurfaceDrawing } from './SurfaceDrawing';
-import { Icon } from '../../icon/Icon';
+import { Icon } from '../icon/Icon';
 import { surfaceCopy } from './surface-copy';
 import './surface-styles.css';
 import { ProjectOriginals } from './ProjectOriginals';
 import { projectCopy } from './project-copy';
-import { projectHref } from '../../router/routes';
+import { projectHref } from '../router/routes';
 
 export function SurfaceWorkspace(props: {
   project: SavedProject;

@@ -1,5 +1,5 @@
 import { createSignal, onCleanup } from 'solid-js';
-import type { LocalVault } from '../../../platform/vault/vault';
+import type { LocalVault } from '../../platform/vault/vault';
 import type { SurfaceDraft } from './surface-review-model';
 
 type Pair = SurfaceDraft['pairOne'];
@@ -41,7 +41,7 @@ export function surfaceMatcher(vault: LocalVault, project: string) {
       const [a, b] = await Promise.all([read(detail), read(reference)]);
       if (controller.signal.aborted) return;
       worker = new Worker(
-        new URL('../../../platform/projects/planar-match.worker.ts', import.meta.url),
+        new URL('../../platform/projects/planar-match.worker.ts', import.meta.url),
         { type: 'module' },
       );
       worker.onmessage = (event: MessageEvent<[Pair, Pair] | null>) => finish(event.data);

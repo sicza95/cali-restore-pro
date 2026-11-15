@@ -1,6 +1,6 @@
-import { estimateCopy } from '../../../platform/estimates/copy';
-import type { EstimateSnapshot } from '../../../platform/estimates/types';
-import type { Language } from '../types';
+import { estimateCopy } from '../../platform/estimates/copy';
+import type { EstimateSnapshot } from '../../platform/estimates/types';
+import type { Language } from '../account-access/types';
 
 /** "Version 4 · Issued · 15 Nov 2026, 14:03": what a saved estimate version is, in words. */
 export function versionLine(language: Language, saved: EstimateSnapshot | undefined) {

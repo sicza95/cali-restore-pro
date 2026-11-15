@@ -1,8 +1,8 @@
 import { For, Show, untrack } from 'solid-js';
-import type { ReportCopy } from '../../../platform/reports/copy';
-import { brandingSources } from '../../../platform/reports/types';
+import type { ReportCopy } from '../../platform/reports/copy';
+import { brandingSources } from '../../platform/reports/types';
 import type { useReport } from './useReport';
-import { ReviewCheck, ReviewSelect } from './fields';
+import { ReviewCheck, ReviewSelect } from '../project-review/fields';
 import { reportControl as id } from './report-controls';
 
 const limits = { studio: 120, contact: 254, footer: 240 };

@@ -1,4 +1,4 @@
-import type { TranslatedFieldProps } from '../types';
+import type { TranslatedFieldProps } from '../../account-access/types';
 
 export function EmailField(props: TranslatedFieldProps) {
   return (

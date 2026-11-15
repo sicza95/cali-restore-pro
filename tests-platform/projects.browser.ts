@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { projectControls } from '../src/ui/account-access/projects/project-controls';
+import { projectControls } from '../src/ui/projects/project-controls';
 
-import { surfaceControls } from '../src/ui/account-access/projects/surface-review-controls';
+import { surfaceControls } from '../src/ui/projects/surface-review-controls';
 import { verifyCheckpointReview } from './checkpoint-review';
 import { verifyCanvasZoom } from './canvas-zoom';
 import { drawingControl, openDetails, verifyDrawingReview } from './drawing-review';

@@ -1,4 +1,4 @@
-import type { Units } from '../../../platform/projects/types';
+import type { Units } from '../../platform/projects/types';
 import type { projectCopy } from './project-copy';
 
 export type Copy = (typeof projectCopy)['en'];

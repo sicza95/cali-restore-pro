@@ -1,16 +1,16 @@
 /* eslint-disable solid/reactivity -- The invitation and request paths are fixed for each mounted panel. */
 import { createResource, createSignal, For, onCleanup, Show } from 'solid-js';
-import { useApp } from '../../app-context/AppContext';
-import { checkpointSamples } from '../../../platform/projects/checkpoint-samples';
-import type { Checkpoint } from '../../../platform/projects/checkpoint-samples';
+import { useApp } from '../app-context/AppContext';
+import { checkpointSamples } from '../../platform/projects/checkpoint-samples';
+import type { Checkpoint } from '../../platform/projects/checkpoint-samples';
 import {
   localSharingKey,
   openCheckpoint,
   sealCheckpoint,
   sharingFingerprint,
-} from '../../../platform/projects/fixture-sharing';
-import type { CheckpointEnvelope } from '../../../platform/projects/fixture-sharing';
-import type { LocalVault } from '../../../platform/vault/vault';
+} from '../../platform/projects/fixture-sharing';
+import type { CheckpointEnvelope } from '../../platform/projects/fixture-sharing';
+import type { LocalVault } from '../../platform/vault/vault';
 import { invitationCopy } from './copy';
 import type { SentInvitation } from './types';
 

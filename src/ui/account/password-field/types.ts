@@ -1,4 +1,4 @@
-import type { Translate } from '../types';
+import type { Translate } from '../../account-access/types';
 
 export type PasswordFieldProps = {
   t: Translate;

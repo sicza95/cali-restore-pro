@@ -2,7 +2,7 @@ import {
   applyPreferences,
   loadPreferences,
   preferenceDefaults,
-} from './settings/preferences/utils';
+} from '../settings/preferences/utils';
 import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/offline-account';
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
