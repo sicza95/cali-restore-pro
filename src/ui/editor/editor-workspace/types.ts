@@ -2,6 +2,7 @@ import type { JSX } from 'solid-js';
 import type { SaveState } from '../../controls/save-status/types';
 import type { Tool, ToolItem } from '../../controls/tool-rail/types';
 import type { IconName } from '../../icon/types';
+import type { LayerControl } from '../layer-panel/types';
 import type { EditorCopy, EditorLayer, LayerId } from '../types';
 
 export type EditorHistory = {
@@ -24,6 +25,10 @@ export interface EditorWorkspaceProps<T extends string = Tool> {
   activeLayer: LayerId;
   onSelectLayer: (layer: LayerId) => void;
   onToggleLayer: (layer: LayerId) => void;
+  /** Passed to `LayerPanel`: one tree in layer order, row control ids and host-owned folders. */
+  layerTree?: boolean;
+  layerControlId?: (kind: LayerControl) => string;
+  onToggleLayerExpand?: (folder: LayerId) => void;
   tool: T;
   onTool: (tool: T) => void;
   /** The rail's tools; defaults to the review constant. */

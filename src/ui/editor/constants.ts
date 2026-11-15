@@ -21,6 +21,8 @@ export const editorCopy: EditorCopy = {
   measurements: 'Measurements',
   hideLayer: (name) => `Hide ${name}`,
   showLayer: (name) => `Show ${name}`,
+  expandFolder: (name) => `Expand ${name}`,
+  collapseFolder: (name) => `Collapse ${name}`,
   emptyTitle: 'No assessment yet',
   emptyNote: 'Add an overview photo to define the surface.',
   uniqueCoverage: 'Unique coverage',

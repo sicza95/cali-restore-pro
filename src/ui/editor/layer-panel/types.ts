@@ -11,11 +11,24 @@ export type LayerPanelProps = {
   onCalibrate?: () => void;
   /** Rendered below the layer list. */
   detail?: JSX.Element;
+  /**
+   * List layers as one tree in the given order: the master and folders are selectable rows,
+   * folders nest to any depth and work phases stay in place instead of their own section.
+   */
+  tree?: boolean;
+  /** Each row control's `data-control-id`. */
+  rowControlId?: (kind: LayerControl) => string;
+  /** When given, folders open and close from each layer's `expanded`, not from local state. */
+  onToggleExpand?: (folder: LayerId) => void;
 };
+
+export type LayerControl = 'select' | 'visibility' | 'expand';
 
 export type LayerRowProps = Pick<
   LayerPanelProps,
-  'copy' | 'layers' | 'active' | 'onSelect' | 'onToggleVisible'
+  'copy' | 'layers' | 'active' | 'onSelect' | 'onToggleVisible' | 'rowControlId'
 > & { id: LayerId };
+
+export type LayerLabelProps = { id: LayerId; layer?: EditorLayer };
 
 export type LayerMeasurementsProps = Pick<LayerPanelProps, 'copy' | 'layers'>;

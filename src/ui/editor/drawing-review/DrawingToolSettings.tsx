@@ -1,5 +1,6 @@
 import { For, Show, untrack } from 'solid-js';
 import type { JSX } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
 import { control } from './constants';
 import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
@@ -22,6 +23,8 @@ export function DrawingToolSettings(props: {
   toolOptions?: boolean;
   /** False when the host shows Apply and Cancel itself, through `DrawingToolOptions`. */
   actions?: boolean;
+  /** Heading level of the tool's name; 3 by default. */
+  level?: 2 | 3;
   /** Rendered after the tool's settings and before close path and Apply. */
   numeric?: JSX.Element;
 }) {
@@ -34,7 +37,7 @@ export function DrawingToolSettings(props: {
   const options = () => props.toolOptions !== false;
   return (
     <section class="drawing-panel" aria-label={c().tool}>
-      <h3>{c()[t.tool()]}</h3>
+      <Dynamic component={props.level === 2 ? 'h2' : 'h3'}>{c()[t.tool()]}</Dynamic>
       <Show when={t.tool() === 'select'}>
         <p>{c().navigateHelp}</p>
       </Show>
