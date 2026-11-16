@@ -62,8 +62,6 @@ async function expectFree(page: Page, step: string) {
  * reference change checks (#75), which end on another new surface's page the same way.
  */
 export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
-  // The reason screenshots (#79), in two languages and orientations per state, take time.
-  info.setTimeout(info.timeout + 90_000);
   const png = await plasterPng(page);
   // The main surface's first photo is used by saved checkpoints: "Remove" says so (#79).
   await reasonShots(page, info, 'checkpoint-surface', checkpointRows);
