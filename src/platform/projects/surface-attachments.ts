@@ -1,5 +1,5 @@
 import type { PlanarSurface } from './planar-types';
-import { carryJournal, journalText } from './surface-journal';
+import { carryJournal, journalText, storedDrafts } from './surface-journal';
 import type { SurfaceJournal } from './surface-journal';
 import type { Attachment, Surface } from './types';
 import type { JournalRef, JournalWrite } from '../vault/project-store';
@@ -33,6 +33,19 @@ export async function changeSurfaceImages(
       });
   }
   return { changes, journals };
+}
+
+/**
+ * The photo the surface's drawing drafts belong to, while its journal holds drafts: the first
+ * photo with the mapping role, whose journal the surface page opens (#72).
+ */
+export async function draftSource(
+  readJournal: (ref: JournalRef) => Promise<{ text: string } | undefined>,
+  scope: Omit<JournalRef, 'source'>,
+  surface: Pick<Surface, 'images'>,
+) {
+  const source = surface.images.find((image) => image.role === 'mapping')?.id;
+  if (source && storedDrafts((await readJournal({ ...scope, source }))?.text)) return source;
 }
 
 /** New images for a surface; assessments lose removed photos, and untouched ones stay as they are. */

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { newPlanarSurface } from './planar-state';
-import { changeSurfaceImages, updateSurfaceImages } from './surface-attachments';
+import { changeSurfaceImages, draftSource, updateSurfaceImages } from './surface-attachments';
 import { emptyJournal, journalHead } from './surface-journal';
+import type { StoredDraft } from './surface-journal';
 import type { JournalRef } from '../vault/project-store';
 import type { PlanarSurface } from './planar-types';
 import type { Surface } from './types';
@@ -111,5 +112,45 @@ describe('changeSurfaceImages', () => {
     const stale = { ...emptyJournal(), head: 'older', drafts };
     const { read } = journals({ main: { revision: 2, text: JSON.stringify(stale) } });
     expect((await changeSurfaceImages(read, scope, before, images)).journals).toEqual([]);
+  });
+});
+
+describe('draftSource (#72)', () => {
+  const scope = { project: 'project', surface: 'surface' };
+  const text = (drafts: StoredDraft[]) => JSON.stringify({ ...emptyJournal(), drafts });
+  const undone: StoredDraft[] = [{ layer: 1, pending: [], undone: [] }];
+  function journals(rows: Record<string, string>) {
+    const reads: JournalRef[] = [];
+    const read = (ref: JournalRef) => {
+      reads.push(ref);
+      return Promise.resolve(ref.source in rows ? { text: rows[ref.source]! } : undefined);
+    };
+    return { reads, read };
+  }
+
+  it('is the first mapping photo while its journal holds drafts', async () => {
+    const { reads, read } = journals({ main: text(undone), detail: text(undone) });
+    expect(await draftSource(read, scope, surface())).toBe('main');
+    // Only the journal the surface page opens is read.
+    expect(reads).toEqual([{ ...scope, source: 'main' }]);
+  });
+
+  it('skips reference photos listed before the first mapping photo', async () => {
+    const images = [
+      { id: 'reference', role: 'reference' as const },
+      { id: 'detail', role: 'mapping' as const },
+      { id: 'main', role: 'mapping' as const },
+    ];
+    const { read } = journals({ main: text(undone), detail: text(undone) });
+    expect(await draftSource(read, scope, { images })).toBe('detail');
+  });
+
+  it('is nothing without drafts, without a journal or without a mapping photo', async () => {
+    expect(await draftSource(journals({ main: text([]) }).read, scope, surface())).toBeUndefined();
+    expect(await draftSource(journals({}).read, scope, surface())).toBeUndefined();
+    const { reads, read } = journals({ reference: text(undone) });
+    const images = [{ id: 'reference', role: 'reference' as const }];
+    expect(await draftSource(read, scope, { images })).toBeUndefined();
+    expect(reads).toEqual([]);
   });
 });

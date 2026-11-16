@@ -4,9 +4,11 @@ import {
   carryJournal,
   currentJournal,
   emptyJournal,
+  hasDrafts,
   journalHead,
   openJournal,
   photoHistory,
+  storedDrafts,
 } from './surface-journal';
 import type { StoredDraft, SurfaceJournal } from './surface-journal';
 import type { PlanarSurface } from './planar-types';
@@ -94,6 +96,36 @@ describe('currentJournal', () => {
     const journal = { ...emptyJournal(), drafts: [draft] };
     expect(currentJournal(journal, unsaved, undefined)).toBe(journal);
     expect(await journalHead(unsaved)).toBe(await journalHead(undefined));
+  });
+});
+
+describe('hasDrafts and storedDrafts (#72)', () => {
+  const state: PlanarSurface = { ...newPlanarSurface(source), revision: 3 };
+  const stored = (journal: SurfaceJournal) => storedDrafts(JSON.stringify(journal));
+
+  it('counts pending marks, undone marks only, and the drafts of a conflict', async () => {
+    const journal = await opened(state);
+    expect(hasDrafts(journal)).toBe(true);
+    expect(stored(journal)).toBe(true);
+    const undone = { ...journal, drafts: [{ ...draft, pending: [], undone: draft.pending }] };
+    expect(hasDrafts(undone)).toBe(true);
+    expect(stored(undone)).toBe(true);
+    // Written against other content: the surface page opens it as a conflict with the drafts.
+    const other = { ...journal, head: 'another device' };
+    expect((await openJournal(JSON.stringify(other), state)).conflict).toBe(true);
+    expect(stored(other)).toBe(true);
+  });
+
+  it('counts nothing without a journal or once every draft is committed or discarded', async () => {
+    const journal = { ...(await opened(state)), drafts: [] };
+    expect(hasDrafts(journal)).toBe(false);
+    expect(stored(journal)).toBe(false);
+    expect(storedDrafts(undefined)).toBe(false);
+    expect(storedDrafts('')).toBe(false);
+  });
+
+  it('rejects a journal it cannot read, as opening it does', () => {
+    expect(() => storedDrafts(JSON.stringify({ version: 2 }))).toThrow('Invalid surface journal');
   });
 });
 

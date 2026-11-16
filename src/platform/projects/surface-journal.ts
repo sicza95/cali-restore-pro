@@ -67,6 +67,15 @@ function parseJournal(text: string) {
   return journal;
 }
 
+/**
+ * Whether the journal holds drawing drafts: pending or undone marks on any layer, also in a
+ * conflict, which keeps them. Their photo cannot be removed or re-roled meanwhile (#72).
+ */
+export const hasDrafts = (journal: SurfaceJournal) => journal.drafts.length > 0;
+
+/** `hasDrafts` for a stored journal, with or without a head that matches the assessment. */
+export const storedDrafts = (text: string | undefined) => !!text && hasDrafts(parseJournal(text));
+
 export async function openJournal(text: string | undefined, state?: PlanarSurface) {
   if (!text) return emptyJournal();
   const journal = parseJournal(text);
