@@ -157,7 +157,6 @@ export function SurfaceReviewAdapter(props: {
           {(key) => (
             <button
               type="button"
-              class="secondary"
               data-control-id={id(key)}
               ref={(element) => {
                 toolButtons[key] = element;
@@ -367,17 +366,11 @@ export function SurfaceReviewAdapter(props: {
                 >
                   {props.copy.apply}
                 </button>
-                <button
-                  type="button"
-                  class="secondary"
-                  data-control-id={id('cancel')}
-                  onClick={close}
-                >
+                <button type="button" data-control-id={id('cancel')} onClick={close}>
                   {props.copy.cancel}
                 </button>
                 <button
                   type="button"
-                  class="secondary"
                   data-control-id={id('reset')}
                   onClick={() => {
                     setAutomatic(false);

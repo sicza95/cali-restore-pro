@@ -55,7 +55,6 @@ export function ProjectSync(props: {
       </Show>
       <Show when={props.model.state() && !base()}>
         <button
-          class="secondary"
           disabled={props.busy}
           data-control-id="project.sync.enable"
           onClick={() => run(() => props.model.sync.enable(props.project.id))}
@@ -74,7 +73,6 @@ export function ProjectSync(props: {
       </Show>
       <Show when={draft()?.blocked}>
         <button
-          class="secondary"
           data-control-id="project.sync.review"
           disabled={props.busy}
           onClick={() =>
@@ -107,7 +105,6 @@ export function ProjectSync(props: {
               </button>
               <Show when={value.remote}>
                 <button
-                  class="secondary"
                   disabled={props.busy}
                   data-control-id="project.sync.keep-cloud"
                   onClick={() => resolve(value, true)}

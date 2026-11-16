@@ -142,7 +142,6 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
       <Show when={failure() || projects()?.failed}>
         <p role="alert">{c().error}</p>
         <button
-          class="secondary"
           disabled={busy()}
           onClick={() => {
             setFailure(false);

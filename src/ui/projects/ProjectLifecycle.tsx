@@ -57,7 +57,6 @@ export function ProjectLifecycle(props: {
           <>
             <button
               data-control-id="project.trash.refresh"
-              class="secondary"
               disabled={app.busy()}
               onClick={() => void refresh()}
             >
@@ -74,7 +73,6 @@ export function ProjectLifecycle(props: {
                           <p>{deadlines(entry)}</p>
                           <button
                             data-control-id="project.trash.restore"
-                            class="secondary"
                             disabled={app.busy() || Date.parse(entry.recoverUntil) <= Date.now()}
                             onClick={() => void change(entry.id, 'recover')}
                           >
@@ -82,7 +80,6 @@ export function ProjectLifecycle(props: {
                           </button>
                           <button
                             data-control-id="project.trash.purge"
-                            class="secondary"
                             disabled={app.busy() || Date.parse(entry.recoverUntil) <= Date.now()}
                             onClick={() => {
                               if (window.confirm(l().confirmPurge)) void change(entry.id, 'purge');
@@ -120,7 +117,7 @@ export function ProjectLifecycle(props: {
               <input type="checkbox" name="purge" />
               {l().skipRecovery}
             </label>
-            <button data-control-id="project.trash.delete" class="secondary" disabled={app.busy()}>
+            <button data-control-id="project.trash.delete" disabled={app.busy()}>
               {l().delete}
             </button>
           </form>

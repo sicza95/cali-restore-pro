@@ -45,7 +45,7 @@ export function SendProjectKey(props: Form & { project: string }) {
             }}
           />
         </label>
-        <button data-control-id="project.key.send" class="secondary" disabled={props.busy}>
+        <button data-control-id="project.key.send" disabled={props.busy}>
           {c().create}
         </button>
       </form>
@@ -102,7 +102,7 @@ export function ReceiveProjectKey(
             onInput={(e) => setSecret(e.currentTarget.value)}
           />
         </label>
-        <button data-control-id="project.key.receive" class="secondary" disabled={props.busy}>
+        <button data-control-id="project.key.receive" disabled={props.busy}>
           {c().open}
         </button>
       </form>

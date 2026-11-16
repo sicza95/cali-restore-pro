@@ -54,7 +54,6 @@ export function ProjectDetail(props: {
     <>
       <div class="project-heading">
         <button
-          class="secondary"
           disabled={props.busy}
           data-control-id="project.archive"
           onClick={() => void props.onRun(() => edit({ archived: !props.project.archived }))}

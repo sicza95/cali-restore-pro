@@ -266,7 +266,6 @@ export function SurfaceCheckpoints(props: {
             </button>
           </form>
           <button
-            class="secondary"
             type="button"
             data-control-id={id('restore')}
             disabled={!mayRestore()}
@@ -294,12 +293,7 @@ export function SurfaceCheckpoints(props: {
               <strong>{chosen()?.name}</strong>
             </p>
             <div class="review-actions">
-              <button
-                type="button"
-                class="secondary"
-                data-control-id={id('cancel')}
-                onClick={() => dialog.close()}
-              >
+              <button type="button" data-control-id={id('cancel')} onClick={() => dialog.close()}>
                 {c().cancel}
               </button>
               <button

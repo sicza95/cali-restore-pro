@@ -21,7 +21,6 @@ export function SurfaceAlignmentFields(props: {
   return (
     <>
       <button
-        class="secondary"
         type="button"
         disabled={props.busy || props.draft.referenceOnly || props.matcher.status() === 'matching'}
         onClick={() => {
@@ -42,7 +41,6 @@ export function SurfaceAlignmentFields(props: {
       </p>
       <Show when={props.matcher.status() === 'matching'}>
         <button
-          class="secondary"
           type="button"
           data-control-id={id('stopMatch')}
           onClick={() => props.matcher.cancel()}

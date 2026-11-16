@@ -91,11 +91,7 @@ export function ProjectOriginals(props: {
       <Show when={transfer()}>
         <div class="project-fields">
           <progress aria-label={props.copy.attach} max={1} value={progress()} />
-          <button
-            class="secondary"
-            data-control-id="originals.cancel"
-            onClick={() => transfer()?.abort()}
-          >
+          <button data-control-id="originals.cancel" onClick={() => transfer()?.abort()}>
             {props.copy.cancel}
           </button>
         </div>
@@ -140,7 +136,6 @@ export function ProjectOriginals(props: {
                 </label>
                 <button
                   data-control-id="originals.remove"
-                  class="secondary"
                   disabled={props.busy || checkpointPhoto() || draftSource()}
                   title={
                     draftSource()

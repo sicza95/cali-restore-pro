@@ -238,7 +238,6 @@ export function SurfaceWorkspace(props: {
           </label>
           <button
             type="button"
-            class="secondary"
             data-control-id="surface.view.previous"
             disabled={index() === 0}
             title={compact() ? view().previous : undefined}
@@ -251,7 +250,6 @@ export function SurfaceWorkspace(props: {
           </button>
           <button
             type="button"
-            class="secondary"
             data-control-id="surface.view.next"
             disabled={index() + 1 >= images().length}
             title={compact() ? view().next : undefined}
