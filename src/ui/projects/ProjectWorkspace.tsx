@@ -69,6 +69,10 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
       ? { [project.id]: project.name, [shown.id]: shown.name }
       : { [project.id]: project.name };
   });
+  app.provideObjectNames(() => {
+    const shown = activeSurface();
+    return shown ? { [shown.surface.id]: shown.object.name } : {};
+  });
   const visible = () => {
     const language = props.language;
     const showArchived = archived();

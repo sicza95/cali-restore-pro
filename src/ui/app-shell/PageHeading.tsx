@@ -16,7 +16,10 @@ function crumbControl(crumb: Crumb, current: Crumb) {
   return current.kind === 'surface' ? 'surface.project' : 'project.review.parent';
 }
 
-/** Breadcrumbs from the route table, then the page title: the last step of the trail. */
+/**
+ * Breadcrumbs from the route table, then the page title: the last step of the trail. A surface's
+ * object sits before it as plain text.
+ */
 export function PageHeading() {
   const app = useApp();
   const page = usePageTrail();
@@ -40,6 +43,14 @@ export function PageHeading() {
                 </li>
               )}
             </For>
+            <Show when={page.object()}>
+              {(name) => (
+                <li class="app-breadcrumbs-plain">
+                  <span>{name()}</span>
+                  <Icon name="chevron" size={14} />
+                </li>
+              )}
+            </Show>
             <li aria-current="page">{page.title()}</li>
           </ol>
         </nav>

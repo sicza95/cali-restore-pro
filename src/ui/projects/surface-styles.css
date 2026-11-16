@@ -1,10 +1,3 @@
-.surface-heading {
-  margin-block: 0 16px;
-}
-.surface-heading p {
-  margin: 0;
-  color: var(--cr-muted);
-}
 .surface-navigation,
 .surface-actions {
   display: flex;
@@ -51,12 +44,13 @@
   min-width: 0;
 }
 /*
- * The canvas runs to the bottom of the first screen: the shell's breadcrumb and title, the vault
- * bar, the status and object lines, the tabs and the compact picker row take about 400 px at
- * 1194 × 834 and 834 × 1194. The view row and hint sit just below; gestures and keys cover them.
+ * The canvas runs to the bottom of the first screen: the shell's breadcrumbs and title, the vault
+ * bar, the status line, the tabs and the compact picker row take about 355 px at 1194 × 834 (the
+ * object name is in the breadcrumbs, #39). Portrait adds the Menu header, so there the canvas ends
+ * about 45 px below the fold. The view row and hint sit just below; gestures and keys cover them.
  */
 .surface-review {
-  --surface-canvas-block: max(320px, calc(100dvh - 400px));
+  --surface-canvas-block: max(320px, calc(100dvh - 360px));
 }
 .surface-focus {
   --surface-canvas-block: calc(100dvh - 140px);

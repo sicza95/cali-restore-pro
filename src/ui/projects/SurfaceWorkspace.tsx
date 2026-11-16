@@ -135,9 +135,6 @@ export function SurfaceWorkspace(props: {
   const compact = () => mode() !== 'checkpoint';
   return (
     <>
-      <header class="surface-heading">
-        <p>{props.object.name}</p>
-      </header>
       <div class="surface-mode" role="group" aria-label={draw().mode}>
         <button
           class="secondary"

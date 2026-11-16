@@ -41,11 +41,12 @@ export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
         { width: 834, height: 1194 },
       ]) {
         await page.setViewportSize(viewport);
-        // The canvas gets most of the first screen (#34): it was 47 % at 1194 and 55 % at 834.
+        // The canvas gets most of the first screen: 47 % at 1194 and 55 % at 834 before #34,
+        // 52 % and 63 % before the surface header lost its object line (#39).
         // Polled: right after a resize the shell may still show the other orientation's header.
         await expect
           .poll(() => canvasShare(page))
-          .toBeGreaterThanOrEqual(viewport.width === 834 ? 60 : 50);
+          .toBeGreaterThanOrEqual(viewport.width === 834 ? 65 : 56);
         const rail = (await page.locator('.surface-rail').boundingBox())!;
         const canvas = (await page.locator('.surface-stage').boundingBox())!;
         const inspector = (await page.locator('.surface-inspector').boundingBox())!;

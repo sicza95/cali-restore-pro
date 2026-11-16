@@ -17,6 +17,7 @@ import { verifyAlignmentGuides, verifyCalibrationGuides, verifyPhotoMatrix } fro
 import { dng } from './fixtures/images';
 import { setupRememberedVault } from './vault-setup';
 import { expectTaskLanguage } from './copy-guard';
+import { expectPageTrail } from './app-navigation';
 
 test.use({ hasTouch: true });
 
@@ -85,8 +86,9 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await controls('project.surface').click();
   const surfacePath = new URL(page.url()).pathname;
   expect(surfacePath).toMatch(/^\/projects\/[a-f0-9-]{36}\/surfaces\/[a-f0-9-]{36}$/);
-  await expect(page.getByRole('heading', { name: 'Upper plaster' })).toBeVisible();
   await expect(controls('surface.project')).toHaveText('East Chapel');
+  // One title per surface page (#39); the object (step 2) is plain text, not a link.
+  await expectPageTrail(page, 'Projects › East Chapel › North wall › Upper plaster', 2);
   await expect(controls('project.collaboration')).toHaveCount(0);
   const review = (id: string) => {
     const key = 'surface.' + id;

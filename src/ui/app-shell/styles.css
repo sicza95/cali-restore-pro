@@ -243,6 +243,10 @@
   flex: none;
   opacity: 0.7;
 }
+/* A step with no page of its own (a surface's object): text, not a link. */
+.app-breadcrumbs-plain > span {
+  padding: 0 6px;
+}
 .app-breadcrumbs [aria-current='page'] {
   padding: 0 6px;
   color: var(--cr-ink);

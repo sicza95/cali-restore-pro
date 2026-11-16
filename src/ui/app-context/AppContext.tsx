@@ -9,16 +9,26 @@ import { createRouter } from '../router/createRouter';
  * provides them, and they last only as long as that screen: when it unmounts (vault locked,
  * signed out, another account) the names leave the shell too.
  */
-function createNames() {
+function createRecords() {
   type Source = () => Readonly<Record<string, string>>;
   const [sources, setSources] = createSignal<readonly Source[]>([]);
-  const names = createMemo(() => Object.assign({}, ...sources().map((source) => source())));
-  /** Call inside a component; the names go away when it is cleaned up. */
-  const provideNames = (source: Source) => {
+  const records = createMemo(() => Object.assign({}, ...sources().map((source) => source())));
+  /** Call inside a component; the records go away when it is cleaned up. */
+  const provide = (source: Source) => {
     setSources((list) => [...list, source]);
     onCleanup(() => setSources((list) => list.filter((entry) => entry !== source)));
   };
-  return { names: names as () => Readonly<Record<string, string>>, provideNames };
+  return [records as () => Readonly<Record<string, string>>, provide] as const;
+}
+
+function createNames() {
+  const [names, provideNames] = createRecords();
+  /**
+   * The name of the object a surface belongs to, keyed by surface ID. Objects have no page, so the
+   * shell shows it as plain text in the trail. Same lifetime as `names`.
+   */
+  const [objectNames, provideObjectNames] = createRecords();
+  return { names, provideNames, objectNames, provideObjectNames };
 }
 
 /** Account session, language, requests, the router and record names, shared by every screen. */

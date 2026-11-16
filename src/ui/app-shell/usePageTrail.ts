@@ -4,7 +4,10 @@ import { useApp } from '../app-context/AppContext';
 import { routeTrail } from '../router/breadcrumbs';
 import type { Crumb } from '../router/breadcrumbs';
 
-/** The current route's breadcrumb trail and the label of each step, in the app language. */
+/**
+ * The current route's breadcrumb trail and the label of each step, in the app language. On a
+ * surface page, `object` names the object the surface belongs to: a step without a page of its own.
+ */
 export function usePageTrail() {
   const app = useApp();
   const trail = () => routeTrail(app.router.route());
@@ -22,5 +25,9 @@ export function usePageTrail() {
     }
   };
   const title = () => label(trail().at(-1)!);
-  return { trail, label, title };
+  const object = () => {
+    const current = trail().at(-1)!;
+    return current.kind === 'surface' ? app.objectNames()[current.id] : undefined;
+  };
+  return { trail, label, title, object };
 }
