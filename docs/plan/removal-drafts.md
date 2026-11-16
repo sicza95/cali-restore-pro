@@ -1,6 +1,6 @@
 # Photo removal with drafts
 
-16 November 2026 · Status: in progress · Issue: #67 · Found while fixing [the recovery conflict](recovery-conflict.md) (#63)
+16 November 2026 · Status: done · Issue: #67 · Found while fixing [the recovery conflict](recovery-conflict.md) (#63)
 
 Goal: removing a detail photo that the assessment uses, with drawing drafts pending, keeps the drafts editable on this device, from the surface page and from the project page.
 
@@ -21,7 +21,7 @@ Carrying the journal forward is sound for this change, with history pruned:
 - **Project page.** It does not load the journal. A shared platform function reads the journal of each assessment the removal changes, carries it and returns the writes; the page saves them with the project in one transaction, which fails as a whole if a journal changed meanwhile.
 - **Surface page, same session.** The same function runs there; the open journal is then replaced by the written one (new revision and head), so the next save expects the right revision.
 
-Not covered, and out of this issue: the project page does not block removing the draft source photo (the surface page does). The assessment and its drafts' context are dropped; no pause appears, and the drafts stay unreachable in storage. Recorded as a new issue.
+Not covered, and out of this issue: the project page does not block removing the draft source photo (the surface page does). The assessment and its drafts' context are dropped; no pause appears, and the drafts stay unreachable in storage. Recorded as #72.
 
 ## Approach
 
@@ -36,3 +36,10 @@ Not covered, and out of this issue: the project page does not block removing the
 - Browser, in the projects flow through a helper (`projects.browser.ts` is at 397 lines): with a pending mark, removing an aligned detail photo on the surface page, then another on the project page, keeps editing available: no recovery notice, tools enabled, the pending mark kept, also after a reload. Each check is run against the old code to see it fail.
 - The #38 warning checks need another real conflict. The test writes the project through the app's own storage layer in the page, as another device's revision lands when a blocked sync draft is resolved with the cloud copy (`project.sync.keep-cloud`: `resolveEditor` replaces the local project row and leaves the journal): the main photo's crop changes and the revision goes up. The surface's drafts were journalled against the old assessment on this device, so after a reload `openJournal` reports the conflict. `verifyRecoveryWarning` then runs unchanged, and "Discard draft" resumes editing.
 - `npm run check`, `test:unit`, `npm test`, `test:files` (the projects flow also with `--repeat-each 5`), `test:sync`, `build-storybook`.
+
+## Outcome
+
+- As planned: `carryJournal` and `parseJournal` in `surface-journal.ts`, `changeSurfaceImages` in `surface-attachments.ts`, a list of journal writes in `projectDocuments().save` and the save chain, and both pages saving photo changes through `changeSurfaceImages`; the surface page hands the written journal to `createSurfaceJournal.carried`.
+- Nothing had to be blocked or left pausing for a detail removal. A journal already written against other content is not carried and still pauses; removing the draft source on the project page is #72.
+- The projects flow's `verifyRemovalKeepsDrafts` (in `recovery-conflict.ts`; `projects.browser.ts` is at 398 lines with a namespace import) attaches and aligns `side-detail.png` with manual guide points, removes it on the surface page and then `wall-detail.png` on the project page. With the old surface page it fails at its first check after the surface-page removal (brush disabled); with the old project page, at the first check after the project-page removal; without the journal write, at the reopen check; without `carried`, at the in-session check. The Vitest cases fail on the old code (the functions do not exist) and on mutants without the head guard or the history pruning; the store's multi-journal check fails with the old store.
+- `verifyRecoveryConflict` writes the other device's revision in the page and reopens the surface; `verifyRecoveryWarning` runs unchanged on that conflict.
