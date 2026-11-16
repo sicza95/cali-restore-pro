@@ -1,6 +1,6 @@
 # Portrait inspector
 
-16 November 2026 · Status: in progress · Issue: #37 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md#ui--5--10), row "Storybook · portrait inspector and letterbox"
+16 November 2026 · Status: done · Issue: #37 · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md#ui--5--10), row "Storybook · portrait inspector and letterbox"
 
 Goal: in the Storybook editor composition at iPad portrait (834 × 1194), the docked inspector shows every section without scrolling, its footer no longer takes an empty right column, and the photo starts at the top of the canvas. The app's surface editor keeps its layout. iPad and desktop only ([ADR 0003](../adr/0003-ipad-and-desktop-only.md)).
 
@@ -32,3 +32,14 @@ Phone width (640 px rules) is untouched.
 - `tests/ui.spec.ts`: at 834 × 1194, every inspector section and layer row (master boundary, Paint loss, Flaking, Lacunae, Cracks, Work phases, Cleaning) lies inside the inspector body's visible box with the body unscrolled and is not clipped by an `overflow: hidden` ancestor, and the photo's drawn top is at most 2 px below the canvas top. It must fail on `main`. Landscape checks stay.
 - The app: `drawing-review.ts` and `photo-review.ts` unchanged and green; `drawing-*` screenshots compared pixel by pixel with `main`.
 - `npm run check`, `test:unit`, `npm test`, `test:files`, `build-storybook`; Storybook portrait and landscape in light and dark.
+
+## Outcome
+
+| Viewport                | Canvas height (was) | Band above the photo (was) | Inspector height (was) | Body visible of content (was) | Footer column (was) |
+| ----------------------- | ------------------: | -------------------------: | ---------------------: | ----------------------------: | ------------------: |
+| 834 × 1194, dark, light |        521 (734) px |                  0 (97) px |           499 (286) px |    382 of 382 (232 of 382) px |       none (240 px) |
+| 1194 × 834              |        672 (672) px |                 46 (46) px |           672 (672) px |    482 of 482 (482 of 482) px |           unchanged |
+
+- As planned: without `inspectorSize` the portrait inspector row grows to its content (499 px) and the canvas takes the rest (521 px), so the 782 × 521 photo fills the canvas height with 14 px at each side. Every section, Cracks and Work phases included, shows without scrolling. The footer is a 63 px row under the layers: coverage and its track on the left, Calibration & units (44 px tall) on the right.
+- `tests/ui.spec.ts` checks, for the dark and light stories at 834 × 1194, that every section and row lies inside the unscrolled inspector body and every overflow-clipping ancestor, that Work phases is in the viewport, and that the photo's drawn top is at most 2 px below the canvas top. On `11ae4a2` it fails: Cracks, Work phases and Cleaning cut off, Work phases out of the viewport, a 97 px band.
+- The app's surface editor is unchanged: its `drawing-*` screenshots match `main` apart from antialiasing on the photo at 1194 with Details open (46 px at a channel delta of 2), which a second run of the same code also shows. Its 121 px band at 834 stays, as explained above.
