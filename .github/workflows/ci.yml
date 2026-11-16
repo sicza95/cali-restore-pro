@@ -50,6 +50,9 @@ jobs:
       - run: npm ci
       - name: Platform unit tests
         run: npm run test:unit
+      # Playwright runner, no browser or server: the estimate calculation oracles.
+      - name: Estimate oracle tests
+        run: npm run test:estimates
 
   go:
     name: Go tests
