@@ -28,7 +28,6 @@ export function SurfaceRecoveryNotice(props: {
         {props.failed ? props.copy.recoveryError : props.copy.recoveryConflict}
       </p>
       <button
-        class="secondary"
         disabled={props.busy}
         type="button"
         aria-describedby={id}
