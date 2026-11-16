@@ -33,6 +33,7 @@ function PhaseDetails(props: {
         label: object.name + ' / ' + surface.name,
       })),
     );
+  const surfaceLabel = () => surfaces().find(({ id }) => id === p().surface)?.label ?? '';
   const surface = () =>
     props.project.objects.flatMap((object) => object.surfaces).find(({ id }) => id === p().surface);
   const assessment = () => p().assessment ?? 'current';
@@ -204,7 +205,7 @@ function PhaseDetails(props: {
             href={href()}
             onClick={(e) => followProjectLink(e, props.navigate)}
           >
-            {c().scopeSurface}
+            {c().openScope(surfaceLabel())}
           </a>
         </Show>
       </div>

@@ -74,7 +74,7 @@ const stepLabel = {
 export const estimateControls: readonly ControlContract[] = [
   ...phases.map((key): ControlContract => ({
     id: phaseControl(key),
-    labelKey: key === 'newName' ? 'add' : key === 'scopeLink' ? 'scopeSurface' : key,
+    labelKey: key === 'newName' ? 'add' : key === 'scopeLink' ? 'openScope' : key,
     helpKey: key === 'mask' || key === 'scopeLink' ? 'maskHelp' : 'transient',
     command: key === 'scopeLink' ? 'Open authorized opaque surface' : 'Review work phase ' + key,
     permission: 'Unlocked account-local project author',

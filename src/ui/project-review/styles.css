@@ -53,6 +53,9 @@
 .estimate-review .review-fields > .estimate-wide-field {
   grid-column: 1 / -1;
 }
+.estimate-review .project-back {
+  overflow-wrap: anywhere;
+}
 .project-review-nav .project-back + .project-back,
 .review-breadcrumbs .project-back + .project-back {
   margin-inline-start: 0;

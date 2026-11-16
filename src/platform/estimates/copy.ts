@@ -31,6 +31,7 @@ const en = {
   splitHelp: 'Assign a phase layer to each new phase.',
   scope: 'Phase area',
   scopeSurface: 'Phase surface',
+  openScope: (surface: string) => `Open surface: ${surface}`,
   chooseSurface: 'Choose a surface',
   noMask: 'No mask assigned',
   maskHelp: 'Draw or clone a phase layer in the surface editor, then select it here.',
@@ -160,6 +161,7 @@ const hu: typeof en = {
   splitHelp: 'Rendeljen munkafázisréteget minden új fázishoz.',
   scope: 'A munkafázis területe',
   scopeSurface: 'A fázis felülete',
+  openScope: (surface: string) => `Felület megnyitása: ${surface}`,
   chooseSurface: 'Válasszon felületet',
   noMask: 'Nincs hozzárendelt maszk',
   maskHelp:
