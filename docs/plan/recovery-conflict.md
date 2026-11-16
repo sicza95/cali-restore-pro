@@ -1,6 +1,6 @@
 # Recovery conflict
 
-16 November 2026 · Status: in progress · Issue: #63 · Found while doing [the warning treatment](warning-treatment.md) (#38)
+16 November 2026 · Status: done · Issue: #63 · Found while doing [the warning treatment](warning-treatment.md) (#38)
 
 Goal: the surface page pauses editing only when the assessment really changed under unsaved drawing drafts, not when an unchanged assessment arrives as a new object.
 
@@ -28,3 +28,10 @@ Both fixes the issue names, because they cover different things.
 - Browser, in the projects flow through a helper (`tests-platform/recovery-conflict.ts`, since `projects.browser.ts` is at 399 lines): after the reference photo is attached with drafts pending, no recovery notice, the drawing tools enabled on the main photo and both layers' drafts kept. The page-wide axe check that ran at that point stays there.
 - The #38 warning checks need a real conflict. Later in the same flow: draw a pending mark, open the project page and remove the detail photo `wall-detail.png`, which is aligned in the assessment. The project page saves the surface without its journal, so the drafts on this device were written against an assessment that no longer exists: the same state another device's revision produces, and what `openJournal` reports on reopening. Back on the surface, `verifyRecoveryWarning` runs unchanged, then "Discard draft" resumes editing.
 - `npm run check`, `test:unit`, `npm test`, `test:files` (the projects flow also with `--repeat-each 5`), `test:sync`, `build-storybook`.
+
+## Outcome
+
+- As planned: `currentJournal` in `surface-journal.ts` compares the head text, and `createSurfaceJournal` calls it from a memo; `updateSurfaceImages` returns untouched assessments as the same objects.
+- The browser check fails on `main` (the drawing tools stay disabled after the attach) and passes with either fix alone, so each covers this path; the Vitest cases for each fail against its old code.
+- The #38 warning checks run on the real conflict above, after "surface reopened"; the page-wide axe check after the attach stays in `verifyAttachKeepsDrafts`. `projects.browser.ts` is at 397 lines: the three existing lines after the attach (brush disabled on the reference photo) moved into the helper unchanged.
+- Removing an aligned detail photo while drafts are pending still pauses editing and asks to discard them, on the project page and on the surface page alike. That is the head rule working, not this bug; whether a photo removal should carry the drafts forward is #67, which also notes that the flow's conflict check depends on it.
