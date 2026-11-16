@@ -33,7 +33,7 @@ const en = {
   scopeSurface: 'Phase surface',
   openScope: (surface: string) => `Open surface: ${surface}`,
   chooseSurface: 'Choose a surface',
-  noMask: 'No mask assigned',
+  noMask: 'No phase layer assigned',
   maskHelp: 'Draw or clone a phase layer in the surface editor, then select it here.',
   breakdown: 'Scope and effort',
   assessment: 'Phase assessment version',
@@ -163,7 +163,7 @@ const hu: typeof en = {
   scopeSurface: 'A fázis felülete',
   openScope: (surface: string) => `Felület megnyitása: ${surface}`,
   chooseSurface: 'Válasszon felületet',
-  noMask: 'Nincs hozzárendelt maszk',
+  noMask: 'Nincs munkafázisréteg',
   maskHelp:
     'Rajzoljon vagy másoljon egy munkafázisréteget a felületszerkesztőben, majd válassza ki itt.',
   breakdown: 'Terület és munkaigény',

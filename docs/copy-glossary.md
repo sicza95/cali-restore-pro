@@ -45,7 +45,7 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 - **Draft** (_vázlat_ for drawing, _piszkozat_ for reports): an unfinished, unsaved piece of work is a real idea for the user.
 - **Preview** (_előnézet_) where it means looking at a result before downloading it.
 - **Encrypted backup** (_titkosított biztonsági mentés_): the user must keep the backup key, so the word tells them something they act on.
-- **Assessment, checkpoint, phase, layer, mask, calibration**: conservation and editor vocabulary the user works with.
+- **Assessment, checkpoint, phase, layer, mask, calibration**: conservation and editor vocabulary the user works with. The estimate calls the layer a work phase is measured on a **phase layer** (_munkafázisréteg_), in its label and in every value of its select ("No phase layer assigned", _Nincs munkafázisréteg_), not a mask.
 
 ## Guard
 
