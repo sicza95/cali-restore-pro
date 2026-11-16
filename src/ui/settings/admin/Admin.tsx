@@ -70,7 +70,6 @@ export function Admin() {
                   <Show when={query().history.length > 1}>
                     <button
                       data-control-id="admin.previous"
-                      class="secondary"
                       onClick={() => setQuery((q) => ({ ...q, history: q.history.slice(0, -1) }))}
                     >
                       {c().previous}
@@ -80,7 +79,6 @@ export function Admin() {
                     {(next) => (
                       <button
                         data-control-id="admin.next"
-                        class="secondary"
                         onClick={() => setQuery((q) => ({ ...q, history: [...q.history, next()] }))}
                       >
                         {c().next}
@@ -98,7 +96,6 @@ export function Admin() {
           <h2>{c().mail}</h2>
           <button
             data-control-id="admin.operations.refresh"
-            class="secondary"
             disabled={ops.loading}
             onClick={() => void refreshOps()}
           >

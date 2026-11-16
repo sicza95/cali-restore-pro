@@ -152,7 +152,6 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                       {(id, index) => (
                         <button
                           data-control-id="sharing.checkpoint.open"
-                          class="secondary"
                           value={id}
                           disabled={busy()}
                         >
@@ -169,7 +168,6 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                         fallback={
                           <button
                             data-control-id="sharing.checkpoint.grant"
-                            class="secondary"
                             value={checkpoint.id}
                             disabled={busy() || !owner?.item.recipientKey}
                           >
@@ -180,7 +178,6 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                         <button
                           data-control-id="sharing.checkpoint.revoke"
                           type="button"
-                          class="secondary"
                           disabled={busy()}
                           onClick={() =>
                             void run(() => app.request(path + '/' + checkpoint.id, {}, 'DELETE'))

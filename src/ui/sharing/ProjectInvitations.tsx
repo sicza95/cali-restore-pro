@@ -79,7 +79,6 @@ function InvitationControls(props: {
       <Show when={sent.error() === 'not_found' && props.canHost}>
         <p>{c().hostHelp}</p>
         <button
-          class="secondary"
           disabled={sent.busy()}
           data-control-id="project.host"
           onClick={() => void sent.run(() => app.request(props.projectPath, {}, 'PUT'))}
@@ -184,7 +183,6 @@ function InvitationControls(props: {
                 <Show when={item.state === 'pending' || item.state === 'accepted'}>
                   <button
                     data-control-id="sharing.cancel"
-                    class="secondary"
                     disabled={sent.busy()}
                     onClick={() =>
                       void sent.run(() => app.request(props.path + '/' + item.id + '/cancel', {}))
@@ -196,7 +194,6 @@ function InvitationControls(props: {
                 <Show when={item.state === 'pending'}>
                   <button
                     type="button"
-                    class="secondary"
                     data-control-id="sharing.resend"
                     aria-describedby={`resend-help-${item.id}`}
                     disabled
@@ -210,7 +207,6 @@ function InvitationControls(props: {
                 <Show when={item.state === 'active' && !item.coOwner}>
                   <button
                     data-control-id="sharing.revoke"
-                    class="secondary"
                     disabled={sent.busy()}
                     onClick={() => {
                       if (window.confirm(c().revokeConfirm))
@@ -349,7 +345,6 @@ function InvitationControls(props: {
       </Show>
       <button
         data-control-id="sharing.refresh"
-        class="secondary"
         disabled={sent.loading() || sent.busy()}
         onClick={() => void sent.refetch()}
       >

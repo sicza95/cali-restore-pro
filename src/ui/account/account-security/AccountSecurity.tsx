@@ -85,7 +85,6 @@ export function AccountSecurity() {
               </Show>
               <button
                 data-control-id="account.sessions.refresh"
-                class="secondary"
                 disabled={app.busy()}
                 onClick={() => void app.refreshSessions()}
               >
@@ -111,7 +110,6 @@ export function AccountSecurity() {
                       </span>
                       <button
                         data-control-id="account.sessions.revoke"
-                        class="secondary"
                         disabled={app.busy() || !app.confirmed() || !app.revokeConfirmed()}
                         onClick={() => void app.revokeSession(session)}
                       >
@@ -123,7 +121,6 @@ export function AccountSecurity() {
               </ul>
               <button
                 data-control-id="account.sessions.revoke-all"
-                class="secondary"
                 disabled={app.busy() || !app.confirmed() || !app.revokeConfirmed()}
                 onClick={() => void app.revokeAll()}
               >

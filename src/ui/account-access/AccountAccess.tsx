@@ -116,11 +116,7 @@ function AccountShell() {
                   <p role="status">{t('working')}</p>
                 </Match>
                 <Match when={guard() === 'retry'}>
-                  <button
-                    data-control-id="app.session.retry"
-                    class="secondary"
-                    onClick={() => location.reload()}
-                  >
+                  <button data-control-id="app.session.retry" onClick={() => location.reload()}>
                     {c().retryAccess}
                   </button>
                 </Match>
@@ -147,7 +143,6 @@ function AccountShell() {
             </span>
             <button
               data-control-id="app.service.retry"
-              class="secondary"
               disabled={connection() === 'checking'}
               onClick={() => void app.refreshConnection()}
             >

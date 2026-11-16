@@ -62,11 +62,7 @@ export function AccountRow(props: { account: AdminAccount; refresh: () => void }
                 </select>
               </label>
               <ConfirmField t={app.t} />
-              <button
-                data-control-id="admin.account.policy"
-                class="secondary"
-                disabled={disabled()}
-              >
+              <button data-control-id="admin.account.policy" disabled={disabled()}>
                 {c().changePolicy}
               </button>
             </form>
@@ -107,11 +103,7 @@ export function AccountRow(props: { account: AdminAccount; refresh: () => void }
                 />
               </label>
               <ConfirmField t={app.t} />
-              <button
-                data-control-id="admin.account.entitlements"
-                class="secondary"
-                disabled={disabled()}
-              >
+              <button data-control-id="admin.account.entitlements" disabled={disabled()}>
                 {c().saveEntitlement}
               </button>
             </form>
@@ -141,11 +133,7 @@ export function AccountRow(props: { account: AdminAccount; refresh: () => void }
                 )}
               </For>
               <ConfirmField t={app.t} />
-              <button
-                data-control-id="admin.account.delegate"
-                class="secondary"
-                disabled={disabled()}
-              >
+              <button data-control-id="admin.account.delegate" disabled={disabled()}>
                 {c().saveDelegation}
               </button>
             </form>
@@ -153,11 +141,7 @@ export function AccountRow(props: { account: AdminAccount; refresh: () => void }
           <Show when={app.can('accounts.sessions.revoke') && a().id !== app.account()?.id}>
             <form onSubmit={(e) => submit(e, 'sessions/revoke', () => ({}))}>
               <ConfirmField t={app.t} />
-              <button
-                data-control-id="admin.account.revoke"
-                class="secondary"
-                disabled={disabled()}
-              >
+              <button data-control-id="admin.account.revoke" disabled={disabled()}>
                 {app.t('revokeAll')}
               </button>
             </form>

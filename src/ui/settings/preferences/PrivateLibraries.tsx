@@ -31,7 +31,6 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
             {(key) => (
               <button
                 type="button"
-                class="secondary"
                 data-control-id={`libraries.${key}`}
                 aria-describedby="estimate-library-help"
                 aria-pressed={kind() === (key === 'rates' ? 'rate' : 'productivity')}
@@ -75,7 +74,6 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
                 </p>
                 <button class="primary">{c().saveVersion}</button>
                 <button
-                  class="secondary"
                   onClick={(e) => {
                     e.preventDefault();
                     void presetRepository(props.vault)

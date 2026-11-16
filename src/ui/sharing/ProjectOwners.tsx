@@ -105,7 +105,6 @@ export function ProjectOwners(props: {
                     <Show when={currentHost() && owner.id !== pendingRecipient()?.id}>
                       <button
                         data-control-id="owners.host.offer"
-                        class="secondary"
                         disabled={busy()}
                         onClick={() => void change('/hosting-transfer', { toId: owner.id })}
                       >
@@ -114,7 +113,6 @@ export function ProjectOwners(props: {
                     </Show>
                     <button
                       data-control-id="owners.remove"
-                      class="secondary"
                       disabled={busy()}
                       onClick={() => {
                         if (window.confirm(c().removeOwnerConfirm))

@@ -139,7 +139,6 @@ export function OfflineOriginals(props: {
                 <div class="original-actions">
                   <button
                     data-control-id="offline.original.download"
-                    class="secondary"
                     disabled={busy() || props.model.checking()}
                     onClick={() => void run(row, false)}
                   >
@@ -159,7 +158,6 @@ export function OfflineOriginals(props: {
                   </Show>
                   <button
                     data-control-id="offline.original.remove"
-                    class="secondary"
                     disabled={busy() || props.model.checking()}
                     onClick={() => void run(row, true)}
                   >

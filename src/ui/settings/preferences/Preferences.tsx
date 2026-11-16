@@ -192,7 +192,6 @@ export function Preferences() {
               <button
                 data-control-id="preferences.branding.clear-logo"
                 type="button"
-                class="secondary"
                 onClick={() => setLogo('')}
               >
                 {c().removeLogo}

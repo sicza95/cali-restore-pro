@@ -17,7 +17,6 @@ export function SharingFingerprint(props: {
       <p>{c().identityHelp}</p>
       <button
         data-control-id="sharing.fingerprint"
-        class="secondary"
         disabled={props.busy}
         onClick={() =>
           void props.run(async () => {

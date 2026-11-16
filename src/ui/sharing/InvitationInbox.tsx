@@ -167,7 +167,6 @@ export function InvitationInbox(props: { vault: LocalVault }) {
                   <For each={optionalScopes(item)}>
                     {(scope) => (
                       <button
-                        class="secondary"
                         value={scope}
                         data-control-id={'invitations.scope.' + scope}
                         disabled={inbox.loading() || inbox.busy()}
@@ -266,7 +265,6 @@ export function InvitationInbox(props: { vault: LocalVault }) {
       </Show>
       <button
         data-control-id="invitations.refresh"
-        class="secondary"
         disabled={inbox.loading() || inbox.busy()}
         onClick={() => {
           setOpened(undefined);

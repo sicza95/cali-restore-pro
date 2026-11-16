@@ -75,11 +75,7 @@ export function SharedOriginals(props: {
       </Show>
       <Show when={pinning()}>
         <progress aria-label={p().progress} max={1} value={progress()} />
-        <button
-          data-control-id="sharing.pin.cancel"
-          class="secondary"
-          onClick={() => pinning()?.abort()}
-        >
+        <button data-control-id="sharing.pin.cancel" onClick={() => pinning()?.abort()}>
           {p().cancel}
         </button>
       </Show>
@@ -94,7 +90,6 @@ export function SharedOriginals(props: {
               <div class="original-actions">
                 <button
                   data-control-id="sharing.original.download"
-                  class="secondary"
                   disabled={busy() || !!pinning() || !props.offline.online()}
                   onClick={() => void download(file)}
                 >
@@ -107,7 +102,6 @@ export function SharedOriginals(props: {
                   fallback={
                     <button
                       data-control-id="sharing.pin.start"
-                      class="secondary"
                       disabled={
                         busy() || !!pinning() || !props.offline.online() || props.offline.checking()
                       }

@@ -15,7 +15,6 @@ export function AccountDeletion(props: { path: string; pending?: boolean; onChan
       <Show when={!props.pending}>
         <button
           data-control-id="account.deletion.preflight"
-          class="secondary"
           disabled={app.busy()}
           onClick={async () => {
             setCheck(await app.read<DeletionPreflight>(props.path + '/deletion-preflight'));
@@ -67,7 +66,7 @@ export function AccountDeletion(props: { path: string; pending?: boolean; onChan
               {d().skipRecovery}
             </label>
           </Show>
-          <button data-control-id="account.deletion.apply" class="secondary" disabled={app.busy()}>
+          <button data-control-id="account.deletion.apply" disabled={app.busy()}>
             {props.pending ? d().purge : force() ? d().deleteForced : d().delete}
           </button>
         </form>
