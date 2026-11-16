@@ -1,6 +1,6 @@
 import { createSignal, For, Show, untrack } from 'solid-js';
 import type { SavedProject } from '../../platform/projects/types';
-import { followProjectLink, projectHref } from '../projects/project-route';
+import { followLink, projectHref } from '../router/routes';
 import type { EstimateCopy } from '../../platform/estimates/copy';
 import { phaseControl as id } from './estimate-controls';
 import { ReviewSelect } from '../project-review/fields';
@@ -197,7 +197,7 @@ function PhaseDetails(props: {
             class="project-back"
             data-control-id={id('scopeLink')}
             href={href()}
-            onClick={(e) => followProjectLink(e, props.navigate)}
+            onClick={(e) => followLink(e, props.navigate)}
           >
             {c().openScope(surfaceLabel())}
           </a>

@@ -1,7 +1,7 @@
 import { For, Show } from 'solid-js';
 import type { SavedProject } from '../../platform/projects/types';
 import type { Language } from '../account-access/types';
-import { followProjectLink, projectReviewHref } from '../projects/project-route';
+import { followLink, projectReviewHref } from '../router/routes';
 import { estimateCopy } from '../../platform/estimates/copy';
 import { reviewRoutes, routeControl } from '../reports/report-controls';
 import type { ReviewRoute } from '../reports/report-controls';
@@ -26,7 +26,7 @@ export function ProjectReviewLinks(props: {
             data-control-id={routeControl(key)}
             aria-current={props.active === key ? 'page' : undefined}
             href={projectReviewHref(props.project, key)}
-            onClick={(event) => followProjectLink(event, props.navigate)}
+            onClick={(event) => followLink(event, props.navigate)}
           >
             {c()[key]}
           </a>
