@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: 'tests-platform',
   testMatch: [
     'estimates.browser.ts',
+    'estimate-rows.browser.ts',
     'encrypted-files.browser.ts',
     'image-import.browser.ts',
     'original-pins.browser.ts',
