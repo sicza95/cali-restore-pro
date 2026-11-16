@@ -91,11 +91,11 @@ export function ReportReview(props: {
           {c().preview}
         </button>
         <Show when={model.preparing()}>
-          <button type="button" class="secondary" onClick={model.cancel}>
+          <button type="button" onClick={model.cancel}>
             {c().cancel}
           </button>
         </Show>
-        <button type="button" class="secondary" data-control-id={id('final')} disabled>
+        <button type="button" data-control-id={id('final')} disabled>
           {c().final}
         </button>
       </div>
@@ -121,12 +121,7 @@ export function ReportReview(props: {
               status() === 'loadError' || status() === 'estimateError' || status() === 'saveError'
             }
           >
-            <button
-              type="button"
-              class="secondary"
-              disabled={busy()}
-              onClick={() => void model.open()}
-            >
+            <button type="button" disabled={busy()} onClick={() => void model.open()}>
               {c().reload}
             </button>
           </Show>
@@ -266,7 +261,6 @@ export function ReportReview(props: {
             <Show when={download.working()}>
               <button
                 type="button"
-                class="secondary"
                 data-control-id={id('cancelDownload')}
                 onClick={download.cancel}
               >
@@ -275,7 +269,6 @@ export function ReportReview(props: {
             </Show>
             <button
               type="button"
-              class="secondary"
               autofocus
               data-control-id={id('cancel')}
               onClick={() => {

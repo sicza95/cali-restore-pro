@@ -67,7 +67,6 @@ function PhaseDetails(props: {
       <div class="review-actions">
         <button
           type="button"
-          class="secondary"
           data-control-id={id('earlier')}
           disabled={order() <= 0}
           onClick={() => m.move(-1)}
@@ -76,7 +75,6 @@ function PhaseDetails(props: {
         </button>
         <button
           type="button"
-          class="secondary"
           data-control-id={id('later')}
           disabled={order() >= m.active().length - 1}
           onClick={() => m.move(1)}
@@ -85,7 +83,6 @@ function PhaseDetails(props: {
         </button>
         <button
           type="button"
-          class="secondary"
           data-control-id={id('duplicate')}
           disabled={!p().name.trim()}
           onClick={() => m.duplicate(p(), p().name.slice(0, 60) + ' · ' + c().copy)}
@@ -94,7 +91,6 @@ function PhaseDetails(props: {
         </button>
         <button
           type="button"
-          class="secondary"
           data-control-id={id('split')}
           disabled={!p().surface || !p().name.trim()}
           onClick={() => m.split(p(), p().name.slice(0, 60) + ' · ' + c().splitName)}
@@ -103,7 +99,6 @@ function PhaseDetails(props: {
         </button>
         <button
           type="button"
-          class="secondary"
           data-control-id={id('archive')}
           onClick={() => update({ archived: true })}
         >
@@ -122,7 +117,6 @@ function PhaseDetails(props: {
         />
         <button
           type="button"
-          class="secondary"
           data-control-id={id('combine')}
           disabled={!selected()}
           onClick={() => {
@@ -255,7 +249,7 @@ export function WorkPhases(props: {
             onInput={(e) => setName(e.currentTarget.value)}
           />
         </label>
-        <button class="secondary" data-control-id={id('add')} disabled={!name().trim()}>
+        <button data-control-id={id('add')} disabled={!name().trim()}>
           {c().add}
         </button>
       </form>
@@ -296,7 +290,6 @@ export function WorkPhases(props: {
                 <span>{phase.name}</span>
                 <button
                   type="button"
-                  class="secondary"
                   data-control-id={id('restore')}
                   onClick={() => {
                     const taken = m

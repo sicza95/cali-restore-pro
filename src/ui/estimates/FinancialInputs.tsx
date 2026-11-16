@@ -80,7 +80,6 @@ export function Extras(props: {
               </ReviewCheck>
               <button
                 type="button"
-                class="secondary"
                 data-control-id={id('removeExtra')}
                 onClick={() => props.remove(extra.id)}
               >
@@ -90,12 +89,7 @@ export function Extras(props: {
           </div>
         )}
       </For>
-      <button
-        type="button"
-        class="secondary"
-        data-control-id={id('newExtra')}
-        onClick={() => props.add()}
-      >
+      <button type="button" data-control-id={id('newExtra')} onClick={() => props.add()}>
         {c().newExtra}
       </button>
     </section>
@@ -141,7 +135,6 @@ export function Adjustments(props: {
             />
             <button
               type="button"
-              class="secondary"
               data-control-id={id('removeAdjustment')}
               onClick={() => props.remove(row.id)}
             >
@@ -150,12 +143,7 @@ export function Adjustments(props: {
           </div>
         )}
       </For>
-      <button
-        type="button"
-        class="secondary"
-        data-control-id={id('newAdjustment')}
-        onClick={() => props.add()}
-      >
+      <button type="button" data-control-id={id('newAdjustment')} onClick={() => props.add()}>
         {c().newAdjustment}
       </button>
       <ReviewCheck id={id('tax')} checked={props.taxed} change={props.setTaxed}>

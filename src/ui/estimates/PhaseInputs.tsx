@@ -70,7 +70,6 @@ export function PhaseInputs(props: {
         >
           <button
             type="button"
-            class="secondary"
             data-control-id={id('acknowledge')}
             onClick={() => update({ measurement: 'ready' })}
           >
@@ -172,7 +171,6 @@ export function PhaseInputs(props: {
           <div class="review-actions">
             <button
               type="button"
-              class="secondary"
               data-control-id={id('keepHours')}
               disabled={!validDecimal(multiplier(), smallestPositive)}
               onClick={() => update({ multiplier: multiplier(), factorDraft: undefined })}
@@ -181,7 +179,6 @@ export function PhaseInputs(props: {
             </button>
             <button
               type="button"
-              class="secondary"
               data-control-id={id('adjustHours')}
               disabled={
                 !validDecimal(multiplier(), smallestPositive) ||
@@ -193,7 +190,6 @@ export function PhaseInputs(props: {
             </button>
             <button
               type="button"
-              class="secondary"
               data-control-id={id('cancel')}
               onClick={() => update({ factorDraft: undefined })}
             >

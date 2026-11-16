@@ -61,7 +61,6 @@ export function EstimateIssueActions(props: { copy: EstimateCopy; draft: Estimat
       </button>
       <button
         type="button"
-        class="secondary"
         data-control-id={id('issue')}
         disabled={!d.valid() || !d.result()?.complete}
         onClick={() => void d.capture(true)}

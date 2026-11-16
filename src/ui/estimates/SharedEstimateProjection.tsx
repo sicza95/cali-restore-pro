@@ -112,7 +112,6 @@ export function SharedEstimateProjection(props: {
         {(source) => (
           <button
             type="button"
-            class="secondary"
             onClick={() => {
               const value = source();
               const revision =
@@ -147,7 +146,7 @@ export function SharedEstimateProjection(props: {
             {(value) => <ReportEstimatePreview estimate={value()} language={props.language} />}
           </Show>
         </div>
-        <button type="button" class="secondary" autofocus onClick={() => dialog.close()}>
+        <button type="button" autofocus onClick={() => dialog.close()}>
           {r().cancel}
         </button>
       </dialog>

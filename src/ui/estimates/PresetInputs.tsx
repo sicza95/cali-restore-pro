@@ -58,20 +58,10 @@ export function PresetInputs(props: {
         <input value={name()} maxlength="80" onInput={(e) => setName(e.currentTarget.value)} />
       </label>
       <div class="review-actions">
-        <button
-          type="button"
-          class="secondary"
-          disabled={!name().trim()}
-          onClick={() => void save('rate')}
-        >
+        <button type="button" disabled={!name().trim()} onClick={() => void save('rate')}>
           {c().rate}
         </button>
-        <button
-          type="button"
-          class="secondary"
-          disabled={!name().trim()}
-          onClick={() => void save('productivity')}
-        >
+        <button type="button" disabled={!name().trim()} onClick={() => void save('productivity')}>
           {c().speed}
         </button>
       </div>
@@ -88,7 +78,6 @@ export function PresetInputs(props: {
               </span>
               <button
                 type="button"
-                class="secondary"
                 disabled={preset.kind === 'rate' && preset.currency !== props.currency}
                 onClick={() => {
                   try {

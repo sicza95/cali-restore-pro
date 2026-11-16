@@ -34,7 +34,6 @@ export function EstimateStepNav(props: {
             <li>
               <button
                 type="button"
-                class="secondary"
                 data-control-id={stepControl(step)}
                 aria-current={props.current === step ? 'step' : undefined}
                 aria-controls={panelId(step)}
@@ -85,7 +84,6 @@ export function EstimateStepPanel(props: {
           {(step) => (
             <button
               type="button"
-              class="secondary"
               data-control-id={stepControl('back')}
               onClick={() => props.go(step())}
             >
