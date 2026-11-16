@@ -49,9 +49,9 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
     await inbox.getByRole('button', { name: 'Estimate summary sample' }).click();
-    await expect(
-      inbox.getByRole('region', { name: 'Estimate summary sample' }).getByText('1,250 EUR'),
-    ).toBeVisible();
+    const projection = '[data-control-id="estimate.scope.projection"]';
+    await expect(inbox.locator(projection)).toContainText('HUF 1,250');
+    await expect(inbox.locator(projection)).not.toContainText('62.5');
     await expect(inbox.getByRole('button', { name: 'Full estimate sample' })).toHaveCount(0);
     await expect(inbox.getByRole('button', { name: 'History sample' })).toHaveCount(0);
     await inbox.route(
@@ -116,9 +116,9 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     await remainingInbox.getByRole('button', { name: 'Refresh invitations' }).click();
     await remainingInbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
     await remainingInbox.getByRole('button', { name: 'Full estimate sample' }).click();
-    await expect(
-      remainingInbox.getByRole('region', { name: 'Full estimate sample' }).getByText('62.50 EUR/h'),
-    ).toBeVisible();
+    await remainingInbox.locator(projection).getByRole('button', { name: 'Preview draft' }).click();
+    await expect(remainingInbox.getByRole('dialog')).toContainText('HUF 62.5/h');
+    await remainingInbox.getByRole('button', { name: 'Cancel preview' }).click();
     await remainingInbox.route(
       '**' + remainingScopes + 'history',
       (route) => route.fulfill({ json: { ...fullEnvelope, scope: 'history' } }),

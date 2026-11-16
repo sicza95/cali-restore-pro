@@ -4,10 +4,30 @@ import { orientedJpeg } from './fixtures/images';
 import { enableHostingAndSync } from './invitation-hosting';
 import { setupRememberedVault } from './vault-setup';
 
+/** Estimate scopes are shared only from an issued estimate: 20 h at HUF 62.50 per hour. */
+async function issueEstimate(project: Page) {
+  const control = (id: string) => project.locator(`[data-control-id="${id}"]`);
+  const phase = (key: string) => control('estimate.phase.' + key);
+  await control('project.review.estimates').click();
+  await control('estimate.step.phases').click();
+  await phase('newName').fill('Surface cleaning');
+  await phase('add').click();
+  await phase('scopeSurface').selectOption({ label: 'North wall / Upper plaster' });
+  await phase('time').fill('20');
+  await phase('rate').fill('62.50');
+  await expect(project.locator('[data-estimate-result="total"]')).toHaveText('HUF 1,250');
+  await control('estimate.step.issue').click();
+  await control('estimate.finance.issue').click();
+  await expect(project.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
+  await control('project.review.parent').click();
+  await expect(project.getByText('shared-plaster.jpg')).toBeVisible();
+}
+
 /**
- * The owner creates a project with one original, invites the recipient and shares a snapshot
- * once the fingerprints are verified (a wrong fingerprint is refused first). Checks that the
- * activation, the sealed content and the estimate scopes reveal no plain project data.
+ * The owner creates a project with one original, issues an estimate, invites the recipient and
+ * shares a snapshot once the fingerprints are verified (a wrong fingerprint is refused first).
+ * Checks that the activation, the sealed content and the estimate scopes reveal no plain project
+ * data.
  */
 export async function shareFirstSnapshot(project: Page, inbox: Page) {
   const owner = project.request;
@@ -16,10 +36,14 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   await setupRememberedVault(project);
   await project.getByLabel('Project name').fill('Synthetic chapel');
   await project.getByRole('button', { name: 'New project' }).click();
-  await project.getByLabel('Add object').fill('North wall');
-  await project.getByRole('button', { name: 'Add object' }).click();
-  await project.getByLabel('Add surface').fill('Upper plaster');
-  await project.getByRole('button', { name: 'Add surface' }).click();
+  // One object: the full estimate scope must stay within the server's 1536-byte grant limit.
+  await project.getByRole('textbox', { name: 'Object', exact: true }).fill('North wall');
+  await project.locator('[data-control-id="project.object.rename"]').click();
+  await expect(
+    project.getByRole('combobox', { name: 'Object', exact: true }).locator('option:checked'),
+  ).toHaveText('North wall');
+  await project.getByRole('textbox', { name: 'Surface', exact: true }).fill('Upper plaster');
+  await project.locator('[data-control-id="project.surface.rename"]').click();
   await expect(project.getByText('Upper plaster · Metric')).toBeVisible();
   await project.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'shared-plaster.jpg',
@@ -28,6 +52,7 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   });
   await project.getByRole('button', { name: 'Attach original', exact: true }).click();
   await expect(project.getByText('shared-plaster.jpg')).toBeVisible();
+  await issueEstimate(project);
   await project.getByText('Project invitations', { exact: true }).click();
   await enableHostingAndSync(project);
   await project.getByLabel('Recipient email').fill('recipient@example.test');
@@ -78,7 +103,7 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   expect(JSON.stringify(sealed)).not.toMatch(/Synthetic chapel|North wall|Upper plaster/);
   const summary = await recipient.get(scopes + 'estimate-summary');
   expect(summary.status()).toBe(200);
-  expect(await summary.text()).not.toContain('1,250 EUR');
+  expect(await summary.text()).not.toMatch(/1,?250|Surface cleaning/);
   expect((await recipient.get(scopes + 'estimate-full')).status()).toBe(404);
   expect((await recipient.get(scopes + 'history')).status()).toBe(404);
   expect((await owner.get(scopes + 'estimate-summary')).status()).toBe(404);
