@@ -1,10 +1,12 @@
 import { createResource, createSignal } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
+import { ScopeTooLargeError } from '../../platform/projects/sharing-scopes';
 
 export function useInvitations<T>(path: string) {
   const model = useApp();
   const [busy, setBusy] = createSignal(false);
-  const [failed, setFailed] = createSignal(false);
+  // Why the last action failed: a scope too large to share, or anything else.
+  const [failed, setFailed] = createSignal<false | 'error' | 'too-large'>(false);
   const [result, { refetch }] = createResource<{
     invitations?: T[];
     originalEpoch?: string;
@@ -26,8 +28,8 @@ export function useInvitations<T>(path: string) {
       await action();
       if (refresh) await refetch();
       return true;
-    } catch {
-      setFailed(true);
+    } catch (error) {
+      setFailed(error instanceof ScopeTooLargeError ? 'too-large' : 'error');
       return false;
     } finally {
       setBusy(false);

@@ -21,16 +21,33 @@ func validOptionalScope(scope string) bool {
 	return scope == "estimate-summary" || scope == "estimate-full" || scope == "history"
 }
 
+// A scope grant seals one estimate scope; a full estimate carries the whole issued
+// snapshot. Like the project snapshot, it may hold 64 KiB of plaintext (#88): the
+// device keeps an estimate with its snapshots in 64 Ki characters, and the largest
+// full scope measured within that seals to about 42 KB. Migration 0022 checks the
+// same bound on the base64 text, and the client checks it before sending
+// (scopeGrantMaxBytes in src/platform/projects/sharing-scopes.ts).
+const (
+	scopeGrantMaxBytes = 64*1024 + 16
+	scopeGrantMaxChars = (scopeGrantMaxBytes + 2) / 3 * 4
+	maxScopeGrants     = 2
+)
+
+// validSealed reports whether ciphertext is canonical base64 of 16 to limit bytes.
+func validSealed(ciphertext string, limit int) bool {
+	bytes, err := base64.StdEncoding.Strict().DecodeString(ciphertext)
+	return err == nil && len(bytes) >= 16 && len(bytes) <= limit &&
+		base64.StdEncoding.EncodeToString(bytes) == ciphertext
+}
+
 func validScopeEnvelopes(scopes []scopeEnvelope) bool {
-	if len(scopes) > 2 {
+	if len(scopes) > maxScopeGrants {
 		return false
 	}
 	seen := make(map[string]bool, len(scopes))
 	for _, grant := range scopes {
-		bytes, err := base64.StdEncoding.Strict().DecodeString(grant.Ciphertext)
 		if !validOptionalScope(grant.Scope) || seen[grant.Scope] || !validSharingPoint(grant.Encapsulation) ||
-			err != nil || len(bytes) < 16 || len(bytes) > 1536 ||
-			base64.StdEncoding.EncodeToString(bytes) != grant.Ciphertext {
+			!validSealed(grant.Ciphertext, scopeGrantMaxBytes) {
 			return false
 		}
 		seen[grant.Scope] = true

@@ -17,6 +17,7 @@ export default defineConfig({
     'drawing-geometry.browser.ts',
     'project-reviews.browser.ts',
     'project-review-scopes.browser.ts',
+    'scope-too-large.browser.ts',
     'report-exports.browser.ts',
     'measured-reports.browser.ts',
     'project-trash.browser.ts',

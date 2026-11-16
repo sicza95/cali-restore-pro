@@ -71,7 +71,7 @@ function InvitationControls(props: {
       <Show
         when={sent.failed() || (sent.error() && (sent.error() !== 'not_found' || !props.canHost))}
       >
-        <p role="alert">{c().error}</p>
+        <p role="alert">{sent.failed() === 'too-large' ? c().scopeTooLarge : c().error}</p>
       </Show>
       <Show when={sent.loading()}>
         <p role="status">{c().loading}</p>

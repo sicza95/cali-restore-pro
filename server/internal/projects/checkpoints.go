@@ -2,7 +2,6 @@ package projects
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"net/http"
 
@@ -10,6 +9,10 @@ import (
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 )
+
+// A checkpoint grant seals a checkpoint title and description; migration 0017
+// checks the matching base64 bound (2048 characters).
+const checkpointGrantMaxBytes = 1536
 
 type checkpointGrant struct {
 	RecipientKey  string `json:"recipientKey"`
@@ -107,9 +110,8 @@ func (h *HTTP) changeCheckpoint(w http.ResponseWriter, r *http.Request) {
 		if !httpjson.DecodeBounded(w, r, grant, 3*1024) {
 			return
 		}
-		bytes, err := base64.StdEncoding.Strict().DecodeString(grant.Ciphertext)
 		if !validSharingPoint(grant.RecipientKey) || !validSharingPoint(grant.Encapsulation) ||
-			err != nil || len(bytes) < 16 || len(bytes) > 1536 || base64.StdEncoding.EncodeToString(bytes) != grant.Ciphertext {
+			!validSealed(grant.Ciphertext, checkpointGrantMaxBytes) {
 			identity.Failure(w, identity.ErrInvalid)
 			return
 		}

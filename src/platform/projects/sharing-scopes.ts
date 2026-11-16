@@ -2,6 +2,26 @@ export type EstimateScope = 'none' | 'estimate-summary' | 'estimate-full';
 export type OptionalScope = Exclude<EstimateScope, 'none'> | 'history';
 export type ScopeSelection = { estimateScope: EstimateScope; shareHistory: boolean };
 
+/**
+ * The server's limit for one sealed scope grant, in ciphertext bytes: 64 KiB of plaintext plus
+ * the 16-byte tag, like the project snapshot (`scopeGrantMaxBytes` in
+ * server/internal/projects/invitation_scopes.go, checked in base64 by migration 0022). The device
+ * keeps an estimate with its snapshots in 64 Ki characters; the largest full scope measured
+ * within that seals to about 42 KB (#88).
+ */
+export const scopeGrantMaxBytes = 64 * 1024 + 16;
+
+/** Thrown before sending when a sealed scope would exceed {@link scopeGrantMaxBytes}. */
+export class ScopeTooLargeError extends Error {
+  constructor(
+    readonly scope: OptionalScope,
+    readonly bytes: number,
+  ) {
+    super(`Sealed ${scope} scope is ${bytes} bytes, over the ${scopeGrantMaxBytes}-byte limit`);
+    this.name = 'ScopeTooLargeError';
+  }
+}
+
 export function optionalScopes(selection: ScopeSelection): OptionalScope[] {
   const scopes: OptionalScope[] = [];
   if (selection.estimateScope !== 'none') scopes.push(selection.estimateScope);

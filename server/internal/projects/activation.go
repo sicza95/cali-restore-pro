@@ -106,7 +106,7 @@ func (h *HTTP) activationRoutes(route func(string, bool, http.HandlerFunc)) {
 			originalGrant
 			Scopes []scopeEnvelope `json:"scopes"`
 		}
-		if !httpjson.DecodeBounded(w, r, &body, 104*1024) {
+		if !httpjson.DecodeBounded(w, r, &body, 104*1024+maxScopeGrants*scopeGrantMaxChars) {
 			return
 		}
 		maxBytes := 384

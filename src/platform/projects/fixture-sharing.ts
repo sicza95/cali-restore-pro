@@ -5,7 +5,12 @@ import { parseSharedProject } from './shared-project';
 import type { SharedProject } from './shared-project';
 import { parseSharedOriginals } from './shared-originals';
 import type { SharedOriginal } from './shared-originals';
-import { parseScopeSample, scopeSamples } from './sharing-scopes';
+import {
+  parseScopeSample,
+  scopeGrantMaxBytes,
+  scopeSamples,
+  ScopeTooLargeError,
+} from './sharing-scopes';
 import type { OptionalScope } from './sharing-scopes';
 import { parseEstimateScope } from '../estimates/scopes';
 
@@ -135,10 +140,14 @@ export async function sealScope(
   scope: OptionalScope,
   content?: unknown,
 ): Promise<ScopeEnvelope> {
+  const plaintext = encoder.encode(JSON.stringify(content ?? scopeSamples[scope]));
+  // AES-GCM adds a 16-byte tag; refuse before sealing what the server would reject.
+  if (plaintext.byteLength + 16 > scopeGrantMaxBytes)
+    throw new ScopeTooLargeError(scope, plaintext.byteLength + 16);
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
   const { enc, ct } = await suite.seal(
     { senderKey, recipientPublicKey },
-    encoder.encode(JSON.stringify(content ?? scopeSamples[scope])),
+    plaintext,
     scopeBinding(context, scope),
   );
   return { scope, encapsulation: base64(enc), ciphertext: base64(ct) };

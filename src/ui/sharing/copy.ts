@@ -68,6 +68,8 @@ export const invitationCopy = defineCopy({
     empty: 'No invitations to show.',
     refresh: 'Refresh invitations',
     error: 'Could not complete the request. Check your access and try again.',
+    scopeTooLarge:
+      'The estimate is too large to share. Choose the estimate summary or no estimate access.',
     loading: 'Loading invitations…',
     enable: 'Enable hosting',
     hostHelp:
@@ -144,6 +146,8 @@ export const invitationCopy = defineCopy({
     empty: 'Nincs megjeleníthető meghívó.',
     refresh: 'Meghívók frissítése',
     error: 'A művelet sikertelen. Ellenőrizd a jogosultságodat, és próbáld újra.',
+    scopeTooLarge:
+      'A becslés túl nagy a megosztáshoz. Válaszd a becslési összesítőt, vagy ne adj hozzáférést a becsléshez.',
     loading: 'Meghívók betöltése…',
     enable: 'Szerveres tárolás engedélyezése',
     hostHelp:

@@ -20,11 +20,19 @@ async function issueEstimate(project: Page) {
   await control('estimate.finance.issue').click();
   await expect(project.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
   await control('project.review.parent').click();
+  // Coming back selects the first object and surface again; the original is on North wall's
+  // second surface.
+  await project
+    .getByRole('combobox', { name: 'Object', exact: true })
+    .selectOption({ label: 'North wall' });
+  await project
+    .getByRole('combobox', { name: 'Surface', exact: true })
+    .selectOption({ label: 'Upper plaster' });
   await expect(project.getByText('shared-plaster.jpg')).toBeVisible();
 }
 
 /**
- * The owner creates a project with one original, issues an estimate, invites the recipient and
+ * The owner creates a project with two objects and one original, issues an estimate, invites the recipient and
  * shares a snapshot once the fingerprints are verified (a wrong fingerprint is refused first).
  * Checks that the activation, the sealed content and the estimate scopes reveal no plain project
  * data.
@@ -36,14 +44,15 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   await setupRememberedVault(project);
   await project.getByLabel('Project name').fill('Synthetic chapel');
   await project.getByRole('button', { name: 'New project' }).click();
-  // One object: the full estimate scope must stay within the server's 1536-byte grant limit.
-  await project.getByRole('textbox', { name: 'Object', exact: true }).fill('North wall');
-  await project.locator('[data-control-id="project.object.rename"]').click();
+  // Two objects: the full estimate scope (about 1.8 KB sealed) went over the old 1536-byte
+  // scope grant limit (#88).
+  await project.getByRole('textbox', { name: 'Add object' }).fill('North wall');
+  await project.getByRole('button', { name: 'Add object' }).click();
+  await project.getByRole('textbox', { name: 'Add surface' }).fill('Upper plaster');
+  await project.getByRole('button', { name: 'Add surface' }).click();
   await expect(
     project.getByRole('combobox', { name: 'Object', exact: true }).locator('option:checked'),
   ).toHaveText('North wall');
-  await project.getByRole('textbox', { name: 'Surface', exact: true }).fill('Upper plaster');
-  await project.locator('[data-control-id="project.surface.rename"]').click();
   await expect(project.getByText('Upper plaster · Metric')).toBeVisible();
   await project.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'shared-plaster.jpg',

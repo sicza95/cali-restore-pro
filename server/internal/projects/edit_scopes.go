@@ -79,7 +79,7 @@ func (a fileAccess) updateInvitationScopes(ctx context.Context, project, id stri
 
 func (h *HTTP) changeInvitationScopes(w http.ResponseWriter, r *http.Request) {
 	var body scopeChange
-	if !httpjson.DecodeBounded(w, r, &body, 6*1024) {
+	if !httpjson.DecodeBounded(w, r, &body, 6*1024+maxScopeGrants*scopeGrantMaxChars) {
 		return
 	}
 	project, id := r.PathValue("project"), r.PathValue("invitation")
