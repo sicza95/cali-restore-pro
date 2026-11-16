@@ -112,7 +112,7 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
   async function save(
     project: SavedProject,
     attachment?: PendingAttachment,
-    journal?: JournalWrite,
+    journal?: JournalWrite | JournalWrite[],
   ) {
     update(await local.save(project, attachment, journal));
     void sync.refresh();

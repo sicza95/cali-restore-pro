@@ -106,17 +106,19 @@ export function projectDocuments(
   }
   function putJournal(
     projectStore: IDBObjectStore,
-    prepared: Awaited<ReturnType<typeof prepareJournal>>,
+    prepared: Awaited<ReturnType<typeof prepareJournal>>[],
     finish: () => void,
     abort: () => void,
   ) {
+    const [next, ...rest] = prepared;
+    if (!next) return finish();
     const store = projectStore.transaction.objectStore(journalTable);
-    const request = store.get(prepared.key);
+    const request = store.get(next.key);
     request.onsuccess = () => {
-      if (((request.result as JournalRow | undefined)?.revision ?? 0) !== prepared.expected)
+      if (((request.result as JournalRow | undefined)?.revision ?? 0) !== next.expected)
         return abort();
-      store.put(prepared.row, prepared.key);
-      finish();
+      store.put(next.row, next.key);
+      putJournal(projectStore, rest, finish, abort);
     };
   }
 
@@ -147,7 +149,7 @@ export function projectDocuments(
           request.onsuccess = () => {
             if ((request.result as ProjectRow | undefined)?.revision !== projectRevision)
               return abort();
-            putJournal(projects, prepared, () => finish(undefined), abort);
+            putJournal(projects, [prepared], () => finish(undefined), abort);
           };
         },
         false,
@@ -213,11 +215,13 @@ export function projectDocuments(
       expected: number,
       text: string,
       attachment?: PendingAttachment,
-      journal?: JournalWrite,
+      journal?: JournalWrite | JournalWrite[],
     ) {
-      if (journal && (table !== projectTable || journal.ref.project !== id))
+      // Several journals when one change moves more than one assessment (a photo removal, #67).
+      const journals = journal ? [journal].flat() : [];
+      if (journals.some((write) => table !== projectTable || write.ref.project !== id))
         throw new Error('Invalid surface journal project');
-      const prepared = journal && (await prepareJournal(journal));
+      const prepared = await Promise.all(journals.map(prepareJournal));
       assertID(id);
       const operation = attachment ? AbortSignal.any([signal, attachment.signal]) : signal;
       operation.throwIfAborted();
@@ -243,13 +247,12 @@ export function projectDocuments(
                 files.put({ ...header, ready: true }, fileKey);
               };
             }
-            if (prepared) putJournal(store, prepared, () => finish(undefined), abort);
-            else finish(undefined);
+            putJournal(store, prepared, () => finish(undefined), abort);
           };
         },
         !!attachment,
         operation,
-        !!prepared,
+        prepared.length > 0,
       );
       return revision;
     },

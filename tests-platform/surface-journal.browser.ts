@@ -183,3 +183,55 @@ test('retention prunes the redo branch while keeping a draft and the checkpoint 
     checkpointRevision: 0,
   });
 });
+
+test('a project save writes several surface journals together or none (#67)', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(async () => {
+    const vaultModule = '/src/platform/vault/vault.ts';
+    const projectModule = '/src/platform/projects/projects.ts';
+    const { LocalVault } = (await import(
+      vaultModule
+    )) as typeof import('../src/platform/vault/vault');
+    const { localProjects, newProject } = (await import(
+      projectModule
+    )) as typeof import('../src/platform/projects/projects');
+    const vault = new LocalVault('journal-batch-account', () => undefined);
+    await vault.create('cc'.repeat(32), true);
+    const projects = localProjects(vault);
+    const documents = vault.projects();
+    const project = await projects.save(newProject('Batch', 'Object', 'Surface', 'EUR'));
+    const surface = project.objects[0]!.surfaces[0]!.id;
+    const ref = (source: string) => ({ project: project.id, surface, source });
+    const [one, two] = [ref(crypto.randomUUID()), ref(crypto.randomUUID())];
+    await documents.saveJournal({ ref: one, expected: 0, text: 'first draft' }, project.revision);
+    const stale = await projects
+      .save({ ...project, name: 'Must roll back' }, undefined, [
+        { ref: one, expected: 1, text: 'first carried' },
+        { ref: two, expected: 1, text: 'second carried' },
+      ])
+      .then(
+        () => false,
+        () => true,
+      );
+    const afterStale = [await documents.readJournal(one), await documents.readJournal(two)];
+    const saved = await projects.save({ ...project, name: 'Carried' }, undefined, [
+      { ref: one, expected: 1, text: 'first carried' },
+      { ref: two, expected: 0, text: 'second carried' },
+    ]);
+    const written = [await documents.readJournal(one), await documents.readJournal(two)];
+    const [listed] = await projects.list();
+    await vault.forget(true);
+    vault.close();
+    return { stale, afterStale, written, revision: saved.revision, name: listed?.name };
+  });
+  expect(result).toEqual({
+    stale: true,
+    afterStale: [{ revision: 1, text: 'first draft' }, undefined],
+    written: [
+      { revision: 2, text: 'first carried' },
+      { revision: 1, text: 'second carried' },
+    ],
+    revision: 2,
+    name: 'Carried',
+  });
+});

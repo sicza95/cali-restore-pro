@@ -88,7 +88,7 @@ export function localProjects(vault: LocalVault) {
     async save(
       { revision, ...value }: SavedProject,
       attachment?: PendingAttachment,
-      journal?: JournalWrite,
+      journal?: JournalWrite | JournalWrite[],
     ) {
       const next = validateProject({ ...value, updatedAt: Date.now() }, value.id);
       if (
