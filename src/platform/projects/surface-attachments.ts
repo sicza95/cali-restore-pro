@@ -1,17 +1,21 @@
 import type { PlanarSurface } from './planar-types';
 import type { Attachment, Surface } from './types';
 
+/** New images for a surface; assessments lose removed photos, and untouched ones stay as they are. */
 export function updateSurfaceImages(surface: Surface, images: Attachment[]): Partial<Surface> {
   const retained = new Set(images.map((image) => image.id));
+  const kept = (entry: { source: { id: string } }) => retained.has(entry.source.id);
   return {
     images,
-    assessments: surface.assessments
-      ?.filter((entry) => retained.has(entry.source.id))
-      .map((entry) => ({
-        ...entry,
-        details: entry.details.filter((detail) => retained.has(detail.source.id)),
-        alignments: entry.alignments.filter((alignment) => retained.has(alignment.source.id)),
-      })),
+    assessments: surface.assessments?.filter(kept).map((entry) =>
+      entry.details.every(kept) && entry.alignments.every(kept)
+        ? entry
+        : {
+            ...entry,
+            details: entry.details.filter(kept),
+            alignments: entry.alignments.filter(kept),
+          },
+    ),
   };
 }
 
