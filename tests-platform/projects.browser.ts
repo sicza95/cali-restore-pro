@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
+import { verifyRecoveryWarning } from './recovery-warning';
 import { projectControls } from '../src/ui/projects/project-controls';
 
 import { surfaceControls } from '../src/ui/projects/surface-review-controls';
@@ -265,7 +265,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await drawingControl(page, 'mode.drawing').click();
   await expect(drawingControl(page, 'tool.brush')).toBeDisabled();
   await drawingControl(page, 'mode.photo').click();
-  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await verifyRecoveryWarning(page, info);
   await expectTaskLanguage(page, 'project landscape');
   await page.screenshot({ path: info.outputPath('projects-landscape.png'), fullPage: true });
   await page.goBack();
