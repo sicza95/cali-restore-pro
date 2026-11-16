@@ -74,3 +74,4 @@ export const vaultCopy = defineCopy({
     working: 'Feldolgozás…',
   },
 });
+export type VaultCopy = (typeof vaultCopy)['en'];

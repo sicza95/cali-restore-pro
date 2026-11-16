@@ -1,4 +1,6 @@
-import type { Page } from '@playwright/test';
+import { createDecipheriv } from 'node:crypto';
+import { expect } from '@playwright/test';
+import type { APIRequestContext, Page } from '@playwright/test';
 
 export async function captureOriginalKey(page: Page) {
   let oldKey = '';
@@ -22,4 +24,26 @@ export async function captureOriginalKey(page: Page) {
     };
   });
   return () => oldKey;
+}
+
+/** The pre-rotation original key must no longer open a rotated original's first part. */
+export async function expectOldKeyRejected(
+  owner: APIRequestContext,
+  ciphertext: Buffer,
+  oldKey: string,
+  projectId: string,
+  fileId: string,
+) {
+  const ownerAccount = await (await owner.get('/api/v1/auth/me')).json();
+  const iv = Buffer.alloc(12);
+  iv.writeUInt32BE(1, 8);
+  const decipher = createDecipheriv('aes-256-gcm', Buffer.from(oldKey, 'base64'), iv);
+  decipher.setAAD(
+    Buffer.from(
+      JSON.stringify(['calirestore-original', 1, ownerAccount.account.id, projectId, fileId, 1]),
+    ),
+  );
+  decipher.setAuthTag(ciphertext.subarray(-16));
+  decipher.update(ciphertext.subarray(0, -16));
+  expect(() => decipher.final()).toThrow();
 }

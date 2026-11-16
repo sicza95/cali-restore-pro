@@ -2,16 +2,16 @@ import { orientedJpeg } from './fixtures/images';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
-import { createDecipheriv } from 'node:crypto';
-import { captureOriginalKey } from './invitation-crypto';
+import { captureOriginalKey, expectOldKeyRejected } from './invitation-crypto';
 import { verifyCheckpointGrants } from './invitation-checkpoints';
-import { enableHostingAndSync, verifyHostingTransfer } from './invitation-hosting';
+import { verifyHostingTransfer } from './invitation-hosting';
 import {
   pauseOriginalDownload,
   stageOriginalUpload,
   verifyPublicationPaused,
 } from './invitation-revocation';
 import { verifyScopeEdits } from './invitation-scopes';
+import { shareFirstSnapshot } from './invitation-share';
 import { setupRememberedVault } from './vault-setup';
 
 const ownerSession = process.env.M06_OWNER_SESSION;
@@ -42,77 +42,9 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const inbox = await recipient.newPage();
     const remainingInbox = await remaining.newPage();
     const oldKey = await captureOriginalKey(inbox);
-    await project.goto('/projects');
-    await setupRememberedVault(project);
-    await project.getByLabel('Project name').fill('Synthetic chapel');
-    await project.getByRole('button', { name: 'New project' }).click();
-    await project.getByLabel('Add object').fill('North wall');
-    await project.getByRole('button', { name: 'Add object' }).click();
-    await project.getByLabel('Add surface').fill('Upper plaster');
-    await project.getByRole('button', { name: 'Add surface' }).click();
-    await expect(project.getByText('Upper plaster · Metric')).toBeVisible();
+    const { ownerCode, recipientCode, list, content, scopes, activation, original } =
+      await shareFirstSnapshot(project, inbox);
     const originalBytes = orientedJpeg;
-    await project.getByLabel('Original file', { exact: true }).setInputFiles({
-      name: 'shared-plaster.jpg',
-      mimeType: 'image/jpeg',
-      buffer: originalBytes,
-    });
-    await project.getByRole('button', { name: 'Attach original', exact: true }).click();
-    await expect(project.getByText('shared-plaster.jpg')).toBeVisible();
-    await project.getByText('Project invitations', { exact: true }).click();
-    await enableHostingAndSync(project);
-    await project.getByLabel('Recipient email').fill('recipient@example.test');
-    await project.getByLabel('Estimate access (sample data)').selectOption('estimate-summary');
-    await project.getByRole('button', { name: 'Send invitation' }).click();
-    await expect(project.getByText('Awaiting acceptance')).toBeVisible();
-    await expect(project.locator('[data-control-id="sharing.resend"]')).toBeDisabled();
-    await expect(project.locator('[data-control-id="sharing.cancel"]')).toBeEnabled();
-    await project.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
-    const ownerCode = await project.locator('.invitation-panel code').innerText();
-
-    await inbox.goto('/invitations');
-    await setupRememberedVault(inbox);
-    await inbox.getByRole('button', { name: 'Accept invitation' }).click();
-    await expect(inbox.getByText('Awaiting secure activation')).toBeVisible();
-    const list = await (await recipient.request.get('/api/v1/invitations')).json();
-    const content = '/api/v1/invitations/' + list.invitations[0].id + '/content';
-    const scopes = '/api/v1/invitations/' + list.invitations[0].id + '/scopes/';
-    expect((await recipient.request.get(content)).status()).toBe(404);
-    expect((await recipient.request.get(scopes + 'estimate-summary')).status()).toBe(404);
-    await inbox.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
-    const recipientCode = await inbox.locator('.invitation-panel code').innerText();
-
-    await project.getByRole('button', { name: 'Refresh invitations' }).click();
-    await project.getByLabel('Verified recipient fingerprint').fill('0'.repeat(64));
-    await project.getByRole('button', { name: 'Share project snapshot' }).click();
-    await expect(project.locator('.invitation-panel [role=alert]')).toBeVisible();
-    expect((await recipient.request.get(content)).status()).toBe(404);
-    await project.getByLabel('Verified recipient fingerprint').fill(recipientCode);
-    await project.getByRole('checkbox', { name: 'Include all attached original files' }).check();
-    const upload = project.waitForRequest(
-      (request) => request.method() === 'POST' && request.url().endsWith('/activate'),
-    );
-    await project.getByRole('button', { name: 'Share project snapshot' }).click();
-    await expect(project.getByText('Shared content available')).toBeVisible();
-    await expect(project.locator('[data-control-id="sharing.resend"]')).toHaveCount(0);
-    await expect(project.locator('[data-control-id="sharing.revoke"]')).toBeEnabled();
-    const activation = (await upload).postDataJSON();
-    expect(JSON.stringify(activation)).not.toMatch(
-      /Synthetic chapel|North wall|Upper plaster|shared-plaster/,
-    );
-    expect(activation.fileIds).toHaveLength(1);
-    const original =
-      '/api/v1/invitations/' + list.invitations[0].id + '/files/' + activation.fileIds[0];
-    expect((await owner.request.get(content)).status()).toBe(404);
-    const sealed = await (await recipient.request.get(content)).json();
-    expect(sealed.format).toBe('project-v1');
-    expect(JSON.stringify(sealed)).not.toMatch(/Synthetic chapel|North wall|Upper plaster/);
-    const summary = await recipient.request.get(scopes + 'estimate-summary');
-    expect(summary.status()).toBe(200);
-    expect(await summary.text()).not.toContain('1,250 EUR');
-    expect((await recipient.request.get(scopes + 'estimate-full')).status()).toBe(404);
-    expect((await recipient.request.get(scopes + 'history')).status()).toBe(404);
-    expect((await owner.request.get(scopes + 'estimate-summary')).status()).toBe(404);
 
     await inbox.getByRole('button', { name: 'Refresh invitations' }).click();
     await inbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
@@ -306,25 +238,13 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     expect(rotatedPart.status()).toBe(200);
     await verifyResumed();
     const newCiphertext = await rotatedPart.body();
-    const ownerAccount = await (await owner.request.get('/api/v1/auth/me')).json();
-    const iv = Buffer.alloc(12);
-    iv.writeUInt32BE(1, 8);
-    const decipher = createDecipheriv('aes-256-gcm', Buffer.from(oldKey(), 'base64'), iv);
-    decipher.setAAD(
-      Buffer.from(
-        JSON.stringify([
-          'calirestore-original',
-          1,
-          ownerAccount.account.id,
-          list.invitations[0].projectId,
-          newId,
-          1,
-        ]),
-      ),
+    await expectOldKeyRejected(
+      owner.request,
+      newCiphertext,
+      oldKey(),
+      list.invitations[0].projectId,
+      newId,
     );
-    decipher.setAuthTag(newCiphertext.subarray(-16));
-    decipher.update(newCiphertext.subarray(0, -16));
-    expect(() => decipher.final()).toThrow();
     await remainingInbox.getByRole('button', { name: 'Refresh invitations' }).click();
     await remainingInbox.getByLabel('Verified owner fingerprint').fill(ownerCode);
     await remainingInbox.getByRole('button', { name: 'Open shared content' }).click();

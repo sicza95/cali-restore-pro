@@ -4,7 +4,8 @@ import { LocalVault } from '../../../platform/vault/vault';
 import type { Language } from '../../account-access/types';
 import { vaultEntryControls } from './entry-controls';
 import { vaultCopy } from './vault-copy';
-import { VaultFileField, VaultKeyField } from './VaultFields';
+import { VaultKeyField } from './VaultFields';
+import { VaultSetup } from './VaultSetup';
 import { download, readFile } from './vault-files';
 import './vault.css';
 
@@ -153,117 +154,44 @@ export function VaultSection(props: {
           <p role="status">{c().forgetDone}</p>
         </Show>
         <Show when={!props.unlockOnly && !props.entry && status() && !status()?.exists}>
-          <label class="confirmation">
-            <input
-              type="checkbox"
-              checked={remember()}
-              disabled={busy()}
-              onChange={(e) => setRemember(e.currentTarget.checked)}
-            />
-            {c().remember}
-          </label>
-          <Show
-            when={recovery()}
-            fallback={
-              <button
-                class="primary"
-                data-control-id="vault.setup.generate"
-                disabled={busy()}
-                onClick={generate}
-              >
-                {c().create}
-              </button>
+          <VaultSetup
+            copy={c()}
+            busy={busy()}
+            remember={remember()}
+            recovery={recovery()}
+            ack={ack()}
+            pairing={pairing()}
+            onRemember={setRemember}
+            onAck={setAck}
+            onGenerate={generate}
+            onCreate={() =>
+              void run(
+                () => vault.create(recovery(), remember()),
+                () => loadText(''),
+              )
             }
-          >
-            <label>
-              {c().key}
-              <input readOnly value={recovery()} aria-describedby="vault-key-help" />
-            </label>
-            <p id="vault-key-help">{c().keyHelp}</p>
-            <label class="confirmation">
-              <input
-                type="checkbox"
-                checked={ack()}
-                disabled={busy()}
-                onChange={(e) => setAck(e.currentTarget.checked)}
-              />
-              {c().savedKey}
-            </label>
-            <Show when={!pairing()}>
-              <button
-                class="primary"
-                data-control-id="vault.setup.confirm"
-                disabled={!ack() || busy()}
-                onClick={() =>
-                  void run(
-                    () => vault.create(recovery(), remember()),
-                    () => loadText(''),
-                  )
-                }
-              >
-                {c().create}
-              </button>
-            </Show>
-          </Show>
-          <details>
-            <summary data-control-id="vault.restore.open">{c().restore}</summary>
-            <form
-              onSubmit={formAction(async (e) => {
-                const code = secret(e);
-                const optedIn = untrack(remember);
-                const current = generation;
-                const file = await readFile(e);
-                if (current !== generation) throw new Error('Vault locked');
-                return vault.restore(file, code, optedIn);
-              }, loadText)}
-            >
-              <VaultKeyField label={c().key} />
-              <VaultFileField label={c().file} />
-              <button data-control-id="vault.restore.submit" disabled={busy()}>
-                {c().restore}
-              </button>
-            </form>
-          </details>
-          <details>
-            <summary data-control-id="vault.request.open">{c().request}</summary>
-            <Show
-              when={pairing()}
-              fallback={
-                <button
-                  data-control-id="vault.request.pair"
-                  disabled={busy()}
-                  onClick={() => {
-                    setPairing(vault.requestTransfer());
-                    generate();
-                  }}
-                >
-                  {c().request}
-                </button>
-              }
-            >
-              <label>
-                {c().pairing}
-                <input readOnly value={pairing()} aria-describedby="vault-pairing-help" />
-              </label>
-              <p id="vault-pairing-help">{c().pairingHelp}</p>
-              <form
-                onSubmit={formAction(async (e) => {
-                  if (!untrack(ack)) throw new Error('Recovery key not saved');
-                  const code = untrack(recovery);
-                  const optedIn = untrack(remember);
-                  const current = generation;
-                  const file = await readFile(e);
-                  if (current !== generation) throw new Error('Vault locked');
-                  return vault.acceptTransfer(file, code, optedIn);
-                }, loadText)}
-              >
-                <VaultFileField label={c().file} />
-                <button data-control-id="vault.request.accept" disabled={busy() || !ack()}>
-                  {c().accept}
-                </button>
-              </form>
-            </Show>
-          </details>
+            onRestore={formAction(async (e) => {
+              const code = secret(e);
+              const optedIn = untrack(remember);
+              const current = generation;
+              const file = await readFile(e);
+              if (current !== generation) throw new Error('Vault locked');
+              return vault.restore(file, code, optedIn);
+            }, loadText)}
+            onRequest={() => {
+              setPairing(vault.requestTransfer());
+              generate();
+            }}
+            onAccept={formAction(async (e) => {
+              if (!untrack(ack)) throw new Error('Recovery key not saved');
+              const code = untrack(recovery);
+              const optedIn = untrack(remember);
+              const current = generation;
+              const file = await readFile(e);
+              if (current !== generation) throw new Error('Vault locked');
+              return vault.acceptTransfer(file, code, optedIn);
+            }, loadText)}
+          />
         </Show>
         <Show when={status()?.exists && text() === undefined}>
           <Show when={status()?.remembered}>
