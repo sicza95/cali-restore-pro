@@ -100,9 +100,12 @@ export function SurfacePhoto(props: {
             draggable={false}
             classList={{ 'surface-photo-loading': status() === 'loading' }}
             onLoad={() => {
+              // A detached image can still finish loading after `clear` (the photo was switched).
+              const current = image();
+              if (!current) return;
               setStatus('ready');
-              props.onReady?.(image()!.manifest.pixels);
-              props.onManifest?.(image()!.manifest);
+              props.onReady?.(current.manifest.pixels);
+              props.onManifest?.(current.manifest);
             }}
             onError={() => setStatus('invalid')}
           />
