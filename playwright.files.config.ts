@@ -20,6 +20,7 @@ export default defineConfig({
     'report-exports.browser.ts',
     'measured-reports.browser.ts',
     'project-trash.browser.ts',
+    'admin-layout.browser.ts',
   ],
   outputDir: 'test-results/encrypted-files',
   use: { baseURL: origin, channel: process.env.CI ? undefined : 'chrome' },
