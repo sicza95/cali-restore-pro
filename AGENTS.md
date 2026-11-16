@@ -1,0 +1,17 @@
+# CaliRestore Pro
+
+This repository starts with the UI library. It is not a replacement editing engine.
+
+- Use SolidJS, TypeScript and semantic CSS. Components live in `src/ui`; Storybook compositions live in `src/stories`.
+- Follow the [source layout conventions](docs/source-layout.md). Organize code by feature and keep authored source files within 400 lines. Keep types, constants and utilities with the scope that owns them.
+- Keep production renderer, persistence, encryption and project data independent of the UI. Stories use synthetic in-memory data.
+- iPad first: 1194 × 834 landscape and 834 × 1194 portrait. Tools stay on the left. Portrait inspectors dock below the canvas.
+- Use tokens for both themes. Translucency is reserved for floating tools and masks; fields and inspectors are opaque. Preserve the opaque fallback and reduced-transparency preference.
+- Maintain at least 44px touch targets, visible keyboard focus, labelled controls and distinct save/sync states.
+- Avoid adding libraries, default components or alternate visual styles without a concrete need. One icon family, one type family.
+- Run `npm run check`, `npm run build-storybook` and `npm test` for UI changes. Inspect landscape and portrait screenshots before delivery. Physical Pencil/Safari testing remains separate.
+- Remaining work is tracked as GitHub issues, grouped in milestones. A commit that finishes an issue ends its message body with `Closes #NN` (`Refs #NN` for partial work); the push to `main` closes the issue. New work found along the way becomes an issue rather than a note.
+- Conventional commits. Do not import legacy application code, real project photos, credentials or runtime data.
+- Every commit must be signed. Use `gh` for GitHub operations and verify the signature before publishing or updating a pull request branch.
+- Follow `docs/plan/README.md` for the platform-first order: identity/rights, settings/admin, encryption, files/projects, sharing/revocation, offline recovery, complete UI, restoration estimates and outputs before image processing/drawing. Pricing means restoration estimates, not subscription billing.
+- Until further notice, push directly to `main` after running the relevant checks. Make frequent, coherent conventional commits, sign every commit, and verify that GitHub marks each published commit Verified. Update requirement coverage and evidence, keeping mocks distinct from real saves, measurements and release qualification.

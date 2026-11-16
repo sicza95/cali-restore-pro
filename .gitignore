@@ -15,7 +15,9 @@ dist/
 deploy/secrets/
 deploy/backups/
 
-# Local-only docs, notes and agent config (kept offline, not committed)
-*.md
-docs/
+# Local-only agent notes and config (not committed)
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.override.md
 .claude/
+docs/handoff/
