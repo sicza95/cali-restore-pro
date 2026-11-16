@@ -103,7 +103,7 @@ Better: one shell in both orientations; selects with token chevrons, a styled fi
 - UX to 7: a lighter project page (disclosure for the rarely used panels), a physical iPad session (#49).
 - UI to 7: #36, #37, and styled measurement lists.
 
-Done since this re-score (ratings not re-scored): photo setup by gesture (#34, 15 November); whole values in estimate rows (#35), one title per surface page (#39) and a warning treatment for the recovery conflict (#38), all 16 November 2026.
+Done since this re-score (ratings not re-scored): photo setup by gesture (#34, 15 November); whole values in estimate rows (#35), one title per surface page (#39), a warning treatment for the recovery conflict (#38), the estimate's empty phase layer value named after its label (#65), no false recovery conflict when a photo is attached with drafts pending (#63, [plan](../plan/recovery-conflict.md)) and the redundant `class="secondary"` removed from buttons and kept out by a unit test (#40), all 16 November 2026.
 
 ## Code quality — 7 / 10
 
@@ -184,7 +184,7 @@ Target devices (decided 2026-11-15): iPad and desktop only. Phone widths (390 px
 2. [x] Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals. Done in PR #21 ([plan](../plan/number-format.md)).
 3. [x] Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue). Done in PR #26 ([plan](../plan/estimate-steps.md)): summary plus five steps, one primary per step.
 4. [x] One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs. Done in `eaad337` ([plan](../plan/app-shell.md)), confirmed 15 November 2026: sidebar, icon rail on surface pages, compact header with a modal drawer (focus trapped, Escape and focus return tested in `navigation.spec.ts`), chevron breadcrumbs from the route table with `aria-current`, one shell `h1`. The surface editor's own header no longer repeats the trail, and the object name is a plain-text step in the shell trail (#39, [plan](../plan/surface-header.md)). Breadcrumb names now leave the shell when the vault locks (#58).
-5. [x] Styled file picker, select and button hierarchy (one primary per view). Done in `eaad337`, `c6f302b`, `20ed0c8` ([plan](../plan/styled-controls.md)), confirmed 15 November 2026: secondary is the default button, selects and the file picker are styled, checkboxes take the accent token. A probe counted the visible primaries on every screen the copy guard visits: one each (or none), except the checkpoints tab, where the embedded pattern editor's Save was a second primary; it is now primary only on the libraries page.
+5. [x] Styled file picker, select and button hierarchy (one primary per view). Done in `eaad337`, `c6f302b`, `20ed0c8` ([plan](../plan/styled-controls.md)), confirmed 15 November 2026: secondary is the default button (the redundant `class="secondary"` attributes were removed in #40), selects and the file picker are styled, checkboxes take the accent token. A probe counted the visible primaries on every screen the copy guard visits: one each (or none), except the checkpoints tab, where the embedded pattern editor's Save was a second primary; it is now primary only on the libraries page.
 
 ### Phase 3 — Code structure
 
