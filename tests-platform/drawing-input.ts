@@ -1,5 +1,6 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
 import { closeDetails, drawingControl, openDetails } from './drawing-review';
+import { expectNoticeFollowsLanguage } from './drawing-notice';
 import { expectRemoveDraftReason, verifyDrawingReasons } from './drawing-reasons';
 
 export async function verifyDrawingInput(page: Page, info: TestInfo) {
@@ -68,6 +69,7 @@ export async function verifyDrawingInput(page: Page, info: TestInfo) {
     expect(span(right)).toBeGreaterThan(span(left) * 1.5);
     await pen('mouseReleased', 0.65, 0);
     await expect(selected).toContainText('Pending marks 1');
+    await expectNoticeFollowsLanguage(page, 'changed');
     await touch('touchStart', [p(0.45, 0.5)]);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
     await expect(selected).toContainText('Pending marks 1');

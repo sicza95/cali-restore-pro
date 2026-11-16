@@ -323,7 +323,12 @@ export function DrawingWorkspace(props: {
         <p class="drawing-feedback drawing-workspace-feedback" role="status">
           <Show when={m.failed()}>{c().saveFailed}</Show>
           <Show when={!m.failed() && !m.busy() && notice()}>
-            {(message) => c()[message()] + ' · ' + layerName(m.layer(), c())}
+            {/* JSX, not a string: Show runs this untracked; a string kept its first language (#83). */}
+            {(message) => (
+              <>
+                {c()[message()]} · {layerName(m.layer(), c())}
+              </>
+            )}
           </Show>
         </p>
         <Show when={t.resolve()}>
