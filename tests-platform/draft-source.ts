@@ -1,26 +1,8 @@
 import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { drawingControl, openDetails } from './drawing-review';
-
-const reason = 'Resolve the drawing drafts before changing this original.';
-const control = (page: Page, id: string) => page.locator(`[data-control-id="${id}"]`);
-const original = (page: Page, name: string) => {
-  const row = page.locator('.project-originals li').filter({ hasText: name });
-  return {
-    remove: row.locator('[data-control-id="originals.remove"]'),
-    role: row.locator('[data-control-id="originals.change-role"]'),
-  };
-};
-
-async function projectPage(page: Page, surface: string) {
-  await control(page, 'surface.project').click();
-  await page
-    .getByRole('combobox', { name: 'Object', exact: true })
-    .selectOption({ label: 'North wall' });
-  await page
-    .getByRole('combobox', { name: 'Surface', exact: true })
-    .selectOption({ label: surface });
-}
+import { attach, control, original, plasterPng, projectPage, reason } from './originals';
+import { verifyReferenceChange } from './reference-change';
 
 /** On the surface page in drawing mode, on "Damage mask", with Details open. */
 async function surfacePage(page: Page) {
@@ -57,38 +39,16 @@ async function expectFree(page: Page, step: string) {
   }
 }
 
-async function attach(page: Page, name: string, buffer: Buffer) {
-  await page.getByLabel('Original file', { exact: true }).setInputFiles({
-    name,
-    mimeType: 'image/png',
-    buffer,
-  });
-  await control(page, 'originals.attach').click();
-  await expect(page.locator('.project-originals').getByText(name)).toBeVisible();
-}
-
 /**
  * The project page blocks removing or re-roling the photo the drawing drafts belong to while
  * they are pending, as the surface page does (#72), on a new surface "Lower plaster" without
  * checkpoints: with a pending mark, with an undone one only, after switching surfaces, and no
  * longer once the draft is committed or discarded. Called on the surface page in photo mode with
- * no drafts pending; ends on the new surface's page in photo mode the same way.
+ * no drafts pending; ends on the new surface's page in photo mode the same way, and then runs the
+ * reference change checks (#75), which end on another new surface's page the same way.
  */
 export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
-  const png = Buffer.from(
-    await page.evaluate(() => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 640;
-      canvas.height = 480;
-      const context = canvas.getContext('2d')!;
-      context.fillStyle = '#9c9481';
-      context.fillRect(0, 0, 640, 480);
-      context.fillStyle = '#4f483c';
-      for (let i = 0; i < 10; i++) context.fillRect(30 + i * 60, 40 + (i % 4) * 100, 30, 80);
-      return canvas.toDataURL('image/png').split(',')[1]!;
-    }),
-    'base64',
-  );
+  const png = await plasterPng(page);
   await projectPage(page, 'Upper plaster');
   await page.getByRole('textbox', { name: 'Add surface' }).fill('Lower plaster');
   await page.getByRole('button', { name: 'Add surface' }).click();
@@ -174,4 +134,5 @@ export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
   await expectFree(page, 'draft discarded');
   await control(page, 'project.surface').click();
   await expect(drawingControl(page, 'mode.photo')).toBeVisible();
+  await verifyReferenceChange(page, info);
 }
