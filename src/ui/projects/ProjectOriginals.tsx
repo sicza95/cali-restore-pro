@@ -1,7 +1,16 @@
 import { checkpointSources } from '../../platform/projects/assessment-checkpoints';
 import { draftBlocks } from '../../platform/projects/surface-attachments';
 import type { PendingAttachment } from '../../platform/vault/project-store';
-import { createMemo, createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import {
+  createMemo,
+  createResource,
+  createSignal,
+  createUniqueId,
+  For,
+  onCleanup,
+  Show,
+  untrack,
+} from 'solid-js';
 import { ImageImportError } from '../../platform/images/types';
 import type { ImportIssue } from '../../platform/images/types';
 import type { Attachment, ImageRole, Surface } from '../../platform/projects/types';
@@ -28,6 +37,7 @@ export function ProjectOriginals(props: {
   const [issue, setIssue] = createSignal<ImportIssue>();
   onCleanup(() => transfer()?.abort());
   const blocks = createMemo(() => draftBlocks(props.surface.images, props.drafts ?? new Set()));
+  const ids = createUniqueId();
 
   return (
     <section class="project-pane project-originals">
@@ -108,6 +118,18 @@ export function ProjectOriginals(props: {
               props.surface.checkpoints?.some(({ assessment }) =>
                 checkpointSources(assessment).some(({ id }) => id === image.id),
               );
+            const roleReason = () => (block()?.role ? props.copy.draftPhoto : undefined);
+            const removeReason = () => {
+              const remove = block()?.remove;
+              if (remove)
+                return props.copy[remove === 'pending' ? 'draftPhoto' : 'hiddenDraftPhoto'];
+              return checkpointPhoto() ? props.copy.checkpointPhoto : undefined;
+            };
+            // Each reason is shown once, and describes the controls it blocks (#79).
+            const reasons = () =>
+              [...new Set([roleReason(), removeReason()])].filter((r): r is string => !!r);
+            const reasonId = (reason?: string) =>
+              reason ? `${ids}-${image.id}-${reasons().indexOf(reason)}` : undefined;
             const [metadata] = createResource(() => files.metadata(ref).catch(() => null));
             return (
               <li>
@@ -128,7 +150,7 @@ export function ProjectOriginals(props: {
                     copy={props.copy}
                     value={image.role}
                     disabled={props.busy || !!block()?.role}
-                    reason={block()?.role ? props.copy.draftPhoto : undefined}
+                    describedBy={reasonId(roleReason())}
                     change={(role) =>
                       void props.onRun(() =>
                         props.onSave(
@@ -141,15 +163,7 @@ export function ProjectOriginals(props: {
                 <button
                   data-control-id="originals.remove"
                   disabled={props.busy || checkpointPhoto() || !!block()?.remove}
-                  title={
-                    block()?.remove
-                      ? props.copy[
-                          block()!.remove === 'pending' ? 'draftPhoto' : 'hiddenDraftPhoto'
-                        ]
-                      : checkpointPhoto()
-                        ? props.copy.checkpointPhoto
-                        : undefined
-                  }
+                  aria-describedby={reasonId(removeReason())}
                   onClick={() =>
                     void props.onRun(async () => {
                       await props.onSave(props.surface.images.filter((a) => a.id !== image.id));
@@ -159,6 +173,13 @@ export function ProjectOriginals(props: {
                 >
                   {props.copy.remove}
                 </button>
+                <For each={reasons()}>
+                  {(reason, index) => (
+                    <p class="field-help" id={`${ids}-${image.id}-${index()}`}>
+                      {reason}
+                    </p>
+                  )}
+                </For>
               </li>
             );
           }}
@@ -172,8 +193,8 @@ function RoleField(props: {
   copy: Copy;
   value?: ImageRole;
   disabled?: boolean;
-  /** Why the select is disabled, as "Remove" says it. */
-  reason?: string;
+  /** The id of the visible text saying why the select is disabled (#79). */
+  describedBy?: string;
   change?: (role: ImageRole) => void;
 }) {
   return (
@@ -182,7 +203,7 @@ function RoleField(props: {
       name="role"
       value={props.value ?? 'mapping'}
       disabled={props.disabled}
-      title={props.reason}
+      aria-describedby={props.describedBy}
       onChange={(e) => {
         const role = e.currentTarget.value as ImageRole;
         if (props.change) {

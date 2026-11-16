@@ -76,6 +76,12 @@
   flex: 1 1 12rem;
   min-width: 0;
 }
+/* A blocked control's reason, under the row's controls (#79). */
+.project-register li > .field-help {
+  flex: 1 0 100%;
+  grid-column: 1 / -1;
+  margin: 0;
+}
 .project-register a,
 .project-back {
   display: inline-flex;
