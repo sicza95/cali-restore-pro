@@ -50,7 +50,7 @@ What the fresh screenshots change:
 | UX 6 · small, passive canvas                 | Holds for photo review (Left / Right / Up / Down buttons, canvas about a third of the page). Drawing review in portrait gives the canvas most of the first screen.                                                                                                                                                                 |
 | UI · native controls                         | Holds. The file input is unstyled on Original files and in Preferences; selects use the browser default arrow.                                                                                                                                                                                                                     |
 | UI · weak button hierarchy                   | Partly addressed. Each panel now has one dark primary ("Apply mark", "Save estimate version", "Attach original"); secondary buttons are still many and equal in weight.                                                                                                                                                            |
-| UI · truncated field rows                    | Holds. "Object 1 / Surfac", "Current assessm" and "No mask assigne" in the estimate's three-column row. Fixed by #35 ([plan](../plan/estimate-rows.md)).                                                                                                                                                                           |
+| UI · truncated field rows                    | **Fixed** by #35 ([plan](../plan/estimate-rows.md)): estimate rows now show whole values. Was: "Object 1 / Surfac", "Current assessm" and "No mask assigne" in the estimate's three-column row.                                                                                                                                    |
 | UI · sidebar floats mid-page                 | **Retired.** The sidebar is `position: sticky`; it only appears mid-page in full-page captures taken after scrolling. No change needed.                                                                                                                                                                                            |
 | UI · sparse admin page                       | Holds, minor.                                                                                                                                                                                                                                                                                                                      |
 | Storybook · portrait inspector and letterbox | Holds. In portrait, Cracks and Work phases are out of sight, the inspector's right column is mostly empty, and there is a band above the photo.                                                                                                                                                                                    |
@@ -59,7 +59,7 @@ New findings from this run:
 
 1. The shell refresh shipped with two failing app tests (above). Either the tests open the Menu first at narrow widths, or they run those steps at landscape width.
 2. `openStory` in `tests/ui.spec.ts` needs a longer first-load timeout or a warm-up request, so `npm test` is green locally without retries.
-3. Photo review shows "The assessment changed outside this editor. Discard the old recovery draft to resume editing." as plain text under the pan buttons, with no warning treatment.
+3. Photo review shows "The assessment changed outside this editor. Discard the old recovery draft to resume editing." as plain text under the pan buttons, with no warning treatment. Fixed by #38 ([plan](../plan/warning-treatment.md)).
 
 Ratings are unchanged (code 7, architecture 7, UX 4, UI 5). The corrected UX 1 finding does not move the UX rating: the capability exists, but the screen does not yet present it as the primary way to work. It does make Phase 1 smaller than first estimated, because step 2 is mostly re-housing existing canvas drawing rather than building it.
 
@@ -87,21 +87,23 @@ Why not 9: `account-access/` still holds the app core and global styles, so the 
 | 2 · internal data shown        | Retired: no ids or revisions on audited screens, numbers formatted per unit and language (guarded).                                                                                  |
 | 3 · developer language         | Retired on audited screens and in every catalogue string (unit-tested since #30). Account, vault and admin screens had no screen audit, but their catalogue strings are now checked. |
 | 4 · everything visible at once | Retired for the estimate: summary plus five steps, page about 1,490 px instead of 2,640.                                                                                             |
-| 5 · inconsistent navigation    | Retired: one shell, drawer in portrait, real breadcrumbs, one title. Left: the surface editor header repeats the trail (#39).                                                        |
-| 6 · small, passive canvas      | **Holds for photo setup**: Left, Right, Up and Down buttons and a zoom slider under the photo (#34); the checkpoint comparison also pans with sliders.                               |
+| 5 · inconsistent navigation    | Retired: one shell, drawer in portrait, real breadcrumbs, one title. The surface editor header no longer repeats the trail (#39).                                                    |
+| 6 · small, passive canvas      | Held for photo setup (Left, Right, Up and Down buttons and a zoom slider); since retired there by gesture pan and zoom (#34). The checkpoint comparison pans with sliders.           |
 
-Why 6 and not 7: the project page and photo setup are still long, form-first pages (the project page in portrait is about 2,160 px of equal-weight panels); Surface measurements is a bare list under the photo; the "assessment changed outside this editor" message still has no warning treatment (#38); no physical iPad and Pencil session yet (#49).
+Why 6 and not 7: the project page and photo setup are still long, form-first pages (the project page in portrait is about 2,160 px of equal-weight panels); Surface measurements is a bare list under the photo; no physical iPad and Pencil session yet (#49).
 
 ### UI — 6 / 10 (was 5)
 
-Better: one shell in both orientations; selects with token chevrons, a styled file picker and accent checkboxes; one dark primary per view (probed); colours only from tokens in both themes. Still holding: three-column estimate rows truncate at 1194 ("Object 1 / Sur…", "Current asses…", "No mask assi…", #35); Surface measurements and the checkpoint measurements are unstyled lists; the admin page is sparse on the right (#36); the Storybook portrait inspector clips and letterboxes (#37). The app screens are now about a 6, the editor about an 8.
+Better: one shell in both orientations; selects with token chevrons, a styled file picker and accent checkboxes; one dark primary per view (probed); colours only from tokens in both themes. Still holding: Surface measurements and the checkpoint measurements are unstyled lists; the admin page is sparse on the right (#36); the Storybook portrait inspector clips and letterboxes (#37). The app screens are now about a 6, the editor about an 8.
 
 ### What would move each rating next
 
 - Code to 9: component tests for the editor and estimate state, the files at the limit split (#44), the global button rule scoped to the app shell.
 - Architecture to 9: the `account-access/` core renamed and its global CSS scoped; #45 decided; #52 and #53 done.
-- UX to 7: photo setup by gesture (#34), #38 and #39, a lighter project page (disclosure for the rarely used panels), a physical iPad session (#49).
-- UI to 7: #35, #36, #37, and styled measurement lists.
+- UX to 7: a lighter project page (disclosure for the rarely used panels), a physical iPad session (#49).
+- UI to 7: #36, #37, and styled measurement lists.
+
+Done since this re-score (ratings not re-scored): photo setup by gesture (#34, 15 November); whole values in estimate rows (#35), one title per surface page (#39) and a warning treatment for the recovery conflict (#38), all 16 November 2026.
 
 ## Code quality — 7 / 10
 
@@ -181,7 +183,7 @@ Target devices (decided 2026-11-15): iPad and desktop only. Phone widths (390 px
 1. [x] Copy audit: replace engineering terms with task language, move "not connected yet" notes to docs, hide IDs. Done in the eight commits of the [copy audit](../plan/copy-audit.md): a [glossary](../copy-glossary.md) in EN and HU, task language on the estimate, editor, report and footer, the backup limit moved to the backup panel (with a fix for its misleading error), no internal ids, a translated save status, and `copy-guard.ts` checking ten screens. The UX rating stays at 4 until the estimate page and app shell (items 3 and 4) land; findings 4 to 6 still hold.
 2. [x] Shared number/unit formatting through `Intl.NumberFormat` with unit-appropriate precision (m², cm², ft²) and locale-aware decimals. Done in PR #21 ([plan](../plan/number-format.md)).
 3. [x] Restructure estimate review as summary + steps (Scope → Phases → Extras → Adjustments & tax → Issue). Done in PR #26 ([plan](../plan/estimate-steps.md)): summary plus five steps, one primary per step.
-4. [x] One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs. Done in `eaad337` ([plan](../plan/app-shell.md)), confirmed 15 November 2026: sidebar, icon rail on surface pages, compact header with a modal drawer (focus trapped, Escape and focus return tested in `navigation.spec.ts`), chevron breadcrumbs from the route table with `aria-current`, one shell `h1`. The surface editor's own header no longer repeats the trail, and the object name is a plain-text step in it (#39, [plan](../plan/surface-header.md)). Breadcrumb names now leave the shell when the vault locks (#58).
+4. [x] One app shell: sidebar in landscape, compact header + drawer in portrait; real breadcrumbs. Done in `eaad337` ([plan](../plan/app-shell.md)), confirmed 15 November 2026: sidebar, icon rail on surface pages, compact header with a modal drawer (focus trapped, Escape and focus return tested in `navigation.spec.ts`), chevron breadcrumbs from the route table with `aria-current`, one shell `h1`. The surface editor's own header no longer repeats the trail, and the object name is a plain-text step in the shell trail (#39, [plan](../plan/surface-header.md)). Breadcrumb names now leave the shell when the vault locks (#58).
 5. [x] Styled file picker, select and button hierarchy (one primary per view). Done in `eaad337`, `c6f302b`, `20ed0c8` ([plan](../plan/styled-controls.md)), confirmed 15 November 2026: secondary is the default button, selects and the file picker are styled, checkboxes take the accent token. A probe counted the visible primaries on every screen the copy guard visits: one each (or none), except the checkpoints tab, where the embedded pattern editor's Save was a second primary; it is now primary only on the libraries page.
 
 ### Phase 3 — Code structure
