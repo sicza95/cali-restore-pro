@@ -35,7 +35,7 @@ export function DrawingToolSettings(props: {
       <Show when={drawHelpShown(t, props.reason)}>
         <p id={props.help.id} class="drawing-tool-help">
           {c().drawHelp}{' '}
-          <button class="secondary" type="button" onClick={() => props.help.onNumeric()}>
+          <button type="button" onClick={() => props.help.onNumeric()}>
             {c().enterByNumber}
           </button>
         </p>

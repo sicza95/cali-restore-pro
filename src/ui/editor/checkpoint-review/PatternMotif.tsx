@@ -54,12 +54,7 @@ export function PatternMotif(props: {
           stroke-width="0.02"
         />
       </svg>
-      <button
-        type="button"
-        class="secondary"
-        disabled={!props.points.length}
-        onClick={() => props.onChange([])}
-      >
+      <button type="button" disabled={!props.points.length} onClick={() => props.onChange([])}>
         {props.clear}
       </button>
     </div>

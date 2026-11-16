@@ -171,7 +171,6 @@ export function PatternReview(props: { language: Language; library?: boolean; va
         </button>
         <button
           type="button"
-          class="secondary"
           data-control-id={control('apply')}
           disabled={!valid()}
           onClick={() => setApplied({ tile: tile(), mono: mono() })}

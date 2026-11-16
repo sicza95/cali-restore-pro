@@ -33,7 +33,6 @@ export function DrawingSketchActions(props: {
         {t.tool() === 'nodes' ? c().applyPoints : c().apply}
       </button>
       <button
-        class="secondary"
         type="button"
         data-control-id={control('path.cancel')}
         disabled={!points()}

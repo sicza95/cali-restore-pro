@@ -69,12 +69,7 @@ export function DrawingLayers(props: {
             <option value="folder">{c().folder}</option>
           </select>
         </label>
-        <button
-          class="secondary"
-          type="button"
-          data-control-id={control('layer.add')}
-          onClick={() => m.add(kind())}
-        >
+        <button type="button" data-control-id={control('layer.add')} onClick={() => m.add(kind())}>
           {c().addLayer}
         </button>
       </div>
@@ -100,7 +95,7 @@ export function DrawingLayers(props: {
                     value={layerName(layer(), c())}
                   />
                 </label>
-                <button class="secondary" type="submit" data-control-id={control('layer.rename')}>
+                <button type="submit" data-control-id={control('layer.rename')}>
                   {c().rename}
                 </button>
               </form>
@@ -178,7 +173,6 @@ export function DrawingLayers(props: {
               <div class="drawing-actions">
                 <Show when={layer().kind === 'damage' || layer().kind === 'phase'}>
                   <button
-                    class="secondary"
                     type="button"
                     data-control-id={control('layer.clone')}
                     onClick={() => m.add(layer().kind, layer())}
@@ -187,7 +181,6 @@ export function DrawingLayers(props: {
                   </button>
                 </Show>
                 <button
-                  class="secondary"
                   type="button"
                   data-control-id={control('layer.up')}
                   disabled={!m.neighbor(-1)}
@@ -196,7 +189,6 @@ export function DrawingLayers(props: {
                   {c().up}
                 </button>
                 <button
-                  class="secondary"
                   type="button"
                   data-control-id={control('layer.down')}
                   disabled={!m.neighbor(1)}
@@ -205,7 +197,6 @@ export function DrawingLayers(props: {
                   {c().down}
                 </button>
                 <button
-                  class="secondary"
                   type="button"
                   data-control-id={control('layer.remove')}
                   disabled={cannotDelete() || !!m.draft()}

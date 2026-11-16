@@ -45,7 +45,6 @@ function DraftActions(props: DraftProps) {
           {c().commit}
         </button>
         <button
-          class="secondary"
           type="button"
           data-control-id={control('history.discard')}
           onClick={() => props.onDiscard()}
@@ -161,7 +160,6 @@ export function ResolveDrawingDraft(props: {
           {c().commit}
         </button>
         <button
-          class="secondary"
           type="button"
           data-control-id={control('resolve.discard')}
           onClick={() => props.onChoice('discard')}
@@ -170,7 +168,6 @@ export function ResolveDrawingDraft(props: {
         </button>
         <button
           autofocus
-          class="secondary"
           type="button"
           data-control-id={control('resolve.cancel')}
           onClick={() => props.onChoice('cancel')}

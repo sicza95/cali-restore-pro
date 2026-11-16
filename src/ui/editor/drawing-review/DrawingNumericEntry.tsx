@@ -46,7 +46,6 @@ export function DrawingNumericEntry(props: {
       <Show when={t.brushing()}>
         {coordinates()}
         <button
-          class="secondary"
           type="button"
           data-control-id={control('brush.dot')}
           disabled={!m.contains(t.coordinates())}
@@ -58,7 +57,6 @@ export function DrawingNumericEntry(props: {
       <Show when={t.sketching()}>
         {coordinates()}
         <button
-          class="secondary"
           type="button"
           data-control-id={control('point.add')}
           disabled={t.sketch().points.length >= t.maximum()}
@@ -121,7 +119,6 @@ export function DrawingNumericEntry(props: {
             </Show>
           </Show>
           <button
-            class="secondary"
             type="button"
             data-control-id={control('point.delete')}
             disabled={nodes() && t.sketch().points.length <= t.minimum()}
