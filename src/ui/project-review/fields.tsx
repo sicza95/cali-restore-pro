@@ -9,9 +9,11 @@ export function ReviewSelect<T extends string>(props: {
   text?: (key: T) => string;
   change: (value: T) => void;
   disabled?: boolean;
+  /** A class for the field's label, such as one that widens it in its row. */
+  class?: string;
 }) {
   return (
-    <label>
+    <label class={props.class}>
       {props.label}
       <select
         data-control-id={props.id}

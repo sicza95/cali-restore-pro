@@ -23,7 +23,7 @@ export function Extras(props: {
         {(extra) => (
           <div class="review-inset">
             <div class="review-fields">
-              <label>
+              <label class="estimate-wide-field">
                 {c().extraName}
                 <input
                   data-control-id={id('extraName')}
@@ -34,6 +34,7 @@ export function Extras(props: {
                 />
               </label>
               <ReviewSelect
+                class="estimate-wide-field"
                 id={id('extraScope')}
                 label={c().extraScope}
                 options={['', ...props.objects.map(({ id }) => id)]}

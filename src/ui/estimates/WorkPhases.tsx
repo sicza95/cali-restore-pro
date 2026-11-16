@@ -141,6 +141,7 @@ function PhaseDetails(props: {
       <h3>{c().scope}</h3>
       <div class="review-fields">
         <ReviewSelect
+          class="estimate-wide-field"
           id={id('scopeSurface')}
           label={c().scopeSurface}
           value={p().surface}

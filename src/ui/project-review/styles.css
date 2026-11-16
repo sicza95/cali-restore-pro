@@ -42,6 +42,17 @@
 .estimate-review .project-pane > form.review-fields > button:last-child {
   grid-column: auto;
 }
+/* Estimate steps: one column, so the phase form keeps the step's full width (the presets panel
+   follows it), and field columns wide enough for whole values in EN and HU (#35). */
+.estimate-review .review-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.estimate-review .review-fields {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+.estimate-review .review-fields > .estimate-wide-field {
+  grid-column: 1 / -1;
+}
 .project-review-nav .project-back + .project-back,
 .review-breadcrumbs .project-back + .project-back {
   margin-inline-start: 0;
