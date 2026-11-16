@@ -53,8 +53,7 @@ export async function journalHead(state?: PlanarSurface) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-export async function openJournal(text: string | undefined, state?: PlanarSurface) {
-  if (!text) return emptyJournal();
+function parseJournal(text: string) {
   const journal = JSON.parse(text) as SurfaceJournal;
   if (
     journal.version !== 1 ||
@@ -65,6 +64,12 @@ export async function openJournal(text: string | undefined, state?: PlanarSurfac
     journal.past.length + journal.future.length > historyLimit
   )
     throw new Error('Invalid surface journal');
+  return journal;
+}
+
+export async function openJournal(text: string | undefined, state?: PlanarSurface) {
+  if (!text) return emptyJournal();
+  const journal = parseJournal(text);
   const head = await journalHead(state);
   if (journal.head === head) return journal;
   return {
@@ -92,6 +97,64 @@ export function currentJournal(
     manual: journal.manual,
     drafts: journal.drafts,
     conflict: journal.drafts.length > 0,
+  };
+}
+
+type PhotoLists = Pick<PlanarSurface, 'details' | 'alignments'>;
+
+/** Both sides of a history step without removed photos; nothing when the step no longer changes anything. */
+function prunedSides<T extends PhotoLists>(
+  sides: { before: T; after: T },
+  retained: ReadonlySet<string>,
+) {
+  const kept = (side: T) =>
+    [...side.details, ...side.alignments].every(({ source }) => retained.has(source.id));
+  if (kept(sides.before) && kept(sides.after)) return sides;
+  const prune = (side: T): T => ({
+    ...side,
+    details: side.details.filter(({ source }) => retained.has(source.id)),
+    alignments: side.alignments.filter(({ source }) => retained.has(source.id)),
+  });
+  const before = prune(sides.before);
+  const after = prune(sides.after);
+  if (JSON.stringify(before) !== JSON.stringify(after)) return { before, after };
+}
+
+function pruneHistory(entries: HistoryEntry[], retained: ReadonlySet<string>) {
+  return entries.flatMap((entry): HistoryEntry[] => {
+    if ('photo' in entry) {
+      const photo = prunedSides(entry.photo, retained);
+      return photo ? [photo === entry.photo ? entry : { ...entry, photo }] : [];
+    }
+    if ('checkpoint' in entry) {
+      const checkpoint = prunedSides(entry.checkpoint, retained);
+      return checkpoint ? [checkpoint === entry.checkpoint ? entry : { ...entry, checkpoint }] : [];
+    }
+    return [entry];
+  });
+}
+
+/**
+ * The stored journal carried to `after`, a change the user made on this device outside the
+ * journal (removing photos, #67): drafts stay, and history loses the photos that are not
+ * `retained`, so undo cannot bring one back. Nothing when the journal was written against other
+ * content than `before` (that stays a conflict) or when the head does not change.
+ */
+export async function carryJournal(
+  text: string,
+  before: PlanarSurface,
+  after: PlanarSurface,
+  retained: ReadonlySet<string>,
+): Promise<SurfaceJournal | undefined> {
+  const journal = parseJournal(text);
+  if (journal.head !== (await journalHead(before))) return;
+  const head = await journalHead(after);
+  if (head === journal.head) return;
+  return {
+    ...journal,
+    head,
+    past: pruneHistory(journal.past, retained),
+    future: pruneHistory(journal.future, retained),
   };
 }
 

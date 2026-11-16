@@ -1,5 +1,39 @@
 import type { PlanarSurface } from './planar-types';
+import { carryJournal, journalText } from './surface-journal';
+import type { SurfaceJournal } from './surface-journal';
 import type { Attachment, Surface } from './types';
+import type { JournalRef, JournalWrite } from '../vault/project-store';
+
+export type CarriedJournal = { write: JournalWrite; journal: SurfaceJournal };
+
+/**
+ * A photo change the user makes on this device: the surface changes from `updateSurfaceImages`,
+ * and the journal of each assessment it changes carried forward, to be saved with them, so the
+ * drafts stay editable after removing a detail photo (#67). Untouched assessments read nothing.
+ */
+export async function changeSurfaceImages(
+  readJournal: (ref: JournalRef) => Promise<{ revision: number; text: string } | undefined>,
+  scope: Omit<JournalRef, 'source'>,
+  surface: Surface,
+  images: Attachment[],
+) {
+  const changes = updateSurfaceImages(surface, images);
+  const retained = new Set(images.map((image) => image.id));
+  const journals: CarriedJournal[] = [];
+  for (const after of changes.assessments ?? []) {
+    const before = surface.assessments!.find((entry) => entry.source.id === after.source.id)!;
+    if (after === before) continue;
+    const ref = { ...scope, source: after.source.id };
+    const row = await readJournal(ref);
+    const journal = row && (await carryJournal(row.text, before, after, retained));
+    if (row && journal)
+      journals.push({
+        write: { ref, expected: row.revision, text: journalText(journal) },
+        journal,
+      });
+  }
+  return { changes, journals };
+}
 
 /** New images for a surface; assessments lose removed photos, and untouched ones stay as they are. */
 export function updateSurfaceImages(surface: Surface, images: Attachment[]): Partial<Surface> {

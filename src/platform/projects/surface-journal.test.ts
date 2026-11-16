@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { newPlanarSurface } from './planar-state';
-import { currentJournal, emptyJournal, journalHead, openJournal } from './surface-journal';
+import {
+  carryJournal,
+  currentJournal,
+  emptyJournal,
+  journalHead,
+  openJournal,
+  photoHistory,
+} from './surface-journal';
 import type { StoredDraft, SurfaceJournal } from './surface-journal';
 import type { PlanarSurface } from './planar-types';
 
@@ -87,5 +94,101 @@ describe('currentJournal', () => {
     const journal = { ...emptyJournal(), drafts: [draft] };
     expect(currentJournal(journal, unsaved, undefined)).toBe(journal);
     expect(await journalHead(unsaved)).toBe(await journalHead(undefined));
+  });
+});
+
+describe('carryJournal', () => {
+  const photo = (id: string) => ({ ...source, id });
+  const detail = (id: string) => ({
+    source: photo(id),
+    revision: 1,
+    input: newPlanarSurface(source).frame.input,
+  });
+  const alignment = (id: string) => ({
+    frameRevision: 1,
+    preparationRevision: 1,
+    source: photo(id),
+    input: { method: 'reference' as const },
+  });
+  const unaligned: PlanarSurface = {
+    ...newPlanarSurface(source),
+    revision: 2,
+    details: [detail('photo-3')],
+    alignments: [alignment('photo-3')],
+  };
+  // Photo setup aligned photo-2, then changed the main crop.
+  const aligned: PlanarSurface = {
+    ...unaligned,
+    revision: 3,
+    details: [detail('photo-3'), detail('photo-2')],
+    alignments: [alignment('photo-3'), alignment('photo-2')],
+  };
+  const cropped: PlanarSurface = {
+    ...aligned,
+    revision: 4,
+    frame: {
+      ...aligned.frame,
+      revision: 4,
+      input: { ...aligned.frame.input, crop: [0, 0, 320, 480] },
+    },
+  };
+  // The user removes photo-2 on this device.
+  const removed: PlanarSurface = {
+    ...cropped,
+    details: [detail('photo-3')],
+    alignments: [alignment('photo-3')],
+  };
+  const retained = new Set(['photo-1', 'photo-3']);
+  const stroke = {
+    action: 'stroke' as const,
+    layer: { id: 1, name: 'Master mask', kind: 'master' as const },
+    drawing: { before: { rows: [], order: [1] }, after: { rows: [], order: [1] } },
+  };
+
+  async function stored(state: PlanarSurface): Promise<SurfaceJournal> {
+    return {
+      ...emptyJournal(),
+      head: await journalHead(state),
+      manual: true,
+      drafts: [draft],
+      past: [photoHistory(unaligned, aligned), photoHistory(aligned, cropped), stroke],
+      future: [{ action: 'checkpointChange', checkpoint: { before: cropped, after: unaligned } }],
+    };
+  }
+
+  it('carries the drafts to the new head after the user removes a detail photo (#67)', async () => {
+    const journal = await stored(cropped);
+    const carried = (await carryJournal(JSON.stringify(journal), cropped, removed, retained))!;
+    expect(carried.head).toBe(await journalHead(removed));
+    expect(carried.drafts).toEqual([draft]);
+    expect(carried.manual).toBe(true);
+    // The reopen check now finds the drafts current.
+    const reopened = await openJournal(JSON.stringify(carried), removed);
+    expect(reopened.conflict).toBeUndefined();
+    expect(reopened.drafts).toEqual([draft]);
+  });
+
+  it('drops the removed photo from history, and steps left without a change', async () => {
+    const journal = await stored(cropped);
+    const carried = (await carryJournal(JSON.stringify(journal), cropped, removed, retained))!;
+    expect(JSON.stringify([carried.past, carried.future])).not.toContain('photo-2');
+    // Aligning photo-2 is now a no-op and goes; the crop change and the stroke stay.
+    const before = { ...aligned, details: removed.details, alignments: removed.alignments };
+    expect(carried.past).toEqual([photoHistory(before, removed), stroke]);
+    expect(carried.future).toEqual([
+      { action: 'checkpointChange', checkpoint: { before: removed, after: unaligned } },
+    ]);
+  });
+
+  it('leaves a journal written against other content as a conflict', async () => {
+    const journal = await stored(aligned);
+    expect(await carryJournal(JSON.stringify(journal), cropped, removed, retained)).toBeUndefined();
+  });
+
+  it('writes nothing when the head does not change', async () => {
+    const unsaved = { ...newPlanarSurface(source), details: [detail('photo-2')] };
+    const journal = { ...emptyJournal(), drafts: [draft] };
+    const after = { ...unsaved, details: [] };
+    expect(await carryJournal(JSON.stringify(journal), unsaved, after, retained)).toBeUndefined();
   });
 });
