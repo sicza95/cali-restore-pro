@@ -1515,6 +1515,10 @@ export type CommitEncryptedFileData = {
 
 export type CommitEncryptedFileErrors = {
   /**
+   * file_conflict: no staged upload to publish (never reserved, cancelled, expired or already cleaned up; reserve again), or parts missing or corrupt; original_rotation_pending; storage_quota_exceeded
+   */
+  409: IdentityError;
+  /**
    * Transfer, authentication or policy error
    */
   default: IdentityError;
@@ -1578,6 +1582,10 @@ export type PutEncryptedPartData = {
 };
 
 export type PutEncryptedPartErrors = {
+  /**
+   * file_conflict: no staged upload to write to (never reserved, cancelled, expired or already cleaned up; reserve again), or different bytes for a stored part; storage_quota_exceeded
+   */
+  409: IdentityError;
   /**
    * Transfer, authentication or policy error
    */

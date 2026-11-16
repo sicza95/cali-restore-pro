@@ -59,7 +59,10 @@ one cancelled or expired staging record per tick with a row lock. A crash before
 commit leaves bytes discoverable through the existing reservation. An upload abandoned for 24
 hours can be reserved again after cleanup; the local ciphertext stays available for retry.
 Network interruption can abort the current attempt; explicit remote cancellation releases the
-reservation after cleanup. There are four concurrent transfer requests per app process.
+reservation after cleanup. A part upload or commit for an upload with no live reservation
+(never reserved, cancelled, expired, or already removed by the worker) returns
+`409 file_conflict`, so the answer does not depend on whether cleanup has run; the client
+reserves again. Only the project's host reaches that check; other accounts get `404`. There are four concurrent transfer requests per app process.
 
 The server sees account ownership, opaque project/file IDs, source and ciphertext lengths, part
 indices, ciphertext hashes, reservation state and expiry. It receives no filename, MIME type,

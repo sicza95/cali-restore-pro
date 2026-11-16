@@ -71,6 +71,10 @@ export async function verifyPublicationPaused(
   origin: string,
   stale: Awaited<ReturnType<typeof stageOriginalUpload>>,
 ) {
+  // Revocation cancelled the stale upload. Give the worker (5 s tick) time to
+  // delete it, so the writes below take the path where its row is gone. The
+  // server answers 409 either way (#90).
+  await new Promise((resolve) => setTimeout(resolve, 7_000));
   expect((await stale.finishParts()).status()).toBe(409);
   expect((await stale.commit()).status()).toBe(409);
   const fresh = await stageOriginalUpload(owner, project, origin);

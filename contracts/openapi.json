@@ -2466,6 +2466,16 @@
           "204": {
             "description": "Accepted"
           },
+          "409": {
+            "description": "file_conflict: no staged upload to publish (never reserved, cancelled, expired or already cleaned up; reserve again), or parts missing or corrupt; original_rotation_pending; storage_quota_exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
           "default": {
             "description": "Transfer, authentication or policy error",
             "content": {
@@ -2559,6 +2569,16 @@
         "responses": {
           "204": {
             "description": "Accepted"
+          },
+          "409": {
+            "description": "file_conflict: no staged upload to write to (never reserved, cancelled, expired or already cleaned up; reserve again), or different bytes for a stored part; storage_quota_exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
           },
           "default": {
             "description": "Transfer, authentication or policy error",

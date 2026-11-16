@@ -141,7 +141,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 		}
 		f, err := a.record(r.Context(), project, id)
 		if err != nil {
-			return nil, err
+			return nil, staged(err)
 		}
 		if f.State == "committed" {
 			return empty(w), nil
@@ -158,7 +158,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 		return empty(w), a.publish(r.Context(), objects, id, f)
 	})
 	handle("PUT "+parts, func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
-		f, part, size, err := requestedPart(r, a, project, id)
+		f, part, size, err := requestedPart(r, a, project, id, staged)
 		if err != nil {
 			return nil, err
 		}
@@ -182,7 +182,7 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 		return empty(w), a.putPart(r.Context(), objects, id, part, body)
 	})
 	readPart := func(w http.ResponseWriter, r *http.Request, a fileAccess, project, id string) (func(), error) {
-		f, part, size, err := requestedPart(r, a, project, id)
+		f, part, size, err := requestedPart(r, a, project, id, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -204,13 +204,28 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 	handle("GET "+shared+"/parts/{part}", readPart)
 }
 
-func requestedPart(r *http.Request, a fileAccess, project, id string) (fileRecord, int, int, error) {
+// staged answers a write to an upload whose row is gone as a write to a
+// cancelled or expired one. The worker deletes those rows on its own schedule
+// (cancellation by DELETE or by revocation sets expires_at=now), so the status
+// must not depend on whether it has run yet. Only the project's host gets here:
+// everyone else is refused by the project check before the file is looked up.
+func staged(err error) error {
+	if errors.Is(err, errFileMissing) {
+		return errFileState
+	}
+	return err
+}
+
+func requestedPart(r *http.Request, a fileAccess, project, id string, missing func(error) error) (fileRecord, int, int, error) {
 	value := r.PathValue("part")
 	part, err := strconv.Atoi(value)
 	if err != nil || strconv.Itoa(part) != value || part < 0 || part > 256 {
 		return fileRecord{}, 0, 0, identity.ErrInvalid
 	}
 	f, err := a.record(r.Context(), project, id)
+	if err != nil && missing != nil {
+		err = missing(err)
+	}
 	if err != nil {
 		return f, 0, 0, err
 	}

@@ -163,7 +163,9 @@ revocation cannot read another part. A part already authorized may finish;
 previously delivered bytes cannot be recalled.
 
 When revocation advances the original-file epoch, it cancels uploads still
-staged in that project and makes them eligible for cleanup. While any
+staged in that project and makes them eligible for cleanup. Further part
+uploads and commits for a cancelled upload return `409 file_conflict`,
+before and after the worker removes it. While any
 surviving invitation still links retired originals, the server rejects
 new original-file grants and ordinary file commits with
 `409 original_rotation_pending`. The host may stage ciphertext and
