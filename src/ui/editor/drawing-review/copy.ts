@@ -9,6 +9,7 @@ const messages = {
     'The assessment changed outside this editor. Discard the old unsaved drawing to keep editing.',
     'A felmérés a szerkesztőn kívül módosult. A szerkesztés folytatásához vesse el a régi, nem mentett rajzot.',
   ],
+  recoveryPaused: ['Editing paused.', 'A szerkesztés szünetel.'],
   recoveryRetry: ['Try again', 'Újrapróbálás'],
   pattern: ['Pattern version', 'Mintaverzió'],
   noPattern: ['Default hatch', 'Alapértelmezett sraffozás'],

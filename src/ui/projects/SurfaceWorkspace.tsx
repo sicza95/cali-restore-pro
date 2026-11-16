@@ -19,6 +19,7 @@ import { control as drawingControl } from '../editor/drawing-review/constants';
 import { drawingCopy } from '../editor/drawing-review/copy';
 import { SurfaceReviewAdapter } from './SurfaceReviewAdapter';
 import { SurfaceDrawing } from './SurfaceDrawing';
+import { SurfaceRecoveryNotice } from './SurfaceRecoveryNotice';
 import { Icon } from '../icon/Icon';
 import { surfaceCopy } from './surface-copy';
 import './surface-styles.css';
@@ -170,6 +171,16 @@ export function SurfaceWorkspace(props: {
           {checkpointCopy[props.language].mode}
         </button>
       </div>
+      {/* Every mode is paused until this is resolved, so it sits above them all (#38). */}
+      <Show when={reference() && (recovery.failed() || recovery.journal()?.conflict)}>
+        <SurfaceRecoveryNotice
+          failed={recovery.failed()}
+          copy={draw()}
+          busy={props.busy}
+          onRetry={recovery.refetch}
+          onDiscard={recovery.discardConflict}
+        />
+      </Show>
       <div class="surface-navigation" data-compact={compact() || undefined}>
         <label>
           {view().surface}
@@ -284,17 +295,6 @@ export function SurfaceWorkspace(props: {
           )}
         </Show>
       </div>
-      <Show when={reference() && (recovery.failed() || recovery.journal()?.conflict)}>
-        <p role="alert">{recovery.failed() ? draw().recoveryError : draw().recoveryConflict}</p>
-        <button
-          class="secondary"
-          disabled={props.busy}
-          type="button"
-          onClick={() => (recovery.failed() ? recovery.refetch() : recovery.discardConflict())}
-        >
-          {recovery.failed() ? draw().recoveryRetry : draw().discard}
-        </button>
-      </Show>
       <Show when={drawingStarted()}>
         <Show when={reference()?.id ?? 'empty'} keyed>
           {(key) => (

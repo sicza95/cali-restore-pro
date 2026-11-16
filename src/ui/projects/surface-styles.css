@@ -236,3 +236,27 @@
 .surface-step-previous {
   transform: rotate(180deg);
 }
+/* The app's message box (`.account-message`) with its action in the same row (#38). */
+.surface-recovery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-block-end: 12px;
+  padding: 8px 8px 8px 12px;
+}
+.surface-recovery p {
+  flex: 1 1 20rem;
+  margin: 0;
+}
+.surface-recovery-icon {
+  flex: none;
+  color: var(--cr-warning);
+}
+.surface-recovery[data-error='true'] .surface-recovery-icon {
+  color: var(--cr-negative);
+}
+.surface-recovery button {
+  flex: none;
+  margin-inline-start: auto;
+}
