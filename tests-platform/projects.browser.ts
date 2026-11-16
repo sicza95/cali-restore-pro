@@ -325,6 +325,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await page.screenshot({ path: info.outputPath('surface-reopened.png') });
   await recovery.verifyRemovalKeepsDrafts(page, surfacePath);
   await recovery.verifyRecoveryConflict(page, info);
+  await recovery.verifyDraftSourceBlocked(page, info);
   await controls('surface.project').click();
   await page
     .getByRole('combobox', { name: 'Object', exact: true })

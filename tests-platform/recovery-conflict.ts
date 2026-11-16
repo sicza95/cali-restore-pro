@@ -4,6 +4,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { drawingControl, openDetails } from './drawing-review';
 import { verifyRecoveryWarning } from './recovery-warning';
 
+export { verifyDraftSourceBlocked } from './draft-source';
+
 const control = (page: Page, id: string) => page.locator(`[data-control-id="${id}"]`);
 const layer = (page: Page, name: string) =>
   drawingControl(page, 'layer.select').filter({ hasText: name }).first();
