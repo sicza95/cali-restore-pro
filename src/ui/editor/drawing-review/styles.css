@@ -12,18 +12,18 @@
 .surface-mode button {
   border: 1px solid transparent;
 }
-.surface-mode button.secondary {
+.surface-mode button.surface-mode-tab {
   background: transparent;
   border: 0;
   border-radius: 0;
   border-bottom: 2px solid transparent;
   color: var(--cr-muted);
 }
-.surface-mode button.secondary:hover {
+.surface-mode button.surface-mode-tab:hover {
   color: var(--cr-ink);
   background: var(--cr-hover);
 }
-.surface-mode button.secondary[aria-pressed='true'] {
+.surface-mode button.surface-mode-tab[aria-pressed='true'] {
   border-bottom-color: var(--cr-accent);
   color: var(--cr-ink);
 }

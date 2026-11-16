@@ -138,7 +138,7 @@ export function SurfaceWorkspace(props: {
     <>
       <div class="surface-mode" role="group" aria-label={draw().mode}>
         <button
-          class="secondary"
+          class="surface-mode-tab"
           type="button"
           data-control-id={drawingControl('mode.photo')}
           aria-pressed={mode() === 'photo'}
@@ -147,7 +147,7 @@ export function SurfaceWorkspace(props: {
           {draw().photoMode}
         </button>
         <button
-          class="secondary"
+          class="surface-mode-tab"
           type="button"
           data-control-id={drawingControl('mode.drawing')}
           aria-pressed={drawing()}
@@ -159,7 +159,7 @@ export function SurfaceWorkspace(props: {
           {draw().drawingMode}
         </button>
         <button
-          class="secondary"
+          class="surface-mode-tab"
           type="button"
           data-control-id="checkpoint.review.mode"
           aria-pressed={mode() === 'checkpoint'}
