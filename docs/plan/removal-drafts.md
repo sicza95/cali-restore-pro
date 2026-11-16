@@ -21,7 +21,7 @@ Carrying the journal forward is sound for this change, with history pruned:
 - **Project page.** It does not load the journal. A shared platform function reads the journal of each assessment the removal changes, carries it and returns the writes; the page saves them with the project in one transaction, which fails as a whole if a journal changed meanwhile.
 - **Surface page, same session.** The same function runs there; the open journal is then replaced by the written one (new revision and head), so the next save expects the right revision.
 
-Not covered, and out of this issue: the project page does not block removing the draft source photo (the surface page does). The assessment and its drafts' context are dropped; no pause appears, and the drafts stay unreachable in storage. Recorded as #72.
+Not covered, and out of this issue: the project page does not block removing the draft source photo (the surface page does). The assessment and its drafts' context are dropped; no pause appears, and the drafts stay unreachable in storage. Recorded as #72, since fixed ([plan](draft-source.md)).
 
 ## Approach
 
