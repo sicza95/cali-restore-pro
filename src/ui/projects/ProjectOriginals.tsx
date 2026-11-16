@@ -125,6 +125,7 @@ export function ProjectOriginals(props: {
                     copy={props.copy}
                     value={image.role}
                     disabled={props.busy || draftSource()}
+                    reason={draftSource() ? props.copy.draftPhoto : undefined}
                     change={(role) =>
                       void props.onRun(() =>
                         props.onSave(
@@ -166,6 +167,8 @@ function RoleField(props: {
   copy: Copy;
   value?: ImageRole;
   disabled?: boolean;
+  /** Why the select is disabled, as "Remove" says it. */
+  reason?: string;
   change?: (role: ImageRole) => void;
 }) {
   return (
@@ -174,6 +177,7 @@ function RoleField(props: {
       name="role"
       value={props.value ?? 'mapping'}
       disabled={props.disabled}
+      title={props.reason}
       onChange={(e) => {
         const role = e.currentTarget.value as ImageRole;
         if (props.change) {

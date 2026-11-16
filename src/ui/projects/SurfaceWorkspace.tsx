@@ -12,7 +12,7 @@ import type { PlanarSurface } from '../../platform/projects/planar-types';
 import { SurfaceMeasurements } from './SurfaceMeasurements';
 import type { Language } from '../account-access/types';
 import { createSurfaceJournal } from './createSurfaceJournal';
-import { photoHistory, recordHistory } from '../../platform/projects/surface-journal';
+import { hasDrafts, photoHistory, recordHistory } from '../../platform/projects/surface-journal';
 import { SurfaceCheckpoints } from './SurfaceCheckpoints';
 import { checkpointCopy } from '../editor/checkpoint-review/copy';
 import { control as drawingControl } from '../editor/drawing-review/constants';
@@ -370,7 +370,9 @@ export function SurfaceWorkspace(props: {
         copy={c()}
         vault={props.vault}
         busy={props.busy}
-        pendingSource={recovery.journal()?.drafts.length ? reference()?.id : undefined}
+        pendingSource={
+          recovery.journal() && hasDrafts(recovery.journal()!) ? reference()?.id : undefined
+        }
         onRun={props.onRun}
         onSave={saveImages}
       />

@@ -1,7 +1,7 @@
 import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
-import { createSignal, For, Show } from 'solid-js';
+import { createResource, createSignal, For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
-import { changeSurfaceImages } from '../../platform/projects/surface-attachments';
+import { changeSurfaceImages, draftSource } from '../../platform/projects/surface-attachments';
 import { newObject, newSurface, projectName } from '../../platform/projects/projects';
 import type {
   Attachment,
@@ -83,6 +83,19 @@ export function ProjectDetail(props: {
       journals.map(({ write }) => write),
     );
   };
+  // Read again after every save and when the selection changes; this page mounts again on the
+  // way back from the surface page, where drafts are made and resolved (#72).
+  const [pendingSource] = createResource(
+    () => ({ id: props.project.id, revision: props.project.revision, surface: surface() }),
+    ({ id, surface }) => {
+      const documents = props.vault.projects();
+      const scope = { project: id, surface: surface.id };
+      // An unreadable journal blocks nothing, as on the surface page.
+      return draftSource((ref) => documents.readJournal(ref), scope, surface).catch(
+        () => undefined,
+      );
+    },
+  );
   return (
     <>
       <div class="project-heading">
@@ -283,7 +296,8 @@ export function ProjectDetail(props: {
               surface={object().surfaces.find((s) => s.id === id)!}
               copy={c()}
               vault={props.vault}
-              busy={props.busy}
+              busy={props.busy || pendingSource.loading}
+              pendingSource={pendingSource.latest}
               onRun={props.onRun}
               onSave={saveImages}
             />
