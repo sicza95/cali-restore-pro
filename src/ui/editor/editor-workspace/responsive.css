@@ -23,15 +23,16 @@
 @media (max-width: 960px) {
   .cr-editor-workspace {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) 286px;
+    /*
+     * The docked inspector takes the height its content needs, so no section hides below the fold
+     * and the canvas closes in on the photo; past the canvas minimum the body scrolls (#37).
+     */
+    grid-template-rows: minmax(var(--cr-canvas-min, 480px), 1fr) minmax(0, auto);
   }
   .cr-inspector {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 240px;
-    grid-template-rows: 52px minmax(0, 1fr);
-  }
-  .cr-inspector-tabs {
-    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 52px minmax(0, 1fr) auto;
   }
   /* Two portrait heights when the host passes `inspectorSize`: short keeps the canvas first. */
   .cr-editor-workspace[data-inspector='short'] {
@@ -67,18 +68,23 @@
   .cr-inspector-body {
     grid-row: 2;
   }
-  /* Without a footer (see LayerPanel) the body takes the footer's column too. */
-  .cr-inspector-body:last-child {
-    grid-column: 1 / -1;
-  }
+  /* The footer docks under the layers as one row: coverage on the left, calibration on the right. */
   .cr-inspector-footer {
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 24px;
+    padding: 8px 16px;
+  }
+  .cr-inspector-footer .cr-coverage-track {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
+  .cr-inspector-footer > .cr-button {
     grid-column: 2;
-    grid-row: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    border-top: 0;
-    border-left: 1px solid var(--cr-rule);
+    grid-row: 1 / 3;
+    width: auto;
   }
   .cr-layer-selection {
     display: none;
