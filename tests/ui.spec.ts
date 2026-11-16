@@ -162,6 +162,42 @@ for (const scenario of [
   });
 }
 
+for (const story of ['landscape', 'light']) {
+  test(`${story} story in portrait shows the whole inspector and the photo at the canvas top`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 834, height: 1194 });
+    await openStory(page, `editor-workspace--${story}`);
+    const image = page.locator('.cr-photo-space img');
+    await image.evaluate((element: HTMLImageElement) => element.decode());
+    // Every section and row lies inside the unscrolled body and no overflow-hidden ancestor cuts it (#37).
+    const hidden = await page.locator('.cr-inspector-body').evaluate((body) => {
+      const items = body.querySelectorAll('.cr-boundary, section, .cr-layer-row');
+      return [...items].flatMap((item) => {
+        const box = item.getBoundingClientRect();
+        const clips = [body];
+        for (let node = body.parentElement; node; node = node.parentElement)
+          if (getComputedStyle(node).overflow !== 'visible') clips.push(node);
+        const cut = clips.some((clip) => {
+          const edge = clip.getBoundingClientRect();
+          return box.top < edge.top - 1 || box.bottom > edge.bottom + 1;
+        });
+        return cut ? [item.getAttribute('aria-label') ?? item.textContent?.trim()] : [];
+      });
+    });
+    expect.soft(hidden).toEqual([]);
+    await expect.soft(page.getByRole('region', { name: 'Work phases' })).toBeInViewport();
+    // The photo is fitted (`contain`); no more than 2 px of canvas above its drawn top.
+    const band = await image.evaluate((element: HTMLImageElement) => {
+      const box = element.getBoundingClientRect();
+      const scale = Math.min(box.width / element.naturalWidth, box.height / element.naturalHeight);
+      const top = box.top + (box.height - element.naturalHeight * scale) / 2;
+      return top - element.closest('.cr-canvas-region')!.getBoundingClientRect().top;
+    });
+    expect(band).toBeLessThanOrEqual(2);
+  });
+}
+
 test('opaque preference removes blur without moving the tool rail', async ({ page }) => {
   await openStory(page, 'editor-workspace--opaque-controls');
   const rail = page.getByRole('toolbar', { name: 'Drawing tools' });
