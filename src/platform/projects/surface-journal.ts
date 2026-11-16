@@ -42,9 +42,13 @@ export const emptyJournal = (): SurfaceJournal => ({
   future: [],
 });
 
+/** The text a journal head hashes: the assessment's JSON, or nothing before its first revision. */
+const headText = (state?: PlanarSurface) => (state?.revision ? JSON.stringify(state) : '');
+
 export async function journalHead(state?: PlanarSurface) {
-  if (!state?.revision) return '';
-  const bytes = encoder.encode(JSON.stringify(state));
+  const text = headText(state);
+  if (!text) return '';
+  const bytes = encoder.encode(text);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
@@ -66,6 +70,25 @@ export async function openJournal(text: string | undefined, state?: PlanarSurfac
   return {
     ...emptyJournal(),
     head,
+    manual: journal.manual,
+    drafts: journal.drafts,
+    conflict: journal.drafts.length > 0,
+  };
+}
+
+/**
+ * The open journal against the current assessment: drafts written against other content are a
+ * conflict, as in `openJournal`. Content, not identity: an unchanged assessment can arrive as a
+ * new object (#63).
+ */
+export function currentJournal(
+  journal: SurfaceJournal,
+  loaded: PlanarSurface | undefined,
+  current: PlanarSurface | undefined,
+): SurfaceJournal {
+  if (loaded === current || headText(loaded) === headText(current)) return journal;
+  return {
+    ...emptyJournal(),
     manual: journal.manual,
     drafts: journal.drafts,
     conflict: journal.drafts.length > 0,

@@ -1,5 +1,6 @@
-import { createResource } from 'solid-js';
+import { createMemo, createResource } from 'solid-js';
 import {
+  currentJournal,
   emptyJournal,
   journalHead,
   journalText,
@@ -35,17 +36,11 @@ export function createSurfaceJournal(options: {
     const current = row();
     if (current?.source === options.source()) return current;
   };
-  const journal = () => {
+  // A memo: the content comparison serialises the assessment when the objects differ.
+  const journal = createMemo(() => {
     const current = value();
-    if (!current) return;
-    if (current.assessment === options.assessment()) return current.journal;
-    return {
-      ...emptyJournal(),
-      manual: current.journal.manual,
-      drafts: current.journal.drafts,
-      conflict: current.journal.drafts.length > 0,
-    };
-  };
+    if (current) return currentJournal(current.journal, current.assessment, options.assessment());
+  });
 
   function save(
     next: SurfaceJournal,
