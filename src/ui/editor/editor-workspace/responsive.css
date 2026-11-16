@@ -93,7 +93,8 @@
 
 @media (max-width: 640px) {
   .cr-editor {
-    grid-template-rows: 60px minmax(0, 1fr) 84px;
+    --cr-editor-header: 60px;
+    grid-template-rows: var(--cr-editor-header) minmax(0, 1fr) 84px;
     min-height: 760px;
   }
   .cr-editor-header {
@@ -183,7 +184,7 @@
     max-width: 80px;
   }
   .cr-editor--focus {
-    grid-template-rows: 60px minmax(0, 1fr) 12px;
+    grid-template-rows: var(--cr-editor-header) minmax(0, 1fr) 12px;
   }
 }
 

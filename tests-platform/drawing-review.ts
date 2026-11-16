@@ -2,6 +2,7 @@ import { expect, type Page, type TestInfo } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { drawingControls } from '../src/ui/editor/drawing-review/registry';
 import { expectTaskLanguage } from './copy-guard';
+import { canvasShare } from './photo-gestures';
 
 export function drawingControl(page: Page, key: string) {
   const id = 'surface.draw.' + key;
@@ -252,6 +253,10 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     await page.setViewportSize(viewport);
     await closeDetails(page);
     await page.evaluate(() => window.scrollTo(0, 0));
+    // The canvas gets half the first screen or more (#39): it was 44.5 % at 1194 and 56.9 % at 834.
+    expect(await canvasShare(page, '.drawing-workspace .cr-canvas-region')).toBeGreaterThanOrEqual(
+      viewport.width === 834 ? 60 : 50,
+    );
     const rail = (await page.locator('.drawing-workspace .cr-tool-rail').boundingBox())!;
     const canvas = (await page.locator('.drawing-workspace .cr-canvas-region').boundingBox())!;
     const inspector = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
@@ -285,6 +290,14 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
     await expect(
       page.locator('[data-control-id="surface.view.surface"] option:checked'),
     ).toHaveText((await page.locator('.app-page-title').textContent())!);
+    // One title per surface page (#39): the editor header holds status and actions, no identity.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    await expect(page.locator('.drawing-workspace .cr-editor-header')).not.toContainText(
+      'CaliRestore',
+    );
+    expect(
+      (await page.locator('.drawing-workspace .cr-editor-header').boundingBox())!.height,
+    ).toBeLessThanOrEqual(56);
     // Both iPad orientations must pass axe with "Details" closed and open.
     for (const state of ['closed', 'open'] as const) {
       if (state === 'open') {

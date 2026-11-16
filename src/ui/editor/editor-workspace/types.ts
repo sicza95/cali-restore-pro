@@ -24,8 +24,12 @@ export type EditorHistory = {
 export interface EditorWorkspaceProps<T extends string = Tool> {
   /** Root element. Use a non-landmark when the page already has a `main`. */
   as?: 'main' | 'section' | 'div';
-  title: string;
-  breadcrumb: readonly string[];
+  /**
+   * The surface name and its trail, shown with the brand. Leave both out when the host page already
+   * carries them: the header then holds only the save status and the workspace actions.
+   */
+  title?: string;
+  breadcrumb?: readonly string[];
   layers: readonly EditorLayer[];
   activeLayer: LayerId;
   onSelectLayer: (layer: LayerId) => void;

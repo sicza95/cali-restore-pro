@@ -38,32 +38,40 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
   return (
     <Dynamic
       component={props.as ?? 'main'}
-      class={props.focus ? 'cr-editor cr-editor--focus' : 'cr-editor'}
+      class="cr-editor"
+      classList={{ 'cr-editor--focus': props.focus, 'cr-editor--embedded': !props.title }}
       aria-label={copy().editor}
     >
       <header class="cr-editor-header">
-        <div class="cr-editor-brand">
-          <Icon name="brand" size={26} />
-          <span>CaliRestore</span>
-        </div>
-        <div class="cr-editor-identity">
-          <span>
-            <For each={props.breadcrumb}>
-              {(crumb, index) => (
-                <>
-                  <Show when={index() > 0}>
-                    {' '}
-                    <span class="cr-crumb-slash">/</span>{' '}
-                  </Show>
-                  {crumb}
-                </>
-              )}
-            </For>
-          </span>
-          <h1>
-            {props.title} <Icon name="chevron" size={13} />
-          </h1>
-        </div>
+        {/* Embedded in a page that already names the surface, the header holds only status and actions. */}
+        <Show when={props.title}>
+          {(title) => (
+            <>
+              <div class="cr-editor-brand">
+                <Icon name="brand" size={26} />
+                <span>CaliRestore</span>
+              </div>
+              <div class="cr-editor-identity">
+                <span>
+                  <For each={props.breadcrumb}>
+                    {(crumb, index) => (
+                      <>
+                        <Show when={index() > 0}>
+                          {' '}
+                          <span class="cr-crumb-slash">/</span>{' '}
+                        </Show>
+                        {crumb}
+                      </>
+                    )}
+                  </For>
+                </span>
+                <h1>
+                  {title()} <Icon name="chevron" size={13} />
+                </h1>
+              </div>
+            </>
+          )}
+        </Show>
         <SaveStatus
           state={props.saveState}
           detail={props.saveDetail}

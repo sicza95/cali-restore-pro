@@ -18,8 +18,6 @@ export function SurfaceDrawing(props: {
   state?: PlanarSurface;
   copy: DrawingCopy;
   language: 'en' | 'hu';
-  title: string;
-  breadcrumb: readonly string[];
   view: SurfaceCopy;
   busy: boolean;
   journal?: SurfaceJournal;
@@ -53,8 +51,6 @@ export function SurfaceDrawing(props: {
       vault={props.vault}
       copy={props.copy}
       language={props.language}
-      title={props.title}
-      breadcrumb={props.breadcrumb}
       state={state()}
       source={source()?.id === props.photo ? source() : undefined}
       referenceOnly={props.referenceOnly}

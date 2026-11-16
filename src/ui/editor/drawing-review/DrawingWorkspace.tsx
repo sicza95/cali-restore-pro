@@ -40,8 +40,6 @@ export function DrawingWorkspace(props: {
   vault: LocalVault;
   copy: DrawingCopy;
   language: 'en' | 'hu';
-  title: string;
-  breadcrumb: readonly string[];
   state?: PlanarSurface;
   source?: SourceFrame;
   referenceOnly: boolean;
@@ -166,8 +164,6 @@ export function DrawingWorkspace(props: {
       <p class="drawing-transient">{c().draftLifetime}</p>
       <EditorWorkspace<Tool>
         as="section"
-        title={props.title}
-        breadcrumb={props.breadcrumb}
         layers={size() && props.state ? editorLayers(m, c()) : []}
         activeLayer={String(m.selected())}
         onSelectLayer={(id) => {

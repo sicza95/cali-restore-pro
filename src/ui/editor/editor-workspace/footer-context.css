@@ -26,7 +26,7 @@
 }
 
 .cr-editor--focus {
-  grid-template-rows: 68px minmax(0, 1fr) 12px;
+  grid-template-rows: var(--cr-editor-header) minmax(0, 1fr) 12px;
 }
 
 .cr-editor--focus .cr-editor-workspace {

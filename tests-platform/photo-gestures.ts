@@ -74,10 +74,10 @@ export async function verifyPhotoGestures(page: Page) {
   await expect(frame).toHaveAttribute('style', /translate\(0px, 0px\) scale\(1\)/);
 }
 
-/** Share of the first screen (page at the top) that the photo canvas covers, in percent. */
-export async function canvasShare(page: Page) {
+/** Share of the first screen (page at the top) that a canvas covers, in percent; the photo canvas by default. */
+export async function canvasShare(page: Page, selector = '.surface-canvas') {
   await page.evaluate(() => window.scrollTo(0, 0));
-  return page.locator('.surface-canvas').evaluate((element) => {
+  return page.locator(selector).evaluate((element) => {
     const box = element.getBoundingClientRect();
     const visible = Math.max(0, Math.min(box.bottom, innerHeight) - Math.max(box.top, 0));
     return Math.round((visible / innerHeight) * 100);
