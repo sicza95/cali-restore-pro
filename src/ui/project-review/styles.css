@@ -232,6 +232,14 @@
   font-size: 1.5rem;
   letter-spacing: -0.02em;
 }
+/* The total gets its own row, and amounts break only between words, never inside a number
+   (the review flow lets text break anywhere) (#35). */
+.estimate-totals .estimate-total {
+  grid-column: 1 / -1;
+}
+.estimate-review .estimate-totals dd {
+  overflow-wrap: normal;
+}
 .estimate-summary p[role='status']:empty {
   display: none;
 }
