@@ -1,22 +1,57 @@
+/* Portrait (up to the shell's 1100 px breakpoint) and single-permission pages stack the panels.
+   Landscape puts Accounts beside a column of Mail queue and Security events; the wider right
+   column keeps each event's two account ids to two lines (EN and HU). */
+.admin-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+@media (min-width: 1101px) {
+  .admin-page:has(> .admin-section + .admin-column) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+}
+/* Both columns end together: the last panel takes the rest of the row. */
+.admin-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.admin-column > :last-child {
+  flex-grow: 1;
+}
 .admin-section {
-  border-top: 1px solid var(--cr-rule);
-  padding: 24px 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+.admin-section h2,
+.admin-section > p {
+  margin: 0;
+}
+.admin-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
 }
 .admin-search {
-  grid-template-columns: minmax(0, 26rem) auto;
-  justify-content: start;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  margin: 12px 0;
 }
 .admin-list {
   list-style: none;
   padding: 0;
-  margin: 16px 0;
+  margin: 0;
 }
 .admin-list > li {
   border-bottom: 1px solid var(--cr-rule);
   padding: 8px 0;
   overflow-wrap: anywhere;
+}
+/* A long email breaks at the line end instead of leaving the disclosure marker on its own. */
+.admin-list summary .account-email {
+  word-break: break-all;
 }
 .admin-list summary span {
   display: inline-block;
@@ -30,7 +65,8 @@
   padding: 12px 0;
   align-items: start;
 }
-.admin-controls > * {
+.admin-controls > *,
+.admin-section .admin-controls > form {
   padding: 16px;
   background: var(--cr-surface);
   margin: 0;
@@ -38,11 +74,16 @@
 .admin-controls p {
   margin: 0;
 }
-.admin-metrics,
 .admin-actions {
   display: flex;
   gap: 24px;
   flex-wrap: wrap;
+}
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
 }
 .admin-metrics dd {
   margin: 0;

@@ -26,9 +26,9 @@ export function Admin() {
   };
   // The admin route guard shows the no-access notice before this screen renders.
   return (
-    <>
+    <div class="admin-page">
       <Show when={app.can('accounts.view')}>
-        <section class="admin-section">
+        <section class="admin-section account-panel">
           <h2>{c().accounts}</h2>
           <form
             class="admin-search"
@@ -92,50 +92,60 @@ export function Admin() {
         </section>
       </Show>
       <Show when={app.can('operations.view')}>
-        <section class="admin-section">
-          <h2>{c().mail}</h2>
-          <button
-            data-control-id="admin.operations.refresh"
-            disabled={ops.loading}
-            onClick={() => void refreshOps()}
-          >
-            {c().refreshOperations}
-          </button>
-          <Show when={ops.loading}>
-            <p role="status">{app.t('working')}</p>
-          </Show>
-          <Show when={ops()}>
-            {(data) => (
-              <>
-                <dl class="admin-metrics">
-                  <For each={['pending', 'sent', 'failed'] as const}>
-                    {(status) => (
-                      <div>
-                        <dt>{c()[status]}</dt>
-                        <dd>{data().mail[status].toLocaleString(app.lang())}</dd>
-                      </div>
-                    )}
-                  </For>
-                </dl>
-                <details>
-                  <summary data-control-id="admin.operations.mail">{c().mailJobs}</summary>
-                  <ul class="admin-list">
-                    <For each={data().jobs} fallback={<li>{c().noMail}</li>}>
-                      {(job) => (
-                        <li>
-                          <strong>{c()[job.status]}</strong>
-                          {' · '}
-                          <time datetime={job.at}>
-                            {new Date(job.at).toLocaleString(app.lang())}
-                          </time>
-                          <div class="field-help">
-                            {c().attempts}: {job.attempts.toLocaleString(app.lang())} · {job.id}
-                          </div>
-                        </li>
+        <div class="admin-column">
+          <section class="admin-section account-panel">
+            <div class="admin-heading">
+              <h2>{c().mail}</h2>
+              <button
+                data-control-id="admin.operations.refresh"
+                disabled={ops.loading}
+                onClick={() => void refreshOps()}
+              >
+                {c().refreshOperations}
+              </button>
+            </div>
+            <Show when={ops.loading}>
+              <p role="status">{app.t('working')}</p>
+            </Show>
+            <Show when={ops()}>
+              {(data) => (
+                <>
+                  <dl class="admin-metrics">
+                    <For each={['pending', 'sent', 'failed'] as const}>
+                      {(status) => (
+                        <div>
+                          <dt>{c()[status]}</dt>
+                          <dd>{data().mail[status].toLocaleString(app.lang())}</dd>
+                        </div>
                       )}
                     </For>
-                  </ul>
-                </details>
+                  </dl>
+                  <details>
+                    <summary data-control-id="admin.operations.mail">{c().mailJobs}</summary>
+                    <ul class="admin-list">
+                      <For each={data().jobs} fallback={<li>{c().noMail}</li>}>
+                        {(job) => (
+                          <li>
+                            <strong>{c()[job.status]}</strong>
+                            {' · '}
+                            <time datetime={job.at}>
+                              {new Date(job.at).toLocaleString(app.lang())}
+                            </time>
+                            <div class="field-help">
+                              {c().attempts}: {job.attempts.toLocaleString(app.lang())} · {job.id}
+                            </div>
+                          </li>
+                        )}
+                      </For>
+                    </ul>
+                  </details>
+                </>
+              )}
+            </Show>
+          </section>
+          <Show when={ops()}>
+            {(data) => (
+              <section class="admin-section account-panel">
                 <h2>{c().audit}</h2>
                 <p class="field-help">{c().auditHelp}</p>
                 <ul class="admin-list">
@@ -154,11 +164,11 @@ export function Admin() {
                     )}
                   </For>
                 </ul>
-              </>
+              </section>
             )}
           </Show>
-        </section>
+        </div>
       </Show>
-    </>
+    </div>
   );
 }
