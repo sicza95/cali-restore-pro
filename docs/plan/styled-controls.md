@@ -21,7 +21,7 @@ unstyled controls, many equal-weight buttons". iPad and desktop only
 
 - **Secondary is the default.** The global `button` rule becomes the secondary style (raised
   surface, ink text); `button.primary` is the dark primary. A button is primary only when a screen
-  says so. `class="secondary"` keeps working and is no longer needed on new code.
+  says so. `class="secondary"` was removed (#40) and `src/ui/button-classes.test.ts` keeps it out.
 - **One primary per view**, the action the view exists for. Everything else on those screens
   (renames, adds, settings saves, attach, sharing, owners, sync choices, password and email
   changes, restore inside a disclosure) is secondary.
