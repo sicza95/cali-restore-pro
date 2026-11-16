@@ -8,7 +8,7 @@ import { drawingCopy } from '../src/ui/editor/drawing-review/copy';
  * Called while the surface shows the conflict: unsaved drawing drafts whose assessment changed.
  */
 export async function verifyRecoveryWarning(page: Page, info: TestInfo) {
-  // The page-wide check projects.browser.ts ran here before; it moved with the helper.
+  // Page-wide, in the conflict state (the one after the photo attach is in recovery-conflict.ts).
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   const notice = page.locator('.surface-recovery');
   const message = notice.locator('p');
