@@ -2,7 +2,18 @@ import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { drawingControl, openDetails } from './drawing-review';
 import { attach, control, original, plasterPng, projectPage, reason } from './originals';
+import { expectNoReason, expectReasons, reasonShots } from './original-reasons';
+import type { Expected } from './original-reasons';
 import { verifyReferenceChange } from './reference-change';
+
+const blockedRows: Record<string, Expected> = {
+  'lower-main.png': { role: 'draft', remove: 'draft' },
+  'lower-reference.png': {},
+};
+const checkpointRows: Record<string, Expected> = {
+  'wall.png': { remove: 'checkpoint' },
+  'plaster-detail.dng': {},
+};
 
 /** On the surface page in drawing mode, on "Damage mask", with Details open. */
 async function surfacePage(page: Page) {
@@ -27,6 +38,8 @@ async function expectBlocked(page: Page, step: string) {
   await expect(other.remove, step).toBeEnabled();
   await expect(other.remove, step).toHaveAccessibleDescription('');
   await expect(other.role, step).toBeEnabled();
+  await expectReasons(page, 'lower-main.png', { role: 'draft', remove: 'draft' }, step);
+  await expectNoReason(page, 'lower-reference.png', step);
 }
 
 /** Enabled only once the journal is read: the controls are disabled while it loads. */
@@ -36,6 +49,7 @@ async function expectFree(page: Page, step: string) {
     await expect(row.remove, step).toBeEnabled();
     await expect(row.remove, step).toHaveAccessibleDescription('');
     await expect(row.role, step).toBeEnabled();
+    await expectNoReason(page, name, step);
   }
 }
 
@@ -48,8 +62,13 @@ async function expectFree(page: Page, step: string) {
  * reference change checks (#75), which end on another new surface's page the same way.
  */
 export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
+  // The reason screenshots (#79), in two languages and orientations per state, take time.
+  info.setTimeout(info.timeout + 90_000);
   const png = await plasterPng(page);
+  // The main surface's first photo is used by saved checkpoints: "Remove" says so (#79).
+  await reasonShots(page, info, 'checkpoint-surface', checkpointRows);
   await projectPage(page, 'Upper plaster');
+  await reasonShots(page, info, 'checkpoint', checkpointRows);
   await page.getByRole('textbox', { name: 'Add surface' }).fill('Lower plaster');
   await page.getByRole('button', { name: 'Add surface' }).click();
   await expect(
@@ -77,16 +96,12 @@ export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
   await expect(main.remove).toHaveAccessibleDescription(reason);
   await expect(main.role).toHaveAccessibleDescription(reason);
   await expect(main.role).toBeDisabled();
+  await reasonShots(page, info, 'draft-source-surface', blockedRows);
   await drawingControl(page, 'mode.photo').click();
 
   await projectPage(page, 'Lower plaster');
   await expectBlocked(page, 'pending mark');
-  await page.locator('.project-originals').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: info.outputPath('draft-source-1194.png'), fullPage: true });
-  await page.setViewportSize({ width: 834, height: 1194 });
-  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
-  await page.screenshot({ path: info.outputPath('draft-source-834.png'), fullPage: true });
-  await page.setViewportSize({ width: 1194, height: 834 });
+  await reasonShots(page, info, 'draft-source', blockedRows);
   // Another surface's photos are not blocked, and the selection is read again on the way back.
   await page
     .getByRole('combobox', { name: 'Surface', exact: true })

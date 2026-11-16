@@ -10,9 +10,22 @@ import {
   projectPage,
   reason,
 } from './originals';
+import { expectNoReason, expectReasons, reasonShots } from './original-reasons';
+import type { Expected } from './original-reasons';
 
 const early = 'side-early.png';
 const main = 'side-main.png';
+const late = 'side-late.png';
+const earlierRows: Record<string, Expected> = {
+  [early]: { role: 'draft' },
+  [main]: { role: 'draft', remove: 'draft' },
+};
+const hiddenRows: Record<string, Expected> = { [early]: {}, [main]: { remove: 'hidden' } };
+const twoReasonRows: Record<string, Expected> = {
+  [early]: { role: 'draft' },
+  [main]: { role: 'draft', remove: 'hidden' },
+  [late]: { role: 'draft', remove: 'draft' },
+};
 const damage = (page: Page) =>
   drawingControl(page, 'layer.select').filter({ hasText: 'Damage mask' });
 
@@ -43,6 +56,9 @@ async function expectEarlierBlocked(page: Page, step: string) {
   await expect(source.remove, step).toHaveAccessibleDescription(reason);
   await expect(source.remove, step).toBeDisabled();
   await expect(source.role, step).toBeDisabled();
+  for (const [name, expected] of Object.entries(earlierRows)) {
+    await expectReasons(page, name, expected, step);
+  }
 }
 
 /** Enabled only once the journals are read: the controls are held while they load. */
@@ -53,6 +69,7 @@ async function expectFree(page: Page, step: string) {
     await expect(row.role, step).toHaveAccessibleDescription('');
     await expect(row.remove, step).toBeEnabled();
     await expect(row.remove, step).toHaveAccessibleDescription('');
+    await expectNoReason(page, name, step);
   }
 }
 
@@ -67,16 +84,47 @@ async function expectHidden(page: Page, step: string) {
   const first = original(page, early);
   await expect(first.role, step).toBeEnabled();
   await expect(first.remove, step).toBeEnabled();
+  for (const [name, expected] of Object.entries(hiddenRows)) {
+    await expectReasons(page, name, expected, step);
+  }
 }
 
-async function shots(page: Page, info: TestInfo, name: string) {
-  await page.locator('.project-originals').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: info.outputPath(`${name}-1194.png`), fullPage: true });
-  await page.setViewportSize({ width: 834, height: 1194 });
-  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
-  await page.locator('.project-originals').scrollIntoViewIfNeeded();
-  await page.screenshot({ path: info.outputPath(`${name}-834.png`), fullPage: true });
-  await page.setViewportSize({ width: 1194, height: 834 });
+/**
+ * Two reasons in one row (#79): a later photo with the mapping role becomes the reference and
+ * gets a pending mark while the photo with hidden drafts is listed before it. Called and ended on
+ * the project page in the hidden-drafts state.
+ */
+async function verifyTwoReasons(page: Page, info: TestInfo, png: Buffer) {
+  await page
+    .locator('.project-originals form')
+    .getByRole('combobox', { name: 'Image role', exact: true })
+    .selectOption('mapping');
+  await attach(page, late, png);
+  await expectHidden(page, 'project page, later reference attached');
+  await control(page, 'project.surface').click();
+  await control(page, 'surface.view.photo').selectOption({ index: 2 });
+  await drawingControl(page, 'mode.drawing').click();
+  await openDetails(page);
+  await drawingControl(page, 'layer.add').click();
+  await expect(damage(page)).toHaveAttribute('aria-pressed', 'true');
+  await drawingControl(page, 'history.mode').selectOption('manual');
+  await pendingMark(page);
+  await reasonShots(page, info, 'two-reasons-surface', twoReasonRows, true);
+  await drawingControl(page, 'mode.photo').click();
+  await projectPage(page, 'Side plaster');
+  await reasonShots(page, info, 'two-reasons', twoReasonRows, true);
+  await surfacePage(page);
+  await drawingControl(page, 'history.discard').click();
+  await expect(damage(page)).not.toContainText('Pending marks');
+  await drawingControl(page, 'mode.photo').click();
+  await projectPage(page, 'Side plaster');
+  // Enabled only once the journals are read.
+  await expect(original(page, late).remove).toBeEnabled();
+  await expect(original(page, late).role).toBeEnabled();
+  await expectNoReason(page, late, 'project page, later reference discarded');
+  await original(page, late).remove.click();
+  await expect(page.locator('.project-originals').getByText(late)).toHaveCount(0);
+  await expectHidden(page, 'project page, later reference removed');
 }
 
 /**
@@ -154,11 +202,11 @@ export async function verifyReferenceChange(page: Page, info: TestInfo) {
   await drawingControl(page, 'history.mode').selectOption('manual');
   await pendingMark(page);
   await expectEarlierBlocked(page, 'surface page, pending mark');
-  await shots(page, info, 'reference-change-earlier-surface');
+  await reasonShots(page, info, 'reference-change-earlier-surface', earlierRows);
   await drawingControl(page, 'mode.photo').click();
   await projectPage(page, 'Side plaster');
   await expectEarlierBlocked(page, 'project page, pending mark');
-  await shots(page, info, 'reference-change-earlier');
+  await reasonShots(page, info, 'reference-change-earlier', earlierRows);
 
   await surfacePage(page);
   await drawingControl(page, 'history.commit').click();
@@ -184,10 +232,11 @@ export async function verifyReferenceChange(page: Page, info: TestInfo) {
   await drawingControl(page, 'mode.photo').click();
   await landReferenceOnlyMain(page);
   await expectHidden(page, 'surface page, hidden drafts');
-  await shots(page, info, 'reference-change-hidden-surface');
+  await reasonShots(page, info, 'reference-change-hidden-surface', hiddenRows);
   await projectPage(page, 'Side plaster');
   await expectHidden(page, 'project page, hidden drafts');
-  await shots(page, info, 'reference-change-hidden');
+  await reasonShots(page, info, 'reference-change-hidden', hiddenRows);
+  await verifyTwoReasons(page, info, png);
 
   // The way out: the mapping role makes it the reference again, and its drafts are back.
   await original(page, main).role.selectOption('mapping');
