@@ -1,6 +1,6 @@
 # Draft source on the project page
 
-16 November 2026 · Status: in progress · Issue: #72 · Found while doing [the photo removal with drafts](removal-drafts.md) (#67)
+16 November 2026 · Status: done · Issue: #72 · Found while doing [the photo removal with drafts](removal-drafts.md) (#67)
 
 Goal: the project page blocks removing or re-roling the photo the drawing drafts belong to while they are pending, as the surface page does, so the drafts cannot be dropped silently.
 
@@ -27,3 +27,10 @@ On `main` at `e7e92af`, the surface page passes `pendingSource` to `ProjectOrigi
 - Vitest: `hasDrafts` and `storedDrafts` (no journal, empty drafts, pending, undone only, conflict) and `draftSource` (drafts on the first mapping photo; none without drafts, without a journal, without a mapping photo; reads the first mapping photo's journal only). Each run against the old code or a mutant to see it fail.
 - Browser, in the projects flow through a helper (`tests-platform/draft-source.ts`; `projects.browser.ts` is at 398 lines): on a new surface without checkpoints, with a pending mark, the project page disables the main photo's "Remove" and role select with the `draftPhoto` description while another photo stays removable; also with an undone draft only, and after switching surfaces and back; enabled again after the draft is committed and after it is discarded. Run against the old project page to see it fail.
 - `npm run check`, `test:unit`, `npm test`, `test:files` (the projects flow also with `--repeat-each 5`), `test:sync`, `build-storybook`. Screenshots of the project page with the blocked controls at 1194 and 834.
+
+## Outcome
+
+- As planned: `hasDrafts` and `storedDrafts` in `surface-journal.ts`, `draftSource` in `surface-attachments.ts`; `ProjectDetail` reads the draft source with a resource keyed on the project, its revision and the selected surface, and passes it to `ProjectOriginals`; the role select carries the `draftPhoto` reason on both pages; the surface page uses `hasDrafts`. `ProjectDetail.tsx` is at 310 lines.
+- The reason stays a `title` (an accessible description, shown on hover), as on the surface page before; nothing is shown on touch. No new text.
+- The projects flow's `verifyDraftSourceBlocked` (`tests-platform/draft-source.ts`, called through `recovery-conflict.ts`; `projects.browser.ts` is at 399 lines) fails with the old project page at its first project-page check (no description on "Remove"), with the old `ProjectOriginals` at the surface-page check of the role select's reason, and with the selection read only at mount at the same first project-page check. Holding the controls while the journal loads closes a short window before the answer; the flow does not catch its removal, as the read is faster than the next action. The Vitest cases fail on the old code (the functions do not exist) and on mutants counting pending marks only, skipping the journal validation, or taking the first photo whatever its role.
+- Giving the mapping role to a photo listed before the draft source still hides the drafts and frees the old source for removal, on both pages: #75.
