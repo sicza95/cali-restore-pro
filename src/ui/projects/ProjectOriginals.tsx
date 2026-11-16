@@ -1,6 +1,7 @@
 import { checkpointSources } from '../../platform/projects/assessment-checkpoints';
+import { draftBlocks } from '../../platform/projects/surface-attachments';
 import type { PendingAttachment } from '../../platform/vault/project-store';
-import { createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import { createMemo, createResource, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { ImageImportError } from '../../platform/images/types';
 import type { ImportIssue } from '../../platform/images/types';
 import type { Attachment, ImageRole, Surface } from '../../platform/projects/types';
@@ -16,7 +17,8 @@ export function ProjectOriginals(props: {
   language: Language;
   vault: LocalVault;
   busy: boolean;
-  pendingSource?: string;
+  /** The photos whose journal holds drawing drafts (#72, #75). */
+  drafts?: ReadonlySet<string>;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
   onSave: (images: Attachment[], attachment?: PendingAttachment) => Promise<void>;
 }) {
@@ -25,6 +27,7 @@ export function ProjectOriginals(props: {
   const [progress, setProgress] = createSignal(0);
   const [issue, setIssue] = createSignal<ImportIssue>();
   onCleanup(() => transfer()?.abort());
+  const blocks = createMemo(() => draftBlocks(props.surface.images, props.drafts ?? new Set()));
 
   return (
     <section class="project-pane project-originals">
@@ -100,7 +103,7 @@ export function ProjectOriginals(props: {
         <For each={props.surface.images} fallback={<li>{props.copy.noFiles}</li>}>
           {(image) => {
             const ref = { project: props.project, id: image.id };
-            const draftSource = () => props.pendingSource === image.id;
+            const block = () => blocks().get(image.id);
             const checkpointPhoto = () =>
               props.surface.checkpoints?.some(({ assessment }) =>
                 checkpointSources(assessment).some(({ id }) => id === image.id),
@@ -124,8 +127,8 @@ export function ProjectOriginals(props: {
                   <RoleField
                     copy={props.copy}
                     value={image.role}
-                    disabled={props.busy || draftSource()}
-                    reason={draftSource() ? props.copy.draftPhoto : undefined}
+                    disabled={props.busy || !!block()?.role}
+                    reason={block()?.role ? props.copy.draftPhoto : undefined}
                     change={(role) =>
                       void props.onRun(() =>
                         props.onSave(
@@ -137,10 +140,12 @@ export function ProjectOriginals(props: {
                 </label>
                 <button
                   data-control-id="originals.remove"
-                  disabled={props.busy || checkpointPhoto() || draftSource()}
+                  disabled={props.busy || checkpointPhoto() || !!block()?.remove}
                   title={
-                    draftSource()
-                      ? props.copy.draftPhoto
+                    block()?.remove
+                      ? props.copy[
+                          block()!.remove === 'pending' ? 'draftPhoto' : 'hiddenDraftPhoto'
+                        ]
                       : checkpointPhoto()
                         ? props.copy.checkpointPhoto
                         : undefined

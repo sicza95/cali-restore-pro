@@ -48,6 +48,8 @@ export const projectCopy = defineCopy({
     attach: 'Attach original',
     remove: 'Remove attachment',
     draftPhoto: 'Resolve the drawing drafts before changing this original.',
+    hiddenDraftPhoto:
+      'This original has drawing drafts. To resolve them, make it the first original with the Mapping role.',
     checkpointPhoto: 'A saved checkpoint uses this original.',
     noFiles: 'No originals on this surface.',
     unavailable: 'Original unavailable',
@@ -109,6 +111,8 @@ export const projectCopy = defineCopy({
     attach: 'Eredeti csatolása',
     remove: 'Csatolmány eltávolítása',
     draftPhoto: 'Az eredeti kép módosítása előtt rendezze a rajzvázlatokat.',
+    hiddenDraftPhoto:
+      'Ehhez az eredeti képhez rajzvázlatok tartoznak. A rendezésükhöz tegye az első „Térképezés” szerepű eredeti képpé.',
     checkpointPhoto: 'Egy mentett ellenőrzőpont használja az eredeti képet.',
     noFiles: 'Nincs eredeti ezen a felületen.',
     unavailable: 'Az eredeti nem érhető el',

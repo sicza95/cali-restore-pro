@@ -12,6 +12,7 @@ import type { PlanarSurface } from '../../platform/projects/planar-types';
 import { SurfaceMeasurements } from './SurfaceMeasurements';
 import type { Language } from '../account-access/types';
 import { createSurfaceJournal } from './createSurfaceJournal';
+import { createDraftPhotos } from './createDraftPhotos';
 import { hasDrafts, photoHistory, recordHistory } from '../../platform/projects/surface-journal';
 import { SurfaceCheckpoints } from './SurfaceCheckpoints';
 import { checkpointCopy } from '../editor/checkpoint-review/copy';
@@ -106,6 +107,14 @@ export function SurfaceWorkspace(props: {
     projectRevision: () => props.project.revision,
     run: (task) => props.onRun(task),
     saveAssessment: (state, write) => saveSurface(withAssessment(state), undefined, write),
+  });
+  // The reference's drafts come from its open journal; the other photos' from storage (#75).
+  const drafts = createDraftPhotos({
+    vault: () => props.vault,
+    project: () => props.project,
+    surface: () => props.surface,
+    open: () => reference()?.id,
+    openDrafts: () => !!recovery.journal() && hasDrafts(recovery.journal()!),
   });
   // Project commands execute from user events under the shared save guard.
   const savePhoto = (state: PlanarSurface, previous: PlanarSurface) => {
@@ -369,10 +378,8 @@ export function SurfaceWorkspace(props: {
         surface={props.surface}
         copy={c()}
         vault={props.vault}
-        busy={props.busy}
-        pendingSource={
-          recovery.journal() && hasDrafts(recovery.journal()!) ? reference()?.id : undefined
-        }
+        busy={props.busy || drafts.loading()}
+        drafts={drafts.drafts()}
         onRun={props.onRun}
         onSave={saveImages}
       />

@@ -1,7 +1,7 @@
 import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
-import { createResource, createSignal, For, Show } from 'solid-js';
+import { createSignal, For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
-import { changeSurfaceImages, draftSource } from '../../platform/projects/surface-attachments';
+import { changeSurfaceImages } from '../../platform/projects/surface-attachments';
 import { newObject, newSurface, projectName } from '../../platform/projects/projects';
 import type {
   Attachment,
@@ -14,6 +14,7 @@ import type { LocalVault } from '../../platform/vault/vault';
 import type { Language } from '../account-access/types';
 import { NameForm, UnitsField } from './forms';
 import { ProjectOriginals } from './ProjectOriginals';
+import { createDraftPhotos } from './createDraftPhotos';
 import { projectCopy } from './project-copy';
 import { followLink, projectHref } from '../router/routes';
 
@@ -85,17 +86,11 @@ export function ProjectDetail(props: {
   };
   // Read again after every save and when the selection changes; this page mounts again on the
   // way back from the surface page, where drafts are made and resolved (#72).
-  const [pendingSource] = createResource(
-    () => ({ id: props.project.id, revision: props.project.revision, surface: surface() }),
-    ({ id, surface }) => {
-      const documents = props.vault.projects();
-      const scope = { project: id, surface: surface.id };
-      // An unreadable journal blocks nothing, as on the surface page.
-      return draftSource((ref) => documents.readJournal(ref), scope, surface).catch(
-        () => undefined,
-      );
-    },
-  );
+  const drafts = createDraftPhotos({
+    vault: () => props.vault,
+    project: () => props.project,
+    surface,
+  });
   return (
     <>
       <div class="project-heading">
@@ -296,8 +291,8 @@ export function ProjectDetail(props: {
               surface={object().surfaces.find((s) => s.id === id)!}
               copy={c()}
               vault={props.vault}
-              busy={props.busy || pendingSource.loading}
-              pendingSource={pendingSource.latest}
+              busy={props.busy || drafts.loading()}
+              drafts={drafts.drafts()}
               onRun={props.onRun}
               onSave={saveImages}
             />

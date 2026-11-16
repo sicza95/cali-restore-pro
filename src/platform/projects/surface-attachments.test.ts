@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { newPlanarSurface } from './planar-state';
-import { changeSurfaceImages, draftSource, updateSurfaceImages } from './surface-attachments';
+import {
+  changeSurfaceImages,
+  draftBlocks,
+  draftPhotos,
+  updateSurfaceImages,
+} from './surface-attachments';
 import { emptyJournal, journalHead } from './surface-journal';
 import type { StoredDraft } from './surface-journal';
 import type { JournalRef } from '../vault/project-store';
@@ -115,42 +120,99 @@ describe('changeSurfaceImages', () => {
   });
 });
 
-describe('draftSource (#72)', () => {
+describe('draftPhotos (#72, #75)', () => {
   const scope = { project: 'project', surface: 'surface' };
   const text = (drafts: StoredDraft[]) => JSON.stringify({ ...emptyJournal(), drafts });
   const undone: StoredDraft[] = [{ layer: 1, pending: [], undone: [] }];
-  function journals(rows: Record<string, string>) {
+  function journals(rows: Record<string, string>, failing: string[] = []) {
     const reads: JournalRef[] = [];
     const read = (ref: JournalRef) => {
       reads.push(ref);
+      if (failing.includes(ref.source)) return Promise.reject(new Error('Unreadable'));
       return Promise.resolve(ref.source in rows ? { text: rows[ref.source]! } : undefined);
     };
     return { reads, read };
   }
 
-  it('is the first mapping photo while its journal holds drafts', async () => {
-    const { reads, read } = journals({ main: text(undone), detail: text(undone) });
-    expect(await draftSource(read, scope, surface())).toBe('main');
-    // Only the journal the surface page opens is read.
-    expect(reads).toEqual([{ ...scope, source: 'main' }]);
-  });
-
-  it('skips reference photos listed before the first mapping photo', async () => {
+  it('is every photo whose journal holds drafts, whatever its role', async () => {
     const images = [
       { id: 'reference', role: 'reference' as const },
-      { id: 'detail', role: 'mapping' as const },
       { id: 'main', role: 'mapping' as const },
+      { id: 'detail', role: 'mapping' as const },
+      { id: 'plain', role: 'mapping' as const },
     ];
-    const { read } = journals({ main: text(undone), detail: text(undone) });
-    expect(await draftSource(read, scope, { images })).toBe('detail');
+    const { reads, read } = journals({
+      reference: text(undone),
+      main: text(undone),
+      detail: text(undone),
+      plain: text([]),
+    });
+    expect(await draftPhotos(read, scope, images)).toEqual(
+      new Set(['reference', 'main', 'detail']),
+    );
+    // Every photo is read, the "Reference only" one too: it can hold drafts it hides.
+    expect(reads).toEqual(images.map(({ id }) => ({ ...scope, source: id })));
   });
 
-  it('is nothing without drafts, without a journal or without a mapping photo', async () => {
-    expect(await draftSource(journals({ main: text([]) }).read, scope, surface())).toBeUndefined();
-    expect(await draftSource(journals({}).read, scope, surface())).toBeUndefined();
-    const { reads, read } = journals({ reference: text(undone) });
-    const images = [{ id: 'reference', role: 'reference' as const }];
-    expect(await draftSource(read, scope, { images })).toBeUndefined();
+  it('is nothing without drafts or without a journal, and reads nothing without photos', async () => {
+    const images = surface().images;
+    expect(await draftPhotos(journals({ main: text([]) }).read, scope, images)).toEqual(new Set());
+    expect(await draftPhotos(journals({}).read, scope, images)).toEqual(new Set());
+    const { reads, read } = journals({ main: text(undone) });
+    expect(await draftPhotos(read, scope, [])).toEqual(new Set());
     expect(reads).toEqual([]);
+  });
+
+  it('counts an unreadable or invalid journal as none, and still reads the others', async () => {
+    const images = surface().images;
+    const { read } = journals({ main: text(undone), detail: '{"version":2}' }, ['main']);
+    expect(await draftPhotos(read, scope, images)).toEqual(new Set());
+    const other = journals({ main: '{"version":2}', detail: text(undone) });
+    expect(await draftPhotos(other.read, scope, images)).toEqual(new Set(['detail']));
+  });
+});
+
+describe('draftBlocks (#72, #75)', () => {
+  const images = [
+    { id: 'early', role: 'reference' as const },
+    { id: 'earlier', role: 'reference' as const },
+    { id: 'main', role: 'mapping' as const },
+    { id: 'detail', role: 'mapping' as const },
+    { id: 'late', role: 'reference' as const },
+  ];
+  const blocks = (drafts: string[], list = images) =>
+    Object.fromEntries(draftBlocks(list, new Set(drafts)));
+
+  it('blocks the reference and the role of every photo before it while it has drafts', () => {
+    expect(blocks(['main'])).toEqual({
+      early: { role: true },
+      earlier: { role: true },
+      main: { remove: 'pending', role: true },
+    });
+  });
+
+  it('blocks only removing a photo whose drafts are hidden, wherever it is listed', () => {
+    expect(blocks(['detail'])).toEqual({ detail: { remove: 'hidden' } });
+    expect(blocks(['late', 'early'])).toEqual({
+      early: { remove: 'hidden' },
+      late: { remove: 'hidden' },
+    });
+    // Before a reference with drafts: its role waits for those drafts, its removal for its own.
+    expect(blocks(['main', 'early', 'detail'])).toEqual({
+      early: { remove: 'hidden', role: true },
+      earlier: { role: true },
+      main: { remove: 'pending', role: true },
+      detail: { remove: 'hidden' },
+    });
+  });
+
+  it('blocks nothing without drafts, and nothing pending without a mapping photo', () => {
+    expect(blocks([])).toEqual({});
+    const unmapped = images.map((image) => ({ ...image, role: 'reference' as const }));
+    expect(blocks(['main'], unmapped)).toEqual({ main: { remove: 'hidden' } });
+    // The first mapping photo is the reference, not the first photo.
+    expect(blocks(['early'], [{ id: 'early', role: 'mapping' }, ...images.slice(1)])).toEqual({
+      early: { remove: 'pending', role: true },
+    });
   });
 });
