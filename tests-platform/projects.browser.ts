@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { verifyAttachKeepsDrafts, verifyRecoveryConflict } from './recovery-conflict';
+import * as recovery from './recovery-conflict';
 import { projectControls } from '../src/ui/projects/project-controls';
 
 import { surfaceControls } from '../src/ui/projects/surface-review-controls';
@@ -262,7 +262,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await review('view.photo').selectOption({ label: '3 · plaster-detail.dng' });
   await expect(page.locator('.surface-canvas img')).toHaveJSProperty('naturalWidth', 48);
   await expect(review('review.prepare')).toHaveAttribute('aria-disabled', 'false');
-  await verifyAttachKeepsDrafts(page);
+  await recovery.verifyAttachKeepsDrafts(page);
   await expectTaskLanguage(page, 'project landscape');
   await page.screenshot({ path: info.outputPath('projects-landscape.png'), fullPage: true });
   await page.goBack();
@@ -323,7 +323,8 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
   await expect(page.getByText('The preparation changed. Check the calibration.')).toBeVisible();
   await expectTaskLanguage(page, 'surface reopened');
   await page.screenshot({ path: info.outputPath('surface-reopened.png') });
-  await verifyRecoveryConflict(page, info, surfacePath);
+  await recovery.verifyRemovalKeepsDrafts(page, surfacePath);
+  await recovery.verifyRecoveryConflict(page, info);
   await controls('surface.project').click();
   await page
     .getByRole('combobox', { name: 'Object', exact: true })
