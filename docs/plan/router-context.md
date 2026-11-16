@@ -9,7 +9,8 @@ Decision record: [ADR 0006](../adr/0006-router-and-app-context.md).
 - **Route parsing is split over three places.** `src/app/main.tsx` checks
   `location.pathname === '/offline-originals'`; `account-access/routes.ts` maps the path to a view
   name once at load (`accountRoute`), plus `signInLink` / `signInDestination` for `?next=`;
-  `projects/project-route.ts` holds the project regex and href builders.
+  `projects/project-route.ts` held the project regex and href builders (now in the router; the
+  file was removed in #41).
 - **History is handled in the project workspace.** `ProjectWorkspace` keeps its own route signal,
   calls `history.pushState` and listens to `popstate`. Every other destination is a full page load
   through a plain `<a href>`.
@@ -74,7 +75,8 @@ accepts one too. That is the only intended difference.
   shell decision for Phase 2 item 4.
 - `projects/project-route.ts` becomes a re-export from the router so the estimate review files
   (`ProjectReview.tsx`, `WorkPhases.tsx`), which another session is restructuring, do not change.
-  It goes once that work lands.
+  It went once that work landed: both files import from `src/ui/router/routes` and the shim was
+  deleted (#41).
 
 ## Steps (one signed commit each)
 
