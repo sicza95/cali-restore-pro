@@ -7,7 +7,7 @@ import type {
   Attachment,
 } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
-import { updateSurfaceImages } from '../../platform/projects/surface-attachments';
+import { changeSurfaceImages } from '../../platform/projects/surface-attachments';
 import type { PlanarSurface } from '../../platform/projects/planar-types';
 import { SurfaceMeasurements } from './SurfaceMeasurements';
 import type { Language } from '../account-access/types';
@@ -38,7 +38,7 @@ export function SurfaceWorkspace(props: {
   onSave: (
     project: SavedProject,
     attachment?: PendingAttachment,
-    journal?: JournalWrite,
+    journal?: JournalWrite | JournalWrite[],
   ) => Promise<void>;
   onNavigate: (href: string) => void;
 }) {
@@ -73,7 +73,7 @@ export function SurfaceWorkspace(props: {
   const saveSurface = (
     changes: Partial<Surface>,
     attachment?: PendingAttachment,
-    journal?: JournalWrite,
+    journal?: JournalWrite | JournalWrite[],
   ) =>
     props.onSave(
       {
@@ -130,8 +130,23 @@ export function SurfaceWorkspace(props: {
       // eslint-disable-next-line solid/reactivity -- recovery.save calls this once the journal is written, during the user's command.
       (next, write) => saveSurface({ ...withAssessment(next), checkpoints }, undefined, write),
     );
-  const saveImages = (images: Attachment[], attachment?: PendingAttachment) =>
-    saveSurface(updateSurfaceImages(props.surface, images), attachment);
+  // Under the caller's save guard; the open journal is replaced by the carried one (#67).
+  const saveImages = async (images: Attachment[], attachment?: PendingAttachment) => {
+    const documents = props.vault.projects();
+    const { changes, journals } = await changeSurfaceImages(
+      (ref) => documents.readJournal(ref),
+      { project: props.project.id, surface: props.surface.id },
+      props.surface,
+      images,
+    );
+    await saveSurface(
+      changes,
+      attachment,
+      journals.map(({ write }) => write),
+    );
+    for (const { write, journal } of journals)
+      recovery.carried(write.ref.source, write.expected + 1, journal);
+  };
   // Photo setup and drawing: one compact picker row, so the canvas starts near the top.
   const compact = () => mode() !== 'checkpoint';
   return (

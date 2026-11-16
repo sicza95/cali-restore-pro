@@ -71,5 +71,10 @@ export function createSurfaceJournal(options: {
     if (!current?.conflict) return;
     return save({ ...emptyJournal(), manual: current.manual });
   };
-  return { journal, save, discardConflict, failed, refetch };
+  /** A journal written with a project save made outside it (a photo removal, #67). */
+  const carried = (source: string, revision: number, next: SurfaceJournal) => {
+    if (value()?.source === source)
+      mutate({ source, assessment: options.assessment(), revision, journal: next });
+  };
+  return { journal, save, carried, discardConflict, failed, refetch };
 }

@@ -1,9 +1,10 @@
-import type { PendingAttachment } from '../../platform/vault/project-store';
+import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
 import { createSignal, For, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
-import { updateSurfaceImages } from '../../platform/projects/surface-attachments';
+import { changeSurfaceImages } from '../../platform/projects/surface-attachments';
 import { newObject, newSurface, projectName } from '../../platform/projects/projects';
 import type {
+  Attachment,
   RestorationObject,
   SavedProject,
   Surface,
@@ -22,7 +23,11 @@ export function ProjectDetail(props: {
   vault: LocalVault;
   busy: boolean;
   onRun: (task: () => Promise<void>) => Promise<boolean>;
-  onSave: (project: SavedProject, attachment?: PendingAttachment) => Promise<void>;
+  onSave: (
+    project: SavedProject,
+    attachment?: PendingAttachment,
+    journal?: JournalWrite[],
+  ) => Promise<void>;
   sharing: JSX.Element;
   onNavigate: (href: string) => void;
 }) {
@@ -34,22 +39,50 @@ export function ProjectDetail(props: {
   const surface = () =>
     object().surfaces.find((s) => s.id === surfaceId()) ?? object().surfaces[0]!;
   const units = () => surface().units ?? object().units ?? props.project.settings.units;
-  const edit = (value: Partial<SavedProject>, attachment?: PendingAttachment) =>
-    props.onSave({ ...props.project, ...value }, attachment);
-  const editObject = (value: Partial<RestorationObject>, attachment?: PendingAttachment) =>
+  const edit = (
+    value: Partial<SavedProject>,
+    attachment?: PendingAttachment,
+    journal?: JournalWrite[],
+  ) => props.onSave({ ...props.project, ...value }, attachment, journal);
+  const editObject = (
+    value: Partial<RestorationObject>,
+    attachment?: PendingAttachment,
+    journal?: JournalWrite[],
+  ) =>
     edit(
       {
         objects: props.project.objects.map((o) => (o.id === object().id ? { ...o, ...value } : o)),
       },
       attachment,
+      journal,
     );
-  const editSurface = (value: Partial<Surface>, attachment?: PendingAttachment) =>
+  const editSurface = (
+    value: Partial<Surface>,
+    attachment?: PendingAttachment,
+    journal?: JournalWrite[],
+  ) =>
     editObject(
       {
         surfaces: object().surfaces.map((s) => (s.id === surface().id ? { ...s, ...value } : s)),
       },
       attachment,
+      journal,
     );
+  // This page does not open the surface journals: the change carries them (#67).
+  const saveImages = async (images: Attachment[], attachment?: PendingAttachment) => {
+    const documents = props.vault.projects();
+    const { changes, journals } = await changeSurfaceImages(
+      (ref) => documents.readJournal(ref),
+      { project: props.project.id, surface: surface().id },
+      surface(),
+      images,
+    );
+    await editSurface(
+      changes,
+      attachment,
+      journals.map(({ write }) => write),
+    );
+  };
   return (
     <>
       <div class="project-heading">
@@ -252,9 +285,7 @@ export function ProjectDetail(props: {
               vault={props.vault}
               busy={props.busy}
               onRun={props.onRun}
-              onSave={(images, attachment) =>
-                editSurface(updateSurfaceImages(surface(), images), attachment)
-              }
+              onSave={saveImages}
             />
           )}
         </Show>
