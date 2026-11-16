@@ -3,7 +3,6 @@ import {
   createResource,
   createSignal,
   createUniqueId,
-  For,
   onCleanup,
   Show,
   untrack,
@@ -23,10 +22,12 @@ import { SurfaceViewControls } from './SurfaceViewControls';
 import { usePhotoGestures } from './usePhotoGestures';
 import { SurfacePhoto } from './SurfacePhoto';
 import { SurfaceReviewGuides } from './SurfaceReviewGuides';
-import { tools } from './surface-review-controls';
 import type { ReviewTool } from './surface-review-controls';
 import { defaults, surfacePhotoStyle, validateDraft } from './surface-review-model';
 import { SurfaceDraftFields } from './SurfaceDraftFields';
+import { SurfacePrepareFields } from './SurfacePrepareFields';
+import { SurfaceReviewActions } from './SurfaceReviewActions';
+import { SurfaceReviewRail } from './SurfaceReviewRail';
 const id = (key: string) => 'surface.review.' + key;
 
 export function SurfaceReviewAdapter(props: {
@@ -115,6 +116,15 @@ export function SurfaceReviewAdapter(props: {
     setOriginal(false);
     setCompare(false);
   }
+  async function apply() {
+    const next = candidate();
+    const reference = referenceSource();
+    const previous = props.state ?? (reference && newPlanarSurface(reference));
+    if (next && previous && (await props.onSave(next, previous))) {
+      setNotice('applied');
+      close();
+    }
+  }
   const candidate = createMemo(() => {
     const key = tool();
     const source = size();
@@ -152,27 +162,13 @@ export function SurfaceReviewAdapter(props: {
       : undefined;
   return (
     <div class="surface-review" classList={{ 'surface-focus': focus() }}>
-      <div class="surface-rail" role="group" aria-label={props.copy.tools}>
-        <For each={tools}>
-          {(key) => (
-            <button
-              type="button"
-              data-control-id={id(key)}
-              ref={(element) => {
-                toolButtons[key] = element;
-              }}
-              aria-pressed={tool() === key}
-              aria-disabled={!!unavailable(key)}
-              aria-describedby={unavailable(key) ? id(key) + '-reason' : undefined}
-              onClick={() => {
-                if (!unavailable(key)) select(key);
-              }}
-            >
-              {props.copy[key]}
-            </button>
-          )}
-        </For>
-      </div>
+      <SurfaceReviewRail
+        copy={props.copy}
+        tool={tool()}
+        unavailable={unavailable}
+        select={select}
+        buttons={toolButtons}
+      />
       <section class="surface-stage" aria-label={props.copy.photo}>
         <div
           ref={gestures.ref}
@@ -278,37 +274,7 @@ export function SurfaceReviewAdapter(props: {
             <>
               <h2>{props.copy[key]}</h2>
               <Show when={key === 'prepare'}>
-                <label>
-                  {props.copy.aspect}
-                  <select
-                    data-control-id={id('aspect')}
-                    value={draft().aspect}
-                    onChange={(e) => setDraft({ ...draft(), aspect: e.currentTarget.value })}
-                  >
-                    <option value="free">{props.copy.free}</option>
-                    <option value="square">{props.copy.square}</option>
-                  </select>
-                </label>
-                <label>
-                  <input
-                    data-control-id={id('flip')}
-                    type="checkbox"
-                    checked={draft().flip}
-                    onChange={(e) => setDraft({ ...draft(), flip: e.currentTarget.checked })}
-                  />
-                  {props.copy.flip}
-                </label>
-                <label>
-                  <input
-                    data-control-id={id('rectify')}
-                    type="checkbox"
-                    checked={draft().rectify}
-                    aria-describedby="surface-rectify-help"
-                    onChange={(e) => setDraft({ ...draft(), rectify: e.currentTarget.checked })}
-                  />
-                  {props.copy.rectify}
-                </label>
-                <p id="surface-rectify-help">{props.copy.rectifyHelp}</p>
+                <SurfacePrepareFields copy={props.copy} draft={draft()} setDraft={setDraft} />
               </Show>
               <Show when={key === 'align'}>
                 <SurfaceAlignmentFields
@@ -348,38 +314,16 @@ export function SurfaceReviewAdapter(props: {
               <Show when={!valid()}>
                 <p id="surface-review-invalid">{props.copy.invalidFields}</p>
               </Show>
-              <div class="surface-actions">
-                <button
-                  class="primary"
-                  type="button"
-                  data-control-id={id('apply')}
-                  disabled={!valid() || props.busy || matcher.status() === 'matching'}
-                  onClick={async () => {
-                    const next = candidate();
-                    const reference = referenceSource();
-                    const previous = props.state ?? (reference && newPlanarSurface(reference));
-                    if (next && previous && (await props.onSave(next, previous))) {
-                      setNotice('applied');
-                      close();
-                    }
-                  }}
-                >
-                  {props.copy.apply}
-                </button>
-                <button type="button" data-control-id={id('cancel')} onClick={close}>
-                  {props.copy.cancel}
-                </button>
-                <button
-                  type="button"
-                  data-control-id={id('reset')}
-                  onClick={() => {
-                    setAutomatic(false);
-                    setDraft(defaults(props.unit));
-                  }}
-                >
-                  {props.copy.reset}
-                </button>
-              </div>
+              <SurfaceReviewActions
+                copy={props.copy}
+                applyDisabled={!valid() || props.busy || matcher.status() === 'matching'}
+                onApply={apply}
+                onCancel={close}
+                onReset={() => {
+                  setAutomatic(false);
+                  setDraft(defaults(props.unit));
+                }}
+              />
             </>
           )}
         </Show>

@@ -1,90 +1,20 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
-import { drawingControls } from '../src/ui/editor/drawing-review/registry';
-import { expectTaskLanguage } from './copy-guard';
-import { canvasShare } from './photo-gestures';
+import {
+  drawingControl,
+  expectDrawingParity,
+  openDetails,
+  recordDrawingControls,
+  selectedLayer,
+} from './drawing-controls';
+import { verifyDrawingLayout } from './drawing-layout';
 
-export function drawingControl(page: Page, key: string) {
-  const id = 'surface.draw.' + key;
-  expect(drawingControls.filter((item) => item.id === id)).toHaveLength(1);
-  return page.locator(`[data-control-id="${id}"]`);
-}
-
-/**
- * Opens "Enter by number" when it is closed. It holds the coordinate fields, point editing and
- * save mode, which Playwright cannot fill or select while the disclosure is closed.
- */
-export async function openDetails(page: Page) {
-  const details = page.locator('.drawing-workspace details.drawing-details');
-  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open)))
-    await details.locator('> summary').click();
-  await expect(details).toHaveAttribute('open', '');
-}
-
-/** Closes "Enter by number" when it is open, so the pointer path is the only one on screen. */
-export async function closeDetails(page: Page) {
-  const details = page.locator('.drawing-workspace details.drawing-details');
-  if (await details.evaluate((element) => (element as HTMLDetailsElement).open))
-    await details.locator('> summary').click();
-  await expect(details).not.toHaveAttribute('open', '');
-}
-
-/**
- * Records every `surface.draw.*` control id that the page renders from now on, including ones
- * that appear only briefly (a dialog, a tool's settings). The returned function reads the set.
- */
-async function recordDrawingControls(page: Page) {
-  await page.evaluate(() => {
-    const seen = new Set<string>();
-    const scan = (root: Element) => {
-      for (const element of [root, ...root.querySelectorAll('[data-control-id]')]) {
-        const id = element.getAttribute('data-control-id');
-        if (id?.startsWith('surface.draw.')) seen.add(id);
-      }
-    };
-    scan(document.body);
-    new MutationObserver((records) => {
-      for (const record of records) {
-        if (record.type === 'attributes') scan(record.target as Element);
-        for (const node of record.addedNodes) if (node instanceof Element) scan(node);
-      }
-    }).observe(document.body, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ['data-control-id'],
-    });
-    (window as unknown as { drawingControlsSeen: Set<string> }).drawingControlsSeen = seen;
-  });
-  return () =>
-    page.evaluate(() => [
-      ...(window as unknown as { drawingControlsSeen: Set<string> }).drawingControlsSeen,
-    ]);
-}
-
-/**
- * Parity: the workspace renders every registered drawing control at some point of the flow, and
- * nothing it renders is missing from the registry.
- */
-function expectDrawingParity(seen: readonly string[]) {
-  const registered = new Set(drawingControls.map(({ id }) => id));
-  const rendered = new Set(seen);
-  expect(
-    [...registered].filter((id) => !rendered.has(id)).sort(),
-    'registered, never rendered',
-  ).toEqual([]);
-  expect(
-    [...rendered].filter((id) => !registered.has(id)).sort(),
-    'rendered, not registered',
-  ).toEqual([]);
-}
+export { closeDetails, drawingControl, openDetails } from './drawing-controls';
 
 export async function verifyDrawingReview(page: Page, info: TestInfo) {
   const seen = await recordDrawingControls(page);
   const c = (key: string) => drawingControl(page, key);
   const layer = (name: string) => c('layer.select').filter({ hasText: name });
-  const selected = () =>
-    page.locator('[data-control-id="surface.draw.layer.select"][aria-pressed="true"]');
+  const selected = () => selectedLayer(page);
   const choose = (tool: string) => c('tool.' + tool).click();
   const point = async (x: number, y: number) => {
     await c('place.x').fill(String(x));
@@ -246,105 +176,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('shape.kind').selectOption('rectangle');
   await point(53, 15);
   await point(83, 40);
-  for (const viewport of [
-    { width: 1194, height: 834 },
-    { width: 834, height: 1194 },
-  ]) {
-    await page.setViewportSize(viewport);
-    await closeDetails(page);
-    await page.evaluate(() => window.scrollTo(0, 0));
-    // The canvas gets half the first screen or more (#39): it was 44.5 % at 1194 and 56.9 % at 834.
-    expect(await canvasShare(page, '.drawing-workspace .cr-canvas-region')).toBeGreaterThanOrEqual(
-      viewport.width === 834 ? 60 : 50,
-    );
-    const rail = (await page.locator('.drawing-workspace .cr-tool-rail').boundingBox())!;
-    const canvas = (await page.locator('.drawing-workspace .cr-canvas-region').boundingBox())!;
-    const inspector = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
-    // The rail floats on the left edge of the canvas.
-    expect(rail.x).toBeGreaterThanOrEqual(canvas.x);
-    expect(rail.x + rail.width).toBeLessThan(canvas.x + canvas.width / 2);
-    if (viewport.width === 1194) expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
-    else expect(inspector.y).toBeGreaterThan(canvas.y + canvas.height);
-    // At fit the photo fills the canvas on one axis and stays inside it on the other.
-    const view = await c('view.canvas').evaluate((element) => ({
-      width: element.clientWidth,
-      height: element.clientHeight,
-    }));
-    const fitted = (await page.locator('.drawing-workspace .drawing-photo').boundingBox())!;
-    expect(fitted.width).toBeLessThanOrEqual(view.width + 1);
-    expect(fitted.height).toBeLessThanOrEqual(view.height + 1);
-    expect(
-      Math.min(Math.abs(fitted.width - view.width), Math.abs(fitted.height - view.height)),
-    ).toBeLessThanOrEqual(1);
-    const touchTargets = async (controls: string[]) => {
-      for (const control of controls) {
-        const target = (await c(control).boundingBox())!;
-        expect(target.height, control).toBeGreaterThanOrEqual(44);
-        expect(target.width, control).toBeGreaterThanOrEqual(44);
-      }
-    };
-    // Apply and Cancel sit in the canvas chip and undo in the shell header, outside "Details".
-    await touchTargets(['tool.shape', 'path.apply', 'path.cancel', 'history.undo', 'layer.add']);
-    await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
-    // Drawing mode compacts the pickers into one row; the surface select still shows this surface.
-    await expect(
-      page.locator('[data-control-id="surface.view.surface"] option:checked'),
-    ).toHaveText((await page.locator('.app-page-title').textContent())!);
-    // One title per surface page (#39): the editor header holds status and actions, no identity.
-    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-    await expect(page.locator('.drawing-workspace .cr-editor-header')).not.toContainText(
-      'CaliRestore',
-    );
-    expect(
-      (await page.locator('.drawing-workspace .cr-editor-header').boundingBox())!.height,
-    ).toBeLessThanOrEqual(56);
-    // Both iPad orientations must pass axe with "Details" closed and open.
-    for (const state of ['closed', 'open'] as const) {
-      if (state === 'open') {
-        await openDetails(page);
-        await touchTargets(['point.x']);
-        await page.evaluate(() => window.scrollTo(0, 0));
-      }
-      await expectTaskLanguage(page, `drawing ${viewport.width} ${state}`);
-      await page.screenshot({
-        path: info.outputPath(`drawing-${viewport.width}-${state}.png`),
-        fullPage: true,
-      });
-      expect(
-        (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
-      ).toEqual([]);
-    }
-    if (viewport.width < 1194) {
-      // Portrait: the grip switches the inspector to its tall height and back.
-      await closeDetails(page);
-      await touchTargets(['view.inspector']);
-      // Closing "Enter by number" and switching height bring the selected layer row into view.
-      const rowInView = () =>
-        selected().evaluate((row) => {
-          const body = row.closest('.cr-inspector-body')!.getBoundingClientRect();
-          const item = row.getBoundingClientRect();
-          return item.top >= body.top - 1 && item.bottom <= body.bottom + 1;
-        });
-      await expect.poll(rowInView).toBe(true);
-      const short = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
-      await c('view.inspector').click();
-      await expect(c('view.inspector')).toHaveAttribute('aria-expanded', 'true');
-      const tall = (await page.locator('.drawing-workspace .cr-inspector').boundingBox())!;
-      expect(tall.height).toBeGreaterThan(short.height);
-      await expect.poll(rowInView).toBe(true);
-      await page
-        .locator('.drawing-workspace .cr-editor')
-        .screenshot({ path: info.outputPath(`drawing-${viewport.width}-tall.png`) });
-      expect(
-        (await new AxeBuilder({ page }).include('.drawing-workspace').analyze()).violations,
-      ).toEqual([]);
-      await c('view.inspector').click();
-      await expect(c('view.inspector')).toHaveAttribute('aria-expanded', 'false');
-      await expect.poll(rowInView).toBe(true);
-      // The steps after this loop expect "Details" open, as the last state left it.
-      await openDetails(page);
-    }
-  }
+  await verifyDrawingLayout(page, info);
   await c('path.cancel').click();
   await page.setViewportSize({ width: 1194, height: 834 });
   await c('tool.shape').focus();
