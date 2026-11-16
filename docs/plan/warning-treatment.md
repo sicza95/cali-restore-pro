@@ -1,6 +1,6 @@
 # Warning treatment
 
-16 November 2026 · Status: planned · Issue: #38 · Source: [quality baseline re-check](../reviews/2026-11-14-quality-baseline.md#re-check-on-current-main), new finding 3
+16 November 2026 · Status: done · Issue: #38 · Source: [quality baseline re-check](../reviews/2026-11-14-quality-baseline.md#re-check-on-current-main), new finding 3
 
 Goal: when a surface's unsaved drawing no longer matches its assessment, the page says so as a warning the user sees on the first screen, with the discard action beside it. iPad and desktop only ([ADR 0003](../adr/0003-ipad-and-desktop-only.md)).
 
@@ -24,3 +24,10 @@ Existing patterns: the `--cr-warning` token exists in both themes (the connectio
 
 - A new helper, `tests-platform/recovery-warning.ts`, called from `projects.browser.ts` where the flow already shows the message (after the reference photo is attached while drafts are pending). It checks the status role, the warning rule colour against the token, that the notice is above the canvas and on the first screen, that the button is in the same row, 44 px, focused by Tab with a visible outline, and runs axe on the notice in light and dark at 1194 × 834 and 834 × 1194, in EN and HU, saving `recovery-<lang>-<theme>-<width>.png`. The page-wide axe check that `projects.browser.ts` ran at that point moves into the helper unchanged (the file is at the 400-line limit).
 - `npm run check`, `test:unit`, `npm test`, `test:files`, `build-storybook`.
+
+## Outcome
+
+- As planned: `SurfaceRecoveryNotice` renders `.account-message` with the new `data-warning` rule (`--cr-warning`), the `alert` icon, the lead "Editing paused." / "A szerkesztés szünetel." and "Discard draft" in the same row, under the mode tabs. At 1194 × 834 and 834 × 1194 it is on the first screen above the photo picker; the Hungarian text wraps to two lines at 834 with the button still beside it. The reopen failure uses the same box with the error rule and keeps `role="alert"`.
+- The conflict message is `role="status"`; the button is described by it.
+- `tests-platform/recovery-warning.ts` runs where `projects.browser.ts` already reaches the conflict. On `main` it fails at its first check (no `.surface-recovery`); with the change it passes. The page-wide axe check that ran at that point is now the helper's first step.
+- The flow reaches the conflict through a false positive: attaching a photo rebuilds the assessment objects, and the in-session journal compares them by identity. Recorded as #63; fixing it needs another way to reach a real conflict in this test.
