@@ -1,6 +1,6 @@
 # Surface header
 
-16 November 2026 · Status: in progress · Issue: #39 · Source: [quality baseline re-score](../reviews/2026-11-14-quality-baseline.md#re-score-after-phases-1-to-4), UX finding 5
+16 November 2026 · Status: done · Issue: #39 · Source: [quality baseline re-score](../reviews/2026-11-14-quality-baseline.md#re-score-after-phases-1-to-4), UX finding 5
 
 Goal: one title per surface page. The shell's breadcrumbs and title carry the surface's identity; the drawing editor's own header stops repeating them; the object name moves into the trail. The space this frees goes to the photo canvas. iPad and desktop only ([ADR 0003](../adr/0003-ipad-and-desktop-only.md)).
 
@@ -25,6 +25,18 @@ No new copy: the object name is data, and the trail's label already exists in EN
 
 ## Verification
 
-- `projects.browser.ts`: the surface page has one `h1` in photo and drawing mode at both sizes; the trail names the object as plain text; the drawing editor header has no heading. The canvas share floors in `photo-review.ts` rise to the new values (they only get stricter).
+- `projects.browser.ts` and its drawing and photo helpers: the trail names the object as plain text; the page has one `h1`; the drawing editor header has no brand or heading. The canvas share floors in `photo-review.ts` rise to the new values (they only get stricter), and the drawing canvas gets a floor of its own.
 - `breadcrumbs.test.ts` unchanged (the route trail itself does not change).
 - `npm run check`, `test:unit`, `npm test`, `test:files`, `build-storybook`; screenshots at 1194 × 834 and 834 × 1194 in photo, drawing and checkpoint modes, light and dark, EN and HU.
+
+## Outcome
+
+| Viewport   | Photo canvas top (was) | Photo canvas height (was) | Photo share (was) | Drawing canvas top (was) | Drawing share (was) |
+| ---------- | ---------------------: | ------------------------: | ----------------: | -----------------------: | ------------------: |
+| 1194 × 834 |           354 (394) px |              474 (434) px |     56.8 (52.0) % |             411 (463) px |       50.7 (44.5) % |
+| 834 × 1194 |           406 (446) px |              834 (794) px |     66.0 (62.6) % |             463 (515) px |       61.2 (56.9) % |
+
+- As planned: the object is a plain-text step in the trail, the embedded editor header holds only the save status and the actions in a 56 px row, and the page has one `h1`.
+- The photo canvas height subtracts 360 px of chrome instead of 400. In portrait the shell's Menu header adds about 50 px, so the canvas ends about 45 px below the fold there, as it did before.
+- `projects.browser.ts` checks the four-step trail, that the object step is not a link, and one `h1` on opening the surface. `drawing-review.ts` checks one `h1`, no brand in the editor header, a header of at most 56 px and a drawing canvas share of at least 50 % at 1194 and 60 % at 834, at both sizes. `photo-review.ts` now asks for a photo canvas share of at least 56 % and 65 % (was 50 % and 60 %).
+- The vault bar and the save line stay: they are shared by every project page and say different things from the editor's save status.
