@@ -168,7 +168,7 @@ test('project hierarchy and encrypted originals reopen from the local vault', as
     'open',
     '',
   );
-  await verifyDrawingInput(page);
+  await verifyDrawingInput(page, info);
   await verifyCanvasZoom(page);
   await verifyPointerStroke(page);
   await verifyPointerPath(page);

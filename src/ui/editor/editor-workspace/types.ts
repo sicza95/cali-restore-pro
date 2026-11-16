@@ -46,6 +46,8 @@ export interface EditorWorkspaceProps<T extends string = Tool> {
   toolsLabel?: string;
   /** Why a tool cannot be selected now; a non-empty reason disables it. */
   toolReason?: (tool: T) => string | undefined;
+  /** A blocked tool was tapped; the host shows its reason, for example in `toolOptions` (#81). */
+  onBlockedTool?: (tool: T) => void;
   /** Each tool's `data-control-id`. */
   toolControlId?: (tool: T) => string;
   history: EditorHistory;
@@ -63,6 +65,7 @@ export interface EditorWorkspaceProps<T extends string = Tool> {
   onMaskOpacity?: (opacity: number) => void;
   zoom?: { value: string; label: string };
   onCalibrate?: () => void;
+  /** Without it a titled editor shows Export disabled, and an embedded one leaves it out (#81). */
   onExport?: () => void;
   canvas: JSX.Element;
   toolOptions?: JSX.Element;

@@ -28,9 +28,9 @@ export function ToolRail<T extends string = Tool>(props: ToolRailProps<T>) {
             aria-keyshortcuts={tool.shortcut}
             aria-disabled={reason(tool.id) ? true : undefined}
             aria-describedby={reason(tool.id) ? `${controlId(tool.id)}-reason` : undefined}
-            title={reason(tool.id) ?? `${tool.label} (${tool.shortcut})`}
+            title={`${tool.label} (${tool.shortcut})`}
             tabIndex={props.active === tool.id ? 0 : -1}
-            onClick={() => reason(tool.id) || props.onChange(tool.id)}
+            onClick={() => (reason(tool.id) ? props.onBlocked?.(tool.id) : props.onChange(tool.id))}
           >
             <Icon name={tool.icon} size={22} />
             {/* Inside the button, so the rail's children stay one button per tool. */}

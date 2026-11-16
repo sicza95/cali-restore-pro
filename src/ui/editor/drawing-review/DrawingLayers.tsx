@@ -1,4 +1,4 @@
-import { createSignal, For, Show, untrack } from 'solid-js';
+import { createSignal, createUniqueId, For, Show, untrack } from 'solid-js';
 import { control, masterId } from './constants';
 import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
@@ -54,6 +54,10 @@ export function DrawingLayers(props: {
   const layer = m.layer;
   const cannotDelete = () =>
     layer().id === masterId || m.layers().some((item) => item.parent === layer().id);
+  // Why Remove is disabled, shown under the actions and read as its description (#79, #81).
+  const removeReason = () =>
+    cannotDelete() ? c().removeHelp : m.draft() ? c().removeDraft : undefined;
+  const reasonId = createUniqueId();
   return (
     <section class="drawing-panel" aria-label={c().layers}>
       <div class="drawing-actions drawing-add">
@@ -199,13 +203,20 @@ export function DrawingLayers(props: {
                 <button
                   type="button"
                   data-control-id={control('layer.remove')}
-                  disabled={cannotDelete() || !!m.draft()}
-                  title={cannotDelete() ? c().removeHelp : m.draft() ? c().removeDraft : undefined}
+                  disabled={!!removeReason()}
+                  aria-describedby={removeReason() ? reasonId : undefined}
                   onClick={m.remove}
                 >
                   {c().remove}
                 </button>
               </div>
+              <Show when={removeReason()}>
+                {(reason) => (
+                  <p class="field-help drawing-reason" id={reasonId}>
+                    {reason()}
+                  </p>
+                )}
+              </Show>
             </div>
           )}
         </Show>

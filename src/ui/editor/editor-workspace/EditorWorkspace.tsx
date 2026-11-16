@@ -102,16 +102,19 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
             aria-pressed={props.focus}
             onClick={() => props.onFocus(!props.focus)}
           />
-          <Button
-            variant="ghost"
-            icon="export"
-            disabled={!props.onExport}
-            title={props.onExport ? undefined : copy().exportUnavailable}
-            class="cr-export-button"
-            onClick={() => props.onExport?.()}
-          >
-            {copy().export}
-          </Button>
+          {/* An embedded editor without output leaves Export out instead of showing it dead (#81). */}
+          <Show when={props.onExport || props.title}>
+            <Button
+              variant="ghost"
+              icon="export"
+              disabled={!props.onExport}
+              title={props.onExport ? undefined : copy().exportUnavailable}
+              class="cr-export-button"
+              onClick={() => props.onExport?.()}
+            >
+              {copy().export}
+            </Button>
+          </Show>
         </div>
       </header>
       <div
@@ -129,6 +132,7 @@ export function EditorWorkspace<T extends string = Tool>(props: EditorWorkspaceP
               active={props.tool}
               onChange={(tool) => props.onTool(tool)}
               disabledReason={props.toolReason}
+              onBlocked={props.onBlockedTool && ((tool) => props.onBlockedTool?.(tool))}
               controlId={props.toolControlId}
             />
           </Show>

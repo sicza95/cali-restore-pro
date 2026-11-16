@@ -166,3 +166,10 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
+
+/* A tapped blocked tool's reason replaces the options in the tool chip (#81). */
+.drawing-workspace .drawing-tool-reason {
+  min-width: 0;
+  color: var(--cr-ink);
+  font-size: 13px;
+}

@@ -1,8 +1,10 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Page, type TestInfo } from '@playwright/test';
 import { closeDetails, drawingControl, openDetails } from './drawing-review';
+import { expectRemoveDraftReason, verifyDrawingReasons } from './drawing-reasons';
 
-export async function verifyDrawingInput(page: Page) {
+export async function verifyDrawingInput(page: Page, info: TestInfo) {
   const c = (key: string) => drawingControl(page, key);
+  await verifyDrawingReasons(page, info);
   const selected = page.locator(
     '[data-control-id="surface.draw.layer.select"][aria-pressed="true"]',
   );
@@ -83,6 +85,7 @@ export async function verifyDrawingInput(page: Page) {
     await expect(selected).toContainText('Undone draft marks 1');
     await tap(3);
     await expect(selected).toContainText('Pending marks 1');
+    await expectRemoveDraftReason(page);
 
     await c('history.commit').click();
     await expect(selected).toContainText('1 · Mark');

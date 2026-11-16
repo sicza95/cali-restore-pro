@@ -31,7 +31,7 @@ const notes = (page: Page, name: string) => row(page, name).locator('.field-help
  * which can overflow its box. Both are measured at once, and again while the page settles (photos
  * and file names load above and inside the list).
  */
-async function expectUnclipped(inner: Locator, outer: Locator, step: string, text = false) {
+export async function expectUnclipped(inner: Locator, outer: Locator, step: string, text = false) {
   const container = await outer.elementHandle();
   const measure = () =>
     inner.evaluate(

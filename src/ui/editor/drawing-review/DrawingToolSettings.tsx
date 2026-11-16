@@ -189,18 +189,33 @@ function ShapeKind(props: OptionProps) {
  * The editor shell's tool chip: brush width or shape kind for the active tool, and the sketch's
  * point count, Apply and Cancel.
  */
-export function DrawingToolOptions(props: OptionProps & { reason: string }) {
+/**
+ * The active tool's options in the tool chip. With `tapped`, the chip says instead why the blocked
+ * tool just tapped cannot be used: on touch there is no hover to show its title (#81).
+ */
+export function DrawingToolOptions(
+  props: OptionProps & { reason: string; tapped?: { label: string; reason: string } },
+) {
   const t = untrack(() => props.tools);
   return (
-    <Show when={!props.reason}>
-      <Show when={t.brushing()}>
-        <BrushWidth tools={t} copy={props.copy} />
-      </Show>
-      <Show when={t.tool() === 'shape'}>
-        <ShapeKind tools={t} copy={props.copy} />
-      </Show>
-      <Show when={sketchActive(t, props.reason)}>
-        <DrawingSketchActions tools={t} copy={props.copy} count />
+    <Show
+      when={!props.tapped}
+      fallback={
+        <p class="drawing-reason drawing-tool-reason">
+          {props.tapped!.label}: {props.tapped!.reason}
+        </p>
+      }
+    >
+      <Show when={!props.reason}>
+        <Show when={t.brushing()}>
+          <BrushWidth tools={t} copy={props.copy} />
+        </Show>
+        <Show when={t.tool() === 'shape'}>
+          <ShapeKind tools={t} copy={props.copy} />
+        </Show>
+        <Show when={sketchActive(t, props.reason)}>
+          <DrawingSketchActions tools={t} copy={props.copy} count />
+        </Show>
       </Show>
     </Show>
   );

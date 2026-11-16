@@ -97,10 +97,18 @@ export function DrawingWorkspace(props: {
     if (tool === 'nodes' && !m.draft() && !m.layer().marks.length) return c().noPaths;
     return '';
   };
+  // The blocked tool last tapped: its reason shows in the tool chip until the next tap (#81).
+  const [tapped, setTapped] = createSignal<Tool>();
+  const tappedReason = () => {
+    const tool = tapped();
+    const reason = tool && tool !== t.tool() ? toolReason(tool) : '';
+    return reason ? { label: c()[tool!], reason } : undefined;
+  };
   function select(tool: Tool) {
     if (!toolReason(tool)) {
       t.activate(tool);
       setNotice(undefined);
+      setTapped(undefined);
     }
   }
   function toggleLayer(id: number) {
@@ -160,7 +168,14 @@ export function DrawingWorkspace(props: {
   const help = () => blocked() || (!m.layer().marks.length && !m.draft() ? c().noPaths : '');
 
   return (
-    <div class="drawing-workspace" hidden={!props.active} onKeyDown={shortcut}>
+    <div
+      class="drawing-workspace"
+      hidden={!props.active}
+      onKeyDown={shortcut}
+      onPointerDown={(event) =>
+        (event.target as Element).closest('.cr-tool-rail') || setTapped(undefined)
+      }
+    >
       <p class="drawing-transient">{c().draftLifetime}</p>
       <EditorWorkspace<Tool>
         as="section"
@@ -180,6 +195,7 @@ export function DrawingWorkspace(props: {
         tools={editorTools(c())}
         toolsLabel={c().rail}
         toolReason={toolReason}
+        onBlockedTool={setTapped}
         toolControlId={(tool) => control('tool.' + tool)}
         history={{
           // The inspector's pair sat in a fieldset disabled while saving; keep that.
@@ -220,7 +236,14 @@ export function DrawingWorkspace(props: {
             {props.children}
           </DrawingCanvas>
         }
-        toolOptions={<DrawingToolOptions tools={t} copy={c()} reason={toolReason(t.tool())} />}
+        toolOptions={
+          <DrawingToolOptions
+            tools={t}
+            copy={c()}
+            reason={toolReason(t.tool())}
+            tapped={tappedReason()}
+          />
+        }
         inspectorLead={
           <Show when={size() && props.state}>
             <fieldset disabled={m.busy()} class="drawing-layer-controls">

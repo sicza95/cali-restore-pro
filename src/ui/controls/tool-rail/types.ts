@@ -19,6 +19,8 @@ export type ToolRailProps<T extends string = Tool> = {
   label?: string;
   /** Why a tool cannot be selected now. A non-empty reason disables the tool and is read out. */
   disabledReason?: (tool: T) => string | undefined;
+  /** A blocked tool was tapped or clicked, so the host can show its reason visibly (#81). */
+  onBlocked?: (tool: T) => void;
   /** The tool's `data-control-id`. The reason text gets the same id with a `-reason` suffix. */
   controlId?: (tool: T) => string;
 };
