@@ -15,19 +15,14 @@ import {
 } from './file-format';
 import type { FileShape } from './file-format';
 import { localFiles } from './file-store';
+import { readBounded, transferRequest as request } from './file-transfer';
+import { imageFromOriginal } from './original-image';
+
+export { readBounded, TransferError } from './file-transfer';
 
 type Ref = { project: string; id: string };
 type Options = { signal?: AbortSignal; progress?: (completed: number, total: number) => void };
 type RemoteOptions = Options & { csrf: string };
-
-export class TransferError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-  ) {
-    super(code);
-  }
-}
 
 export function encryptedFiles(
   root: CryptoKey,
@@ -47,41 +42,6 @@ export function encryptedFiles(
     assertID(id);
     return projectPath(project) + '/files/' + id;
   };
-
-  async function request(
-    path: string,
-    signal: AbortSignal,
-    method = 'GET',
-    csrf?: string,
-    body?: string | ArrayBuffer,
-  ) {
-    signal.throwIfAborted();
-    const headers = new Headers();
-    if (csrf !== undefined) headers.set('X-CSRF-Token', csrf);
-    if (typeof body === 'string') headers.set('Content-Type', 'application/json');
-    if (body instanceof ArrayBuffer) {
-      headers.set('Content-Type', 'application/octet-stream');
-      headers.set(
-        'X-Ciphertext-SHA256',
-        Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', body)), (byte) =>
-          byte.toString(16).padStart(2, '0'),
-        ).join(''),
-      );
-    }
-    const response = await fetch(path, {
-      method,
-      headers,
-      body,
-      signal,
-      cache: 'no-store',
-      redirect: 'error',
-    });
-    if (!response.ok) {
-      const value = (await response.json().catch(() => null)) as { error?: string } | null;
-      throw new TransferError(response.status, value?.error ?? 'transfer_failed');
-    }
-    return response;
-  }
 
   async function ready({ project, id }: Ref) {
     assertID(project);
@@ -193,37 +153,12 @@ export function encryptedFiles(
     if (!manifest || !proxy) {
       const original = await cipher(ref);
       parseManifest(await original.open(0, await readPart(ref.id, shape, 0)), shape);
-      let cachedPart = 0;
-      let cachedBytes = new Uint8Array();
-      const image = await buildWorkingImage(
-        {
-          size: shape.sourceBytes,
-          async read(start, end) {
-            const output = new Uint8Array(end - start);
-            for (let at = start; at < end;) {
-              signal.throwIfAborted();
-              const part = Math.floor(at / chunkBytes) + 1;
-              if (part !== cachedPart) {
-                cachedBytes.fill(0);
-                cachedBytes = new Uint8Array(
-                  await original.open(part, await readPart(ref.id, shape, part)),
-                );
-                if (signal.aborted) {
-                  cachedBytes.fill(0);
-                  signal.throwIfAborted();
-                }
-                cachedPart = part;
-              }
-              const offset = at % chunkBytes;
-              const count = Math.min(end - at, cachedBytes.length - offset);
-              output.set(cachedBytes.subarray(offset, offset + count), at - start);
-              at += count;
-            }
-            return output.buffer;
-          },
-        },
+      const image = await imageFromOriginal(
+        original,
+        (part) => readPart(ref.id, shape, part),
+        shape.sourceBytes,
         signal,
-      ).finally(() => cachedBytes.fill(0));
+      );
       await saveImage(ref, image, signal);
       manifest = image.manifest;
       proxy = image.parts[0]!;
@@ -368,25 +303,4 @@ export function encryptedFiles(
       });
     },
   };
-}
-
-export async function readBounded(response: Response, size: number) {
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('Missing ciphertext');
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value.byteLength > size - offset) throw new Error('Oversized ciphertext');
-      bytes.set(value, offset);
-      offset += value.byteLength;
-    }
-  } finally {
-    await reader.cancel().catch(() => undefined);
-    reader.releaseLock();
-  }
-  if (offset !== size) throw new Error('Incomplete ciphertext');
-  return bytes.buffer;
 }

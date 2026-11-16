@@ -1,14 +1,6 @@
 import { importCode, newCode, open, seal } from './crypto';
 import type { Envelope } from './crypto';
-import {
-  accountRange,
-  connect,
-  projectTable,
-  revisionQueueTable,
-  revisionSyncTable,
-  vaultTable,
-} from './store';
-import type { VaultRow } from './store';
+import { accountRange, projectTable } from './store';
 import { revisionBlockFor, revisionRemote, sealRevision } from '../projects/revisions';
 import type {
   RevisionBase,
@@ -21,6 +13,8 @@ import type {
 
 import { assertID } from './file-format';
 import type { ProjectRow } from './project-store';
+import { retryRunner } from './revision-runner';
+import { revisionTransaction } from './revision-transaction';
 
 export type SyncCheckpoint = {
   project: string;
@@ -46,47 +40,7 @@ export function revisionQueue(
   signal: AbortSignal,
 ) {
   const remote = revisionRemote(account, signal);
-  async function transaction<T>(
-    mode: IDBTransactionMode,
-    run: (store: IDBObjectStore, result: (value: T) => void, sync: IDBObjectStore) => void,
-  ) {
-    signal.throwIfAborted();
-    const db = await connect();
-    try {
-      signal.throwIfAborted();
-      return await new Promise<T>((resolve, reject) => {
-        const tx = db.transaction(
-          [vaultTable, projectTable, revisionQueueTable, revisionSyncTable],
-          mode,
-          { durability: 'strict' },
-        );
-        const abort = () => tx.abort();
-        let value: T;
-        signal.addEventListener('abort', abort, { once: true });
-        tx.onabort = () => {
-          signal.removeEventListener('abort', abort);
-          reject(signal.reason ?? tx.error ?? new Error('Vault changed'));
-        };
-        tx.oncomplete = () => {
-          signal.removeEventListener('abort', abort);
-          if (signal.aborted) reject(signal.reason);
-          else resolve(value);
-        };
-        const vault = tx.objectStore(vaultTable).get(account);
-        vault.onsuccess = () => {
-          if ((vault.result as VaultRow | undefined)?.stamp !== stamp()) abort();
-          else
-            run(
-              tx.objectStore(revisionQueueTable),
-              (next) => (value = next),
-              tx.objectStore(revisionSyncTable),
-            );
-        };
-      });
-    } finally {
-      db.close();
-    }
-  }
+  const transaction = revisionTransaction(account, stamp, signal);
 
   const rows = () =>
     transaction<Draft[]>('readonly', (store, result) => {
@@ -181,14 +135,13 @@ export function revisionQueue(
       ))
     )
       throw new Error('A queued edit changed; reload it before replacing it');
-    const wake = () => schedule?.(0);
+    const wake = runner.wake;
     if (running) void running.then(wake, wake);
     else wake();
     return id;
   }
 
   let running: Promise<boolean> | undefined;
-  let schedule: ((delay: number) => void) | undefined;
   async function drain(csrf: string) {
     let retry = false;
     for (const draft of await rows()) {
@@ -209,51 +162,11 @@ export function revisionQueue(
 
   const retry = (csrf: string) => (running ??= drain(csrf).finally(() => (running = undefined)));
 
-  function start(getCsrf: () => Promise<string>, onError: (error: unknown) => void) {
-    signal.throwIfAborted();
-    if (schedule) throw new Error('Retry runner is already active');
-    let timer: ReturnType<typeof setTimeout>;
-    let delay = 1000;
-    let stopped = false;
-    const wake = () => schedule?.(0);
-    const stop = () => {
-      stopped = true;
-      clearTimeout(timer);
-      window.removeEventListener('online', wake);
-      signal.removeEventListener('abort', stop);
-      schedule = undefined;
-    };
-    async function run() {
-      try {
-        if (stopped || !navigator.onLine) return;
-        if (!(await rows()).some((draft) => !draft.blocked)) return;
-        const csrf = await getCsrf();
-        if (stopped) return;
-        if (await retry(csrf)) {
-          if (!stopped) schedule?.(delay);
-          delay = Math.min(delay * 2, 60_000);
-        } else {
-          delay = 1000;
-        }
-      } catch (error) {
-        if (!stopped) {
-          onError(error);
-          if (!stopped) schedule?.(delay);
-          delay = Math.min(delay * 2, 60_000);
-        }
-      }
-    }
-    schedule = (ms) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => void run(), ms);
-    };
-    window.addEventListener('online', wake);
-    signal.addEventListener('abort', stop, { once: true });
-    wake();
-    return () => {
-      if (!stopped) stop();
-    };
-  }
+  const runner = retryRunner(
+    signal,
+    async () => (await rows()).some((draft) => !draft.blocked),
+    retry,
+  );
 
   async function projectCode(project: string, epoch: string, provision = false) {
     assertID(project);
@@ -278,7 +191,7 @@ export function revisionQueue(
   }
 
   return {
-    start,
+    start: runner.start,
     account,
     signal,
     projectCode,
