@@ -107,7 +107,12 @@ func loadPasskeyUser(ctx context.Context, tx pgx.Tx, where string, arg any) (pas
 		var flags int16
 		var transports []string
 		var attachment string
-		err := row.Scan(&c.ID, &c.PublicKey, &count, &flags, &c.Authenticator.CloneWarning, &c.Authenticator.AAGUID, &c.AttestationType, &c.AttestationFormat, &transports, &attachment)
+		// The stored clone warning is for display only. The credential starts
+		// without it, so CloneWarning after validation reflects this assertion's
+		// counter alone: one delayed or out-of-order assertion must not lock the
+		// passkey for good (the library never clears the flag).
+		var warned bool
+		err := row.Scan(&c.ID, &c.PublicKey, &count, &flags, &warned, &c.Authenticator.AAGUID, &c.AttestationType, &c.AttestationFormat, &transports, &attachment)
 		c.Authenticator.SignCount = uint32(count)
 		c.Authenticator.Attachment = protocol.AuthenticatorAttachment(attachment)
 		c.Flags = webauthn.NewCredentialFlags(protocol.AuthenticatorFlags(flags))

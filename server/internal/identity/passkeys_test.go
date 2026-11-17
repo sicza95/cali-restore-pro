@@ -306,6 +306,16 @@ func TestPostgresPasskeys(t *testing.T) {
 		if err != nil || len(list) != 1 || !list[0].CloneWarning {
 			t.Fatal(list, err)
 		}
+		// A later assertion with an increasing counter signs in again; the
+		// warning stays visible for the owner to review.
+		device.count = 7
+		if _, err := signIn(device); err != nil {
+			t.Fatal("valid counter after a regression", err)
+		}
+		list, err = s.Passkeys(ctx, owner)
+		if err != nil || len(list) != 1 || !list[0].CloneWarning {
+			t.Fatal("warning cleared", list, err)
+		}
 		if _, err := admin.Exec(ctx, `UPDATE passkeys SET clone_warning=false`); err != nil {
 			t.Fatal(err)
 		}
