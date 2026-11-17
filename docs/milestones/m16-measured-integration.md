@@ -24,7 +24,8 @@ GitHub Actions on `d26e534` passed the UI library workflow and found two browser
 
 ## Open qualification
 
-- Physical iPad Safari and Home Screen, Apple Pencil, sustained dense 4K/8K editing and export memory profiling remain open. Windows Playwright WebKit lacks `OffscreenCanvas` in this environment.
+- Desktop 8K profile (#50, IMG-05): a report-only CI job and `npm run test:perf` import a synthetic 8192 × 4096 JPEG, run a sustained zoom, pan and draw loop and export an 8000 × 4000 raw mask in Chromium, recording JS heap and frame time through CDP. On a Windows laptop (Core i7-12800H, Chrome 157, dev server, three runs): import 1.21 to 1.27 s, peak main-thread JS heap 245 MB, frame p95 16.8 to 16.9 ms, export 268 to 299 ms. Budgets, method and limits: [desktop performance budgets](../plan/perf-budgets.md). The numbers are provisional; they replace nothing in the iPad item below.
+- Physical iPad Safari and Home Screen, Apple Pencil, sustained dense 4K/8K editing and export memory profiling remain open (#49). Windows Playwright WebKit lacks `OffscreenCanvas` in this environment.
 - Exact physical print scale and workbook recalculation in the target spreadsheet applications remain open. Raw-mask export and the final issuance rule have implementation evidence, with physical-device and release qualification still open. Maps fit the output frame and report calibrated dimensions where available.
 - [Portable backup v2](m07-portable-backups.md) includes estimate and report records with atomic recovery and backward-compatible v1 import. Recipient report authoring is delivered as recipient-vault drafts ([ADR 0008](../adr/0008-recipient-own-reports.md)); production infrastructure retention/recovery still requires separate qualification.
 

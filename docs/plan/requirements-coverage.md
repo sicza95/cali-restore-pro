@@ -30,7 +30,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | IMG-01      | Must     | Seven validated initial image-format families                       | M-04  | M-16       | Partial |
 | IMG-02      | Must     | Preserve original source                                            | M-04  | M-13       | Partial |
 | IMG-03      | Must     | Large-source import separated from editing                          | M-04  | M-16       | Partial |
-| IMG-05      | Must     | 8K-class source-image workload                                      | M-04  | M-16       | Partial |
+| IMG-05      | Must     | 8K-class source-image workload ([desktop profile](perf-budgets.md)) | M-04  | M-16       | Partial |
 | FRAME-01    | Must     | Crop, rotate, flip, rectify/perspective and required skew workflows | M-08  | M-13       | Partial |
 | FRAME-02    | Must     | Separate view navigation from document transforms                   | M-14  | M-16       | Partial |
 | FRAME-03    | Must     | Later main-reference transforms carry shared mask space             | M-05  | M-13       | Partial |
@@ -209,6 +209,8 @@ ADMIN-06, ADMIN-07 and ADMIN-08 evidence is in [M-07 deletion and retention](../
 Issue #77 extends ADMIN-01 and UX-02 evidence with bilingual readable operational labels and short copyable references; filled admin pages and expanded mail lists now pass the copy guard. See [M-02 reference evidence](../milestones/m02-account-administration.md#readable-operational-references-77). API metadata, requirement status and physical-device qualification are unchanged.
 
 Issue #111 extends that evidence with current actor/subject account emails and retained mail kinds from the `operations.view`-gated API. PostgreSQL HTTP tests verify access denial, deleted-account nulls and mail kinds after payload erasure; synthetic EN/HU browser checks cover readable labels, fallback labels, full-ID copying and long-email wrapping in both iPad orientations. Requirement status and physical-device qualification remain unchanged.
+
+IMG-05 evidence (#50): the [desktop Chromium profile](perf-budgets.md) imports a synthetic 8192 × 4096 JPEG (13.8 MB), runs a sustained zoom, pan and draw loop and exports an 8000 × 4000 raw mask. Measured on a Windows laptop (Core i7-12800H, Chrome 157, Vite dev server, three runs, 2026-11-17): import 1.21 to 1.27 s; peak main-thread JS heap 244.7 to 244.9 MB (during the import; 10.4 MB retained after drawing); frame p95 16.8 to 16.9 ms with at most 4 of about 1700 frames over 33.4 ms during zoom, pan and draw (frame maximum 17.4 ms for zoom and pan, 33.5 to 66.8 ms for drawing); export 268 to 299 ms. These are provisional desktop budgets with a report-only CI job, not qualification: worker and GPU memory, iPad Safari, Apple Pencil and RAW or large-PNG sources are unmeasured (#49), so IMG-05 stays Partial. The profile also found that PNG sources over about 17 MB are rejected as damaged and that a raw mask over 32 Mpx, which includes 8192 × 4096, cannot be exported.
 
 [raw-mask]: ../milestones/out01-raw-mask-export.md
 [out11]: ../milestones/m16-measured-integration.md#out-11--final-report-issuance-2026-11-17-part-of-54

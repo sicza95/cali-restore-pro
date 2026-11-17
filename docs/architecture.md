@@ -49,5 +49,5 @@ File size, colocation and naming follow the [source layout conventions](source-l
 ## Targets and delivery
 
 - iPad landscape and portrait, and desktop; not phones ([ADR 0003](adr/0003-ipad-and-desktop-only.md)).
-- One CI workflow with parallel frontend, Go and end-to-end jobs, plus an informational Firefox and WebKit run of the files suite ([browser support](browser-support.md)). Every commit is signed; pull requests merge by fast-forwarding `main` ([ADR 0005](adr/0005-fast-forward-merges.md)).
+- One CI workflow with parallel frontend, Go and end-to-end jobs, plus an informational Firefox and WebKit run of the files suite ([browser support](browser-support.md)) and a report-only desktop performance profile ([budgets](plan/perf-budgets.md)). Every commit is signed; pull requests merge by fast-forwarding `main` ([ADR 0005](adr/0005-fast-forward-merges.md)).
 - Delivery order is the [platform plan](plan/README.md); remaining work is tracked in GitHub issues.

@@ -1,0 +1,18 @@
+{
+  "note": "Provisional desktop Chromium budgets (#50, docs/plan/perf-budgets.md). iPad Safari numbers replace them under #49. Report only: scripts/perf-compare.mjs warns, never fails.",
+  "metrics": {
+    "heapPeakMB": { "unit": "MB", "budget": 400, "regressionPct": 25, "floor": 20 },
+    "heapAfterDrawMB": { "unit": "MB", "budget": 50, "regressionPct": 50, "floor": 5 },
+    "importMs": { "unit": "ms", "budget": 5000, "regressionPct": 50, "floor": 500 },
+    "zoomFrameP95Ms": { "unit": "ms", "budget": 33.4, "regressionPct": 25, "floor": 2 },
+    "panFrameP95Ms": { "unit": "ms", "budget": 33.4, "regressionPct": 25, "floor": 2 },
+    "drawFrameP95Ms": { "unit": "ms", "budget": 33.4, "regressionPct": 25, "floor": 2 },
+    "zoomFrameMaxMs": { "unit": "ms", "budget": 250, "regressionPct": 100, "floor": 50 },
+    "panFrameMaxMs": { "unit": "ms", "budget": 250, "regressionPct": 100, "floor": 50 },
+    "drawFrameMaxMs": { "unit": "ms", "budget": 250, "regressionPct": 100, "floor": 50 },
+    "slowFrames": { "unit": "frames", "budget": 20, "regressionPct": 100, "floor": 5 },
+    "longTaskMs": { "unit": "ms", "budget": 1000, "regressionPct": 100, "floor": 100 },
+    "exportMedianMs": { "unit": "ms", "budget": 2000, "regressionPct": 50, "floor": 300 },
+    "exportHeapPeakMB": { "unit": "MB", "budget": 20, "regressionPct": 50, "floor": 5 }
+  }
+}

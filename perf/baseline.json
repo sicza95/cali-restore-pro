@@ -1,0 +1,72 @@
+{
+  "baselines": [
+    {
+      "label": "windows-i7-12800H-chrome",
+      "recordedAt": "2026-11-17",
+      "runs": 3,
+      "environment": {
+        "chromium": "157.0.8103.79",
+        "platform": "win32 x64",
+        "cpus": 20,
+        "cpuModel": "12th Gen Intel(R) Core(TM) i7-12800H",
+        "memoryGB": 32,
+        "ci": false,
+        "server": "vite dev (unbundled)",
+        "viewport": {
+          "width": 1194,
+          "height": 834
+        }
+      },
+      "fixture": {
+        "width": 8192,
+        "height": 4096,
+        "jpegBytes": 13797591,
+        "exportMask": {
+          "width": 8000,
+          "height": 4000
+        },
+        "exportBytes": 829903
+      },
+      "metrics": {
+        "heapStartMB": 6.7,
+        "heapAfterImportMB": 7.4,
+        "heapPeakMB": 244.9,
+        "heapAfterDrawMB": 10.4,
+        "zoomPercentReached": 800,
+        "importMs": 1247,
+        "zoomFrameP95Ms": 16.9,
+        "panFrameP95Ms": 16.8,
+        "drawFrameP95Ms": 16.8,
+        "zoomFrameMaxMs": 17,
+        "panFrameMaxMs": 17,
+        "drawFrameMaxMs": 50,
+        "slowFrames": 2,
+        "longTaskMs": 178,
+        "exportFirstMs": 276,
+        "exportMedianMs": 276,
+        "exportHeapPeakMB": 1.5,
+        "exportHeapAfterMB": 0.7
+      },
+      "spread": {
+        "heapStartMB": [6.7, 6.7],
+        "heapAfterImportMB": [7.4, 7.4],
+        "heapPeakMB": [244.7, 244.9],
+        "heapAfterDrawMB": [10.4, 10.4],
+        "zoomPercentReached": [800, 800],
+        "importMs": [1208, 1272],
+        "zoomFrameP95Ms": [16.8, 16.9],
+        "panFrameP95Ms": [16.8, 16.9],
+        "drawFrameP95Ms": [16.8, 16.8],
+        "zoomFrameMaxMs": [17, 17],
+        "panFrameMaxMs": [17, 17.4],
+        "drawFrameMaxMs": [33.5, 66.8],
+        "slowFrames": [1, 4],
+        "longTaskMs": [165, 276],
+        "exportFirstMs": [269, 298],
+        "exportMedianMs": [268, 299],
+        "exportHeapPeakMB": [1.4, 1.5],
+        "exportHeapAfterMB": [0.7, 0.7]
+      }
+    }
+  ]
+}

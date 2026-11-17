@@ -21,3 +21,5 @@ CLAUDE.local.md
 AGENTS.override.md
 .claude/
 docs/handoff/
+
+perf-results/

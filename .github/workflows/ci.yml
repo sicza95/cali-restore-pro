@@ -123,6 +123,34 @@ jobs:
           path: test-results/encrypted-files/**/error-context.md
           retention-days: 7
 
+  # Report-only (#50): desktop Chromium profile of an 8K import, a zoom/pan/draw loop and an
+  # export. Never blocks a merge; the budgets are provisional until iPad numbers exist (#49).
+  # Method and budgets: docs/plan/perf-budgets.md.
+  perf:
+    name: Desktop perf profile (report only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:perf
+      - name: Compare with budgets and baseline (warnings only)
+        if: always()
+        run: npm run perf:compare
+      - name: Profile JSON
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: perf-profile
+          path: perf-results/profile.json
+          retention-days: 14
+
   e2e:
     name: Platform E2E
     runs-on: ubuntu-latest
