@@ -2,7 +2,12 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import type { Draft } from '../src/platform/reports/types';
 import { input, phase } from '../tests-estimates/fixtures';
-import { verifyRawMaskExport } from './raw-mask-export';
+import { verifyRawMask8k, verifyRawMaskExport } from './raw-mask-export';
+
+test('exports a 7680x4320 raw mask within the PNG size limit', async ({ page }) => {
+  test.setTimeout(120_000);
+  await verifyRawMask8k(page);
+});
 
 test('exports one raw mask at native dimensions with transparent surroundings', async ({
   page,

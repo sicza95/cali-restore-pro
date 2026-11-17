@@ -33,8 +33,22 @@ describe('raw mask export', () => {
     expect(() => rawMaskExport(state, 'missing')).toThrow('unavailable');
   });
 
-  it.each([0, -1, 1.5, NaN, Infinity, 32768])('rejects invalid dimensions %s', (width) => {
+  it.each([0, -1, 1.5, NaN, Infinity, 32768, 12289])('rejects invalid dimensions %s', (width) => {
     expect(() => assertRawMask({ ...rawMaskExport(state, 'one'), width })).toThrow('size limit');
+  });
+
+  it.each([
+    [7680, 4320],
+    [8192, 4096],
+    [12288, 3413],
+  ])('accepts importer-sized sources up to %i x %i', (width, height) => {
+    expect(() => assertRawMask({ ...rawMaskExport(state, 'one'), width, height })).not.toThrow();
+  });
+
+  it('rejects sources beyond the importer limits', () => {
+    const payload = rawMaskExport(state, 'one');
+    expect(() => assertRawMask({ ...payload, width: 12288, height: 3414 })).toThrow('size limit');
+    expect(() => assertRawMask({ ...payload, width: 12289, height: 1 })).toThrow('size limit');
   });
 
   it('enforces pixel and geometry budgets before starting a worker', () => {
