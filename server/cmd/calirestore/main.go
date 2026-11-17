@@ -39,7 +39,7 @@ func main() {
 
 func run(ctx context.Context, args []string) error {
 	if len(args) != 1 {
-		return errors.New("usage: calirestore serve|worker|migrate|verify-restored-objects|bootstrap-superuser|healthcheck|worker-healthcheck")
+		return errors.New("usage: calirestore serve|worker|migrate|check-config|verify-restored-objects|bootstrap-superuser|healthcheck|worker-healthcheck")
 	}
 	if args[0] == "healthcheck" {
 		return healthcheck()
@@ -55,12 +55,21 @@ func run(ctx context.Context, args []string) error {
 		}
 		return nil
 	}
-	if args[0] != "serve" && args[0] != "worker" && args[0] != "migrate" && args[0] != "verify-restored-objects" && args[0] != "bootstrap-superuser" {
+	if args[0] != "serve" && args[0] != "worker" && args[0] != "migrate" && args[0] != "verify-restored-objects" && args[0] != "bootstrap-superuser" && args[0] != "check-config" {
 		return errors.New("unknown command")
 	}
 	c, err := config.Load()
 	if err != nil {
 		return err
+	}
+	if args[0] == "serve" || args[0] == "worker" || args[0] == "check-config" {
+		if err := config.CheckProduction(c, os.Getenv, args[0]); err != nil {
+			return err
+		}
+	}
+	if args[0] == "check-config" {
+		slog.Info("configuration valid", "mode", c.Mode)
+		return nil
 	}
 	pc, err := pgxpool.ParseConfig(c.DatabaseURL)
 	if err != nil {
