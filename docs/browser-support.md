@@ -15,12 +15,11 @@ the other jobs, so a regression shows up on the change that caused it.
 
 ## Known gaps
 
-Measured on GitHub Actions `ubuntu-latest`, Playwright 1.62.1, November 2026. Of 41 tests, 29 pass,
-3 fail and 9 are skipped in each engine.
+Measured on GitHub Actions `ubuntu-latest`, Playwright 1.62.1, November 2026. Of 41 tests, 31 pass,
+2 fail and 9 are skipped in each engine.
 
 | Test                                       | Firefox | WebKit  | Why                                                                                                                                                                                                                |
 | ------------------------------------------ | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `estimates.browser.ts` manual pricing      | Fails   | Fails   | App: currency precision comes from the engine's `Intl` data. V8 gives HUF 0 fraction digits, SpiderMonkey and JavaScriptCore give 2, so totals read `HUF 430.00` and round to a different precision.               |
 | `project-backups.browser.ts` restore       | Fails   | Fails   | App: Firefox restores the project, but the restored DNG original shows "Preview unavailable" offline in the preview build. WebKit rejects the correct backup key with "Restore failed".                            |
 | `original-pins.browser.ts` offline pin     | Fails   | Fails   | Not yet classified. Firefox: the offline navigation to `/offline-originals` fails with `NS_ERROR_OFFLINE` instead of being served by the service worker. WebKit: the mocked invitation request fails after unlock. |
 | `project-reviews.browser.ts` report output | Passes  | Flaky   | App: WebKit sometimes raises "Failed to execute 'abort' on 'IDBTransaction'" as a page error. `revision-transaction.ts` aborts on signal without the `InvalidStateError` guard that `project-store.ts` has.        |
