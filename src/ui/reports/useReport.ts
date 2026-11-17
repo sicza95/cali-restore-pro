@@ -71,7 +71,9 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       if (estimate.status === 'fulfilled') {
         const snapshots = estimate.value?.document.snapshots ?? [];
         setIssued(snapshots.map(({ id, version, issued }) => ({ id, version, issued })));
-        if (!saved) set('estimate', snapshots.at(-1)?.id ?? '');
+        // Default to the newest issued version; a draft only when none is issued.
+        const preferred = snapshots.filter(({ issued }) => issued).at(-1) ?? snapshots.at(-1);
+        if (!saved) set('estimate', preferred?.id ?? '');
       } else setStatus('estimateError');
     } else setStatus('loadError');
     setBusy(false);
