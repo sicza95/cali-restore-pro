@@ -80,16 +80,16 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | PRIV-06     | Must     | Minimum server-readable metadata allowlist                          | M-00  | M-16       | Partial |
 | PRIV-07     | Must     | Explicit sign-out/forget protects recoverable work                  | M-03  | M-16       | Partial |
 | PRIV-08     | Must     | Explicit opt-in for optional crash/performance reporting            | M-02  | M-16       | Partial |
-| SHARE-01    | Later    | Recipient-aware encrypted sharing                                   | M-03  | M-16       | Planned |
+| SHARE-01    | Later    | Recipient-aware encrypted sharing                                   | M-03  | M-16       | Partial |
 | SHARE-02    | Later    | Independent editing with read-only defaults                         | M-01  | M-16       | Planned |
-| SHARE-03    | Later    | Three estimate-sharing levels per collaborator                      | M-03  | M-16       | Planned |
-| SHARE-04    | Later    | Equal project owners with ownership continuity                      | M-05  | M-07       | Planned |
-| SHARE-05    | Later    | Independent/offline collaboration with preserved conflicts          | M-07  | M-16       | Planned |
+| SHARE-03    | Later    | Three estimate-sharing levels per collaborator                      | M-03  | M-16       | Partial |
+| SHARE-04    | Later    | Equal project owners with ownership continuity                      | M-05  | M-07       | Partial |
+| SHARE-05    | Later    | Independent/offline collaboration with preserved conflicts          | M-07  | M-16       | Partial |
 | SHARE-06    | Later    | Revocation protects online access and future updates                | M-03  | M-16       | Partial |
-| SHARE-07    | Later    | Locked local recovery of unsynced edits after removal               | M-03  | M-16       | Planned |
+| SHARE-07    | Later    | Locked local recovery of unsynced edits after removal               | M-03  | M-16       | Partial |
 | SHARE-08    | Later    | Owner-controlled older-checkpoint access                            | M-03  | M-16       | Partial |
-| SHARE-09    | Later    | Account-bound accepted invitations with identity-change review      | M-01  | M-06       | Planned |
-| SHARE-10    | Later    | Read-only quote-level estimate summary                              | M-06  | M-16       | Planned |
+| SHARE-09    | Later    | Account-bound accepted invitations with identity-change review      | M-01  | M-06       | Partial |
+| SHARE-10    | Later    | Read-only quote-level estimate summary                              | M-06  | M-16       | Partial |
 | PAT-01      | Later    | Visual repeating-tile pattern editor                                | M-08  | M-15       | Passed  |
 | PAT-02      | Later    | Reusable versioned patterns with consistent output                  | M-05  | M-16       | Partial |
 | EST-01      | Later    | User phase/productivity profiles and layer/detail overrides         | M-09  | M-16       | Partial |
@@ -175,6 +175,10 @@ The pre-existing Storybook library is partial UI evidence, not acceptance of UI-
 | Frequent commits and a PR for every milestone      | Every milestone; conventional commits, clear dependencies and validation                                       |
 
 SHARE-08 evidence: [M-06 selected grants](../milestones/m06-sharing.md#selected-checkpoints) cover synthetic checkpoints. Named checkpoint authoring and real dependency enforcement remain planned.
+
+SHARE-01, SHARE-03, SHARE-04, SHARE-09 and SHARE-10 evidence: [M-06 sharing](../milestones/m06-sharing.md) covers account-bound invitations with owner cancellation, pinned sharing-key fingerprints, authenticated HPKE grants per scope (assessment, estimate summary, full estimate, history), co-owners, hosting transfer and last-owner protection, and [M-07 deletion and retention](../milestones/m07-deletion-retention.md) covers ownership continuity on account deletion. Estimate and history grants carry synthetic records, grants are read-only snapshots, and the cryptographic review (#52) is open, so these rows stay Partial.
+
+SHARE-05 and SHARE-07 evidence: [M-07 conditional sync](../milestones/m07-conditional-sync.md) covers owner-only revision conflicts that preserve the local draft, but not collaborator edits, merging or recovery after removal. SHARE-02 stays Planned: no non-owner write grant exists.
 
 SHARE-06 evidence: [M-06 revocation during transfers](../milestones/m06-sharing.md#revocation-during-transfers) covers hosted originals. Live updates to other scopes and offline recovery remain planned.
 
