@@ -9,6 +9,7 @@ import type { EstimateCopy } from '../../platform/estimates/copy';
 import { createPhases, extraRate, phaseValid } from './estimate-model';
 import type { Adjustment, Extra, Phase } from './estimate-model';
 import { validDecimal } from '../project-review/fields';
+import { saveFailure } from './save-failure';
 import { usePhaseMeasurements } from './usePhaseMeasurements';
 
 /** The estimate being edited: inputs, live result, validity and saved versions. */
@@ -144,8 +145,8 @@ export function useEstimateDraft(
       setVersions(next);
       setVersion(String(next.length));
       setStatus(copy().saved);
-    } catch {
-      setStatus(copy().saveFailed);
+    } catch (error) {
+      setStatus(saveFailure(error, copy()));
     } finally {
       setBusy(false);
     }

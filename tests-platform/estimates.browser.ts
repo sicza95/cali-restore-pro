@@ -176,6 +176,40 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
   expect(result.opened[0]).not.toContain('hours');
 });
 
+test('an estimate over the vault size cap fails with a typed error and keeps the saved one', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const fixture = input();
+  const result = await page.evaluate(async (fixture) => {
+    const load = (path: string): Promise<unknown> => import(path);
+    const { LocalVault } = (await load(
+      '/src/platform/vault/vault.ts',
+    )) as typeof import('../src/platform/vault/vault');
+    const { estimateRepository } = (await load(
+      '/src/platform/estimates/persistence.ts',
+    )) as typeof import('../src/platform/estimates/persistence');
+    const project = crypto.randomUUID();
+    fixture.project = project;
+    fixture.phases[0]!.quantity!.project = project;
+    const vault = new LocalVault('00000000-0000-4000-8000-000000000013', () => undefined);
+    await vault.create('cc'.repeat(32), false);
+    const repository = estimateRepository(vault);
+    const doc = { schema: 1 as const, draft: fixture, snapshots: [] };
+    const revision = await repository.save(project, 0, doc);
+    const big = structuredClone(doc);
+    big.draft.assumptions = 'x'.repeat(64 * 1024);
+    const error = await repository.save(project, revision, big).then(
+      () => '',
+      (cause: Error) => cause.name,
+    );
+    const kept = await repository.load(project);
+    return { error, revision, keptRevision: kept?.revision };
+  }, fixture);
+  expect(result.error).toBe('DocumentTooLargeError');
+  expect(result.keptRevision).toBe(result.revision);
+});
+
 test('estimate route saves and reopens manual pricing with tablet layouts', async ({
   page,
 }, info) => {

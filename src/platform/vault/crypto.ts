@@ -91,8 +91,20 @@ const documentLimit = (purpose: Purpose) =>
     ? maxLocalDocument
     : maxText;
 
+/** Thrown by {@link seal} when the text is over the limit for its purpose. */
+export class DocumentTooLargeError extends Error {
+  constructor(
+    readonly length: number,
+    readonly limit: number,
+  ) {
+    super('Text too large');
+    this.name = 'DocumentTooLargeError';
+  }
+}
+
 export async function seal(root: CryptoKey, account: string, purpose: Purpose, text: string) {
-  if (text.length > documentLimit(purpose)) throw new Error('Text too large');
+  const limit = documentLimit(purpose);
+  if (text.length > limit) throw new DocumentTooLargeError(text.length, limit);
   const salt = crypto.getRandomValues(new Uint8Array(32));
   const { key, algorithm } = await parameters(root, account, purpose, salt);
   const ciphertext = await crypto.subtle.encrypt(

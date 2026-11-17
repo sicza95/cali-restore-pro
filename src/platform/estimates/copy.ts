@@ -8,6 +8,8 @@ const en = {
   saved: 'Version saved on this device. Not synced yet.',
   saveFailed:
     'Could not open or save the estimate. Reopen to resolve a changed version; inputs are retained.',
+  tooLarge:
+    'This estimate, with its issued versions, is too large to save. Nothing was lost: your inputs are still here. Remove or merge some measured phases, then save again.',
   reprice: 'Project currency changed. Enter new prices; no exchange conversion is applied.',
   newPrices: 'Clear prices for the new currency',
   phases: 'Work phases',
@@ -138,6 +140,8 @@ const hu: typeof en = {
   saved: 'Verzió mentve ezen az eszközön. Még nincs szinkronizálva.',
   saveFailed:
     'A becslés nem nyitható meg vagy menthető. Verzióütközésnél nyissa meg újra; a bevitt adatok megmaradnak.',
+  tooLarge:
+    'Ez a becslés a kiadott verzióival együtt túl nagy a mentéshez. Nem veszett el semmi: a bevitt adatok megmaradtak. Töröljön vagy vonjon össze néhány mért fázist, majd mentsen újra.',
   reprice: 'A projekt pénzneme megváltozott. Adjon meg új árakat; nincs árfolyamváltás.',
   newPrices: 'Árak törlése az új pénznemhez',
   phases: 'Munkafázisok',

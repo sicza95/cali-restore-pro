@@ -1,6 +1,14 @@
 import { createCipheriv, createDecipheriv, hkdfSync } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { importCode, maxFile, newCode, open, parseEnvelope, seal } from './crypto';
+import {
+  DocumentTooLargeError,
+  importCode,
+  maxFile,
+  newCode,
+  open,
+  parseEnvelope,
+  seal,
+} from './crypto';
 import type { Envelope } from './crypto';
 
 const code = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
@@ -123,9 +131,10 @@ describe('vault envelope', () => {
 
   it('limits text by purpose', async () => {
     const root = await importCode(code);
-    await expect(seal(root, account, 'snapshot', 'x'.repeat(64 * 1024 + 1))).rejects.toThrow(
-      'Text too large',
-    );
+    const rejected = seal(root, account, 'snapshot', 'x'.repeat(64 * 1024 + 1));
+    await expect(rejected).rejects.toThrow('Text too large');
+    await expect(rejected).rejects.toBeInstanceOf(DocumentTooLargeError);
+    await expect(rejected).rejects.toMatchObject({ length: 64 * 1024 + 1, limit: 64 * 1024 });
     const large = 'x'.repeat(100_000);
     const purpose = 'project:22222222-2222-4222-8222-222222222222:1';
     expect(await open(root, account, purpose, await seal(root, account, purpose, large))).toBe(
