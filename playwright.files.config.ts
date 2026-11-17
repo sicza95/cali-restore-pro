@@ -1,6 +1,5 @@
 import { defineConfig } from '@playwright/test';
-
-const origin = 'http://127.0.0.1:4184';
+import { devOrigin, filesPorts, previewOrigin } from './tests-platform/files-origins';
 
 export default defineConfig({
   testDir: 'tests-platform',
@@ -24,17 +23,15 @@ export default defineConfig({
     'admin-layout.browser.ts',
   ],
   outputDir: 'test-results/encrypted-files',
-  use: { baseURL: origin, channel: process.env.CI ? undefined : 'chrome' },
+  use: { baseURL: devOrigin, channel: process.env.CI ? undefined : 'chrome' },
   webServer: [
     {
-      command:
-        'node node_modules/vite/bin/vite.js --config vite.app.config.ts --host 127.0.0.1 --port 4184 --strictPort',
-      url: origin,
+      command: `node node_modules/vite/bin/vite.js --config vite.app.config.ts --host 127.0.0.1 --port ${filesPorts.dev} --strictPort`,
+      url: devOrigin,
     },
     {
-      command:
-        'node node_modules/vite/bin/vite.js build --config vite.app.config.ts && node node_modules/vite/bin/vite.js preview --config vite.app.config.ts --host 127.0.0.1 --port 4186 --strictPort',
-      url: 'http://127.0.0.1:4186',
+      command: `node node_modules/vite/bin/vite.js build --config vite.app.config.ts && node node_modules/vite/bin/vite.js preview --config vite.app.config.ts --host 127.0.0.1 --port ${filesPorts.preview} --strictPort`,
+      url: previewOrigin,
     },
   ],
 });

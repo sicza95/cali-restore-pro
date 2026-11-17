@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { previewOrigin } from './files-origins';
 import { dng } from './fixtures/images';
 
 async function openFreshVault(page: Page, origin = '') {
@@ -73,7 +74,7 @@ test('download and restore an encrypted project through the controls in a fresh 
   const fresh = await browser.newContext({ viewport: { width: 834, height: 1194 } });
   try {
     const target = await fresh.newPage();
-    await openFreshVault(target, 'http://127.0.0.1:4186');
+    await openFreshVault(target, previewOrigin);
     await expect.poll(() => target.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
     await expect(target.getByRole('link', { name: 'East Chapel' })).toHaveCount(0);
     await fresh.setOffline(true);

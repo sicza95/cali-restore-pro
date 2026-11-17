@@ -36,6 +36,8 @@ npm run build-storybook
 npm test
 ```
 
+`npm run test:files` serves the app on ports 4184 (development) and 4186 (production preview). Set `FILES_DEV_PORT` and `FILES_PREVIEW_PORT` to use other ports, for example to run two checkouts at once.
+
 Local Playwright tests use installed Chrome. CI installs its pinned Chromium version. Screenshots and reports are generated under `test-results/` and `playwright-report/`; they are ignored by Git. Browser viewport checks do not replace physical iPad, Safari or Pencil validation.
 
 ## Structure

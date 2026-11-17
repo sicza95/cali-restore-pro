@@ -2,6 +2,7 @@ import { createCipheriv, randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { build } from 'vite';
+import { previewOrigin } from './files-origins';
 
 const recipient = 'a1000000-0000-4000-8000-000000000000';
 const sender = 'a2000000-0000-4000-8000-000000000000';
@@ -82,7 +83,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await context.route('**/__offline-grant.js', (route) =>
     route.fulfill({ contentType: 'text/javascript', body: script.code }),
   );
-  const origin = 'http://127.0.0.1:4186';
+  const origin = previewOrigin;
   await page.goto(origin + '/invitations');
   const grant = await page.evaluate(
     async (input) => {
