@@ -15,6 +15,7 @@ const path = `/api/v1/invitations/${invitation}/files/${id}`;
 test('an interrupted pin can retry; a completed pin works offline until revocation is learned', async ({
   page: onlinePage,
   context,
+  browserName,
 }, info) => {
   let page = onlinePage;
   const source = randomBytes((1 << 20) + 31);
@@ -132,15 +133,17 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   const shell = await page.goto(origin + offlinePath);
   expect(shell?.fromServiceWorker()).toBe(true);
   // Chromium headless shell can reset the page's connectivity signal on a
-  // service-worker navigation. Reapply it to the loaded page before unlocking.
-  const session = await context.newCDPSession(page);
-  const showOffline = (offline: boolean) =>
-    session.send('Network.overrideNetworkState', {
+  // service-worker navigation. Reapply it to the loaded page before unlocking. CDP is
+  // Chromium-only; the other engines keep the context's offline state (#51).
+  const session = browserName === 'chromium' ? await context.newCDPSession(page) : null;
+  const showOffline = async (offline: boolean) => {
+    await session?.send('Network.overrideNetworkState', {
       offline,
       latency: 0,
       downloadThroughput: -1,
       uploadThroughput: -1,
     });
+  };
   await showOffline(true);
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   await page.setViewportSize({ width: 834, height: 1194 });

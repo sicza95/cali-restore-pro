@@ -1,6 +1,7 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { setupRememberedVault } from './vault-setup';
 import { expectTaskLanguage } from './copy-guard';
+import { touchTarget } from './touch-target';
 
 const objectName = 'North elevation sandstone balustrade';
 const surfaceName = 'Lower cornice and frieze, west bay';
@@ -60,7 +61,7 @@ async function expectWholeRows(page: Page, key: string, screen: string, path: st
     const box = (await control.boundingBox())!;
     expect
       .soft(box.height, `touch target ${await control.getAttribute('data-control-id')}`)
-      .toBeGreaterThanOrEqual(44);
+      .toBeGreaterThanOrEqual(touchTarget);
   }
   await expectTaskLanguage(page, screen);
   await step.screenshot({ path });

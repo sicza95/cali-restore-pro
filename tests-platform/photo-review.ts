@@ -3,6 +3,7 @@ import type { Page, TestInfo } from '@playwright/test';
 import { surfaceControls } from '../src/ui/projects/surface-review-controls';
 import { expectTaskLanguage } from './copy-guard';
 import { canvasShare, verifyPhotoGestures } from './photo-gestures';
+import { touchTarget } from './touch-target';
 
 export function photoControl(page: Page, key: string) {
   const id = 'surface.' + key;
@@ -55,8 +56,8 @@ export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
         else expect(inspector.x).toBeGreaterThan(canvas.x + canvas.width);
         for (const control of ['review.prepare', 'review.apply', 'review.cancel', 'view.fit']) {
           const box = (await c(control).boundingBox())!;
-          expect(box.height).toBeGreaterThanOrEqual(44);
-          expect(box.width).toBeGreaterThanOrEqual(44);
+          expect(box.height).toBeGreaterThanOrEqual(touchTarget);
+          expect(box.width).toBeGreaterThanOrEqual(touchTarget);
         }
         await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
         await expectTaskLanguage(page, `photo ${lang} ${viewport.width}`);

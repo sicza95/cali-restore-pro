@@ -4,6 +4,7 @@ import type { Page, TestInfo } from '@playwright/test';
 import { checkpointControls } from '../src/ui/editor/checkpoint-review/registry';
 import { openDetails } from './drawing-review';
 import { expectTaskLanguage } from './copy-guard';
+import { touchTarget } from './touch-target';
 
 export async function verifyCheckpointReview(page: Page, info: TestInfo) {
   const control = (id: string) => {
@@ -107,8 +108,8 @@ export async function verifyCheckpointReview(page: Page, info: TestInfo) {
       pattern('library'),
     ]) {
       const box = (await target.boundingBox())!;
-      expect(box.width).toBeGreaterThanOrEqual(44);
-      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(touchTarget);
+      expect(box.height).toBeGreaterThanOrEqual(touchTarget);
     }
     await expectTaskLanguage(page, `checkpoint ${viewport.width}`);
     await page.screenshot({

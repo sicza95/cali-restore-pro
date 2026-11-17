@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expectTaskLanguage } from './copy-guard';
 import { closeDetails, drawingControl, openDetails, selectedLayer } from './drawing-controls';
 import { canvasShare } from './photo-gestures';
+import { touchTarget } from './touch-target';
 
 /**
  * Drawing layout on both iPad orientations, with a shape path in progress: canvas share, rail
@@ -46,8 +47,8 @@ export async function verifyDrawingLayout(page: Page, info: TestInfo) {
     const touchTargets = async (controls: string[]) => {
       for (const control of controls) {
         const target = (await c(control).boundingBox())!;
-        expect(target.height, control).toBeGreaterThanOrEqual(44);
-        expect(target.width, control).toBeGreaterThanOrEqual(44);
+        expect(target.height, control).toBeGreaterThanOrEqual(touchTarget);
+        expect(target.width, control).toBeGreaterThanOrEqual(touchTarget);
       }
     };
     // Apply and Cancel sit in the canvas chip and undo in the shell header, outside "Details".

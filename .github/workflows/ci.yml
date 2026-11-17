@@ -114,6 +114,13 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps ${{ matrix.browser }}
       - run: npm run test:files
+      - name: Failure context
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: files-${{ matrix.browser }}-results
+          path: test-results/encrypted-files/**/error-context.md
+          retention-days: 7
 
   e2e:
     name: Platform E2E

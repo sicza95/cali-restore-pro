@@ -6,6 +6,7 @@ import { estimateControls } from '../src/ui/estimates/estimate-controls';
 import { reportControls } from '../src/ui/reports/report-controls';
 import { projectTable, reportTable, revisionQueueTable } from '../src/platform/vault/store';
 import { expectTaskLanguage } from './copy-guard';
+import { touchTarget } from './touch-target';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const other = '00000000-0000-4000-8000-000000000002';
@@ -57,8 +58,8 @@ async function inspectReview(page: Page, info: TestInfo, label: string, ids: str
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
     for (const id of ids) {
       const box = (await control(page, id).first().boundingBox())!;
-      expect(box.width).toBeGreaterThanOrEqual(44);
-      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(touchTarget);
+      expect(box.height).toBeGreaterThanOrEqual(touchTarget);
     }
     await expectTaskLanguage(page, `${label} ${viewport.width}`);
     await page.screenshot({
@@ -295,8 +296,8 @@ test('owner reviews work phases, scoped inputs and independent report output thr
     await page.setViewportSize(viewport);
     await report('preview').tap();
     const cancel = (await report('cancel').boundingBox())!;
-    expect(cancel.width).toBeGreaterThanOrEqual(44);
-    expect(cancel.height).toBeGreaterThanOrEqual(44);
+    expect(cancel.width).toBeGreaterThanOrEqual(touchTarget);
+    expect(cancel.height).toBeGreaterThanOrEqual(touchTarget);
     await page.screenshot({ path: info.outputPath(`report-preview-${viewport.width}.png`) });
     await report('cancel').tap();
     await expect(draft).toHaveCount(0);

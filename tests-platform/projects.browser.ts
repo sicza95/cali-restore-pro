@@ -14,6 +14,12 @@ import { archiveAndRestore, verifyUnavailable } from './projects-flow/access';
 test.describe.configure({ mode: 'serial' });
 
 test.describe('project hierarchy and encrypted originals reopen from the local vault', () => {
+  // Touch and pen input go through CDP (drawing-input.ts, drawing-review.ts, photo-gestures.ts),
+  // which only Chromium has, and every later step builds on the drawing step (#51).
+  test.skip(
+    ({ browserName }) => browserName !== 'chromium',
+    'Drawing input needs CDP touch and pen events (Chromium only)',
+  );
   let flow: ProjectsFlow;
 
   test.beforeAll(async ({ browser }, info) => {

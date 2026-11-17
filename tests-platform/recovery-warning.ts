@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { drawingCopy } from '../src/ui/editor/drawing-review/copy';
+import { touchTarget } from './touch-target';
 
 /**
  * The recovery conflict is a warning on the first screen with its action beside it (#38).
@@ -56,8 +57,8 @@ export async function verifyRecoveryWarning(page: Page, info: TestInfo) {
         expect(button.x).toBeGreaterThan(text.x + text.width - 1);
         expect(button.y).toBeLessThan(text.y + text.height);
         expect(button.y + button.height).toBeGreaterThan(text.y);
-        expect(button.height).toBeGreaterThanOrEqual(44);
-        expect(button.width).toBeGreaterThanOrEqual(44);
+        expect(button.height).toBeGreaterThanOrEqual(touchTarget);
+        expect(button.width).toBeGreaterThanOrEqual(touchTarget);
         await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
         const results = await new AxeBuilder({ page }).include('.surface-recovery').analyze();
         expect(results.violations).toEqual([]);
