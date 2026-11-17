@@ -11,7 +11,6 @@ export const backupCopy = defineCopy({
     import: 'Import encrypted backup',
     file: 'Backup file',
     restore: 'Restore as a local copy',
-    gap: 'Backups don’t include estimates or report drafts yet. This project has one, so it can’t be backed up for now. Keep it on this device.',
     exportFailed:
       'Backup could not be prepared. Check that all originals are available on this device and the backup fits within 512 MiB.',
     importFailed:
@@ -28,7 +27,6 @@ export const backupCopy = defineCopy({
     import: 'Titkosított biztonsági mentés importálása',
     file: 'Biztonsági mentés fájlja',
     restore: 'Visszaállítás helyi másolatként',
-    gap: 'A biztonsági mentés még nem tartalmazza a becsléseket és a jelentéspiszkozatokat. Ehhez a projekthez tartozik ilyen, ezért egyelőre nem menthető. Tartsa meg ezen az eszközön.',
     exportFailed:
       'Nem sikerült előkészíteni a mentést. Ellenőrizze, hogy minden eredeti fájl elérhető-e ezen az eszközön, és a mentés legfeljebb 512 MiB méretű-e.',
     importFailed:

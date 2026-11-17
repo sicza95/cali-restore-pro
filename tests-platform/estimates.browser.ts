@@ -39,14 +39,6 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
     const doc = { schema: 1 as const, draft: fixture, snapshots: [issued] };
     const repository = estimateRepository(vault);
     await repository.save(project, 0, doc);
-    const incompleteBackup = await vault
-      .projectBackups()
-      .export(project)
-      .then(
-        () => false,
-        (error: { gap?: string }) => error.gap === 'estimate',
-      );
-    const backupGap = await vault.projectBackups().gap(project);
     const stale = await repository.save(project, 0, doc).then(
       () => false,
       () => true,
@@ -144,8 +136,6 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
     vault.close();
     other.close();
     return {
-      incompleteBackup,
-      backupGap,
       stale,
       immutable,
       isolation,
@@ -160,8 +150,6 @@ test('encrypted estimate and preset persistence, immutable versions, isolation a
   }, fixture);
   expect(result).toMatchObject({
     stale: true,
-    incompleteBackup: true,
-    backupGap: 'estimate',
     immutable: true,
     isolation: true,
     locked: true,
@@ -342,12 +330,13 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await report('cancel').click();
   await page.locator('[data-control-id="project.review.parent"]').click();
   await page.locator('[data-control-id="project.backup"]').click();
-  await expect(
-    page.getByText('Backups don’t include estimates or report drafts yet.'),
-  ).toBeVisible();
-  await expect(page.locator('[data-control-id="backup.export"]')).toBeDisabled();
-  await expectTaskLanguage(page, 'project backup gap');
-  await page.screenshot({ path: info.outputPath('project-backup-gap.png'), fullPage: true });
+  await expect(page.locator('[data-control-id="backup.export"]')).toBeEnabled();
+  await page.locator('[data-control-id="backup.export"]').click();
+  await expect(page.getByRole('textbox', { name: 'Backup key', exact: true })).toHaveValue(
+    /^[a-f0-9]{64}$/,
+  );
+  await expectTaskLanguage(page, 'project backup');
+  await page.screenshot({ path: info.outputPath('project-backup.png'), fullPage: true });
   await page.locator('[data-control-id="project.review.estimates"]').click();
   await page.getByLabel('App language').selectOption('hu');
   await step('issue');

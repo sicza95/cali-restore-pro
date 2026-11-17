@@ -16,6 +16,7 @@ import {
 import type { VaultRow } from './store';
 import { abortOnSignal, abortTransaction } from './transaction-abort';
 import type { LocalFile } from './file-store';
+import type { BackupDocuments } from './backup-documents';
 
 export type JournalRef = { project: string; surface: string; source: string };
 export type JournalWrite = { ref: JournalRef; expected: number; text: string };
@@ -54,6 +55,7 @@ export function projectDocuments(
     withFiles = false,
     operation = signal,
     withJournal = false,
+    withDocuments = false,
   ) {
     operation.throwIfAborted();
     const db = await connect();
@@ -63,6 +65,7 @@ export function projectDocuments(
         const tables = [vaultTable, table];
         if (withFiles) tables.push(fileTable);
         if (withJournal) tables.push(journalTable);
+        if (withDocuments) tables.push(estimateTable, reportTable);
         const tx = db.transaction(tables, mode, { durability: 'strict' });
         let result: T;
         const abort = () => abortTransaction(tx);
@@ -148,15 +151,42 @@ export function projectDocuments(
         true,
       );
     },
-    async restore(id: string, text: string, originals: RestoredOriginal[]) {
+    async restore(
+      id: string,
+      text: string,
+      originals: RestoredOriginal[],
+      documents: BackupDocuments = {},
+    ) {
       assertID(id);
+      if (table !== projectTable) throw new Error('Invalid restore store');
       signal.throwIfAborted();
       const envelope = await seal(root, account, purpose(id, 1), text);
+      const prepared = await Promise.all(
+        (
+          [
+            ['estimate', estimateTable],
+            ['report', reportTable],
+          ] as const
+        ).flatMap(([kind, table]) =>
+          documents[kind] === undefined
+            ? []
+            : [
+                seal(root, account, `${table}:${id}:1`, documents[kind]).then((envelope) => ({
+                  table,
+                  envelope,
+                })),
+              ],
+        ),
+      );
       await transact<void>(
         'readwrite',
         (store, finish, abort) => {
           try {
             store.add({ id, revision: 1, envelope } satisfies ProjectRow, [account, id]);
+            for (const { table, envelope } of prepared)
+              store.transaction
+                .objectStore(table)
+                .add({ id, revision: 1, envelope } satisfies ProjectRow, [account, id]);
             const files = store.transaction.objectStore(fileTable);
             for (const original of originals) {
               files.add(original.header, [account, original.id]);
@@ -169,6 +199,9 @@ export function projectDocuments(
             abort();
           }
         },
+        true,
+        signal,
+        false,
         true,
       );
     },

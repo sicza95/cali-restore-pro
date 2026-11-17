@@ -26,4 +26,4 @@ GitHub Actions on `d26e534` passed the UI library workflow and found two browser
 
 - Physical iPad Safari and Home Screen, Apple Pencil, sustained dense 4K/8K editing and export memory profiling remain open. Windows Playwright WebKit lacks `OffscreenCanvas` in this environment.
 - Exact physical print scale, raw-mask export, final report issuance and workbook recalculation in the target spreadsheet applications remain open. Maps fit the output frame and report calibrated dimensions where available.
-- Recipient report authoring, portable backup inclusion of estimates/reports and production infrastructure retention/recovery still require separate qualification.
+- [Portable backup v2](m07-portable-backups.md) includes estimate and report records with atomic recovery and backward-compatible v1 import. Recipient report authoring and production infrastructure retention/recovery still require separate qualification; #55 remains open for recipient authoring.

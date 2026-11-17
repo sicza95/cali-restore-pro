@@ -150,6 +150,19 @@ test('authenticates all original chunks and rolls back a cancelled or aborted im
     const [object] = project.objects;
     const [surface] = object!.surfaces;
     surface!.images.push({ id: original.id, role: 'mapping' });
+    const load = (path: string): Promise<unknown> => import(path);
+    const { backupRecords } = (await load(
+      '/tests-platform/fixtures/backup-records.ts',
+    )) as typeof import('./fixtures/backup-records');
+    const { estimateRepository } = (await load(
+      '/src/platform/estimates/persistence.ts',
+    )) as typeof import('../src/platform/estimates/persistence');
+    const { reportRepository } = (await load(
+      '/src/platform/reports/persistence.ts',
+    )) as typeof import('../src/platform/reports/persistence');
+    const records = backupRecords(project.id, original.id);
+    await estimateRepository(source).save(project.id, 0, records.estimate);
+    await reportRepository(source).save(project.id, 0, records.report);
     object!.surfaces.push({
       ...surface!,
       id: crypto.randomUUID(),
@@ -166,6 +179,8 @@ test('authenticates all original chunks and rolls back a cancelled or aborted im
     const db = await connect();
     const counts = async () => ({
       projects: (await localProjects(target).list()).length,
+      estimates: (await target.estimates().list()).length,
+      reports: (await target.reports().list()).length,
       files: await new Promise<number>((resolve, reject) => {
         const request = db
           .transaction(fileTable)
@@ -221,6 +236,16 @@ test('authenticates all original chunks and rolls back a cancelled or aborted im
     const [reopened] = await localProjects(target).list();
     const refs = reopened!.objects[0]!.surfaces.flatMap((entry) => entry.images);
     const ref = { project: reopened!.id, id: refs[0]!.id };
+    const estimate = (await estimateRepository(target).load(restored.id))!;
+    const report = (await reportRepository(target).load(restored.id))!;
+    const restoredEstimate = structuredClone(records.estimate);
+    restoredEstimate.draft.project = restored.id;
+    restoredEstimate.draft.phases[0]!.quantity!.project = restored.id;
+    restoredEstimate.draft.phases[0]!.scopeSource = ref.id;
+    restoredEstimate.snapshots[0]!.input = structuredClone(restoredEstimate.draft);
+    const restoredReport = structuredClone(records.report);
+    restoredReport.project = restored.id;
+    restoredReport.settings.surfaces['surface-a']!.references = [ref.id];
     const metadata = await target.files().metadata(ref);
     const chunks: Uint8Array[] = [];
     for await (const chunk of target.files().original(ref)) chunks.push(chunk);
@@ -250,12 +275,17 @@ test('authenticates all original chunks and rolls back a cancelled or aborted im
       afterRecovery,
       metadata,
       matches,
+      estimateIntact: JSON.stringify(estimate.document) === JSON.stringify(restoredEstimate),
+      reportIntact: JSON.stringify(report.document) === JSON.stringify(restoredReport),
+      documentRevisions: [estimate.revision, report.revision],
       missingOriginal,
       ciphertext: ![
         'Hidden chapel',
         'Hidden object',
         'Hidden surface',
         'hidden-original.dng',
+        'Private backup assumptions',
+        'Private report notes',
         code,
       ].some((value) => raw.includes(value)),
       independent: restored.id !== project.id && ref.id !== original.id,
@@ -278,10 +308,13 @@ test('authenticates all original chunks and rolls back a cancelled or aborted im
     cancelled: true,
     injected: true,
     aborted: true,
-    afterFailures: { projects: 0, files: 0 },
-    afterRecovery: { projects: 1, files: 4 },
+    afterFailures: { projects: 0, estimates: 0, reports: 0, files: 0 },
+    afterRecovery: { projects: 1, estimates: 1, reports: 1, files: 4 },
     metadata: { name: 'hidden-original.dng', type: 'image/x-adobe-dng', size: 1048579 },
     matches: true,
+    estimateIntact: true,
+    reportIntact: true,
+    documentRevisions: [1, 1],
     missingOriginal: true,
     ciphertext: true,
     independent: true,

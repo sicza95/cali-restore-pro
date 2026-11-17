@@ -15,27 +15,20 @@ import type { FileShape } from './file-format';
 import { projectDocuments } from './project-store';
 import { estimateTable, reportTable } from './store';
 import type { RestoredOriginal } from './project-store';
+import { documentShapes, restoreDocuments } from './backup-documents';
+import type { BackupDocuments, DocumentShape } from './backup-documents';
 import {
   backupCipher,
   backupHeader,
   backupHeaderBytes,
+  backupVersion,
   indexSize,
   maxBackupBytes,
   maxIndexBytes,
 } from './backup-format';
 
-/** A saved estimate or report draft: portable backups cannot carry these yet. */
-export type BackupGap = 'estimate' | 'report';
-
-/** Refuses a backup that would silently leave out the project's estimate or report draft. */
-export class BackupUnavailable extends Error {
-  constructor(readonly gap: BackupGap) {
-    super(`${gap}-inclusive portable backups are not yet supported; refusing an incomplete backup`);
-  }
-}
-
 type Original = FileShape & { id: string };
-type BackupIndex = { project: Project; originals: Original[] };
+type BackupIndex = { project: Project; originals: Original[]; documents?: DocumentShape[] };
 type Options = { signal?: AbortSignal; progress?: (fraction: number) => void };
 const encode = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
@@ -74,10 +67,10 @@ function attachmentIds(project: Project) {
   return ids;
 }
 
-function archiveSize(indexBytes: number, originals: Original[]) {
+function archiveSize(indexBytes: number, originals: Original[], documents: DocumentShape[] = []) {
   const bytes = originals.reduce(
     (total, shape) => total + shape.manifestBytes + shape.sourceBytes + 16 * chunkCount(shape),
-    backupHeaderBytes + indexBytes,
+    backupHeaderBytes + indexBytes + documents.reduce((total, shape) => total + shape.bytes, 0),
   );
   if (indexBytes > maxIndexBytes || bytes > maxBackupBytes) throw new Error('Backup is too large');
   return bytes;
@@ -93,20 +86,9 @@ export function projectBackups(
   const signalFor = (options: Options) =>
     options.signal ? AbortSignal.any([locked, options.signal]) : locked;
 
-  /** What the project holds that a portable backup cannot carry yet, if anything. */
-  async function gap(projectId: string, signal: AbortSignal): Promise<BackupGap | undefined> {
-    if (await projectDocuments(root, account, stamp, signal, estimateTable).changed(projectId, 0))
-      return 'estimate';
-    if (await projectDocuments(root, account, stamp, signal, reportTable).changed(projectId, 0))
-      return 'report';
-  }
-
   return {
-    gap: (projectId: string, options: Options = {}) => gap(projectId, signalFor(options)),
     async export(projectId: string, options: Options = {}) {
       const signal = signalFor(options);
-      const missing = await gap(projectId, signal);
-      if (missing) throw new BackupUnavailable(missing);
       const document = await projectDocuments(root, account, stamp, signal).changed(projectId, 0);
       if (!document) throw new Error('Project unavailable');
       const project = validateProject(JSON.parse(document.text) as Project, projectId);
@@ -119,13 +101,36 @@ export function projectBackups(
         assertShape(shape);
         originals.push(shape);
       }
-      const index = encode.encode(JSON.stringify({ project, originals } satisfies BackupIndex));
-      const total = archiveSize(index.byteLength + 16, originals);
+      const records: { kind: keyof BackupDocuments; bytes: Uint8Array<ArrayBuffer> }[] = [];
+      for (const [kind, table] of [
+        ['estimate', estimateTable],
+        ['report', reportTable],
+      ] as const) {
+        const row = await projectDocuments(root, account, stamp, signal, table).changed(
+          projectId,
+          0,
+        );
+        if (row) records.push({ kind, bytes: encode.encode(row.text) });
+      }
+      const documents = documentShapes(
+        records.map(({ kind, bytes }) => ({ kind, bytes: bytes.length + 16 })),
+      );
+      const index = encode.encode(
+        JSON.stringify({ project, originals, documents } satisfies BackupIndex),
+      );
+      const total = archiveSize(index.byteLength + 16, originals, documents);
       const header = backupHeader(index.byteLength + 16);
       const code = newCode();
       const archive = await backupCipher(code, header);
       const parts: BlobPart[] = [header, await archive.seal(index)];
       let offset = header.length + index.byteLength + 16;
+      for (const record of records) {
+        signal.throwIfAborted();
+        parts.push(await archive.seal(record.bytes));
+        offset += record.bytes.length + 16;
+        record.bytes.fill(0);
+        options.progress?.(offset / total);
+      }
       for (const shape of originals) {
         const source = await fileCipher(root, account, projectId, shape.id);
         for (let part = 0; part <= chunkCount(shape); part++) {
@@ -164,19 +169,33 @@ export function projectBackups(
         return plain;
       };
 
-      const { project, originals } = JSON.parse(
-        decode.decode(await read(indexBytes)),
-      ) as BackupIndex;
+      const {
+        project,
+        originals,
+        documents: shapes,
+      } = JSON.parse(decode.decode(await read(indexBytes))) as BackupIndex;
+      const documents = backupVersion(header) === 1 ? [] : documentShapes(shapes);
+      if (backupVersion(header) === 1 && shapes !== undefined)
+        throw new Error('Invalid legacy index');
       if (!Array.isArray(originals)) throw new Error('Invalid original index');
       const ids = attachmentIds(project);
       for (const shape of originals) {
         assertShape(shape);
         if (!ids.delete(shape.id)) throw new Error('Unexpected or repeated original');
       }
-      if (ids.size || archiveSize(indexBytes, originals) !== blob.size)
+      if (ids.size || archiveSize(indexBytes, originals, documents) !== blob.size)
         throw new Error('Incomplete or oversized backup');
 
       const id = crypto.randomUUID();
+      const records: BackupDocuments = {};
+      for (const shape of documents) {
+        const plain = await read(shape.bytes);
+        try {
+          records[shape.kind] = decode.decode(plain);
+        } finally {
+          new Uint8Array(plain).fill(0);
+        }
+      }
       const fileIds = new Map<string, string>();
       const restored: RestoredOriginal[] = [];
       for (const shape of originals) {
@@ -221,6 +240,7 @@ export function projectBackups(
         id,
         JSON.stringify(next),
         restored,
+        restoreDocuments(records, project.id, id, fileIds),
       );
       return { ...next, revision: 1 };
     },

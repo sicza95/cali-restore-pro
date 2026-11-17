@@ -1,6 +1,5 @@
 import { createSignal, onCleanup, Show } from 'solid-js';
 import type { SavedProject } from '../../platform/projects/types';
-import { BackupUnavailable } from '../../platform/vault/project-backups';
 import type { LocalVault } from '../../platform/vault/vault';
 import type { Language } from '../account-access/types';
 import { projectCopy } from './project-copy';
@@ -25,17 +24,6 @@ export function ProjectBackup(props: Props) {
   const [cancelled, setCancelled] = createSignal(false);
   const [download, setDownload] = createSignal<{ url: string; code: string }>();
   const [saved, setSaved] = createSignal(false);
-  const [gap, setGap] = createSignal(false);
-
-  /** Says up front when the project holds something a backup can't carry yet. */
-  async function checkGap() {
-    if (!props.project) return;
-    try {
-      setGap(!!(await props.vault.projectBackups().gap(props.project)));
-    } catch {
-      setGap(false);
-    }
-  }
 
   function clearDownload() {
     const result = download();
@@ -61,9 +49,8 @@ export function ProjectBackup(props: Props) {
       clearDownload();
       try {
         await work({ signal: controller.signal, progress: setProgress });
-      } catch (error) {
+      } catch {
         if (controller.signal.aborted) setCancelled(true);
-        else if (error instanceof BackupUnavailable) setGap(true);
         else setError(props.project ? c().exportFailed : c().importFailed);
       } finally {
         setTransfer(undefined);
@@ -75,8 +62,7 @@ export function ProjectBackup(props: Props) {
     <details
       class="project-backup"
       onToggle={(event) => {
-        if (event.currentTarget.open) void checkGap();
-        else {
+        if (!event.currentTarget.open) {
           transfer()?.abort();
           clearDownload();
         }
@@ -133,8 +119,7 @@ export function ProjectBackup(props: Props) {
         {(id) => (
           <button
             data-control-id="backup.export"
-            disabled={props.busy || gap()}
-            aria-describedby={gap() ? 'project-backup-gap' : undefined}
+            disabled={props.busy}
             onClick={() =>
               execute(async (options) => {
                 const { blob, code } = await props.vault.projectBackups().export(id(), options);
@@ -184,11 +169,6 @@ export function ProjectBackup(props: Props) {
             </Show>
           </div>
         )}
-      </Show>
-      <Show when={gap()}>
-        <p id="project-backup-gap" class="field-help" role="status">
-          {c().gap}
-        </p>
       </Show>
       <Show when={error()}>
         <p role="alert">{error()}</p>

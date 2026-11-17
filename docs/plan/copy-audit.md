@@ -1,5 +1,9 @@
 # Copy audit — Phase 2, step 1
 
+Later update (#55, backup slice): [portable backup v2](../milestones/m07-portable-backups.md)
+includes estimates and report drafts. The historical refusal and gap wording
+described below have been removed from both languages; Prepare backup is enabled.
+
 15 November 2026 · Status: done, in review · Source: [quality baseline](../reviews/2026-11-14-quality-baseline.md), Phase 2 item 1, UX findings 2 and 3 · Targets: iPad and desktop
 
 Goal: every screen speaks the conservator's language. Engineering terms become task words, status notes that describe the build (not the user's work) leave the screen, and internal identifiers stop showing. Behaviour, control ids and layouts do not change.

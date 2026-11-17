@@ -60,4 +60,4 @@ M-16 reruns fixture-oracle and permission/content checks with real committed geo
 
 ## Known limit: backups
 
-Portable project backups (M-07) do not carry saved estimate versions or report drafts yet. `projectBackups().export` refuses such a project with `BackupUnavailable` rather than writing an incomplete backup, and the project's backup panel says so when it opens (`projectBackups().gap`), with "Prepare backup" disabled. Lifting this needs estimate- and report-inclusive backup formats; until then that work stays on the device.
+Portable project backups (M-07) now carry the saved estimate draft, all issued versions and report draft in [version 2](../milestones/m07-portable-backups.md). Restore rebinds project/photo identities and commits these records with the project and originals in one transaction, preserving issued calculations, version IDs and source revision provenance. Version 1 backups without these records still restore. The backup panel permits these projects; the previous `BackupUnavailable`/`gap` refusal is removed. Personal preset libraries and separate drawing journals remain device-local; recipient report authoring remains open under #55.
