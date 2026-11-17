@@ -38,6 +38,11 @@ export function createRouter() {
     if (url.hash && !url.hash.startsWith('#token='))
       requestAnimationFrame(() => document.getElementById(url.hash.slice(1))?.scrollIntoView());
   };
+  // Fragment navigation can emit popstate followed by hashchange. The first event has already
+  // consumed and stripped the token; do not let its duplicate discard that page's token.
+  const hashChange = () => {
+    if (location.pathname + location.search + location.hash !== href()) sync();
+  };
   // Delegate within the app so inline account, vault and recovery links share the route table.
   const click = (event: MouseEvent) => {
     const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
@@ -46,11 +51,11 @@ export function createRouter() {
   };
   document.addEventListener('click', click);
   window.addEventListener('popstate', sync);
-  window.addEventListener('hashchange', sync);
+  window.addEventListener('hashchange', hashChange);
   onCleanup(() => {
     document.removeEventListener('click', click);
     window.removeEventListener('popstate', sync);
-    window.removeEventListener('hashchange', sync);
+    window.removeEventListener('hashchange', hashChange);
   });
   return { entry, linkToken, href, route, navigate };
 }

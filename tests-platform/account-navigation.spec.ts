@@ -175,3 +175,24 @@ test('a delayed password confirmation cannot enable controls after leaving and r
   await expect(page.getByRole('button', { name: 'Change password', exact: true })).toBeDisabled();
   await expect(page.getByText(/Password confirmed\./)).toHaveCount(0);
 });
+
+test('an email fragment opened on the same page is consumed once across history and hash events', async ({
+  page,
+}) => {
+  const token = 'b'.repeat(43);
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
+  );
+  await page.route('**/api/v1/auth/verify-email', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ token });
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page.goto('/verify-email');
+  await expect(page.getByText('Open the link from your email to continue.')).toBeVisible();
+  await mark(page);
+  await page.goto('/verify-email#token=' + token);
+  await expect(page).toHaveURL(/\/verify-email$/);
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
+  await sameDocument(page);
+});
