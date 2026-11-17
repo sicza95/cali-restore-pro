@@ -15,6 +15,7 @@ import { useReportDownload } from './useReportDownload';
 import { ReportPreview } from './ReportPreview';
 import { ReportScope } from './ReportScope';
 import { BrandingSettings } from './ReportSettings';
+import { RawMaskDownload } from './RawMaskDownload';
 
 const units = ['inherited', ...estimateUnits] as const;
 
@@ -138,6 +139,9 @@ export function ReportReview(props: {
       </section>
       <Show when={ready()}>
         <Show when={props.output}>{actions()}</Show>
+        <Show when={props.output}>
+          <RawMaskDownload project={props.project} vault={props.vault} language={props.language} />
+        </Show>
         <div class="review-grid">
           <ReportScope
             project={props.project}

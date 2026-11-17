@@ -1,6 +1,28 @@
 import { crc32 } from './export-bytes';
+import { assertRawMask } from './raw-mask';
+import type { RawMaskExport } from './raw-mask';
 
 const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+
+export async function rawMaskPng(value: RawMaskExport) {
+  assertRawMask(value);
+  const canvas = new OffscreenCanvas(value.width, value.height);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas unavailable');
+  ctx.beginPath();
+  for (const ring of value.mask) {
+    ring.forEach(([x, y], index) => {
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+  }
+  ctx.fillStyle = '#000000';
+  ctx.fill('nonzero');
+  const png = await canvas.convertToBlob({ type: 'image/png' });
+  if (png.size > 32_000_000) throw new Error('PNG size limit');
+  return png;
+}
 
 function densityChunk(dpi: number) {
   const bytes = new Uint8Array(21);

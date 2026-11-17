@@ -1,6 +1,6 @@
 import { createSignal, onCleanup } from 'solid-js';
 import { exportReport } from '../../platform/reports/export';
-import type { Draft } from '../../platform/reports/types';
+import type { ReportExport } from '../../platform/reports/export';
 import type { LocalVault } from '../../platform/vault/vault';
 
 export function useReportDownload(vault: () => LocalVault, current: () => boolean) {
@@ -25,7 +25,7 @@ export function useReportDownload(vault: () => LocalVault, current: () => boolea
   }
   onCleanup(cancel);
 
-  async function download(draft: Draft) {
+  async function download(input: ReportExport | (() => ReportExport)) {
     if (job) return;
     const task = new AbortController();
     job = task;
@@ -34,6 +34,8 @@ export function useReportDownload(vault: () => LocalVault, current: () => boolea
     try {
       if (!current()) throw new Error('Project changed');
       const signal = AbortSignal.any([task.signal, vault().accessSignal()]);
+      signal.throwIfAborted();
+      const draft = typeof input === 'function' ? input() : input;
       const blob = await exportReport(draft, signal);
       signal.throwIfAborted();
       if (!current()) throw new Error('Project changed');
@@ -41,7 +43,10 @@ export function useReportDownload(vault: () => LocalVault, current: () => boolea
       url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'calirestore-report-draft.' + draft.format.toLowerCase();
+      link.download =
+        'kind' in draft
+          ? 'calirestore-raw-mask.png'
+          : 'calirestore-report-draft.' + draft.format.toLowerCase();
       link.click();
       release = setTimeout(revoke, 1500);
     } catch {

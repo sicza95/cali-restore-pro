@@ -2,6 +2,13 @@ import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import type { Draft } from '../src/platform/reports/types';
 import { input, phase } from '../tests-estimates/fixtures';
+import { verifyRawMaskExport } from './raw-mask-export';
+
+test('exports one raw mask at native dimensions with transparent surroundings', async ({
+  page,
+}) => {
+  await verifyRawMaskExport(page);
+});
 
 const draft: Draft = {
   format: 'PDF',

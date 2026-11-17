@@ -60,7 +60,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | MEAS-05     | Must     | Actual geometry coverage with visual-only opacity                   | M-08  | M-13       | Partial |
 | MEAS-06     | Must     | Preserve work and inputs through empty/incomplete assessment        | M-05  | M-16       | Partial |
 | MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Partial |
-| OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Partial |
+| OUT-01      | Must     | [Raw mask and composited map exports][raw-mask]                     | M-10  | M-16       | Partial |
 | OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Partial |
 | OUT-03      | Must     | Printable PDF map and standard client report                        | M-10  | M-16       | Partial |
 | OUT-04      | Must     | Separate normal outputs, backups, and diagnostics                   | M-07  | M-16       | Partial |
@@ -128,7 +128,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 
 [M-10 report workflow evidence](../milestones/m10-reports-and-exports.md) covers encrypted device-local report drafts, scoped issued estimate previews, selected surfaces and fixture comparisons, captured branding, independent EN/HU and units, and output controls (OUT-03, OUT-05 through OUT-08, OUT-10 through OUT-12 and UX-02). Downloads, payload inspection and real assessment qualification remain with M-11/M-16.
 
-[M-11 client export evidence](../milestones/m11-client-exports.md) covers five browser-generated formats, composited fixture maps, numeric and editable workbooks, draft labelling, selection and metadata checks, and abort and size limits (OUT-01 through OUT-03 and OUT-05 through OUT-12). Raw masks, explicit source metadata inclusion, real reference images and final measured reports remain open.
+[M-11 client export evidence](../milestones/m11-client-exports.md) covers five browser-generated formats, composited fixture maps, numeric and editable workbooks, draft labelling, selection and metadata checks, and abort and size limits (OUT-01 through OUT-03 and OUT-05 through OUT-12). Raw-mask PNG evidence is recorded in the OUT-01 row; explicit source metadata inclusion, real reference images and final measured reports remain open.
 
 [M-09 calculation and persistence evidence](../milestones/m09-restoration-estimates.md) covers fixture arithmetic for EST-01 through EST-20, immutable estimate versions, private encrypted preset copies, selected scope and allowlisted summary/full publication (SHARE-03/10, PRIV-01). Status is Partial, not real-geometry or release acceptance. Estimate cloud sync, portable recovery (PROJ-04), scoped collaboration and M-10/M-11 outputs remain open; backup creation refuses projects with estimates to avoid incomplete recovery claims.
 
@@ -201,3 +201,5 @@ ADMIN-06, ADMIN-07 and ADMIN-08 evidence is in [M-07 deletion and retention](../
 [M-08 closeout](m08-delivery.md#m-08-8-of-8--inventory-and-handoff) links the route and control reconciliation, evidence and remaining gates. FRAME-01/02, ALIGN-01/02/03 and CAL-01 gain preview-control evidence for perspective, the rectification target, viewport pan, editable correspondences and calibration endpoints. These review values have no durable geometry path. UX-01/02 and UI-01 gain the EN/HU and light/dark tablet matrix. PRIV-05/07, PROJ-01/02/04/05/07 and the applicable SHARE rows retain distinct evidence for account/vault gates, encrypted storage, account-bound grants, revocation and reconnect. EST-01 and PAT-02 gain a vault-gated library entry with preset availability documented. Product acceptance statuses remain scoped to each row’s functional and release milestones.
 
 Issue #77 extends ADMIN-01 and UX-02 evidence with bilingual readable operational labels and short copyable references; filled admin pages and expanded mail lists now pass the copy guard. See [M-02 reference evidence](../milestones/m02-account-administration.md#readable-operational-references-77). API metadata, requirement status and physical-device qualification are unchanged.
+
+[raw-mask]: ../milestones/out01-raw-mask-export.md

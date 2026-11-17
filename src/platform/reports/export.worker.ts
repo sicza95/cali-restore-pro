@@ -4,7 +4,8 @@ import { reportCopy } from './copy';
 import { visualExport } from './export-visual';
 import { estimateSheets } from './export-editable';
 import { xlsx } from './export-xlsx';
-import type { Draft } from './types';
+import type { ReportExport } from './export';
+import { rawMaskPng } from './export-png';
 import type { Cell } from './export-rows';
 
 function csv(rows: Cell[][]) {
@@ -23,7 +24,8 @@ function csv(rows: Cell[][]) {
   });
 }
 
-async function encode(draft: Draft) {
+async function encode(draft: ReportExport) {
+  if ('kind' in draft) return rawMaskPng(draft);
   if (!draft.surfaces.length) throw new Error('Report selection required');
   if (draft.format === 'CSV') return csv(reportTable(draft));
   if (draft.format === 'XLSX') {
@@ -46,7 +48,7 @@ async function encode(draft: Draft) {
   return visualExport(draft);
 }
 
-self.onmessage = async ({ data }: MessageEvent<Draft>) => {
+self.onmessage = async ({ data }: MessageEvent<ReportExport>) => {
   try {
     self.postMessage(await encode(data));
   } catch {

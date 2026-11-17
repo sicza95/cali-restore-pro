@@ -1,8 +1,13 @@
 import type { Draft } from './types';
+import { assertRawMask } from './raw-mask';
+import type { RawMaskExport } from './raw-mask';
 
-export function exportReport(draft: Draft, signal: AbortSignal): Promise<Blob> {
+export type ReportExport = Draft | RawMaskExport;
+
+export function exportReport(draft: ReportExport, signal: AbortSignal): Promise<Blob> {
   signal.throwIfAborted();
-  if (
+  if ('kind' in draft) assertRawMask(draft);
+  else if (
     draft.surfaces.length > 150 ||
     draft.surfaces.reduce((total, surface) => total + surface.references.length, 0) > 2000 ||
     (draft.estimate?.detail?.phases.length ?? 0) > 500 ||

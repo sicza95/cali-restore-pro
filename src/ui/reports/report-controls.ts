@@ -44,6 +44,23 @@ export type ReviewRoute = (typeof reviewRoutes)[number];
 export const routeControl = (key: ReviewRoute) => 'project.review.' + key;
 
 export const reportControls: readonly ControlContract[] = [
+  ...['surface', 'version', 'layer', 'download', 'cancel'].map((key): ControlContract => ({
+    id: 'report.raw.' + key,
+    labelKey: key,
+    helpKey: 'note',
+    command: 'Select or download one raw mask PNG',
+    permission: 'Unlocked account-local project author',
+    prerequisite: 'Outputs open and saved assessment with a mask layer selected',
+    valueSource: 'Selected assessment source dimensions and one saved layer mask',
+    behavior: 'functional',
+    owner: 'M-16',
+    composition: 'Outputs · Raw mask',
+    unavailable: {
+      failure: 'Show localized export error',
+      empty: 'Disable download without a saved layer',
+      locked: 'Clear mask selection',
+    },
+  })),
   {
     id: 'project.review.parent',
     labelKey: 'name',

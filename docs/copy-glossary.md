@@ -43,6 +43,8 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 
 ## Words that stay
 
+- **Raw mask** (_nyers maszk_): one saved layer as an opaque black mask with transparent surroundings, in the reference photo's original pixel coordinates and dimensions. It excludes the photo, crop, grid, legend and layer styling.
+
 - **Draft** (_vázlat_ for drawing, _piszkozat_ for reports): an unfinished, unsaved piece of work is a real idea for the user.
 - **Preview** (_előnézet_) where it means looking at a result before downloading it.
 - **Encrypted backup** (_titkosított biztonsági mentés_): the user must keep the backup key, so the word tells them something they act on.

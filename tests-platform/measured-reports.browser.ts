@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { orientedJpeg } from './fixtures/images';
 import { expectTaskLanguage } from './copy-guard';
+import { verifyRawMaskDownload } from './raw-mask-download';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 
@@ -143,4 +144,6 @@ test('reconciles a committed checkpoint estimate with scoped production download
   expect(bytes).toContain('Clean plaster');
   expect(bytes).toContain('<f>');
   expect(bytes).not.toContain('data:image');
+  await report('cancel').click();
+  await verifyRawMaskDownload(page, info, fixture.checkpoint);
 });
