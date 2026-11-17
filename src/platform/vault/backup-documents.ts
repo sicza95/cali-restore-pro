@@ -1,4 +1,3 @@
-import { calculate } from '../estimates/calculate';
 import type { EstimateDocument, EstimateInput } from '../estimates/types';
 import type { ReportDraft } from '../reports/types';
 import { maxLocalDocument } from './crypto';
@@ -73,8 +72,12 @@ export function restoreDocuments(
       draft: input(doc.draft),
       snapshots: doc.snapshots.map((snapshot) => {
         const next = input(snapshot.input);
-        if (JSON.stringify(calculate(next)) !== JSON.stringify(snapshot.result))
-          throw new Error('Backup estimate snapshot mismatch');
+        if (
+          !snapshot.result ||
+          typeof snapshot.result !== 'object' ||
+          Array.isArray(snapshot.result)
+        )
+          throw new Error('Invalid backup estimate result');
         return { ...snapshot, input: next };
       }),
     });

@@ -4,6 +4,8 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { backupRecords } from '../../../tests-platform/fixtures/backup-records';
 import { newProject } from '../projects/projects';
 import { calculate } from '../estimates/calculate';
+import { estimateRepository } from '../estimates/persistence';
+import type { LocalVault } from './vault';
 import { importCode, maxLocalDocument } from './crypto';
 import {
   backupCipher,
@@ -192,15 +194,30 @@ it('translates committed measurement revisions while preserving snapshot results
   expect(next.snapshots[0].result).toEqual(estimate.snapshots[0]!.result);
 });
 
-it('rejects foreign project records and inconsistent issued results', () => {
+it('rejects foreign project records and preserves historical issued results on restore and load', async () => {
   const { estimate, report } = backupRecords('source');
   expect(() =>
     restoreDocuments({ report: JSON.stringify(report) }, 'other', 'copy', new Map()),
   ).toThrow();
-  estimate.snapshots[0]!.result.total = '0.00';
-  expect(() =>
-    restoreDocuments({ estimate: JSON.stringify(estimate) }, 'source', 'copy', new Map()),
-  ).toThrow('snapshot mismatch');
+  estimate.snapshots[0]!.result.total = '123456.78';
+  expect(estimate.snapshots[0]!.result).not.toEqual(calculate(estimate.snapshots[0]!.input));
+  const destination = crypto.randomUUID();
+  const restored = restoreDocuments(
+    { estimate: JSON.stringify(estimate) },
+    'source',
+    destination,
+    new Map(),
+  );
+  const store = records(estimateTable);
+  await store.save(destination, 0, restored.estimate!);
+  const repository = estimateRepository({ estimates: () => store } as LocalVault);
+  const loaded = (await repository.load(destination))!;
+  expect(loaded.document.snapshots[0]!.result).toEqual(estimate.snapshots[0]!.result);
+  loaded.document.draft.assumptions = 'Updated draft';
+  await repository.save(destination, loaded.revision, loaded.document);
+  expect((await repository.load(destination))!.document.snapshots[0]!.result).toEqual(
+    estimate.snapshots[0]!.result,
+  );
 });
 
 it('remaps photo references without changing issued identifiers or results', () => {

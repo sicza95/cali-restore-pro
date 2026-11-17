@@ -18,7 +18,9 @@ export function estimateRepository(vault: LocalVault) {
       for (const item of document.snapshots) {
         if (
           item.input.project !== project ||
-          JSON.stringify(calculate(item.input)) !== JSON.stringify(item.result)
+          !item.result ||
+          typeof item.result !== 'object' ||
+          Array.isArray(item.result)
         )
           throw new Error('Estimate snapshot mismatch');
       }
@@ -32,7 +34,7 @@ export function estimateRepository(vault: LocalVault) {
       const existing = previous ? (JSON.parse(previous.text) as EstimateDocument).snapshots : [];
       if (existing.some((s, i) => JSON.stringify(s) !== JSON.stringify(document.snapshots[i])))
         throw new Error('Snapshots are immutable');
-      for (const s of document.snapshots) {
+      for (const s of document.snapshots.slice(existing.length)) {
         if (
           s.input.project !== project ||
           JSON.stringify(calculate(s.input)) !== JSON.stringify(s.result)
