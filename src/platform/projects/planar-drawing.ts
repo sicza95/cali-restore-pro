@@ -1,5 +1,6 @@
 import clipping from 'polygon-clipping';
 import type { MultiPolygon, Pair, Ring as ClipRing } from 'polygon-clipping';
+import { budgetSides, capSides, minCapSides, sourceTolerance } from './planar-detail';
 import { assertMask, flattenCenterline, maxEdges } from './planar-mask';
 import { extent, rect } from './planar-transform';
 import type { PatternVersion } from './patterns';
@@ -14,6 +15,8 @@ export type DrawingMark = {
   operation: 'add' | 'subtract' | 'replace';
   width: number;
   region: Ring;
+  /** Boundary tolerance in source pixels (#122). Absent on marks saved before it. */
+  tolerance?: number;
 };
 export type DrawingLayer = {
   id: number;
@@ -72,14 +75,21 @@ export function nonzeroPolygons(mask: Mask): MultiPolygon {
   return bounded(clipping.union([], ...bands.values()));
 }
 
-const sides = 16;
-const unitCircle = Array.from({ length: sides }, (_, i): Point => {
-  const angle = (i * 2 * Math.PI) / sides;
-  return [Math.cos(angle), Math.sin(angle)];
-});
+const circles = new Map<number, Point[]>();
+function unitCircle(sides: number) {
+  let circle = circles.get(sides);
+  if (!circle) {
+    circle = Array.from({ length: sides }, (_, i): Point => {
+      const angle = (i * 2 * Math.PI) / sides;
+      return [Math.cos(angle), Math.sin(angle)];
+    });
+    circles.set(sides, circle);
+  }
+  return circle;
+}
 
-function cap([x, y]: Point, radius: number): Pair[] {
-  return unitCircle.map(([u, v]) => [x + radius * u, y + radius * v]);
+function cap([x, y]: Point, radius: number, sides: number): Pair[] {
+  return unitCircle(sides).map(([u, v]) => [x + radius * u, y + radius * v]);
 }
 
 function hull(points: Pair[]): Pair[] {
@@ -104,7 +114,7 @@ function footprint(mark: DrawingMark): MultiPolygon {
   const [first] = mark.points;
   if (!first) return [];
   const points = mark.closed ? [...mark.points, first] : mark.points;
-  const tolerance = 0.25;
+  const tolerance = mark.tolerance ?? sourceTolerance;
   const segments = points.slice(1).map((point, i) => {
     const { at, handle } = points[i]!;
     const toward = (end: Point): Point => [
@@ -118,15 +128,27 @@ function footprint(mark: DrawingMark): MultiPolygon {
   const line = flattenCenterline(first.at, segments, tolerance);
   if (mark.closed) return bounded(clipping.union(polygon(line)));
   const pressure = mark.points.some((point) => point.pressure !== undefined);
-  const ends = line.map((point, i) =>
-    cap(point, (mark.width / 2) * (pressure ? (mark.points[i]?.pressure ?? 1) : 1)),
+  const radii = line.map(
+    (_, i) => (mark.width / 2) * (pressure ? (mark.points[i]?.pressure ?? 1) : 1),
   );
-  // Each straight interval sweeps the convex hull of its endpoint disks.
-  if (ends.length === 1) return polygon(ends[0]!);
-  if (ends.length * sides > maxEdges * 2) throw new Error('Stroke exceeds geometry budget');
-  return bounded(
-    clipping.union([], ...ends.slice(1).map((end, i) => polygon(hull([...ends[i]!, ...end])))),
-  );
+  if (line.length * minCapSides > maxEdges * 2) throw new Error('Stroke exceeds geometry budget');
+  const detail = capSides(Math.max(...radii), mark.tolerance);
+  const sweep = (sides: number): MultiPolygon => {
+    const ends = line.map((point, i) => cap(point, radii[i]!, sides));
+    // Each straight interval sweeps the convex hull of its endpoint disks.
+    if (ends.length === 1) return polygon(ends[0]!);
+    return bounded(
+      clipping.union([], ...ends.slice(1).map((end, i) => polygon(hull([...ends[i]!, ...end])))),
+    );
+  };
+  const sides = budgetSides(detail, line.length, maxEdges * 2);
+  if (sides === minCapSides) return sweep(sides);
+  try {
+    return sweep(sides);
+  } catch {
+    // Finer caps exceeded the mask budget; the legacy cap detail still fits.
+    return sweep(minCapSides);
+  }
 }
 
 export function checkpointCoverage(state: PlanarSurface) {

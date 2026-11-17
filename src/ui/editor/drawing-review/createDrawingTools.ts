@@ -144,6 +144,7 @@ export function createDrawingTools(review: DrawingReview, notify: (notice: 'chan
       operation: mark?.operation ?? operation(),
       width: mark?.width ?? 0.65,
       region: mark?.region,
+      ...(mark?.tolerance !== undefined && { tolerance: mark.tolerance }),
     };
   };
   async function apply() {

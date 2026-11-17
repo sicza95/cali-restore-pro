@@ -1,4 +1,5 @@
 import { assertPattern } from './patterns';
+import { validTolerance } from './planar-detail';
 import { assertMask } from './planar-mask';
 import { replaceMasks } from './planar-state';
 import { drawMask } from './planar-drawing';
@@ -96,6 +97,7 @@ export function assertDrawing(layers: DrawingLayer[]) {
         typeof mark.closed !== 'boolean' ||
         !Number.isFinite(mark.width) ||
         mark.width <= 0 ||
+        (mark.tolerance !== undefined && !validTolerance(mark.tolerance)) ||
         !Array.isArray(mark.points) ||
         mark.points.length < (mark.closed ? 3 : 1) ||
         mark.points.length > 512 ||

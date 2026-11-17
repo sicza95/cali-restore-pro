@@ -16,6 +16,8 @@ export type Mark = {
   operation: Operation;
   width: number;
   region?: Ring;
+  /** Boundary tolerance in source pixels; set when a mark is accepted (issue 122). */
+  tolerance?: number;
 };
 
 export type Layer = {

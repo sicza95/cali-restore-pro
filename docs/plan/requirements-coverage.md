@@ -42,7 +42,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | MASK-02     | Must     | Precise pen and shape workflows                                     | M-08  | M-14       | Partial |
 | MASK-03     | Must     | Point and curve editing for every mask                              | M-08  | M-14       | Partial |
 | MASK-04     | Must     | Vector mask source of truth with derived display caches             | M-05  | M-13       | Partial |
-| MASK-05     | Must     | Source-dependent fine detail without a fixed physical minimum       | M-08  | M-16       | Planned |
+| MASK-05     | Must     | Source-dependent fine detail without a fixed physical minimum       | M-08  | M-16       | Partial |
 | MASK-06     | Must     | Lightweight encrypted recovery of layer-owned painting drafts       | M-03  | M-15       | Passed  |
 | MASK-07     | Must     | Constant-width defaults with optional pressure-sensitive width      | M-08  | M-16       | Partial |
 | MASK-08     | Must     | Optional adjustable stroke stabilization                            | M-08  | M-16       | Partial |
@@ -153,6 +153,8 @@ MEAS-06 remains Partial pending real-device and release qualification. Unit evid
 [M-15 recovery and versions](../milestones/m15-surface-recovery.md) covers encrypted draft and redo recovery, checkpoint comparison and restoration, and durable pattern versions. M-16 follows with estimate links and output integration.
 
 [M-16 measured integration](../milestones/m16-measured-integration.md) adds committed phase measurement and checkpoint binding (EST-02, EST-05, EST-06, EST-09), selected-assessment draft data across all five formats (OUT-01 through OUT-03, OUT-05, OUT-06), and verified workbook cache and content boundaries (OUT-08 through OUT-12, PAT-02). These rows remain Partial pending the remaining product and device gates in the evidence.
+
+MASK-05 is Partial from #122: [source-pixel detail](../milestones/m14-mask-authoring.md#source-pixel-detail). The owner decided on 2026-11-17 that tolerance and edge budget are in source-image pixels with no fixed physical minimum. Unit evidence in `src/platform/projects/planar-detail.test.ts` covers the cap tolerance bound, detail growing with source resolution, the bounded edge budget, legacy 16-sided marks reproducing and stored tolerance validation; `drawing-document.test.ts` covers the tolerance round-trip. Accepted close-ups, export detail on real photographs and physical device qualification remain open for M-16.
 
 [M-14 mask authoring evidence](../milestones/m14-mask-authoring.md) adds canonical authoring and encrypted commits for SURF-02, FRAME-02, MASK-01 through MASK-04, MASK-07 through MASK-09, LAYER-01 through LAYER-05 and HIST-01/02. Physical iPad input and sustained load, encrypted draft and history recovery, and downstream measurements remain open.
 

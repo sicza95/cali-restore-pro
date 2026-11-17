@@ -1,4 +1,5 @@
 import { createMemo, createUniqueId, For, Show, untrack } from 'solid-js';
+import { sourceTolerance } from '../../../platform/projects/planar-detail';
 import { drawMask, markFootprint } from '../../../platform/projects/planar-drawing';
 import { project } from '../../../platform/projects/planar-transform';
 import type {
@@ -136,6 +137,7 @@ export function DrawingOverlay(props: {
       operation: 'add',
       closed: false,
       region: props.region,
+      tolerance: sourceTolerance,
     });
   const live = createMemo(() =>
     props.stroke?.length ? brushPath(props.stroke, t.brush().width) : '',

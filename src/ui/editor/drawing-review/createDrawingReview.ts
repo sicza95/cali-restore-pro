@@ -7,6 +7,7 @@ import {
 import type { HistoryEntry, SurfaceJournal } from '../../../platform/projects/surface-journal';
 import { createEffect, createMemo, createSignal, on } from 'solid-js';
 import { commitDrawing } from '../../../platform/projects/drawing-state';
+import { sourceTolerance } from '../../../platform/projects/planar-detail';
 import type { PlanarSurface, Ring } from '../../../platform/projects/planar-types';
 import { masterId, newLayer } from './constants';
 import {
@@ -231,7 +232,7 @@ export function createDrawingReview(options: {
   async function accept(mark: Mark, action: MarkAction) {
     const region = options.region();
     if (blocked() || !region || !containsMark(mark)) return false;
-    mark = { ...mark, region };
+    mark = { ...mark, region, tolerance: mark.tolerance ?? sourceTolerance };
     const current = layer();
     if (manual() || draft()) {
       return setDraft(current.id, { pending: [...(draft()?.pending ?? []), mark], undone: [] });
