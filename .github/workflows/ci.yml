@@ -29,7 +29,8 @@ jobs:
         run: npm run check
       - name: Generated API client is current
         run: npm run api:generate && git diff --exit-code -- src/platform/api
-      - run: npm audit --audit-level=high
+      - name: Dependency audit (high, allowlist in scripts/audit-allowlist.json)
+        run: npm run audit
       - name: App build
         run: npm run build
       - run: npm run build-storybook

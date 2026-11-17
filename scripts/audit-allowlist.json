@@ -1,0 +1,10 @@
+{
+  "advisories": [
+    {
+      "id": "GHSA-fc5q-39xc-vjpf",
+      "package": "picomatch",
+      "reason": "ReDoS with no patched release yet; reaches dev tooling only (vite, vitest, typescript-eslint, storybook). Production dependencies audit clean.",
+      "issue": "https://github.com/sicza95/cali-restore-pro/issues/119"
+    }
+  ]
+}

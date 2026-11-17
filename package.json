@@ -16,6 +16,7 @@
   "scripts": {
     "build": "vite build --config vite.app.config.ts",
     "api:generate": "openapi-ts",
+    "audit": "node scripts/audit.mjs",
     "setup:secrets": "node scripts/setup-secrets.mjs",
     "test:platform": "node scripts/platform-smoke.mjs",
     "test:sync": "playwright test --config playwright.sync.config.ts",
