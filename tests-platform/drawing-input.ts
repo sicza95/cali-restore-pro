@@ -10,7 +10,7 @@ export async function verifyDrawingInput(page: Page, info: TestInfo) {
     '[data-control-id="surface.draw.layer.select"][aria-pressed="true"]',
   );
   await c('layer.add').click();
-  await expect(selected).toContainText('Damage mask');
+  await expect(selected).toContainText('Damage layer');
   await c('tool.brush').click();
   await openDetails(page);
   await c('history.mode').selectOption('manual');

@@ -10,13 +10,13 @@ import type { ProjectsFlow } from './flow';
 const layers = (page: Page) => {
   const select = drawingControl(page, 'layer.select');
   return {
-    damage: select.filter({ hasText: 'Damage mask' }).first(),
+    damage: select.filter({ hasText: 'Damage layer' }).first(),
     phase: select.filter({ hasText: 'Independent phase' }),
   };
 };
 
 /**
- * Leaves an undone mark on "Damage mask" and a pending one on "Independent phase" in manual
+ * Leaves an undone mark on "Damage layer" and a pending one on "Independent phase" in manual
  * history, then attaches the reference photo "plaster-detail.dng", which keeps the drafts (#63).
  * Starts on the detail photo; ends on the reference photo in photo mode.
  */

@@ -23,7 +23,7 @@ export async function verifyCheckpointReview(page: Page, info: TestInfo) {
   );
   const draw = (key: string) => page.locator('[data-control-id="surface.draw.' + key + '"]');
   await draw('mode.drawing').click();
-  const damage = draw('layer.select').filter({ hasText: 'Damage mask' }).first();
+  const damage = draw('layer.select').filter({ hasText: 'Damage layer' }).first();
   const master = draw('layer.select').filter({ hasText: 'Master mask' });
   await master.click();
   await draw('tool.eraser').click();

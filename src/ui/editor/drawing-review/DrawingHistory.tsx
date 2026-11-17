@@ -4,7 +4,7 @@ import type { DrawingCopy } from './copy';
 import type { DrawingReview } from './createDrawingReview';
 import { layerName } from './DrawingLayers';
 
-/** "Undo · Brush stroke · Damage mask": the action, what it reverts and on which layer. */
+/** "Undo · Brush stroke · Damage layer": the action, what it reverts and on which layer. */
 export function historyLabel(m: DrawingReview, c: DrawingCopy, redo: boolean) {
   const action = redo ? c.redo : c.undo;
   if (m.draft()) {

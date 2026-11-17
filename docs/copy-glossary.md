@@ -39,13 +39,14 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 | draft batch                                            | several marks                        | vázlatköteg                                                | több rajzjel                               |
 | (shared) snapshot                                      | snapshot (EN keeps it)               | pillanatkép                                                | másolat (Projektmásolat megosztása)        |
 | pinned (offline originals)                             | available offline                    | rögzített (it reads as "committed")                        | offline elérhető                           |
+| work phase mask, damage mask (editor layer kinds)      | Phase layer, Damage layer            | Munkafázis maszkja, Kármaszk                               | Munkafázisréteg, Kárréteg                  |
 
 ## Words that stay
 
 - **Draft** (_vázlat_ for drawing, _piszkozat_ for reports): an unfinished, unsaved piece of work is a real idea for the user.
 - **Preview** (_előnézet_) where it means looking at a result before downloading it.
 - **Encrypted backup** (_titkosított biztonsági mentés_): the user must keep the backup key, so the word tells them something they act on.
-- **Assessment, checkpoint, phase, layer, mask, calibration**: conservation and editor vocabulary the user works with. The estimate calls the layer a work phase is measured on a **phase layer** (_munkafázisréteg_), in its label and in every value of its select ("No phase layer assigned", _Nincs munkafázisréteg_), not a mask.
+- **Assessment, checkpoint, phase, layer, mask, calibration**: conservation and editor vocabulary the user works with. The estimate calls the layer a work phase is measured on a **phase layer** (_munkafázisréteg_), in its label and in every value of its select ("No phase layer assigned", _Nincs munkafázisréteg_), not a mask, and the editor and surface pages use the same names (**Damage layer**, _Kárréteg_).
 
 ## Guard
 

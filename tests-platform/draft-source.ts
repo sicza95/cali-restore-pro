@@ -15,16 +15,16 @@ const checkpointRows: Record<string, Expected> = {
   'plaster-detail.dng': {},
 };
 
-/** On the surface page in drawing mode, on "Damage mask", with Details open. */
+/** On the surface page in drawing mode, on "Damage layer", with Details open. */
 async function surfacePage(page: Page) {
   await control(page, 'project.surface').click();
   await drawingControl(page, 'mode.drawing').click();
   await openDetails(page);
-  await drawingControl(page, 'layer.select').filter({ hasText: 'Damage mask' }).click();
+  await drawingControl(page, 'layer.select').filter({ hasText: 'Damage layer' }).click();
 }
 
 const damage = (page: Page) =>
-  drawingControl(page, 'layer.select').filter({ hasText: 'Damage mask' });
+  drawingControl(page, 'layer.select').filter({ hasText: 'Damage layer' });
 
 /** The main photo's "Remove" and role select are blocked with the reason; the other photo is not. */
 async function expectBlocked(page: Page, step: string) {

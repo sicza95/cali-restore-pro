@@ -43,8 +43,8 @@ const messages = {
   shape: ['Shape', 'Alakzat'],
   nodes: ['Edit points', 'Pontok szerkesztése'],
   master: ['Master mask', 'Fő maszk'],
-  damage: ['Damage mask', 'Kármaszk'],
-  phase: ['Work phase mask', 'Munkafázis maszkja'],
+  damage: ['Damage layer', 'Kárréteg'],
+  phase: ['Phase layer', 'Munkafázisréteg'],
   folder: ['Folder', 'Mappa'],
   navigateHelp: [
     'Select a layer or inspect the mapping reference.',

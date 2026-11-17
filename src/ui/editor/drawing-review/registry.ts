@@ -120,7 +120,7 @@ export const drawingControls: readonly ControlContract[] = [
       ['layer.select', 'layers', 'Select a review layer without changing visibility'],
       ['layer.visibility', 'visibility', 'Toggle mask overlay visibility without selecting it'],
       ['layer.expand', 'expand', 'Expand or collapse a review folder'],
-      ['layer.kind', 'kind', 'Choose a damage mask, work phase mask or folder'],
+      ['layer.kind', 'kind', 'Choose a damage layer, phase layer or folder'],
       ['layer.add', 'addLayer', 'Add a review layer'],
       ['layer.properties', 'properties', 'Show selected layer properties'],
       ['layer.name', 'name', 'Enter layer name'],

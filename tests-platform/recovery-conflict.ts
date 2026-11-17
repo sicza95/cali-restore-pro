@@ -13,7 +13,7 @@ const layer = (page: Page, name: string) =>
 /**
  * Attaching a photo keeps the drawing drafts editable (#63). Called right after the reference
  * photo is attached and selected, with a pending mark on "Independent phase" and an undone one on
- * "Damage mask". The assessment did not change, so there is no conflict.
+ * "Damage layer". The assessment did not change, so there is no conflict.
  */
 export async function verifyAttachKeepsDrafts(page: Page) {
   const photo = control(page, 'surface.view.photo');
@@ -27,16 +27,16 @@ export async function verifyAttachKeepsDrafts(page: Page) {
   // Loaded state first: the tools are enabled only once the journal is open without a conflict.
   await expect(drawingControl(page, 'tool.brush')).toBeEnabled();
   await expect(layer(page, 'Independent phase')).toContainText('Pending marks 1');
-  await expect(layer(page, 'Damage mask')).toContainText('Undone draft marks 1');
+  await expect(layer(page, 'Damage layer')).toContainText('Undone draft marks 1');
   await expect(page.locator('.surface-recovery')).toHaveCount(0);
   await drawingControl(page, 'mode.photo').click();
   await expect(page.locator('.surface-recovery')).toHaveCount(0);
   await photo.selectOption(selected);
 }
 
-/** A pending mark on "Damage mask", journalled; ends in drawing mode with Details open. */
+/** A pending mark on "Damage layer", journalled; ends in drawing mode with Details open. */
 async function drawPendingMark(page: Page) {
-  const damage = layer(page, 'Damage mask');
+  const damage = layer(page, 'Damage layer');
   await drawingControl(page, 'mode.drawing').click();
   await openDetails(page);
   await damage.click();
@@ -50,7 +50,7 @@ async function expectDraftKept(page: Page, step: string) {
   await drawingControl(page, 'mode.drawing').click();
   // Loaded state first: the tools are enabled only once the journal is open without a conflict.
   await expect(drawingControl(page, 'tool.brush'), step).toBeEnabled();
-  await expect(layer(page, 'Damage mask'), step).toContainText('Pending marks 1');
+  await expect(layer(page, 'Damage layer'), step).toContainText('Pending marks 1');
   await expect(page.locator('.surface-recovery'), step).toHaveCount(0);
   await drawingControl(page, 'mode.photo').click();
 }
@@ -113,7 +113,7 @@ export async function verifyRemovalKeepsDrafts(page: Page, surfacePath: string) 
   await removeOriginal(page, 'side-detail.png');
   await expectDraftKept(page, 'after removing a detail on the surface page');
   // The open journal took the written revision: the next draft saves go through.
-  const damage = layer(page, 'Damage mask');
+  const damage = layer(page, 'Damage layer');
   await drawingControl(page, 'mode.drawing').click();
   await damage.click();
   await drawingControl(page, 'history.undo').click();
@@ -200,7 +200,7 @@ async function landOtherDeviceRevision(page: Page) {
  * discarded and editing available.
  */
 export async function verifyRecoveryConflict(page: Page, info: TestInfo) {
-  const damage = layer(page, 'Damage mask');
+  const damage = layer(page, 'Damage layer');
   await drawPendingMark(page);
   await drawingControl(page, 'mode.photo').click();
   await landOtherDeviceRevision(page);

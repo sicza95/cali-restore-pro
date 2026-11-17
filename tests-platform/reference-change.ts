@@ -27,7 +27,7 @@ const twoReasonRows: Record<string, Expected> = {
   [late]: { role: 'draft', remove: 'draft' },
 };
 const damage = (page: Page) =>
-  drawingControl(page, 'layer.select').filter({ hasText: 'Damage mask' });
+  drawingControl(page, 'layer.select').filter({ hasText: 'Damage layer' });
 
 /** On the surface page showing the main photo (listed second), drawing with Details open. */
 async function surfacePage(page: Page, layer = true) {

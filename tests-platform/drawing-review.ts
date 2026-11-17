@@ -58,7 +58,7 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
 
   await c('history.mode').selectOption('manual');
   await c('layer.add').click();
-  await expect(selected()).toContainText('Damage mask');
+  await expect(selected()).toContainText('Damage layer');
   await c('brush.dot').click();
   const photo = page.locator('.drawing-photo img');
   await photo.scrollIntoViewIfNeeded();
@@ -92,15 +92,15 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('layer.kind').selectOption('phase');
   await c('layer.add').click();
   await c('brush.dot').click();
-  await expect(layer('Damage mask')).toContainText('Pending marks 2');
-  await expect(layer('Work phase mask')).toContainText('Pending marks 1');
+  await expect(layer('Damage layer')).toContainText('Pending marks 2');
+  await expect(layer('Phase layer')).toContainText('Pending marks 1');
   await c('layer.visibility').last().click();
-  await expect(selected()).toContainText('Work phase mask');
+  await expect(selected()).toContainText('Phase layer');
   await expect(c('brush.width')).toHaveCount(0);
   await expect(c('history.commit')).toBeDisabled();
   await c('layer.visibility').last().click();
 
-  await layer('Damage mask').click();
+  await layer('Damage layer').click();
   await choose('nodes');
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(c('resolve.cancel')).toBeFocused();
@@ -112,12 +112,12 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('resolve.commit').click();
   await expect(c('point.mark')).toBeVisible();
   await expect(selected()).toContainText('2 · Mark');
-  await expect(c('history.undo')).toHaveAccessibleName('Undo · Several marks · Damage mask');
+  await expect(c('history.undo')).toHaveAccessibleName('Undo · Several marks · Damage layer');
   await c('history.undo').click();
   await expect(selected()).toContainText('0 · Mark');
   await c('history.redo').click();
   await expect(selected()).toContainText('2 · Mark');
-  await layer('Work phase mask').click();
+  await layer('Phase layer').click();
   await choose('nodes');
   await c('resolve.discard').click();
   await expect(selected()).not.toContainText('Pending marks');
@@ -140,16 +140,16 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await point(60, 30);
   await c('point.delete').click();
   await c('path.apply').click();
-  await expect(c('history.undo')).toHaveAccessibleName('Undo · Point edit · Work phase mask');
+  await expect(c('history.undo')).toHaveAccessibleName('Undo · Point edit · Phase layer');
   await c('layer.properties').click();
   await c('layer.locked').check();
   await expect(c('tool.nodes')).toBeDisabled();
   await expect(c('point.mark')).toHaveCount(0);
-  await expect(c('history.undo')).toHaveAccessibleName('Undo · Layer change · Work phase mask');
+  await expect(c('history.undo')).toHaveAccessibleName('Undo · Layer change · Phase layer');
   await c('history.undo').click();
   await expect(c('layer.locked')).not.toBeChecked();
   await c('layer.clone').click();
-  await expect(c('layer.select').filter({ hasText: 'Work phase mask' })).toHaveCount(2);
+  await expect(c('layer.select').filter({ hasText: 'Phase layer' })).toHaveCount(2);
   await c('layer.name').fill('Independent phase');
   await c('layer.rename').click();
   await expect(selected()).toContainText('Independent phase');
@@ -208,9 +208,9 @@ export async function verifyDrawingReview(page: Page, info: TestInfo) {
   await c('layer.add').click();
   await c('layer.expand').click();
   await expect(folder).toHaveAttribute('aria-pressed', 'true');
-  await expect(layer('Damage mask')).toHaveCount(1);
+  await expect(layer('Damage layer')).toHaveCount(1);
   await c('layer.expand').click();
-  await expect(layer('Damage mask')).toHaveCount(2);
+  await expect(layer('Damage layer')).toHaveCount(2);
   await layer('Independent phase').click();
   await c('layer.properties').click();
   await c('layer.parent').selectOption({ label: 'Folder' });
