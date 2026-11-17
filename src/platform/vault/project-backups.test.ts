@@ -3,6 +3,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { backupRecords } from '../../../tests-platform/fixtures/backup-records';
 import { newProject } from '../projects/projects';
+import { calculate } from '../estimates/calculate';
 import { importCode, maxLocalDocument } from './crypto';
 import {
   backupCipher,
@@ -60,16 +61,88 @@ it('exports v2 and restores estimate history and report configuration under the 
   const next = JSON.parse((await records(estimateTable).changed(restored.id, 0))!.text);
   expect(next).toEqual(
     JSON.parse(
-      restoreDocuments({ estimate: JSON.stringify(estimate) }, project.id, restored.id, new Map())
-        .estimate!,
+      restoreDocuments(
+        { estimate: JSON.stringify(estimate) },
+        project.id,
+        restored.id,
+        new Map(),
+        1,
+      ).estimate!,
     ),
   );
   expect(next.snapshots[0].result).toEqual(estimate.snapshots[0]!.result);
-  expect(next.snapshots[0].input.revision).toBe(7);
+  expect(next.snapshots[0].input.revision).toBe(0);
   expect(JSON.parse((await records(reportTable).changed(restored.id, 0))!.text)).toEqual({
     ...report,
     project: restored.id,
+    projectRevision: 0,
   });
+});
+
+it.each([true, false])(
+  'preserves snapshot and report freshness at backup (current: %s)',
+  async (current) => {
+    const project = newProject('Freshness', 'Object', 'Surface', 'EUR');
+    const { estimate, report } = backupRecords(project.id);
+    const sourceRevision = current ? 7 : 1;
+    estimate.draft.revision = sourceRevision;
+    estimate.snapshots[0]!.input.revision = sourceRevision;
+    report.projectRevision = sourceRevision;
+    for (let revision = 0; revision < 7; revision++)
+      await projects().save(project.id, revision, JSON.stringify(project));
+    await records(estimateTable).save(project.id, 0, JSON.stringify(estimate));
+    await records(reportTable).save(project.id, 0, JSON.stringify(report));
+    const exported = await backups().export(project.id);
+    const restored = await backups().import(exported.blob, exported.code);
+    const next = JSON.parse((await records(estimateTable).changed(restored.id, 0))!.text);
+    const draft = JSON.parse((await records(reportTable).changed(restored.id, 0))!.text);
+    expect(next.draft.revision).toBe(current ? 1 : 0);
+    expect(next.snapshots[0].input.revision).toBe(current ? 1 : 0);
+    expect(draft.projectRevision).toBe(current ? 1 : 0);
+  },
+);
+
+it('captures project, estimate and report in one readonly transaction', async () => {
+  const project = newProject('Atomic export', 'Object', 'Surface', 'EUR');
+  const { estimate, report } = backupRecords(project.id);
+  await projects().save(project.id, 0, JSON.stringify(project));
+  await records(estimateTable).save(project.id, 0, JSON.stringify(estimate));
+  await records(reportTable).save(project.id, 0, JSON.stringify(report));
+  const transaction = vi.spyOn(IDBDatabase.prototype, 'transaction');
+  const get = IDBObjectStore.prototype.get;
+  let update: Promise<number> | undefined;
+  vi.spyOn(IDBObjectStore.prototype, 'get').mockImplementation(function (
+    this: IDBObjectStore,
+    key,
+  ) {
+    if (this.name === 'encrypted-projects' && !update) {
+      update = records(reportTable).save(
+        project.id,
+        1,
+        JSON.stringify({
+          ...report,
+          settings: { ...report.settings, notes: 'Changed concurrently' },
+        }),
+      );
+    }
+    return get.call(this, key);
+  });
+  const exported = await backups().export(project.id);
+  await update;
+  const restored = await backups().import(exported.blob, exported.code);
+  const capturedReport = JSON.parse((await records(reportTable).changed(restored.id, 0))!.text);
+  expect(capturedReport.settings.notes).toBe(report.settings.notes);
+  expect(JSON.parse((await records(reportTable).changed(project.id, 0))!.text).settings.notes).toBe(
+    'Changed concurrently',
+  );
+  expect(
+    transaction.mock.calls.some(
+      ([tables, mode]) =>
+        mode === 'readonly' &&
+        Array.isArray(tables) &&
+        [estimateTable, reportTable, 'encrypted-projects'].every((table) => tables.includes(table)),
+    ),
+  ).toBe(true);
 });
 
 it.each([1, 2])('restores v%i archives without estimate or report records', async (version) => {
@@ -99,6 +172,25 @@ it.each(['estimate', 'report'] as const)(
     expect(await records(kind === 'estimate' ? reportTable : estimateTable).list()).toEqual([]);
   },
 );
+
+it('translates committed measurement revisions while preserving snapshot results', () => {
+  const { estimate } = backupRecords('source');
+  for (const input of [estimate.draft, estimate.snapshots[0]!.input]) {
+    input.phases[0]!.quantity!.source = 'committed';
+    input.phases[0]!.quantity!.revision = '7/photo/2/3';
+  }
+  estimate.snapshots[0]!.result = calculate(estimate.snapshots[0]!.input);
+  const result = restoreDocuments(
+    { estimate: JSON.stringify(estimate) },
+    'source',
+    'copy',
+    new Map(),
+    7,
+  );
+  const next = JSON.parse(result.estimate!);
+  expect(next.snapshots[0].input.phases[0].quantity.revision).toBe('1/photo/2/3');
+  expect(next.snapshots[0].result).toEqual(estimate.snapshots[0]!.result);
+});
 
 it('rejects foreign project records and inconsistent issued results', () => {
   const { estimate, report } = backupRecords('source');

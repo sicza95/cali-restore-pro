@@ -25,15 +25,18 @@ export function documentShapes(value: unknown): DocumentShape[] {
   return value as DocumentShape[];
 }
 
-/** Rebind only copy identities; issued versions, calculations and revision provenance survive. */
+/** Rebind identities and preserve freshness relative to the backed-up project. */
 export function restoreDocuments(
   documents: BackupDocuments,
   source: string,
   destination: string,
   files: ReadonlyMap<string, string>,
+  sourceRevision?: number,
 ): BackupDocuments {
   const result: BackupDocuments = {};
   const file = (id: string) => files.get(id) ?? id;
+  const revision = (value: number) =>
+    Number.isSafeInteger(sourceRevision) && sourceRevision! > 0 && value === sourceRevision ? 1 : 0;
   if (documents.estimate !== undefined) {
     const doc = JSON.parse(documents.estimate) as EstimateDocument;
     if (doc.schema !== 1 || doc.draft.project !== source || !Array.isArray(doc.snapshots))
@@ -43,6 +46,7 @@ export function restoreDocuments(
       return {
         ...value,
         project: destination,
+        revision: revision(value.revision),
         phases: value.phases.map((phase) => ({
           ...phase,
           ...(phase.scopeSource === undefined ? {} : { scopeSource: file(phase.scopeSource) }),
@@ -51,6 +55,13 @@ export function restoreDocuments(
                 quantity: {
                   ...phase.quantity,
                   project: phase.quantity.project === source ? destination : phase.quantity.project,
+                  ...(phase.quantity.source === 'committed'
+                    ? {
+                        revision: phase.quantity.revision.replace(/^\d+(?=\/)/, (value) =>
+                          String(revision(Number(value))),
+                        ),
+                      }
+                    : {}),
                 },
               }
             : {}),
@@ -80,6 +91,7 @@ export function restoreDocuments(
     result.report = JSON.stringify({
       ...doc,
       project: destination,
+      projectRevision: revision(doc.projectRevision),
       settings: {
         ...doc.settings,
         surfaces: Object.fromEntries(

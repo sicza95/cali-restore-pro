@@ -240,11 +240,13 @@ test('authenticates all original chunks and rolls back a cancelled or aborted im
     const report = (await reportRepository(target).load(restored.id))!;
     const restoredEstimate = structuredClone(records.estimate);
     restoredEstimate.draft.project = restored.id;
+    restoredEstimate.draft.revision = 0;
     restoredEstimate.draft.phases[0]!.quantity!.project = restored.id;
     restoredEstimate.draft.phases[0]!.scopeSource = ref.id;
     restoredEstimate.snapshots[0]!.input = structuredClone(restoredEstimate.draft);
     const restoredReport = structuredClone(records.report);
     restoredReport.project = restored.id;
+    restoredReport.projectRevision = 0;
     restoredReport.settings.surfaces['surface-a']!.references = [ref.id];
     const metadata = await target.files().metadata(ref);
     const chunks: Uint8Array[] = [];

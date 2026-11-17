@@ -13,7 +13,6 @@ import {
 } from './file-format';
 import type { FileShape } from './file-format';
 import { projectDocuments } from './project-store';
-import { estimateTable, reportTable } from './store';
 import type { RestoredOriginal } from './project-store';
 import { documentShapes, restoreDocuments } from './backup-documents';
 import type { BackupDocuments, DocumentShape } from './backup-documents';
@@ -28,7 +27,12 @@ import {
 } from './backup-format';
 
 type Original = FileShape & { id: string };
-type BackupIndex = { project: Project; originals: Original[]; documents?: DocumentShape[] };
+type BackupIndex = {
+  project: Project;
+  projectRevision?: number;
+  originals: Original[];
+  documents?: DocumentShape[];
+};
 type Options = { signal?: AbortSignal; progress?: (fraction: number) => void };
 const encode = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
@@ -89,9 +93,9 @@ export function projectBackups(
   return {
     async export(projectId: string, options: Options = {}) {
       const signal = signalFor(options);
-      const document = await projectDocuments(root, account, stamp, signal).changed(projectId, 0);
-      if (!document) throw new Error('Project unavailable');
-      const project = validateProject(JSON.parse(document.text) as Project, projectId);
+      const captured = await projectDocuments(root, account, stamp, signal).backupRows(projectId);
+      if (!captured.project) throw new Error('Project unavailable');
+      const project = validateProject(JSON.parse(captured.project) as Project, projectId);
       const originals: Original[] = [];
       for (const id of attachmentIds(project)) {
         signal.throwIfAborted();
@@ -102,21 +106,20 @@ export function projectBackups(
         originals.push(shape);
       }
       const records: { kind: keyof BackupDocuments; bytes: Uint8Array<ArrayBuffer> }[] = [];
-      for (const [kind, table] of [
-        ['estimate', estimateTable],
-        ['report', reportTable],
-      ] as const) {
-        const row = await projectDocuments(root, account, stamp, signal, table).changed(
-          projectId,
-          0,
-        );
-        if (row) records.push({ kind, bytes: encode.encode(row.text) });
+      for (const kind of ['estimate', 'report'] as const) {
+        const text = captured[kind];
+        if (text !== undefined) records.push({ kind, bytes: encode.encode(text) });
       }
       const documents = documentShapes(
         records.map(({ kind, bytes }) => ({ kind, bytes: bytes.length + 16 })),
       );
       const index = encode.encode(
-        JSON.stringify({ project, originals, documents } satisfies BackupIndex),
+        JSON.stringify({
+          project,
+          projectRevision: captured.revision,
+          originals,
+          documents,
+        } satisfies BackupIndex),
       );
       const total = archiveSize(index.byteLength + 16, originals, documents);
       const header = backupHeader(index.byteLength + 16);
@@ -171,6 +174,7 @@ export function projectBackups(
 
       const {
         project,
+        projectRevision,
         originals,
         documents: shapes,
       } = JSON.parse(decode.decode(await read(indexBytes))) as BackupIndex;
@@ -240,7 +244,7 @@ export function projectBackups(
         id,
         JSON.stringify(next),
         restored,
-        restoreDocuments(records, project.id, id, fileIds),
+        restoreDocuments(records, project.id, id, fileIds, projectRevision),
       );
       return { ...next, revision: 1 };
     },

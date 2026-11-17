@@ -205,6 +205,47 @@ export function projectDocuments(
         true,
       );
     },
+    async backupRows(id: string) {
+      assertID(id);
+      if (table !== projectTable) throw new Error('Invalid backup store');
+      const rows = await transact<(ProjectRow | undefined)[]>(
+        'readonly',
+        (store, finish) => {
+          const tables = [projectTable, estimateTable, reportTable];
+          const values: (ProjectRow | undefined)[] = [];
+          let remaining = tables.length;
+          tables.forEach((name, index) => {
+            const request = store.transaction.objectStore(name).get([account, id]);
+            request.onsuccess = () => {
+              values[index] = request.result as ProjectRow | undefined;
+              if (--remaining === 0) finish(values);
+            };
+          });
+        },
+        false,
+        signal,
+        false,
+        true,
+      );
+      const texts = await Promise.all(
+        rows.map((row, index) => {
+          if (!row) return undefined;
+          const name = ([projectTable, estimateTable, reportTable] as const)[index]!;
+          const context =
+            name === projectTable
+              ? (`project:${id}:${row.revision}` as const)
+              : (`${name}:${id}:${row.revision}` as const);
+          return open(root, account, context, row.envelope);
+        }),
+      );
+      signal.throwIfAborted();
+      return {
+        revision: rows[0]?.revision,
+        project: texts[0],
+        estimate: texts[1],
+        report: texts[2],
+      };
+    },
     async changed(id: string, after: number) {
       assertID(id);
       const row = await transact<ProjectRow | undefined>('readonly', (store, finish) => {
