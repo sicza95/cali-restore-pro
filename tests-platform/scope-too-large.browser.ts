@@ -46,9 +46,10 @@ test('an estimate too large to share shows its own error and sends nothing', asy
         await vault.create('ab'.repeat(32), true);
         const project = newProject('Large chapel', 'North wall', 'Upper plaster', 'HUF');
         await localProjects(vault).save(project);
-        // The device keeps an estimate in 64 Ki characters, so only three-byte characters take a
-        // full scope over the 64 KiB limit: 30 objects named in euro signs seal to about 72 KB.
-        const issued = snapshot(withLongNames(largeEstimate(30, 1, 1, project.id), '€'), 1, true);
+        // The device keeps an estimate in 768 Ki characters, so only three-byte characters take a
+        // full scope over the 768 KiB limit: 360 objects named in euro signs seal to about 820 KB
+        // while the saved document stays near 670 Ki characters.
+        const issued = snapshot(withLongNames(largeEstimate(360, 1, 1, project.id), '€'), 1, true);
         await estimateRepository(vault).save(project.id, 0, {
           schema: 1,
           draft: largeEstimate(1, 1, 1, project.id),

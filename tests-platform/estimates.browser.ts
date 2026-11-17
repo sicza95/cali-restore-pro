@@ -198,7 +198,7 @@ test('an estimate over the vault size cap fails with a typed error and keeps the
     const doc = { schema: 1 as const, draft: fixture, snapshots: [] };
     const revision = await repository.save(project, 0, doc);
     const big = structuredClone(doc);
-    big.draft.assumptions = 'x'.repeat(64 * 1024);
+    big.draft.assumptions = 'x'.repeat(768 * 1024);
     const error = await repository.save(project, revision, big).then(
       () => '',
       (cause: Error) => cause.name,
