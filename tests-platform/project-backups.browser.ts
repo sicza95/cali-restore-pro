@@ -27,6 +27,7 @@ async function openFreshVault(page: Page, origin = '') {
 test('download and restore an encrypted project through the controls in a fresh browser vault', async ({
   page,
   browser,
+  browserName,
 }, info) => {
   await page.setViewportSize({ width: 1194, height: 834 });
   await openFreshVault(page);
@@ -77,7 +78,15 @@ test('download and restore an encrypted project through the controls in a fresh 
     await openFreshVault(target, previewOrigin);
     await expect.poll(() => target.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
     await expect(target.getByRole('link', { name: 'East Chapel' })).toHaveCount(0);
-    await fresh.setOffline(true);
+    // Only Chromium's offline emulation acts like an offline browser here (#101). WebKit's fails
+    // every Blob read, in-memory ones included, and Firefox's fails worker scripts that the service
+    // worker has cached. Firefox cuts every request with a route instead; WebKit routes would also
+    // catch the cached worker scripts before the service worker, so there only the server is cut.
+    if (browserName === 'chromium') await fresh.setOffline(true);
+    else
+      await target.route(browserName === 'webkit' ? '**/api/**' : '**', (route) =>
+        route.abort('internetdisconnected'),
+      );
     await target.getByText('Import encrypted backup', { exact: true }).click();
     await target.getByLabel('Backup file').setInputFiles(archive);
     await target.getByLabel('Backup key', { exact: true }).fill('00'.repeat(32));
