@@ -123,7 +123,7 @@ export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[
     name: names.estimate,
     widths: [40, 25, 22],
     rows: [
-      [c.exportNote],
+      [c.exportNote, estimate.draft ? c.estimateDraft : c.estimateIssued],
       [e.currency, estimate.currency],
       [c.calculation, 'restoration-v1'],
       [e.assumptions, estimate.assumptions],
@@ -152,7 +152,7 @@ export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[
         ),
       ],
       [e.projectExtra, formula(`SUMIF(${range(extras, 'A')},0,${extraCosts})`, r.extras)],
-      [],
+      [c.unavailableNote],
       [object, e.subtotal, object + ' #'],
       ...estimate.objects.map((name, i) => {
         const row = i + 14;

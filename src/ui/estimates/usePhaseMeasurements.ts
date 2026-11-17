@@ -93,8 +93,10 @@ export function usePhaseMeasurements(
     })()
       .catch(() => {
         if (!signal.aborted)
-          for (const row of rows)
-            model.update(row.id, { measurement: 'missing', quantity: undefined });
+          for (const row of rows) {
+            const phase = model.rows.find(({ id }) => id === row.id);
+            if (phase) model.update(row.id, updateMeasuredPhase(phase, undefined));
+          }
       })
       .finally(() => {
         if (!signal.aborted) setPending(false);

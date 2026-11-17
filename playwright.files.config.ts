@@ -37,6 +37,7 @@ export default defineConfig({
     'scope-too-large.browser.ts',
     'report-exports.browser.ts',
     'measured-reports.browser.ts',
+    'incomplete-assessment.browser.ts',
     'project-trash.browser.ts',
     'admin-layout.browser.ts',
     'admin-references.browser.ts',

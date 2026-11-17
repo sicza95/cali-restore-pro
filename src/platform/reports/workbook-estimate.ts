@@ -10,14 +10,15 @@ function number(value: string, blank = false) {
 
 export type WorkbookEstimate = ReturnType<typeof workbookEstimate>;
 
-// The caller supplies the explicitly selected issued version from the owner's vault.
+// The caller supplies the explicitly selected saved version from the owner's vault.
 // Project IDs, phase IDs, inactive rates, preset references and raw measurements
 // are unnecessary in a detached workbook.
 export function workbookEstimate(snapshot: EstimateSnapshot, surfaces: PreviewSurface[]) {
-  if (!snapshot.issued || !coversEstimate(snapshot, surfaces)) throw new Error('Estimate scope');
+  if (!coversEstimate(snapshot, surfaces)) throw new Error('Estimate scope');
   const { input, result } = snapshot;
   const objects = input.objects.filter(({ id }) => input.selected.includes(id));
   return {
+    draft: !snapshot.issued,
     currency: input.currency,
     precision: result.precision,
     assumptions: input.assumptions,

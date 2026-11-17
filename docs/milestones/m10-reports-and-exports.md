@@ -25,3 +25,7 @@ Continued from clean `3c62a4bb76533ba97df053802676cb6c50320fe6`. GitHub marked t
 2. Connect real selected-revision geometry, scale, calibration, and references once those providers exist. Assessment versions beyond current are illustrative checkpoints in this slice. Project revision/timestamp and estimate provenance are captured separately from fixture selection. Only M-16 can qualify real measured results on target devices.
 3. Report drafts are device-local. Portable project backup refuses estimate-bearing or report-bearing projects until those stores can be recovered atomically. Cloud sync, device transfer, deletion reachability and independent collaborative editing remain open. This slice does not refresh active grants or establish a new authorization path for recipient project reports.
 4. Fixture tests use authenticated browser paths with mocked account/invitation endpoints and real local cryptography. Physical iPad/Safari/Pencil and service-backed release qualification remain open.
+
+## 2026-11-17 owner decision: saved draft estimates
+
+Owner reports may select a saved unissued estimate version as well as an issued version. A draft is labelled in the report language, and unavailable dependent values remain unavailable. Incomplete estimates still cannot be issued; sharing grants retain their issued-version rules.

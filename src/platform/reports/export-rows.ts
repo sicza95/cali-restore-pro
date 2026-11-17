@@ -58,6 +58,8 @@ export function reportBlocks(draft: Draft): Block[] {
     const { summary, detail, unknownFreshness } = draft.estimate;
     const rows: Row[] = [
       [c.finances, c.estimateVersion, summary.version],
+      [c.finances, c.status, draft.estimate.draft ? c.estimateDraft : c.estimateIssued],
+      [c.finances, c.status, c.unavailableNote],
       [c.finances, c.projectRevision, summary.projectRevision],
       [c.finances, c.estimateDate, summary.createdAt],
       [c.finances, c.calculation, summary.calculation],

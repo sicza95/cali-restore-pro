@@ -21,6 +21,8 @@ export function ReportEstimatePreview(props: { estimate: ReportEstimate; languag
         {c().projectRevision} {summary().projectRevision} ·{' '}
         <time dateTime={summary().createdAt}>{summary().createdAt.slice(0, 10)}</time>
       </p>
+      <p>{props.estimate.draft ? c().estimateDraft : c().estimateIssued}</p>
+      <p>{c().unavailableNote}</p>
       <Show when={props.estimate.unknownFreshness}>
         <p>{c().unknownFreshness}</p>
       </Show>

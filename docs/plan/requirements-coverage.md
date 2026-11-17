@@ -146,7 +146,7 @@ M-12 adds [bounded image import and variant evidence](../milestones/m12-image-im
 
 [M-13 planar assessment evidence](../milestones/m13-planar-assessment.md) covers FRAME-01/03/04, CAL-01 through CAL-03, MASK-04, LAYER-02/04/05, MEAS-01 through MEAS-05 and ALIGN-01 through ALIGN-03. The versioned engine, surface controls, oracle cases and encrypted recovery provide Partial evidence. Drawing gestures, representative calibrated photographs, device qualification and downstream measurements remain open.
 
-MEAS-06 has Partial unit evidence: estimate calculation keeps fixed and manual hourly results without a measured area, reports adjustment amounts as unavailable rather than zero while the subtotal is unpriced, and planar coverage percent is unavailable rather than zero when nothing is assessed. Editor-state preservation and end-to-end empty-assessment flows remain open.
+MEAS-06 remains Partial pending real-device and release qualification. Unit evidence covers unavailable dependent calculations, preserved manual inputs and editor drawing round-trips. The synthetic `incomplete-assessment.browser.ts` regression saves and reopens empty and uncalibrated partial assessments, then saves, reopens and exports their estimate and report, including an editable workbook. On 2026-11-17 the owner approved including saved unissued estimate versions in owner reports and editable workbooks when labelled as drafts in EN/HU; incomplete estimates remain blocked from issuance. See the M-10 and M-11 decision notes.
 
 [M-15 recovery and versions](../milestones/m15-surface-recovery.md) covers encrypted draft and redo recovery, checkpoint comparison and restoration, and durable pattern versions. M-16 follows with estimate links and output integration.
 

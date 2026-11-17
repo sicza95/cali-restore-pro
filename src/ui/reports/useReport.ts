@@ -33,7 +33,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
     workbook: 'snapshot',
   });
   const [brand, setBrand] = createSignal<Branding>();
-  const [issued, setIssued] = createSignal<{ id: string; version: number }[]>([]);
+  const [issued, setIssued] = createSignal<{ id: string; version: number; issued: boolean }[]>([]);
   const [preparing, setPreparing] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [ready, setReady] = createSignal(false);
@@ -69,8 +69,8 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       setSavedRevision(saved?.document.projectRevision);
       setReady(true);
       if (estimate.status === 'fulfilled') {
-        const snapshots = estimate.value?.document.snapshots.filter(({ issued }) => issued) ?? [];
-        setIssued(snapshots.map(({ id, version }) => ({ id, version })));
+        const snapshots = estimate.value?.document.snapshots ?? [];
+        setIssued(snapshots.map(({ id, version, issued }) => ({ id, version, issued })));
         if (!saved) set('estimate', snapshots.at(-1)?.id ?? '');
       } else setStatus('estimateError');
     } else setStatus('loadError');
@@ -156,9 +156,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       await prepareSurfaces(project, selection, surfaces, props.vault, signal);
       if (selection.finances !== 'none') {
         const saved = await estimates.load(projectId);
-        const snapshot = saved?.document.snapshots.find(
-          ({ id, issued }) => id === selection.estimate && issued,
-        );
+        const snapshot = saved?.document.snapshots.find(({ id }) => id === selection.estimate);
         if (!snapshot) draft.estimateState = 'unavailable';
         else if (!coversEstimate(snapshot, surfaces)) draft.estimateState = 'outsideScope';
         else {

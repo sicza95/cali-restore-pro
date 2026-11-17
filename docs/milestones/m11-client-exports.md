@@ -25,3 +25,7 @@ The owner can download the detached report preview from Reports or Outputs. An i
 2. Implement bounded originals, proxies/tiles, orientation and color, worker cancellation and evidence for each supported import variant. Keep originals encrypted. Keep source metadata out of normal exports unless an authorized user explicitly requests a permitted field.
 3. M-16 must connect and verify real selected-revision geometry, scale, calibration, maps and reference pixels. Test physical iPad/Safari, real output extent, high-resolution memory limits and workbook recalculation in supported spreadsheet applications. The M-11 fixture evidence does not qualify final measured outputs.
 4. Carry forward the M-09/M-10 recovery, sync, report/estimate deletion reachability and collaboration limits. The owner draft export adds no recipient report authorization, server-side plaintext rendering or portable-store recovery.
+
+## 2026-11-17 owner decision: draft workbooks
+
+Owner exports, including editable workbooks, may use an explicitly selected saved unissued estimate version. The output identifies it as a draft; missing dependent values remain blank or otherwise marked unavailable rather than becoming zero. Issuance rules and sharing grants are unchanged.

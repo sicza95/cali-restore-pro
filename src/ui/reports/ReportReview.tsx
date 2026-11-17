@@ -211,7 +211,9 @@ export function ReportReview(props: {
                   text={(key) => {
                     if (!key) return c().noEstimate;
                     const row = issued().find(({ id }) => id === key);
-                    return row ? 'v' + row.version : c().noEstimate;
+                    return row
+                      ? 'v' + row.version + (row.issued ? '' : ' · ' + c().draft)
+                      : c().noEstimate;
                   }}
                   change={(value) => set('estimate', value)}
                 />
