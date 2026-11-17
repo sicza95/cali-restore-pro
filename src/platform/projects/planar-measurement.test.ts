@@ -67,6 +67,13 @@ describe('measurePlanar', () => {
     expect(clipped.damage.areaM2).toEqual({ status: 'unavailable', value: null });
   });
 
+  it('keeps coverage unavailable, never zero, when nothing is assessed (MEAS-06)', () => {
+    const empty = measurePlanar({ ...state, calibration: undefined, master: [] }, 7);
+    expect(empty.assessed.pixels2).toBe(0);
+    expect(empty.damage.percent).toEqual({ status: 'unavailable', value: null });
+    expect(empty.assessed.percent).toEqual({ status: 'unavailable', value: null });
+  });
+
   it('marks the area invalid once the frame moves past the calibration', () => {
     const moved = { ...state, revision: state.revision + 1 };
     moved.frame = { ...state.frame, revision: moved.revision };

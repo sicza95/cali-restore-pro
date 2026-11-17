@@ -58,7 +58,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | MEAS-03     | Must     | Flat-surface measurement with an extensible method boundary         | M-05  | M-13       | Partial |
 | MEAS-04     | Must     | Unique overall damage area with full category breakdowns            | M-08  | M-13       | Partial |
 | MEAS-05     | Must     | Actual geometry coverage with visual-only opacity                   | M-08  | M-13       | Partial |
-| MEAS-06     | Must     | Preserve work and inputs through empty/incomplete assessment        | M-05  | M-16       | Planned |
+| MEAS-06     | Must     | Preserve work and inputs through empty/incomplete assessment        | M-05  | M-16       | Partial |
 | MEAS-07     | Must     | Metric/imperial units with project/object/surface inheritance       | M-05  | M-16       | Partial |
 | OUT-01      | Must     | Raw mask and composited map exports                                 | M-10  | M-16       | Partial |
 | OUT-02      | Must     | Structured measurement data                                         | M-10  | M-16       | Partial |
@@ -145,6 +145,8 @@ M-04 adds [encrypted original storage and transfer](../milestones/m04-encrypted-
 M-12 adds [bounded image import and variant evidence](../milestones/m12-image-import.md). IMG-01/02/03/05 now have client validation, recoverable encrypted working assets, normalized orientation and color, cancellation, camera-preview spot checks and desktop 8K ingest evidence. Physical iPad/Safari, broad camera coverage and sustained editing qualification remain open.
 
 [M-13 planar assessment evidence](../milestones/m13-planar-assessment.md) covers FRAME-01/03/04, CAL-01 through CAL-03, MASK-04, LAYER-02/04/05, MEAS-01 through MEAS-05 and ALIGN-01 through ALIGN-03. The versioned engine, surface controls, oracle cases and encrypted recovery provide Partial evidence. Drawing gestures, representative calibrated photographs, device qualification and downstream measurements remain open.
+
+MEAS-06 has Partial unit evidence: estimate calculation keeps fixed and manual hourly results without a measured area, reports adjustment amounts as unavailable rather than zero while the subtotal is unpriced, and planar coverage percent is unavailable rather than zero when nothing is assessed. Editor-state preservation and end-to-end empty-assessment flows remain open.
 
 [M-15 recovery and versions](../milestones/m15-surface-recovery.md) covers encrypted draft and redo recovery, checkpoint comparison and restoration, and durable pattern versions. M-16 follows with estimate links and output integration.
 

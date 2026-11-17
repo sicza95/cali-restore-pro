@@ -271,12 +271,26 @@ describe('calculate', () => {
       complete: false,
       objects: [{ subtotal: null }],
       subtotal: null,
-      adjustments: [{ id: 'a', amount: '0' }],
+      adjustments: [{ id: 'a', amount: null }],
       beforeTax: null,
       taxTotal: null,
       total: null,
       issues: ['area-unavailable'],
     });
+  });
+
+  it('keeps manual hourly and fixed results when no area is measured (MEAS-06)', () => {
+    const none = measurement(null);
+    const hourly = calculate(input({ phases: [phase({ quantity: none, material: '0' })] }));
+    // 10 h x 45.50
+    expect(hourly.total).toBe('455.00');
+    const fixed = calculate(
+      input({
+        phases: [phase({ quantity: none, price: 'fixed', rate: { fixed: '200' }, material: '0' })],
+      }),
+    );
+    expect(fixed.total).toBe('200.00');
+    expect(fixed.complete).toBe(true);
   });
 
   it('totals but is not complete while hours need review', () => {

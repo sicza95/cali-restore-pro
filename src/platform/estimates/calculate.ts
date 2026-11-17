@@ -135,14 +135,14 @@ export function calculate(input: EstimateInput): EstimateResult {
       id: a.id,
       amount:
         subtotal === null
-          ? '0'
+          ? null
           : decimal(subtotal).mul(percent).div(decimal('100')).round(precision),
     };
   });
   const beforeTax =
     subtotal === null
       ? null
-      : sum([subtotal, ...adjustments.map((a) => a.amount)]).round(precision);
+      : sum([subtotal, ...adjustments.map((a) => a.amount!)]).round(precision);
   const taxRate = input.tax.enabled ? nonnegative(input.tax.rate) : decimal('0');
   if (taxRate.n > 100n * taxRate.d) throw new Error('Invalid tax');
   const taxTotal =

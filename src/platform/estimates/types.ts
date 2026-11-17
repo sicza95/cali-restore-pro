@@ -79,7 +79,7 @@ export type EstimateResult = {
   phases: PhaseResult[];
   objects: { id: string; name: string; subtotal: string | null }[];
   extras: string;
-  adjustments: { id: string; amount: string }[];
+  adjustments: { id: string; amount: string | null }[];
   hours: string | null;
   subtotal: string | null;
   beforeTax: string | null;

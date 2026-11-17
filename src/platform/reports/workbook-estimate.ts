@@ -77,7 +77,10 @@ export function workbookEstimate(snapshot: EstimateSnapshot, surfaces: PreviewSu
     adjustments: input.adjustments.map((adjustment, index) => ({
       name: adjustment.name,
       percent: number(adjustment.percent),
-      amount: number(result.adjustments[index]!.amount),
+      amount:
+        result.adjustments[index]!.amount === null
+          ? null
+          : number(result.adjustments[index]!.amount!),
     })),
     result: {
       objects: result.objects.map(({ subtotal }) => (subtotal === null ? null : number(subtotal))),
