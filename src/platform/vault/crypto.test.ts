@@ -135,6 +135,14 @@ describe('vault envelope', () => {
     await expect(rejected).rejects.toThrow('Text too large');
     await expect(rejected).rejects.toBeInstanceOf(DocumentTooLargeError);
     await expect(rejected).rejects.toMatchObject({ length: 64 * 1024 + 1, limit: 64 * 1024 });
+    const estimates = 'encrypted-estimates:22222222-2222-4222-8222-222222222222';
+    const roomy = 'x'.repeat(768 * 1024);
+    expect(await open(root, account, estimates, await seal(root, account, estimates, roomy))).toBe(
+      roomy,
+    );
+    await expect(seal(root, account, estimates, roomy + 'x')).rejects.toBeInstanceOf(
+      DocumentTooLargeError,
+    );
     const large = 'x'.repeat(100_000);
     const purpose = 'project:22222222-2222-4222-8222-222222222222:1';
     expect(await open(root, account, purpose, await seal(root, account, purpose, large))).toBe(

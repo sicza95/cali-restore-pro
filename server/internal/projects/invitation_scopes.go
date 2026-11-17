@@ -22,13 +22,12 @@ func validOptionalScope(scope string) bool {
 }
 
 // A scope grant seals one estimate scope; a full estimate carries the whole issued
-// snapshot. Like the project snapshot, it may hold 64 KiB of plaintext (#88): the
-// device keeps an estimate with its snapshots in 64 Ki characters, and the largest
-// full scope measured within that seals to about 42 KB. Migration 0022 checks the
-// same bound on the base64 text, and the client checks it before sending
-// (scopeGrantMaxBytes in src/platform/projects/sharing-scopes.ts).
+// snapshot. It may hold 768 KiB of plaintext (#91), the device's estimate document
+// limit (maxLocalDocument in src/platform/vault/crypto.ts), so any saved estimate can
+// be shared. Migration 0023 checks the same bound on the base64 text, and the client
+// checks it before sending (scopeGrantMaxBytes in src/platform/projects/sharing-scopes.ts).
 const (
-	scopeGrantMaxBytes = 64*1024 + 16
+	scopeGrantMaxBytes = 768*1024 + 16
 	scopeGrantMaxChars = (scopeGrantMaxBytes + 2) / 3 * 4
 	maxScopeGrants     = 2
 )

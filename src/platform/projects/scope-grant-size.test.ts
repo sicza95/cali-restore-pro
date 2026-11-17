@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { snapshot } from '../estimates/snapshots';
 import type { EstimateInput } from '../estimates/types';
 import { largeEstimate, withLongNames } from '../../../tests-platform/fixtures/large-estimate';
+import { maxLocalDocument } from '../vault/crypto';
 import { sealScope } from './fixture-sharing';
 import { scopeGrantMaxBytes, ScopeTooLargeError } from './sharing-scopes';
 
@@ -31,9 +32,9 @@ async function seal(content: unknown) {
 
 const sealedBytes = (ciphertext: string) => atob(ciphertext).length;
 
-// The device keeps an estimate (draft and issued snapshots) in at most 64 Ki characters
-// (`maxText` in src/platform/vault/crypto.ts), which bounds what a full scope can carry.
-const vaultLimit = 64 * 1024;
+// The device keeps an estimate (draft and issued snapshots) in at most 768 Ki characters
+// (`maxLocalDocument` in src/platform/vault/crypto.ts), which bounds what a full scope can carry.
+const vaultLimit = maxLocalDocument;
 
 /** The most objects (one measured phase each) whose draft and one issued snapshot fit the vault. */
 function largestSavable(customize: (input: EstimateInput) => EstimateInput) {
@@ -46,16 +47,16 @@ function largestSavable(customize: (input: EstimateInput) => EstimateInput) {
   }
 }
 
-describe('scope grant size (#88)', () => {
+describe('scope grant size (#88, #91)', () => {
   it.each([
     ['English names', (input: EstimateInput) => input],
     ['long Hungarian names', (input: EstimateInput) => withLongNames(input, 'ő')],
   ])('shares the largest estimate the device can save, with %s', async (_, customize) => {
-    // Measured at about 36 KB and 42 KB when the limit was set.
+    // Measured at about 36 KB and 42 KB at the old 64 Ki limit; about twelve times that now.
     const input = largestSavable(customize);
     const grant = await seal(fullScope(input));
-    expect(input.phases.length).toBeGreaterThanOrEqual(15);
-    expect(sealedBytes(grant.ciphertext)).toBeGreaterThan(30_000);
+    expect(input.phases.length).toBeGreaterThanOrEqual(150);
+    expect(sealedBytes(grant.ciphertext)).toBeGreaterThan(300_000);
     expect(sealedBytes(grant.ciphertext)).toBeLessThanOrEqual(scopeGrantMaxBytes);
   });
 
@@ -65,7 +66,7 @@ describe('scope grant size (#88)', () => {
   });
 
   it('refuses a scope over the limit before sealing it', async () => {
-    const error = await seal(fullScope(withLongNames(largeEstimate(30, 1, 1), '€'))).catch(
+    const error = await seal(fullScope(withLongNames(largeEstimate(600, 1, 1), '€'))).catch(
       (e: unknown) => e,
     );
     expect(error).toBeInstanceOf(ScopeTooLargeError);

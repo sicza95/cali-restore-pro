@@ -1,15 +1,15 @@
+import { maxLocalDocument } from '../vault/crypto';
 export type EstimateScope = 'none' | 'estimate-summary' | 'estimate-full';
 export type OptionalScope = Exclude<EstimateScope, 'none'> | 'history';
 export type ScopeSelection = { estimateScope: EstimateScope; shareHistory: boolean };
 
 /**
- * The server's limit for one sealed scope grant, in ciphertext bytes: 64 KiB of plaintext plus
- * the 16-byte tag, like the project snapshot (`scopeGrantMaxBytes` in
- * server/internal/projects/invitation_scopes.go, checked in base64 by migration 0022). The device
- * keeps an estimate with its snapshots in 64 Ki characters; the largest full scope measured
- * within that seals to about 42 KB (#88).
+ * The server's limit for one sealed scope grant, in ciphertext bytes: the device's estimate
+ * document limit (`maxLocalDocument`, 768 KiB) plus the 16-byte tag (`scopeGrantMaxBytes` in
+ * server/internal/projects/invitation_scopes.go, checked in base64 by migration 0023). A full
+ * scope never holds more than the whole estimate document, so any saved estimate can be shared (#91).
  */
-export const scopeGrantMaxBytes = 64 * 1024 + 16;
+export const scopeGrantMaxBytes = maxLocalDocument + 16;
 
 /** Thrown before sending when a sealed scope would exceed {@link scopeGrantMaxBytes}. */
 export class ScopeTooLargeError extends Error {

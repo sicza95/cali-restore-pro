@@ -56,7 +56,7 @@ recipient account can fetch it. The browser authenticates and decrypts the
 envelope with the pinned sender key before displaying the project name,
 revision, object and surface names, and effective surface units.
 
-The grant is a single saved revision, capped at 64 KiB of plaintext.
+The grant is a single saved revision, capped at 64 KiB of plaintext. A sealed estimate scope may hold up to 768 KiB of plaintext, the device's estimate document limit (migration `0023`).
 Financial settings stay outside the snapshot. Original files can be
 included explicitly as described below. Migration `0009` preserves existing assessment sample grants
 and labels new snapshots with their own format. Live updates, other

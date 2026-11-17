@@ -20,9 +20,9 @@ func TestScopeGrantSize(t *testing.T) {
 			Ciphertext:    base64.StdEncoding.EncodeToString(make([]byte, size)),
 		}}
 	}
-	// Migration 0022 checks length(ciphertext) BETWEEN 24 AND 87404.
-	if scopeGrantMaxChars != 87404 || len(grant(scopeGrantMaxBytes)[0].Ciphertext) != scopeGrantMaxChars {
-		t.Fatalf("scope grant limit %d characters does not match migration 0022", scopeGrantMaxChars)
+	// Migration 0023 checks length(ciphertext) BETWEEN 24 AND 1048600.
+	if scopeGrantMaxChars != 1048600 || len(grant(scopeGrantMaxBytes)[0].Ciphertext) != scopeGrantMaxChars {
+		t.Fatalf("scope grant limit %d characters does not match migration 0023", scopeGrantMaxChars)
 	}
 	for _, c := range []struct {
 		size int

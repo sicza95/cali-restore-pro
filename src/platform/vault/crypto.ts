@@ -87,7 +87,8 @@ async function parameters(
 const documentLimit = (purpose: Purpose) =>
   purpose.startsWith('project:') ||
   purpose.startsWith('surface-journal:') ||
-  purpose.startsWith('encrypted-pattern-presets:')
+  purpose.startsWith('encrypted-pattern-presets:') ||
+  purpose.startsWith('encrypted-estimates:')
     ? maxLocalDocument
     : maxText;
 

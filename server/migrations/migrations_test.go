@@ -43,11 +43,11 @@ func TestPostgresMigrations(t *testing.T) {
 		t.Fatal(err)
 	}
 	checkOwnershipBackfill(t, ctx, pool)
-	// 0022 raises the scope grant bound to 64 KiB of plaintext (scopeGrantMaxChars in projects).
+	// 0023 raises the scope grant bound to 768 KiB of plaintext (scopeGrantMaxChars in projects).
 	var scopeCheck string
 	if err := pool.QueryRow(ctx, `SELECT pg_get_constraintdef(oid) FROM pg_constraint
  WHERE conname='invitation_scope_grants_ciphertext_check'`).Scan(&scopeCheck); err != nil ||
-		scopeCheck != "CHECK (((length(ciphertext) >= 24) AND (length(ciphertext) <= 87404)))" {
+		scopeCheck != "CHECK (((length(ciphertext) >= 24) AND (length(ciphertext) <= 1048600)))" {
 		t.Fatalf("scope grant ciphertext check %q: %v", scopeCheck, err)
 	}
 	var count int
