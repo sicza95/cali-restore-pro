@@ -1,14 +1,9 @@
 import { decimal, nonnegative, sum } from './decimal';
+import { currencyMinorUnits } from '../format/currency';
 import { convertArea } from './units';
 import type { EstimateInput, EstimateResult, Phase, PhaseResult } from './types';
 
-export function currencyPrecision(currency: string) {
-  if (!/^[A-Z]{3}$/.test(currency)) throw new Error('Invalid currency');
-  return (
-    new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions()
-      .maximumFractionDigits ?? 2
-  );
-}
+export const currencyPrecision = currencyMinorUnits;
 
 export function calculatePhase(
   phase: Phase,

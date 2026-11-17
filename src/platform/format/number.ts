@@ -2,6 +2,7 @@
  * Shared number and unit formatting for everything shown on screen or in visual files (PDF, SVG).
  * Calculations, saved data and CSV/XLSX values keep exact machine numbers and do not use this.
  */
+import { currencyMinorUnits } from './currency';
 import type { AreaUnit } from '../estimates/types';
 
 export type NumberLanguage = 'en' | 'hu';
@@ -99,17 +100,6 @@ export function formatHours(value: NumberValue, language: NumberLanguage) {
   return formatNumber(value, language, 2);
 }
 
-function currencyDigits(currency: string) {
-  try {
-    return (
-      new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions()
-        .maximumFractionDigits ?? 2
-    );
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Money in the currency's own precision: `HUF 1,234`, `€12.50`, HU `1234 Ft`. A rate keeps up to
  * four fraction digits, since a unit price may be finer than the currency.
@@ -122,7 +112,7 @@ export function formatMoney(
 ): string {
   const number = toNumber(value);
   if (number === null) return missing;
-  const digits = /^[A-Z]{3}$/.test(currency) ? currencyDigits(currency) : null;
+  const digits = /^[A-Z]{3}$/.test(currency) ? currencyMinorUnits(currency) : null;
   if (digits === null) return formatNumber(number, language) + (currency ? nbsp + currency : '');
   return formatter(language, {
     style: 'currency',
