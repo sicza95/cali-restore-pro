@@ -1,5 +1,6 @@
 import type { Mask, PlanarSurface } from '../projects/planar-types';
 import { assertMask } from '../projects/planar-mask';
+import { assertDimensions } from '../images/types';
 
 export type RawMaskExport = {
   kind: 'raw-mask';
@@ -9,18 +10,17 @@ export type RawMaskExport = {
   mask: Mask;
 };
 
+// The mask is exported at the source's native size, so it accepts exactly what the importer
+// accepts (assertDimensions: 12288 per side, 40 Mi pixels), which covers 7680x4320 and 8192x4096.
+// Memory: the export canvas is RGBA, 4 bytes per pixel, so 40 Mi px is at most 160 MiB, once, in
+// the export worker. The PNG is bounded separately by the 32 MB check in export-png.ts.
 export function assertRawMask(value: RawMaskExport) {
   const { width, height } = value;
-  if (
-    !Number.isSafeInteger(width) ||
-    !Number.isSafeInteger(height) ||
-    width <= 0 ||
-    height <= 0 ||
-    width > 32767 ||
-    height > 32767 ||
-    width * height > 32_000_000
-  )
+  try {
+    assertDimensions(width, height);
+  } catch {
     throw new Error('Mask size limit');
+  }
   assertMask(value.mask);
 }
 

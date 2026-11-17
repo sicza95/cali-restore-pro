@@ -59,6 +59,9 @@ export async function jpegFrame(blob: ImageSource, checkEnd = true): Promise<Fra
   throw invalidImage();
 }
 
+// 1 Mi chunks is 12 MiB of headers alone: far beyond any real encoder, cheap to walk.
+const maxPngChunks = 1024 ** 2;
+
 export async function pngFrame(blob: ImageSource): Promise<Frame> {
   const header = await read(blob, 0, 33);
   if (
@@ -73,21 +76,30 @@ export async function pngFrame(blob: ImageSource): Promise<Frame> {
   assertDimensions(width, height);
   let image = false;
   let orientation: number | undefined;
+  // Headers are read through a sliding window, so a file made of tiny chunks costs one read per
+  // window rather than one per chunk. Every read stays inside the blob, and the scan only ever
+  // moves forward, so work is bounded by the file size (at most one chunk per 12 bytes).
+  const windowBytes = 64 * 1024;
+  let window = { start: 0, data: new DataView(new ArrayBuffer(0)) };
   let at = 33;
-  for (let n = 0; at + 12 <= blob.size && n < 4096; n++) {
-    const chunk = await read(blob, at, 8);
-    const length = chunk.getUint32(0);
-    const type = ascii(chunk, 4, 4);
-    at += length + 12;
-    if (at > blob.size) throw invalidImage();
+  for (let n = 0; at + 12 <= blob.size; n++) {
+    if (n === maxPngChunks) throw imageLimit();
+    if (at < window.start || at + 8 > window.start + window.data.byteLength)
+      window = { start: at, data: await read(blob, at, Math.min(windowBytes, blob.size - at)) };
+    const length = window.data.getUint32(at - window.start);
+    const type = ascii(window.data, at - window.start + 4, 4);
+    if (length > 0x7fffffff) throw invalidImage();
+    const next = at + length + 12;
+    if (next > blob.size) throw invalidImage();
     if (type === 'acTL') throw unsupportedImage();
     if (type === 'eXIf') {
       if (length > 256 * 1024) throw imageLimit();
-      orientation = tiffOrientation(await read(blob, at - length - 4, length));
+      orientation = tiffOrientation(await read(blob, at + 8, length));
     }
     if (type === 'IDAT') image = true;
-    if (type === 'IEND' && image && length === 0 && at === blob.size)
+    if (type === 'IEND' && image && length === 0 && next === blob.size)
       return { width, height, orientation };
+    at = next;
   }
   throw invalidImage();
 }
