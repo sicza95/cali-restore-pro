@@ -87,11 +87,23 @@ export function signInDestination(next: string | null) {
 
 /** Hands plain left clicks on an in-app link to `navigate`; modified clicks keep browser behaviour. */
 export function followLink(
-  event: MouseEvent & { currentTarget: HTMLAnchorElement },
+  event: MouseEvent,
   navigate: (href: string) => void,
+  anchor = event.currentTarget as HTMLAnchorElement,
 ) {
-  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
+  if (
+    event.defaultPrevented ||
+    event.button !== 0 ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.shiftKey ||
+    event.altKey ||
+    anchor.hasAttribute('download') ||
+    (anchor.target && anchor.target !== '_self') ||
+    anchor.origin !== location.origin ||
+    parseRoute(anchor.pathname).name === 'notFound'
+  )
     return;
   event.preventDefault();
-  navigate(event.currentTarget.pathname);
+  navigate(anchor.pathname + anchor.search + anchor.hash);
 }

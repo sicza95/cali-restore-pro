@@ -1,6 +1,6 @@
 # 0006 · One router and an app context
 
-Status: Accepted · Date: 2026-11-15 · Decided by: maintainer, under the quality roadmap · Source: [quality baseline Phase 3 item 2](../reviews/2026-11-14-quality-baseline.md), [plan](../plan/router-context.md)
+Status: Superseded in part by [0007](0007-account-client-navigation.md) (account navigation only) · Date: 2026-11-15 · Decided by: maintainer, under the quality roadmap · Source: [quality baseline Phase 3 item 2](../reviews/2026-11-14-quality-baseline.md), [plan](../plan/router-context.md)
 
 ## Context
 

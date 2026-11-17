@@ -1,7 +1,7 @@
 import { createContext, createMemo, createSignal, onCleanup, untrack, useContext } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { createAccountAccess } from '../account-access/createAccountAccess';
-import { createRouter } from '../router/createRouter';
+import { createRouter, type Router } from '../router/createRouter';
 
 /**
  * Display names of records the URL points at (projects, surfaces), keyed by ID, for the shell's
@@ -32,8 +32,7 @@ function createNames() {
 }
 
 /** Account session, language, requests, the router and record names, shared by every screen. */
-export function createApp() {
-  const router = createRouter();
+export function createApp(router = createRouter()) {
   return { ...createAccountAccess(router), ...createNames(), router };
 }
 
@@ -42,8 +41,8 @@ export type App = ReturnType<typeof createApp>;
 const AppContext = createContext<App>();
 
 /** Creates the app once for its subtree; `value` lets a host such as a story supply its own. */
-export function AppProvider(props: { value?: App; children: JSX.Element }) {
-  const app = untrack(() => props.value) ?? createApp();
+export function AppProvider(props: { value?: App; router?: Router; children: JSX.Element }) {
+  const app = untrack(() => props.value) ?? createApp(untrack(() => props.router));
   return <AppContext.Provider value={app}>{props.children}</AppContext.Provider>;
 }
 

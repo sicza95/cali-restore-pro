@@ -77,7 +77,7 @@ Why not 9: UI behaviour is tested only through Playwright (no component tests); 
 
 All five weaknesses are fixed: `internal/identity` split into nine domain packages (1); `src/ui` split into `account/`, `settings/`, `projects/`, `project-review/`, `estimates/`, `reports/`, `sharing/` (2); one editor (3, retired earlier); a router and app context (4); one CI workflow with parallel jobs (5). Decisions are recorded as ADRs and every phase has a plan document.
 
-Why not 9: `account-access/` still holds the app core and global styles, so the folder name and the CSS cascade still cross features; account pages mix in-app navigation and full page loads (#45); the shell's record names show that vault-scoped state needs an explicit lifetime (fixed for names in #58, but not yet a general rule); and production qualification is open (cryptographic review #52, deployment and recovery #53, sustained 4K/8K memory #50).
+Why not 9: `account-access/` still holds the app core and global styles, so the folder name and the CSS cascade still cross features; the shell's record names show that vault-scoped state needs an explicit lifetime (fixed for names in #58, but not yet a general rule); and production qualification is open (cryptographic review #52, deployment and recovery #53, sustained 4K/8K memory #50). The mixed account navigation is resolved by #45: [ADR 0007](../adr/0007-account-client-navigation.md) records client-side account links, route-entry session checks and Back/Forward coverage.
 
 ### UX — 6 / 10 (was 4)
 
@@ -99,7 +99,7 @@ Better: one shell in both orientations; selects with token chevrons, a styled fi
 ### What would move each rating next
 
 - Code to 9: component tests for the editor and estimate state, the files at the limit split (#44; done 16 November: `projects.browser.ts`, `revision-queue.ts`, `vault/files.ts`, `drawing-review.ts`, `SurfaceReviewAdapter.tsx`, `VaultSection.tsx` and `invitations.spec.ts`), the global button rule scoped to the app shell.
-- Architecture to 9: the `account-access/` core renamed and its global CSS scoped; #45 decided; #52 and #53 done.
+- Architecture to 9: the `account-access/` core renamed and its global CSS scoped; #52 and #53 done. The #45 navigation decision is recorded in ADR 0007.
 - UX to 7: a lighter project page (disclosure for the rarely used panels), a physical iPad session (#49).
 - UI to 7: styled measurement lists (#36 and #37 are done).
 

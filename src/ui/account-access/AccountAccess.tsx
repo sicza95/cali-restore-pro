@@ -12,14 +12,19 @@ import { AccountScreen } from '../account/AccountScreen';
 import { navigationText } from './navigation-copy';
 import { settingsCopy } from '../settings/settings-copy';
 import { deletionCopy } from '../settings/profile/deletion-copy';
+import { createRouter } from '../router/createRouter';
+import { OfflineOriginalsPage } from '../sharing/OfflineOriginalsPage';
 import '../settings/styles.css';
 import '../account/access-form/styles.css';
 
 export function AccountAccess() {
+  const router = createRouter();
   return (
-    <AppProvider>
-      <AccountShell />
-    </AppProvider>
+    <Show when={router.route().name !== 'offline'} fallback={<OfflineOriginalsPage />}>
+      <AppProvider router={router}>
+        <AccountShell />
+      </AppProvider>
+    </Show>
   );
 }
 
@@ -94,14 +99,16 @@ function AccountShell() {
         <Switch>
           <Match when={publicView()}>
             {(form) => (
-              <AccessForm
-                view={form()}
-                language={lang()}
-                linkToken={router.linkToken}
-                submit={submit}
-                t={t}
-                busy={busy}
-              />
+              <Show when={router.href()} keyed>
+                <AccessForm
+                  view={form()}
+                  language={lang()}
+                  linkToken={router.linkToken()}
+                  submit={submit}
+                  t={t}
+                  busy={busy}
+                />
+              </Show>
             )}
           </Match>
           <Match when={view() === 'notFound'}>

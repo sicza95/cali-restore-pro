@@ -4,26 +4,29 @@ import {
   preferenceDefaults,
 } from '../settings/preferences/utils';
 import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/offline-account';
-import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { createEffect, createMemo, createSignal, on, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
 import { sessionEndingActions } from './constants';
 import { accountCopy as copy } from './copy';
 import { authErrorMessage, authFormBody } from './utils';
 import { signInDestination } from '../router/routes';
 import type { Router } from '../router/createRouter';
+import type { RouteName } from '../router/types';
 import { applyLanguage, storedLanguage } from './presentation';
 import type { DeletionStatus } from '../../platform/api/types.gen';
 import type { Account, Language, Message, Session } from './types';
 
-export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>) {
+export function createAccountAccess(router: Router) {
   const [lang, setLang] = createSignal<Language>(storedLanguage());
   const t = (key: Message) => copy[lang()][key];
-  const view = router.entry.name;
+  const view = createMemo(() => router.route().name);
   const { linkToken } = router;
   const [deletionReceipt, setDeletionReceipt] = createSignal<DeletionStatus>();
   const [account, setAccount] = createSignal<Account>();
   const [capabilities, setCapabilities] = createSignal<string[]>([]);
-  const [loaded, setLoaded] = createSignal(false);
+  const [loadedState, setLoaded] = createSignal(false);
+  const [checkedView, setCheckedView] = createSignal<RouteName>();
+  const loaded = () => loadedState() && checkedView() === view();
   const can = (capability: string) => capabilities().includes(capability);
   const canAdmin = () => can('accounts.view') || can('operations.view');
   const [sessionUnavailable, setSessionUnavailable] = createSignal(false);
@@ -63,7 +66,11 @@ export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>)
     }
   };
   let sessionChanges: BroadcastChannel | undefined;
+  let sessionGeneration = 0;
+  let navigationGeneration = 0;
+  let active = true;
   const clearSession = (notify = true) => {
+    sessionGeneration++;
     if (notify && account()) sessionChanges?.postMessage(account()?.id);
     window.dispatchEvent(new Event('calirestore-session-end'));
     if (localStorage.getItem(offlineAccountKey) === account()?.id) rememberOfflineAccount();
@@ -71,13 +78,17 @@ export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>)
     setCapabilities([]);
     setCsrf('');
     setSessions([]);
+    setConfirmed(false);
+    setRevokeConfirmed(false);
   };
   const refreshSessions = async () => {
+    const generation = sessionGeneration;
     setSessionError(false);
     try {
-      setSessions((await api('sessions')).sessions ?? []);
+      const result = await api('sessions');
+      if (generation === sessionGeneration) setSessions(result.sessions ?? []);
     } catch {
-      setSessionError(true);
+      if (generation === sessionGeneration) setSessionError(true);
     }
   };
   const refreshConnection = async () => {
@@ -86,15 +97,20 @@ export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>)
   };
   const run = async (action: string, body: object, success: Message) => {
     if (busy()) return false;
+    const requestPage = navigationGeneration;
     setBusy(true);
     setMessage(undefined);
     setFailed(false);
     try {
       const result = await api(action, body);
+      if (!active) return false;
       if (action === 'login') {
+        clearSession(false);
         rememberOfflineAccount();
         sessionChanges?.postMessage(null);
-        window.location.assign(signInDestination(new URLSearchParams(location.search).get('next')));
+        await refreshAccount();
+        if (requestPage === navigationGeneration)
+          router.navigate(signInDestination(new URLSearchParams(location.search).get('next')));
         return;
       }
       if (
@@ -114,6 +130,7 @@ export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>)
         clearSession();
         setConfirmed(false);
       }
+      if (requestPage !== navigationGeneration) return result;
       if (action === 'confirm') setConfirmed(true);
       setMessage(success);
       if (action.startsWith('/admin/')) {
@@ -140,7 +157,7 @@ export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>)
   const submit = (event: SubmitEvent, action: string, success: Message) => {
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
-    const body = authFormBody(form, action, lang(), linkToken);
+    const body = authFormBody(form, action, lang(), linkToken());
     void run(action, body, success).finally(() => form.reset());
   };
   const read = async <T>(path: string) => {
@@ -155,11 +172,15 @@ export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>)
     }
   };
   const refreshAccount = async () => {
-    const result = await api('me');
+    const generation = ++sessionGeneration;
+    const result = await requestAuth('me', csrf());
+    if (generation !== sessionGeneration) return;
+    if (account() && account()?.id !== result.account?.id) clearSession(false);
+    setCsrf(result.csrfToken ?? '');
     setCapabilities(result.capabilities ?? []);
     setAccount(result.account);
-    if (view === 'invitations' || localStorage.getItem(offlineAccountKey) !== result.account?.id)
-      rememberOfflineAccount(view === 'invitations' ? result.account?.id : undefined);
+    if (view() === 'invitations' || localStorage.getItem(offlineAccountKey) !== result.account?.id)
+      rememberOfflineAccount(view() === 'invitations' ? result.account?.id : undefined);
   };
   const applyAccountPreferences = () => {
     const id = account()?.id;
@@ -177,22 +198,48 @@ export function createAccountAccess(router: Pick<Router, 'entry' | 'linkToken'>)
     deviceTheme.addEventListener('change', applyAccountPreferences);
     applyLanguage(lang());
     void refreshConnection();
-    void refreshAccount()
-      .then(() => {
-        if (view === 'security') void refreshSessions();
-      })
-      .catch((error: unknown) => {
-        if (error instanceof Error && error.message === 'authentication_required') {
-          rememberOfflineAccount();
-        } else {
-          setSessionUnavailable(true);
-          setMessage('unavailable');
-          setFailed(true);
-        }
-      })
-      .finally(() => setLoaded(true));
   });
+  // Account transitions used to load a new document: recheck rights and reset transient state.
+  // Project subroutes keep their mounted vault and drawing workspace.
+  createEffect(
+    on(view, (destination) => {
+      const generation = ++navigationGeneration;
+      setLoaded(false);
+      setSessionUnavailable(false);
+      setMessage(undefined);
+      setFailed(false);
+      setConfirmed(false);
+      setRevokeConfirmed(false);
+      setSessions([]);
+      setDeletionReceipt(undefined);
+      void refreshAccount()
+        .then(() => {
+          if (generation === navigationGeneration && destination === 'security' && account())
+            void refreshSessions();
+        })
+        .catch((error: unknown) => {
+          if (generation !== navigationGeneration) return;
+          clearSession(false);
+          if (error instanceof Error && error.message === 'authentication_required') {
+            rememberOfflineAccount();
+          } else {
+            setSessionUnavailable(true);
+            setMessage('unavailable');
+            setFailed(true);
+          }
+        })
+        .finally(() => {
+          if (generation === navigationGeneration) {
+            setCheckedView(destination);
+            setLoaded(true);
+          }
+        });
+    }),
+  );
   onCleanup(() => {
+    active = false;
+    navigationGeneration++;
+    sessionGeneration++;
     sessionChanges?.close();
     deviceTheme.removeEventListener('change', applyAccountPreferences);
   });

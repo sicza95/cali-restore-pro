@@ -5,9 +5,6 @@ import '../ui/account-access/styles.css';
 import '../ui/account-access/shell.css';
 import '../ui/app-shell/styles.css';
 import { AccountAccess } from '../ui/account-access/AccountAccess';
-import { parseRoute } from '../ui/router/routes';
-
-import { OfflineOriginalsPage } from '../ui/sharing/OfflineOriginalsPage';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   void navigator.serviceWorker.register('/offline-worker.js').catch(() => undefined);
@@ -19,8 +16,4 @@ window.addEventListener('pageshow', (event) => {
     location.reload();
 });
 
-render(
-  () =>
-    parseRoute(location.pathname).name === 'offline' ? <OfflineOriginalsPage /> : <AccountAccess />,
-  document.getElementById('app')!,
-);
+render(() => <AccountAccess />, document.getElementById('app')!);

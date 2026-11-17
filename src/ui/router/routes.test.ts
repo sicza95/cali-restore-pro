@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { accountPaths, publicRouteNames, reviewSteps } from './constants';
 import {
   followLink,
@@ -136,7 +136,9 @@ describe('sign-in deep links', () => {
 });
 
 describe('followLink', () => {
-  const click = (init: Partial<MouseEvent>) => {
+  afterEach(() => vi.unstubAllGlobals());
+  const click = (init: Partial<MouseEvent>, link: Partial<HTMLAnchorElement> = {}) => {
+    vi.stubGlobal('location', { origin: 'https://app.test' });
     let prevented = false;
     const event = {
       button: 0,
@@ -145,7 +147,15 @@ describe('followLink', () => {
       shiftKey: false,
       altKey: false,
       ...init,
-      currentTarget: { pathname: '/projects/' + project },
+      currentTarget: {
+        pathname: '/projects/' + project,
+        search: '',
+        hash: '',
+        target: '',
+        origin: 'https://app.test',
+        hasAttribute: () => false,
+        ...link,
+      },
       preventDefault: () => (prevented = true),
     } as unknown as MouseEvent & { currentTarget: HTMLAnchorElement };
     const visited: string[] = [];
@@ -166,5 +176,23 @@ describe('followLink', () => {
       { altKey: true },
     ])
       expect(click(init)).toEqual({ prevented: false, visited: [] });
+  });
+
+  it('preserves return queries and section fragments', () => {
+    expect(click({}, { pathname: '/login', search: '?next=profile', hash: '#help' })).toEqual({
+      prevented: true,
+      visited: ['/login?next=profile#help'],
+    });
+  });
+
+  it('leaves external, download, new-tab, unknown and already handled links alone', () => {
+    for (const link of [
+      { origin: 'https://other.test' },
+      { target: '_blank' },
+      { hasAttribute: () => true },
+      { pathname: '/api/v1/status' },
+    ])
+      expect(click({}, link)).toEqual({ prevented: false, visited: [] });
+    expect(click({ defaultPrevented: true })).toEqual({ prevented: false, visited: [] });
   });
 });

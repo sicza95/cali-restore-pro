@@ -11,6 +11,7 @@ import { useApp } from '../app-context/AppContext';
 import { Icon } from '../icon/Icon';
 import type { IconName } from '../icon/types';
 import { accountPaths } from '../router/constants';
+import { followLink } from '../router/routes';
 
 const destinationIcons: Record<(typeof accountNavigationControls)[number]['labelKey'], IconName> = {
   projects: 'folder',
@@ -62,6 +63,7 @@ export function AppNavigation(props: { mode: NavigationMode }) {
         {(control) => (
           <a
             href={control.href}
+            onClick={(event) => followLink(event, app.router.navigate)}
             data-control-id={control.id}
             title={rail() ? c()[control.labelKey] : undefined}
             aria-current={app.router.route().name === control.labelKey ? 'page' : undefined}
@@ -110,6 +112,7 @@ export function AppNavigation(props: { mode: NavigationMode }) {
       <a
         class="product-name"
         href={app.account() ? accountPaths.projects : '/'}
+        onClick={(event) => followLink(event, app.router.navigate)}
         title={rail() ? 'CaliRestore Pro' : undefined}
       >
         <Icon name="brand" size={26} />

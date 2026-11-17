@@ -1,5 +1,7 @@
 # Requirements coverage and acceptance tracking
 
+Issue #45 adds client-side account navigation ([ADR 0007](../adr/0007-account-client-navigation.md)). UX-01/02 and UI-01 gain document-preserving links, deep-link sign-in returns and account Back/Forward coverage in `tests-platform/account-navigation.spec.ts`; PRIV-05/07 retain route-entry session checks, credential confirmation, vault unmount cleanup and fail-closed expiry/unavailability coverage. These browser fixtures complement the real identity lifecycle in `identity.spec.ts`; they do not qualify physical Safari or change release acceptance.
+
 The status column records implementation and evidence as milestones land. The [preserved acceptance catalogue](requirements-baseline.md) contains the original IDs, priorities and full acceptance text so review does not depend on untracked workspace documents. The [plan](README.md) changes delivery order, not required behavior.
 
 **First** means schema, contract, platform implementation or explicit UI work begins there. **Acceptance** is the earliest planned milestone with the complete real behavior/evidence, not a completion claim. Priority labels are preserved from the earlier delivery baseline; the milestone columns define the new order. Engine-dependent workflows are retested together in M-16 even when a bounded feature can pass earlier. PRIV-03 remains the baseline optional passkey extension with compatibility qualification; its row does not make passkeys a prerequisite for core authentication/recovery.
