@@ -236,3 +236,7 @@ management attempts, ciphertext substitution, vault lock and revocation.
 This is evidence for the synthetic sharing workflow. Named checkpoint
 authoring, real dependency closures, current/future history access and
 report/export integration remain later work.
+
+## Recipient reports
+
+Recipients can author their own report from what their active grants share ([ADR 0008](../adr/0008-recipient-own-reports.md), evidence in [M-10](m10-reports-and-exports.md#2026-11-17-owner-decision-recipient-reports-55)). The draft stays in the recipient's vault, is never sent to the server or the owner, and outlives revocation with a warning.

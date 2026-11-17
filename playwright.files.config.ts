@@ -35,6 +35,7 @@ export default defineConfig({
     'project-reviews.browser.ts',
     'project-review-scopes.browser.ts',
     'scope-too-large.browser.ts',
+    'recipient-reports.browser.ts',
     'report-exports.browser.ts',
     'measured-reports.browser.ts',
     'incomplete-assessment.browser.ts',

@@ -22,6 +22,10 @@ import { ProjectInvitations } from './ProjectInvitations';
 import { Checkpoints } from './Checkpoints';
 import { SharedOriginals } from './SharedOriginals';
 import { OfflineOriginals, useOfflineOriginals } from './OfflineOriginals';
+import type { SharedSource } from '../../platform/recipient-reports/types';
+import { useRecipientReports } from '../recipient-reports/useRecipientReports';
+import { RecipientReportEditor } from '../recipient-reports/RecipientReportEditor';
+import { RecipientReportList } from '../recipient-reports/RecipientReportList';
 import './styles.css';
 
 export function InvitationInbox(props: { vault: LocalVault }) {
@@ -38,6 +42,13 @@ export function InvitationInbox(props: { vault: LocalVault }) {
     locked: AbortSignal;
     scope?: { id: OptionalScope; rows: string[] };
   }>();
+  // What each grant opened in this session, for the recipient's own report (ADR 0008).
+  const reports = useRecipientReports(untrack(() => props.vault));
+  const [shared, setShared] = createSignal<Record<string, Partial<SharedSource>>>({});
+  const active = (invitation: string) =>
+    inbox.loading() || inbox.error()
+      ? undefined
+      : inbox.rows().some((row) => row.id === invitation && row.state === 'active');
   return (
     <section class="invitation-panel" aria-label={c().heading}>
       <OfflineOriginals model={offline} language={app.lang()} />
@@ -136,6 +147,18 @@ export function InvitationInbox(props: { vault: LocalVault }) {
                           : undefined;
                       if (!selected && !('format' in grant)) throw new Error('Missing assessment');
                       key.signal.throwIfAborted();
+                      const estimate =
+                        scoped && scoped.id !== 'history' && scoped.rows[0]?.startsWith('{')
+                          ? { scope: scoped.id, text: scoped.rows[0] }
+                          : undefined;
+                      setShared((all) => ({
+                        ...all,
+                        [item.id]: {
+                          sender: grant.senderId,
+                          project: content?.project ?? all[item.id]?.project,
+                          estimate: estimate ?? all[item.id]?.estimate,
+                        },
+                      }));
                       setOpened({
                         id: item.id,
                         project: content?.project,
@@ -255,6 +278,20 @@ export function InvitationInbox(props: { vault: LocalVault }) {
                     </Show>
                   )}
                 </Show>
+                <Show when={shared()[item.id]?.project && (shared()[item.id] as SharedSource)}>
+                  {(source) => (
+                    <RecipientReportEditor
+                      grant={{
+                        invitation: item.id,
+                        project: item.projectId,
+                        state: item.state,
+                        estimateScope: item.estimateScope,
+                      }}
+                      source={source()}
+                      store={reports}
+                    />
+                  )}
+                </Show>
               </Show>
             </li>
           )}
@@ -263,11 +300,13 @@ export function InvitationInbox(props: { vault: LocalVault }) {
       <Show when={!inbox.loading() && !inbox.error() && !inbox.rows().length}>
         <p>{c().empty}</p>
       </Show>
+      <RecipientReportList store={reports} active={active} />
       <button
         data-control-id="invitations.refresh"
         disabled={inbox.loading() || inbox.busy()}
         onClick={() => {
           setOpened(undefined);
+          setShared({});
           void inbox.refetch();
         }}
       >

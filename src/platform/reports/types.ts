@@ -92,4 +92,6 @@ export type Draft = Pick<
   resolution?: ReportSettings['resolution'];
   workbook?: ReportSettings['workbook'];
   workbookEstimate?: WorkbookEstimate;
+  /** A recipient's own draft from shared content (ADR 0008): labelled as such on every file. */
+  recipient?: true;
 };

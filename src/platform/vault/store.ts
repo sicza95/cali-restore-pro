@@ -14,13 +14,15 @@ export const journalTable = 'encrypted-surface-journals';
 export const patternTable = 'encrypted-pattern-presets';
 export const reportTable = 'encrypted-reports';
 export const presetTable = 'encrypted-estimate-presets';
+// A recipient's own report drafts, keyed by [account, project, invitation] (ADR 0008).
+export const recipientReportTable = 'encrypted-recipient-reports';
 export const revisionSyncTable = 'revision-sync';
 export const revisionQueueTable = 'revision-queue';
 export const accountRange = (account: string) => IDBKeyRange.bound([account], [account, []]);
 
 export async function connect() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('calirestore-vault', 8);
+    const request = indexedDB.open('calirestore-vault', 9);
     request.onupgradeneeded = (event) => {
       if (event.oldVersion < 1) request.result.createObjectStore(vaultTable);
       if (event.oldVersion < 2) request.result.createObjectStore(fileTable);
@@ -36,6 +38,7 @@ export async function connect() {
         request.result.createObjectStore(journalTable);
         request.result.createObjectStore(patternTable);
       }
+      if (event.oldVersion < 9) request.result.createObjectStore(recipientReportTable);
     };
     request.onblocked = () => reject(new Error('Close older vault tabs and retry'));
     request.onerror = () => reject(request.error);
@@ -79,6 +82,7 @@ export async function commitVault(
           reportTable,
           journalTable,
           patternTable,
+          recipientReportTable,
         ],
         'readwrite',
         {
@@ -105,6 +109,7 @@ export async function commitVault(
           tx.objectStore(reportTable).delete(accountRange(account));
           tx.objectStore(journalTable).delete(accountRange(account));
           tx.objectStore(patternTable).delete(accountRange(account));
+          tx.objectStore(recipientReportTable).delete(accountRange(account));
         }
       };
     });

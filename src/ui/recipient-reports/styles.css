@@ -1,0 +1,37 @@
+.recipient-report-editor fieldset {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--cr-rule);
+}
+.recipient-reports ul {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.recipient-reports li {
+  display: grid;
+  gap: 4px;
+}
+.recipient-report-warning {
+  margin: 4px 0;
+  padding: 8px 12px;
+  border-left: 4px solid var(--cr-warning);
+}
+.recipient-report-editor textarea {
+  min-height: 6rem;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+  font: inherit;
+  resize: vertical;
+}
+.recipient-report-editor textarea:focus-visible {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 3px;
+}

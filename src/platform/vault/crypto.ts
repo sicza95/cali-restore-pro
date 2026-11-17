@@ -11,6 +11,7 @@ type Purpose =
   | 'sharing-identity'
   | `encrypted-estimates:${string}`
   | `encrypted-reports:${string}`
+  | `encrypted-recipient-reports:${string}`
   | `encrypted-estimate-presets:${string}`
   | `encrypted-pattern-presets:${string}`
   | `surface-journal:${string}`
@@ -88,7 +89,9 @@ const documentLimit = (purpose: Purpose) =>
   purpose.startsWith('project:') ||
   purpose.startsWith('surface-journal:') ||
   purpose.startsWith('encrypted-pattern-presets:') ||
-  purpose.startsWith('encrypted-estimates:')
+  purpose.startsWith('encrypted-estimates:') ||
+  // A recipient draft may carry a whole shared full estimate (ADR 0008).
+  purpose.startsWith('encrypted-recipient-reports:')
     ? maxLocalDocument
     : maxText;
 

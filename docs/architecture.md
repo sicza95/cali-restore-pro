@@ -43,7 +43,7 @@ File size, colocation and naming follow the [source layout conventions](source-l
 - **Navigation.** Account and project pages share client-side history navigation. Account transitions recheck server sessions and capabilities; deep links and Back/Forward retain the same route guards ([ADR 0007](adr/0007-account-client-navigation.md)).
 - **Vault.** Each account has a local encrypted vault unlocked on trusted devices or with a recovery key. Content keys never leave authorized clients.
 - **Files and revisions.** Originals are immutable, chunked and encrypted locally first, then uploaded against a storage reservation and published only if `base_revision` still matches; a stale base is a conflict the client resolves.
-- **Sharing.** Invitations bind to a verified account; grants are scoped (assessment, estimate, history) and wrapped per recipient. Revocation is enforced in PostgreSQL on every request, and keys are rotated for the remaining recipients ([M-06](milestones/m06-sharing.md)).
+- **Sharing.** Invitations bind to a verified account; grants are scoped (assessment, estimate, history) and wrapped per recipient. Revocation is enforced in PostgreSQL on every request, and keys are rotated for the remaining recipients ([M-06](milestones/m06-sharing.md)). Recipients may keep their own report drafts from granted content in their own vault ([ADR 0008](adr/0008-recipient-own-reports.md)).
 - **Editor.** One shell, `EditorWorkspace`, renders the shipped editor and its Storybook stories ([ADR 0004](adr/0004-one-editor-workspace.md)).
 
 ## Targets and delivery

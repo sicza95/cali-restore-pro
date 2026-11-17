@@ -47,7 +47,7 @@ function scene(draft: Draft, hasLogo: boolean, paged: boolean) {
     pages.push(page);
     y = margin;
     addText(c.title, 21, true, accent);
-    addText(c.exportNote, 10, false, muted);
+    addText(draft.recipient ? c.recipientNote : c.exportNote, 10, false, muted);
     y += 16;
     bodyStart = y;
   }

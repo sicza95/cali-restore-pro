@@ -4,6 +4,7 @@ import { accountControls } from '../account/account-controls';
 import { vaultEntryControls } from '../account/account-security/entry-controls';
 import { vaultControls } from '../account/account-security/vault-controls';
 import { sharingControls } from '../sharing/sharing-controls';
+import { recipientReportControls } from '../recipient-reports/recipient-report-controls';
 import {
   accountNavigationControls,
   languageControl,
@@ -29,6 +30,7 @@ export const applicationControls = [
   ...projectControls,
   ...projectOperationControls,
   ...sharingControls,
+  ...recipientReportControls,
   ...surfaceControls,
   ...drawingControls,
   ...checkpointControls,

@@ -127,7 +127,7 @@ export function reportBlocks(draft: Draft): Block[] {
 export function reportTable(draft: Draft): Cell[][] {
   const c = reportCopy[draft.language];
   return [
-    [c.title, '', c.exportNote, ''],
+    [c.title, '', draft.recipient ? c.recipientNote : c.exportNote, ''],
     [c.section, c.item, c.value, c.unit],
     ...reportBlocks(draft).flatMap(({ rows }) =>
       rows.map(([section, item, value, unit]) => [section, item, value, unit ?? '']),

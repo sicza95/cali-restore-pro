@@ -73,7 +73,10 @@ estimate and configured report, deletes the source vault and reopens both
 through their repositories after locking/unlocking the destination. Wrong-key,
 corrupt, truncated, extended, cancelled and transaction-aborted restores leave
 zero project, estimate, report or original rows. Recipient report authoring
-remains outside this slice and #55 stays open.
+followed in its own slice ([ADR 0008](../adr/0008-recipient-own-reports.md),
+[M-10](m10-reports-and-exports.md#2026-11-17-owner-decision-recipient-reports-55)):
+recipient drafts live in the recipient's own vault table and are deliberately
+not part of the owner's backups.
 
 Verification for this slice: `npm run check`, `npm run test:unit` (278 passed),
 `npm run test:files` (44 Chromium tests passed), `npm run build-storybook` and

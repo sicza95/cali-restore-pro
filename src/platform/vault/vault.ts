@@ -14,6 +14,7 @@ import { revisionQueue } from './revision-queue';
 import { projectDocuments } from './project-store';
 import { originalPins } from './original-pins';
 import { projectBackups } from './project-backups';
+import { recipientReportDocuments } from './recipient-reports';
 
 export class LocalVault {
   #root?: CryptoKey;
@@ -167,6 +168,12 @@ export class LocalVault {
   reports() {
     const { root, row } = this.#unlocked();
     return projectDocuments(root, this.account, row.stamp, this.#fileAccess.signal, reportTable);
+  }
+
+  /** The recipient's own report drafts from shared projects, kept apart from owner documents. */
+  recipientReports() {
+    const { root, row } = this.#unlocked();
+    return recipientReportDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
   projectBackups() {
