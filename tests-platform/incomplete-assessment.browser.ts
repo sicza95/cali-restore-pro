@@ -104,6 +104,9 @@ test('empty and partial assessments survive reopening and a draft estimate workb
   await page.locator('[data-control-id="project.review.outputs"]').click();
   await report('finances').selectOption('full');
   await expect(report('estimateVersion').locator('option:checked')).toHaveText('v1 · Draft');
+  await expect(report('final')).toBeDisabled();
+  await expect(report('final')).toHaveAccessibleDescription(/incomplete.*Partial totals/);
+  await expect(page.locator('#report-final-reason')).toBeVisible();
   await report('format').selectOption('XLSX');
   await report('workbook').selectOption('editable');
   await report('preview').click();
@@ -132,6 +135,10 @@ test('empty and partial assessments survive reopening and a draft estimate workb
   expect(bytes).toContain('r="M3"><v>8</v>');
   await report('cancel').click();
   await report('language').selectOption('hu');
+  await expect(report('final')).toBeDisabled();
+  await page.locator('[data-control-id="app.nav.language"]').selectOption('hu');
+  await expect(page.locator('#report-final-reason')).toContainText('Ez a becslés hiányos.');
+  await page.screenshot({ path: info.outputPath('final-blocked-hu.png') });
   await report('preview').click();
   await expect(dialog).toContainText('Becsléspiszkozat (nem kiadott)');
   await expect(dialog).toContainText('Ehhez a verzióhoz nincs mérés.');

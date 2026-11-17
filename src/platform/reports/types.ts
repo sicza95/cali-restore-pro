@@ -50,6 +50,12 @@ export type ReportDraft = {
   projectRevision: number;
   savedAt: string;
   settings: ReportSettings;
+  issuance?: ReportIssuance;
+};
+
+export type ReportIssuance = {
+  issuedAt: string;
+  estimate: { id: string; version: number; createdAt: string };
 };
 
 export type PreviewSurface = {
@@ -94,4 +100,5 @@ export type Draft = Pick<
   workbookEstimate?: WorkbookEstimate;
   /** A recipient's own draft from shared content (ADR 0008): labelled as such on every file. */
   recipient?: true;
+  issuance?: ReportIssuance;
 };

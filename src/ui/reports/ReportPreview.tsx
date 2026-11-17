@@ -70,10 +70,17 @@ export function ReportPreview(props: { draft: Draft }) {
           draft().project.updatedAt,
         )}
       </p>
-      <p class="review-note">{c().previewNote}</p>
+      <p class="review-note">{draft().issuance ? c().finalExportNote : c().previewNote}</p>
       <Show when={draft().estimateState}>
         {(state) => (
           <p role="status">{state() === 'outsideScope' ? c().outsideScope : c().noEstimate}</p>
+        )}
+      </Show>
+      <Show when={draft().issuance}>
+        {(issuance) => (
+          <p>
+            {c().finalSource} {issuance().estimate.version} · {c().issuedAt} {issuance().issuedAt}
+          </p>
         )}
       </Show>
       <Show when={draft().branding}>

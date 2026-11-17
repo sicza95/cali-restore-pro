@@ -1,10 +1,12 @@
 import { createSignal, onCleanup, onMount, untrack } from 'solid-js';
 import { createStore, reconcile, unwrap } from 'solid-js/store';
 import { estimateRepository } from '../../platform/estimates/persistence';
+import type { EstimateSnapshot } from '../../platform/estimates/types';
+import { finalReportBlock, issueReport } from '../../platform/reports/issuance';
 import { coversEstimate, reportEstimate } from '../../platform/reports/estimate';
 import { reportRepository } from '../../platform/reports/persistence';
 import { workbookEstimate } from '../../platform/reports/workbook-estimate';
-import type { Branding, Draft, ReportSettings } from '../../platform/reports/types';
+import type { Branding, Draft, ReportIssuance, ReportSettings } from '../../platform/reports/types';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
 import { parseLanguage } from '../../platform/i18n/language';
@@ -33,13 +35,14 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
     workbook: 'snapshot',
   });
   const [brand, setBrand] = createSignal<Branding>();
-  const [issued, setIssued] = createSignal<{ id: string; version: number; issued: boolean }[]>([]);
+  const [issued, setIssued] = createSignal<EstimateSnapshot[]>([]);
   const [preparing, setPreparing] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [ready, setReady] = createSignal(false);
   const [status, setStatus] = createSignal<
     'saved' | 'loadError' | 'saveError' | 'estimateError' | 'previewError'
   >();
+  const [savedIssuance, setSavedIssuance] = createSignal<ReportIssuance>();
   const [savedRevision, setSavedRevision] = createSignal<number>();
   let revision = 0;
   let mounted = true;
@@ -67,10 +70,11 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       }
       revision = saved?.revision ?? 0;
       setSavedRevision(saved?.document.projectRevision);
+      setSavedIssuance(saved?.document.issuance);
       setReady(true);
       if (estimate.status === 'fulfilled') {
         const snapshots = estimate.value?.document.snapshots ?? [];
-        setIssued(snapshots.map(({ id, version, issued }) => ({ id, version, issued })));
+        setIssued(snapshots);
         // Default to the newest issued version; a draft only when none is issued.
         const preferred = snapshots.filter(({ issued }) => issued).at(-1) ?? snapshots.at(-1);
         if (!saved) set('estimate', preferred?.id ?? '');
@@ -112,6 +116,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       if (mounted) {
         setSavedRevision(projectRevision);
         setStatus('saved');
+        setSavedIssuance(undefined);
       }
     } catch {
       if (mounted) setStatus('saveError');
@@ -128,11 +133,11 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
     setBusy(false);
   }
 
-  async function preview(show: (draft: Draft) => void) {
+  async function preview(show: (draft: Draft) => void, final = false) {
     if (!ready() || busy()) return;
     const selection = readSettings();
     const project = structuredClone(unwrap(props.project));
-    const { name, revision, updatedAt } = project;
+    const { name, revision: projectRevision, updatedAt } = project;
     const surfaces = selectedSurfaces(project, selection);
     if (!surfaces.length) return;
     const token = ++attempt;
@@ -143,7 +148,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
     setBusy(true);
     setStatus(undefined);
     const draft: Draft = {
-      project: { name, revision, updatedAt },
+      project: { name, revision: projectRevision, updatedAt },
       surfaces,
       language: selection.language,
       content: selection.content,
@@ -159,6 +164,9 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       if (selection.finances !== 'none') {
         const saved = await estimates.load(projectId);
         const snapshot = saved?.document.snapshots.find(({ id }) => id === selection.estimate);
+        setIssued(saved?.document.snapshots ?? []);
+        if (final && finalReportBlock(snapshot, surfaces, selection.finances))
+          throw new Error('Final issuance blocked');
         if (!snapshot) draft.estimateState = 'unavailable';
         else if (!coversEstimate(snapshot, surfaces)) draft.estimateState = 'outsideScope';
         else {
@@ -166,9 +174,10 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
           draft.estimate = reportEstimate(
             { scope: 'estimate-full', snapshot },
             selection.finances,
-            revision,
+            projectRevision,
             changed,
           );
+          if (final) draft.issuance = issueReport(draft, snapshot);
           if (
             selection.format === 'XLSX' &&
             selection.workbook === 'editable' &&
@@ -181,7 +190,23 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
       }
       if (mounted && token === attempt) {
         signal.throwIfAborted();
-        if (props.project.revision !== revision) throw new Error('Project changed');
+        if (props.project.revision !== projectRevision) throw new Error('Project changed');
+        if (final) {
+          if (!draft.issuance) throw new Error('Final issuance blocked');
+          revision = await reports.save(projectId, revision, {
+            schema: 1,
+            project: projectId,
+            projectRevision: project.revision,
+            savedAt: draft.issuance.issuedAt,
+            settings: selection,
+            issuance: draft.issuance,
+          });
+          if (!mounted || token !== attempt) return;
+          signal.throwIfAborted();
+          if (props.project.revision !== project.revision) throw new Error('Project changed');
+          setSavedRevision(project.revision);
+          setSavedIssuance(draft.issuance);
+        }
         show(draft);
       }
     } catch {
@@ -205,6 +230,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
     busy,
     status,
     savedRevision,
+    savedIssuance,
     open,
     save,
     preview,

@@ -72,7 +72,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | OUT-08      | Must     | Selected-content-only export files                                  | M-10  | M-16       | Partial |
 | OUT-09      | Must     | Export metadata defaults with explicit inclusion                    | M-10  | M-16       | Partial |
 | OUT-10      | Must     | Snapshot and editable-estimate XLSX modes                           | M-09  | M-16       | Partial |
-| OUT-11      | Must     | Labelled drafts and valid final measurement claims                  | M-09  | M-16       | Partial |
+| OUT-11      | Must     | [Labelled drafts and final measurement claims][out11]               | M-09  | M-16       | Partial |
 | OUT-12      | Must     | Inherited output units with an individual-output override           | M-05  | M-16       | Partial |
 | PRIV-01     | Must     | Client-side content encryption                                      | M-03  | M-16       | Partial |
 | PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Partial |
@@ -130,7 +130,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 
 [M-10 report workflow evidence](../milestones/m10-reports-and-exports.md) covers encrypted device-local report drafts, scoped issued estimate previews, selected surfaces and fixture comparisons, captured branding, independent EN/HU and units, and output controls (OUT-03, OUT-05 through OUT-08, OUT-10 through OUT-12 and UX-02). Downloads, payload inspection and real assessment qualification remain with M-11/M-16.
 
-[M-11 client export evidence](../milestones/m11-client-exports.md) covers five browser-generated formats, composited fixture maps, numeric and editable workbooks, draft labelling, selection and metadata checks, and abort and size limits (OUT-01 through OUT-03 and OUT-05 through OUT-12). Raw-mask PNG evidence is recorded in the OUT-01 row; explicit source metadata inclusion, real reference images and final measured reports remain open.
+[M-11 client export evidence](../milestones/m11-client-exports.md) covers five browser-generated formats, composited fixture maps, numeric and editable workbooks, draft labelling, selection and metadata checks, and abort and size limits (OUT-01 through OUT-03 and OUT-05 through OUT-12). Raw-mask PNG evidence is recorded in the OUT-01 row; explicit source metadata inclusion, real reference images and release qualification remain open. OUT-11 final issuance from complete issued estimates has [rule and browser evidence][out11]; partial totals remain drafts.
 
 [M-09 calculation and persistence evidence](../milestones/m09-restoration-estimates.md) covers fixture arithmetic for EST-01 through EST-20, immutable estimate versions, private encrypted preset copies, selected scope and allowlisted summary/full publication (SHARE-03/10, PRIV-01). Status is Partial, not real-geometry or release acceptance. [Portable backup v2](../milestones/m07-portable-backups.md) adds atomic recovery of project estimate drafts, issued versions and report drafts (PROJ-04). Estimate cloud sync, personal-library recovery and scoped collaboration remain open; later M-10/M-11 evidence covers outputs.
 
@@ -209,3 +209,4 @@ Issue #77 extends ADMIN-01 and UX-02 evidence with bilingual readable operationa
 Issue #111 extends that evidence with current actor/subject account emails and retained mail kinds from the `operations.view`-gated API. PostgreSQL HTTP tests verify access denial, deleted-account nulls and mail kinds after payload erasure; synthetic EN/HU browser checks cover readable labels, fallback labels, full-ID copying and long-email wrapping in both iPad orientations. Requirement status and physical-device qualification remain unchanged.
 
 [raw-mask]: ../milestones/out01-raw-mask-export.md
+[out11]: ../milestones/m16-measured-integration.md#out-11--final-report-issuance-2026-11-17-part-of-54

@@ -94,6 +94,7 @@ export function restoreDocuments(
     result.report = JSON.stringify({
       ...doc,
       project: destination,
+      issuance: undefined, // Restored project copies start as report drafts.
       projectRevision: revision(doc.projectRevision),
       settings: {
         ...doc.settings,

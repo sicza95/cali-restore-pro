@@ -78,8 +78,18 @@ const en = {
   calculation: 'Calculation version',
   currentEstimate: 'Current estimate version',
   final: 'Issue final report',
+  savedFinal: 'Saved final report',
+  finalExportNote: 'Final report from selected assessments.',
+  finalSource: 'Source issued estimate version',
+  issuedAt: 'Report issued',
+  finalNoSurfaces: 'Include at least one surface to issue a final report.',
+  finalNoEstimate: 'Include a saved estimate to issue a final report.',
+  finalIncomplete: 'This estimate is incomplete. Partial totals stay in draft reports.',
+  finalUnissued: 'Issue the selected estimate before issuing a final report.',
+  finalOutsideScope:
+    'Include all surfaces and assessment versions used by the estimate before issuing a final report.',
   noSelection: 'Include at least one surface to preview.',
-  encoder: 'Download a draft from the preview.',
+  encoder: 'Download the report from its preview.',
   draft: 'Draft',
   estimateDraft: 'Draft estimate (not issued)',
   estimateIssued: 'Issued estimate',
@@ -112,7 +122,7 @@ const en = {
   unique: 'Unique affected area',
   status: 'Status',
   sample: 'Illustrative estimate',
-  refPending: 'Selected reference. The image is unavailable in this draft.',
+  refPending: 'Selected reference. The image is unavailable in this report.',
 };
 const hu: typeof en = {
   save: 'Jelentéspiszkozat mentése',
@@ -193,8 +203,18 @@ const hu: typeof en = {
   calculation: 'Számítási verzió',
   currentEstimate: 'Aktuális becslésverzió',
   final: 'Végleges jelentés kiadása',
+  savedFinal: 'Mentett végleges jelentés',
+  finalExportNote: 'Végleges jelentés a kijelölt felmérésekből.',
+  finalSource: 'A forrásként használt kiadott becslés verziója',
+  issuedAt: 'Jelentés kiadva',
+  finalNoSurfaces: 'A végleges jelentés kiadásához válasszon legalább egy felületet.',
+  finalNoEstimate: 'A végleges jelentés kiadásához vonjon be egy mentett becslést.',
+  finalIncomplete: 'Ez a becslés hiányos. A részösszegek csak jelentéspiszkozatban szerepelhetnek.',
+  finalUnissued: 'A végleges jelentés kiadása előtt adja ki a kiválasztott becslést.',
+  finalOutsideScope:
+    'A végleges jelentés kiadása előtt vonja be a becslés összes felületét és felmérési verzióját.',
   noSelection: 'Az előnézethez válasszon legalább egy felületet.',
-  encoder: 'Az előnézetből letölthető a piszkozat.',
+  encoder: 'A jelentés az előnézetéből tölthető le.',
   draft: 'Piszkozat',
   estimateDraft: 'Becsléspiszkozat (nem kiadott)',
   estimateIssued: 'Kiadott becslés',
@@ -227,7 +247,7 @@ const hu: typeof en = {
   unique: 'Egyedi érintett terület',
   status: 'Állapot',
   sample: 'Szemléltető becslés',
-  refPending: 'Kijelölt referenciafotó. A kép nem érhető el ebben a piszkozatban.',
+  refPending: 'Kijelölt referenciafotó. A kép nem érhető el ebben a jelentésben.',
 };
 export type ReportCopy = typeof en;
 export const reportCopy = defineCopy({ en, hu });

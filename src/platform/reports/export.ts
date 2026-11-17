@@ -1,3 +1,4 @@
+import { assertReportIssuance } from './issuance';
 import type { Draft } from './types';
 import { assertRawMask } from './raw-mask';
 import type { RawMaskExport } from './raw-mask';
@@ -6,6 +7,7 @@ export type ReportExport = Draft | RawMaskExport;
 
 export function exportReport(draft: ReportExport, signal: AbortSignal): Promise<Blob> {
   signal.throwIfAborted();
+  if (!('kind' in draft)) assertReportIssuance(draft);
   if ('kind' in draft) assertRawMask(draft);
   else if (
     draft.surfaces.length > 150 ||

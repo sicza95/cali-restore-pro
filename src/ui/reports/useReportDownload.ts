@@ -46,7 +46,9 @@ export function useReportDownload(vault: () => LocalVault, current: () => boolea
       link.download =
         'kind' in draft
           ? 'calirestore-raw-mask.png'
-          : 'calirestore-report-draft.' + draft.format.toLowerCase();
+          : 'calirestore-report-' +
+            (draft.issuance ? 'final.' : 'draft.') +
+            draft.format.toLowerCase();
       link.click();
       release = setTimeout(revoke, 1500);
     } catch {

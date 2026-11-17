@@ -123,7 +123,10 @@ export function estimateSheets(draft: Draft, estimate: WorkbookEstimate): Sheet[
     name: names.estimate,
     widths: [40, 25, 22],
     rows: [
-      [c.exportNote, estimate.draft ? c.estimateDraft : c.estimateIssued],
+      [
+        draft.issuance ? c.finalExportNote : c.exportNote,
+        estimate.draft ? c.estimateDraft : c.estimateIssued,
+      ],
       [e.currency, estimate.currency],
       [c.calculation, 'restoration-v1'],
       [e.assumptions, estimate.assumptions],

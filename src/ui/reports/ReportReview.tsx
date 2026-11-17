@@ -8,6 +8,7 @@ import { reportControl as id } from './report-controls';
 import { reportCopy } from '../../platform/reports/copy';
 import { languageNames, languages } from '../../platform/i18n/language';
 import { contentKeys, defaultSelection, formats, resolutions } from '../../platform/reports/types';
+import { finalReportBlock } from '../../platform/reports/issuance';
 import { selectedSurfaces } from './report-model';
 import type { Draft } from '../../platform/reports/types';
 import { useReport } from './useReport';
@@ -38,13 +39,20 @@ export function ReportReview(props: {
   const canEditWorkbook = () =>
     settings.finances === 'full' && issued().some(({ id }) => id === settings.estimate);
 
-  function preview(event: MouseEvent & { currentTarget: HTMLButtonElement }) {
+  const finalBlock = () =>
+    finalReportBlock(
+      issued().find(({ id }) => id === settings.estimate),
+      selected(),
+      settings.finances,
+    );
+
+  function preview(event: MouseEvent & { currentTarget: HTMLButtonElement }, final = false) {
     const opener = event.currentTarget;
     void model.preview((value) => {
       previewOpener = opener;
       setDraft(value);
       dialog.showModal();
-    });
+    }, final);
   }
 
   const actions = () => (
@@ -87,7 +95,7 @@ export function ReportReview(props: {
           type="button"
           data-control-id={id('preview')}
           disabled={!ready() || busy() || !selected().length}
-          onClick={preview}
+          onClick={(event) => preview(event)}
         >
           {c().preview}
         </button>
@@ -96,10 +104,23 @@ export function ReportReview(props: {
             {c().cancel}
           </button>
         </Show>
-        <button type="button" data-control-id={id('final')} disabled>
+        <button
+          type="button"
+          data-control-id={id('final')}
+          disabled={!ready() || busy() || !!finalBlock()}
+          aria-describedby={finalBlock() ? 'report-final-reason' : undefined}
+          onClick={(event) => preview(event, true)}
+        >
           {c().final}
         </button>
       </div>
+      <Show when={finalBlock()}>
+        {(reason) => (
+          <p id="report-final-reason" class="review-note">
+            {c()[reason()]}
+          </p>
+        )}
+      </Show>
       <p class="review-note">{c().encoder}</p>
     </section>
   );
@@ -137,6 +158,14 @@ export function ReportReview(props: {
           <p role="status">{c().olderDraft}</p>
         </Show>
       </section>
+      <Show when={model.savedIssuance()}>
+        {(issuance) => (
+          <p class="review-note">
+            {c().savedFinal} · {c().finalSource} {issuance().estimate.version} · {c().issuedAt}{' '}
+            {issuance().issuedAt}
+          </p>
+        )}
+      </Show>
       <Show when={ready()}>
         <Show when={props.output}>{actions()}</Show>
         <Show when={props.output}>

@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { orientedJpeg } from './fixtures/images';
 import { expectTaskLanguage } from './copy-guard';
+import { verifyFinalReport } from './final-report';
 import { verifyRawMaskDownload } from './raw-mask-download';
 
 const owner = '00000000-0000-4000-8000-000000000001';
@@ -94,6 +95,9 @@ test('reconciles a committed checkpoint estimate with scoped production download
   await page.locator('[data-control-id="project.review.outputs"]').click();
   await report('format').selectOption('SVG');
   await report('finances').selectOption('full');
+  await expect(report('final')).toBeDisabled();
+  await expect(report('final')).toHaveAccessibleDescription(/Include all surfaces/);
+  await expect(page.locator('#report-final-reason')).toBeVisible();
   await report('preview').click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toContainText('Estimate omitted');
@@ -145,5 +149,6 @@ test('reconciles a committed checkpoint estimate with scoped production download
   expect(bytes).toContain('<f>');
   expect(bytes).not.toContain('data:image');
   await report('cancel').click();
+  await verifyFinalReport(page, info, fixture.path);
   await verifyRawMaskDownload(page, info, fixture.checkpoint);
 });

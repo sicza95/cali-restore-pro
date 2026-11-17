@@ -13,6 +13,7 @@ export type ReportEstimate = {
   detail?: ReturnType<typeof itemization>;
   unknownFreshness?: true;
   draft?: true;
+  complete?: boolean;
 };
 
 function itemization({ input, result }: EstimateSnapshot) {
@@ -54,11 +55,16 @@ export function reportEstimate(
   return mode === 'full'
     ? {
         summary: totals,
+        complete: source.snapshot.result.complete,
         draft: source.snapshot.issued ? undefined : true,
         detail: itemization(source.snapshot),
         unknownFreshness: source.freshness === 'unknown' ? true : undefined,
       }
-    : { summary: totals, draft: source.snapshot.issued ? undefined : true };
+    : {
+        summary: totals,
+        complete: source.snapshot.result.complete,
+        draft: source.snapshot.issued ? undefined : true,
+      };
 }
 
 // M-09 stores totals for an entire estimate selection. A report may include the

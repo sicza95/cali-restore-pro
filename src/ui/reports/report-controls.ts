@@ -106,7 +106,9 @@ export const reportControls: readonly ControlContract[] = [
     valueSource:
       'Authorized project hierarchy, account defaults and encrypted report draft and issued estimate selection',
     behavior:
-      key === 'save' || key === 'download' || key === 'cancelDownload' ? 'functional' : 'review',
+      key === 'final' || key === 'save' || key === 'download' || key === 'cancelDownload'
+        ? 'functional'
+        : 'review',
     owner:
       key === 'download' ||
       key === 'cancelDownload' ||

@@ -1,3 +1,4 @@
+import { assertReportIssuance } from './issuance';
 import { assessmentBlock } from './assessment-rows';
 import type { AssessmentMap } from './assessment-map';
 import { reportCopy } from './copy';
@@ -16,6 +17,7 @@ const value = (text: string | null | undefined) =>
   text == null ? null : Number(text.replace(',', '.'));
 
 export function reportBlocks(draft: Draft): Block[] {
+  assertReportIssuance(draft);
   const c = reportCopy[draft.language];
   const e = estimateCopy[draft.language];
   const b = draft.branding;
@@ -25,6 +27,13 @@ export function reportBlocks(draft: Draft): Block[] {
       heading: project.name,
       rows: [
         [c.title, c.project, project.name],
+        ...(draft.issuance
+          ? ([
+              [c.title, c.finalSource, draft.issuance.estimate.version],
+              [c.title, c.issuedAt, draft.issuance.issuedAt],
+              [c.title, c.estimateDate, draft.issuance.estimate.createdAt],
+            ] satisfies Row[])
+          : []),
         [c.title, c.projectRevision, project.revision],
         [c.title, c.projectDate, new Date(project.updatedAt).toISOString()],
         ...(b
@@ -127,7 +136,12 @@ export function reportBlocks(draft: Draft): Block[] {
 export function reportTable(draft: Draft): Cell[][] {
   const c = reportCopy[draft.language];
   return [
-    [c.title, '', draft.recipient ? c.recipientNote : c.exportNote, ''],
+    [
+      c.title,
+      '',
+      draft.recipient ? c.recipientNote : draft.issuance ? c.finalExportNote : c.exportNote,
+      '',
+    ],
     [c.section, c.item, c.value, c.unit],
     ...reportBlocks(draft).flatMap(({ rows }) =>
       rows.map(([section, item, value, unit]) => [section, item, value, unit ?? '']),
