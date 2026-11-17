@@ -196,3 +196,133 @@ test('an email fragment opened on the same page is consumed once across history 
   await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
   await sameDocument(page);
 });
+
+test('a delayed admin authentication failure cannot sign out a different account', async ({
+  page,
+}) => {
+  const other = { id: 'account-b', email: 'other@example.test' };
+  let current: typeof account | undefined = account;
+  let requested = false;
+  let release = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/v1/auth/me', (route) =>
+    current
+      ? route.fulfill({
+          json: { account: current, csrfToken: 'fixture', capabilities: ['operations.view'] },
+        })
+      : route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
+  );
+  await page.route('**/api/v1/admin/operations', async (route) => {
+    if (requested) {
+      await route.fulfill({
+        json: { mail: { pending: 0, sent: 0, failed: 0 }, audit: [], jobs: [] },
+      });
+      return;
+    }
+    requested = true;
+    await pending;
+    await route.fulfill({ status: 401, json: { error: 'authentication_required' } });
+  });
+  await page.route('**/api/v1/auth/logout', (route) => {
+    current = undefined;
+    return route.fulfill({ json: {} });
+  });
+  await page.route('**/api/v1/auth/login', (route) => {
+    current = other;
+    return route.fulfill({ json: {} });
+  });
+  await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.setViewportSize({ width: 1194, height: 834 });
+  await page.goto('/admin');
+  await expect.poll(() => requested).toBe(true);
+  await page.locator('[data-control-id="app.nav.sign-out"]').click();
+  await expect(page.getByText('Sign in to open this page.')).toBeVisible();
+  await page.getByRole('main').getByRole('link', { name: 'Sign in' }).click();
+  await page.getByLabel('Email address', { exact: true }).fill(other.email);
+  await page.getByLabel('Password', { exact: true }).fill('synthetic password');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await visit(page, 'Account profile');
+  await expect(page.getByText(other.email, { exact: true })).toBeVisible();
+  const response = page.waitForResponse(
+    (response) => response.url().endsWith('/admin/operations') && response.status() === 401,
+  );
+  release();
+  await response;
+  await expect(page.getByText(other.email, { exact: true })).toBeVisible();
+  await expect(page.getByText('Sign in to open this page.')).toHaveCount(0);
+});
+
+test('a delayed failure after navigation does not show an error or clear the session', async ({
+  page,
+}) => {
+  let requested = false;
+  let release = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({ json: { account, csrfToken: 'fixture' } }),
+  );
+  await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/confirm', async (route) => {
+    requested = true;
+    await pending;
+    await route.fulfill({ status: 401, json: { error: 'authentication_required' } });
+  });
+  await page.setViewportSize({ width: 1194, height: 834 });
+  await page.goto('/settings/security');
+  await page.getByLabel('Current password').fill('synthetic password');
+  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+  await expect.poll(() => requested).toBe(true);
+  await visit(page, 'Account profile');
+  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  const response = page.waitForResponse((response) => response.url().endsWith('/auth/confirm'));
+  release();
+  await response;
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+});
+
+test('a delayed response cannot replace the CSRF token of a refreshed session', async ({
+  page,
+}) => {
+  let requested = false;
+  let token = '';
+  let release = () => {};
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({ json: { account, csrfToken: 'current' } }),
+  );
+  await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/confirm', async (route) => {
+    if (!requested) {
+      requested = true;
+      await pending;
+      await route.fulfill({ json: { csrfToken: 'stale' } });
+    } else {
+      token = route.request().headers()['x-csrf-token'];
+      await route.fulfill({ json: {} });
+    }
+  });
+  await page.setViewportSize({ width: 1194, height: 834 });
+  await page.goto('/settings/security');
+  await page.getByLabel('Current password').fill('synthetic password');
+  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+  await expect.poll(() => requested).toBe(true);
+  await visit(page, 'Preferences');
+  await expect(page.getByLabel('Theme')).toBeVisible();
+  await visit(page, 'Account security');
+  await expect(page.getByLabel('Current password')).toBeVisible();
+  const response = page.waitForResponse((response) => response.url().endsWith('/auth/confirm'));
+  release();
+  await response;
+  await page.getByLabel('Current password').fill('synthetic password');
+  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+  await expect.poll(() => token).toBe('current');
+});

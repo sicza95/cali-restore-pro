@@ -52,8 +52,9 @@ export function createAccountAccess(router: Router) {
   };
 
   const api = async (action: string, body?: object) => {
+    const generation = sessionGeneration;
     const result = await requestAuth(action, csrf(), body);
-    if (result.csrfToken) setCsrf(result.csrfToken);
+    if (generation === sessionGeneration && result.csrfToken) setCsrf(result.csrfToken);
     return result;
   };
   const lockVault = () => {
@@ -98,12 +99,13 @@ export function createAccountAccess(router: Router) {
   const run = async (action: string, body: object, success: Message) => {
     if (busy()) return false;
     const requestPage = navigationGeneration;
+    const generation = sessionGeneration;
     setBusy(true);
     setMessage(undefined);
     setFailed(false);
     try {
       const result = await api(action, body);
-      if (!active) return false;
+      if (!active || generation !== sessionGeneration) return false;
       if (action === 'login') {
         clearSession(false);
         rememberOfflineAccount();
@@ -142,6 +144,8 @@ export function createAccountAccess(router: Router) {
       }
       return result;
     } catch (error) {
+      if (!active || requestPage !== navigationGeneration || generation !== sessionGeneration)
+        return false;
       setFailed(true);
       const code = error instanceof Error ? error.message : '';
       setMessage(authErrorMessage(code));
@@ -161,9 +165,13 @@ export function createAccountAccess(router: Router) {
     void run(action, body, success).finally(() => form.reset());
   };
   const read = async <T>(path: string) => {
+    const generation = sessionGeneration;
+    const requestPage = navigationGeneration;
     try {
       return await requestAuth<T>(path, csrf());
     } catch (error) {
+      if (!active || requestPage !== navigationGeneration || generation !== sessionGeneration)
+        return undefined;
       const code = error instanceof Error ? error.message : '';
       if (code === 'authentication_required') clearSession();
       setMessage(authErrorMessage(code));
