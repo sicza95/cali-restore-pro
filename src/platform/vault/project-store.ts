@@ -14,6 +14,7 @@ import {
   patternTable,
 } from './store';
 import type { VaultRow } from './store';
+import { abortOnSignal, abortTransaction } from './transaction-abort';
 import type { LocalFile } from './file-store';
 
 export type JournalRef = { project: string; surface: string; source: string };
@@ -64,23 +65,13 @@ export function projectDocuments(
         if (withJournal) tables.push(journalTable);
         const tx = db.transaction(tables, mode, { durability: 'strict' });
         let result: T;
-        const abort = () => tx.abort();
-        const cancel = () => {
-          try {
-            abort();
-          } catch (error) {
-            // The commit may have completed before its completion event was delivered.
-            if (!(error instanceof DOMException) || error.name !== 'InvalidStateError') throw error;
-          }
-        };
-        operation.addEventListener('abort', cancel, { once: true });
+        const abort = () => abortTransaction(tx);
+        abortOnSignal(tx, operation);
         tx.oncomplete = () => {
-          operation.removeEventListener('abort', cancel);
           if (operation.aborted && !withFiles) reject(operation.reason);
           else resolve(result);
         };
         tx.onabort = () => {
-          operation.removeEventListener('abort', cancel);
           reject(
             operation.reason ??
               tx.error ??

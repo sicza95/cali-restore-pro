@@ -1,5 +1,6 @@
 import { connect, projectTable, revisionQueueTable, revisionSyncTable, vaultTable } from './store';
 import type { VaultRow } from './store';
+import { abortOnSignal, abortTransaction } from './transaction-abort';
 
 export type RevisionTransaction = <T>(
   mode: IDBTransactionMode,
@@ -28,21 +29,18 @@ export function revisionTransaction(
           mode,
           { durability: 'strict' },
         );
-        const abort = () => tx.abort();
         let value: T;
-        signal.addEventListener('abort', abort, { once: true });
+        abortOnSignal(tx, signal);
         tx.onabort = () => {
-          signal.removeEventListener('abort', abort);
           reject(signal.reason ?? tx.error ?? new Error('Vault changed'));
         };
         tx.oncomplete = () => {
-          signal.removeEventListener('abort', abort);
           if (signal.aborted) reject(signal.reason);
           else resolve(value);
         };
         const vault = tx.objectStore(vaultTable).get(account);
         vault.onsuccess = () => {
-          if ((vault.result as VaultRow | undefined)?.stamp !== stamp()) abort();
+          if ((vault.result as VaultRow | undefined)?.stamp !== stamp()) abortTransaction(tx);
           else
             run(
               tx.objectStore(revisionQueueTable),

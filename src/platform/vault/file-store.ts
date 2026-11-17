@@ -1,5 +1,6 @@
 import { connect, fileTable, vaultTable } from './store';
 import type { VaultRow } from './store';
+import { abortOnSignal, abortTransaction } from './transaction-abort';
 import type { FileShape } from './file-format';
 import { imageHeaderPart, imagePart } from './image-cache';
 import type { Envelope } from './crypto';
@@ -26,7 +27,7 @@ export function localFiles(account: string, stamp: string) {
         const request = tx.objectStore(vaultTable).get(account);
         request.onsuccess = () => {
           if ((request.result as VaultRow | undefined)?.stamp !== stamp) {
-            tx.abort();
+            abortTransaction(tx);
             return;
           }
           action(
@@ -34,7 +35,7 @@ export function localFiles(account: string, stamp: string) {
             (value) => {
               result = value;
             },
-            () => tx.abort(),
+            () => abortTransaction(tx),
           );
         };
       });
@@ -96,18 +97,8 @@ export function localFiles(account: string, stamp: string) {
       run<void>('readwrite', (s, _, abort) => {
         const r = s.get([account, id]);
         const transaction = s.transaction;
-        const cancel = () => {
-          try {
-            abort();
-          } catch (error) {
-            if (!(error instanceof DOMException) || error.name !== 'InvalidStateError') throw error;
-          }
-        };
         if (signal.aborted) return abort();
-        signal.addEventListener('abort', cancel, { once: true });
-        const release = () => signal.removeEventListener('abort', cancel);
-        transaction.addEventListener('complete', release, { once: true });
-        transaction.addEventListener('abort', release, { once: true });
+        abortOnSignal(transaction, signal);
         r.onsuccess = () => {
           const header = r.result as LocalFile | undefined;
           if (header?.project !== project) return abort();
