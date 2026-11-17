@@ -1,11 +1,21 @@
 import { expect, type Page } from '@playwright/test';
 import { menuControl } from '../src/ui/account-access/navigation-controls';
+import { compactQuery } from '../src/ui/app-shell/useCompactLayout';
 
-/** Below 1100 px the account navigation sits in the drawer behind the Menu button. */
+/**
+ * Below 1100 px the account navigation sits in the drawer behind the Menu button. The shell picks
+ * its layout from a media-query listener, which runs at the next rendering step after a resize, so
+ * first wait until its mode matches the viewport (#136).
+ */
 export async function showAppNavigation(page: Page) {
+  const shell = page.locator('.account-shell');
+  const compact = await page.evaluate((query) => window.matchMedia(query).matches, compactQuery);
+  if (compact) await expect(shell).not.toHaveAttribute('data-nav', /^(sidebar|rail)$/);
+  else await expect(shell).not.toHaveAttribute('data-nav', 'compact');
+  if ((await shell.getAttribute('data-nav')) !== 'compact') return;
   const toggle = page.locator(`[data-control-id="${menuControl.id}"]`);
-  if (!(await toggle.isVisible())) return;
   if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(page.locator('#app-drawer')).toBeVisible();
 }
 
 /**

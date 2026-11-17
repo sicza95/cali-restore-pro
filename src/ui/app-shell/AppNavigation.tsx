@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, on, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, on, Show } from 'solid-js';
 import { navigationText } from '../account-access/navigation-copy';
 import {
   accountNavigationControls,
@@ -54,7 +54,11 @@ export function AppNavigation(props: { mode: NavigationMode }) {
   };
   createEffect(on(app.router.route, close, { defer: true }));
   createEffect(on(() => props.mode, close, { defer: true }));
-  createEffect(on(app.account, close, { defer: true }));
+  // Every in-app navigation rechecks the session and stores a fresh account object. `on` reruns
+  // whenever its source does, so compare ids in a memo: only another account (or signing out)
+  // closes the drawer, not that recheck finishing while it is open.
+  const accountId = createMemo(() => app.account()?.id);
+  createEffect(on(accountId, close, { defer: true }));
 
   // A component, not a shared node: each layout mode renders its own copy.
   const Destinations = () => (

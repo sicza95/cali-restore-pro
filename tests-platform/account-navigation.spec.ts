@@ -332,3 +332,35 @@ test('a delayed response cannot replace the CSRF token of a refreshed session', 
   await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
   await expect.poll(() => token).toBe('current');
 });
+
+test('a session recheck that finishes after navigation leaves the opened drawer open', async ({
+  page,
+}) => {
+  let hold = false;
+  let held = false;
+  let release = () => {};
+  await page.route('**/api/v1/auth/me', async (route) => {
+    if (hold) {
+      hold = false;
+      held = true;
+      await new Promise<void>((resolve) => {
+        release = resolve;
+      });
+    }
+    await route.fulfill({ json: { account, csrfToken: 'fixture' } });
+  });
+  await page.setViewportSize({ width: 834, height: 1194 });
+  await page.goto('/settings/account');
+  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  hold = true;
+  await visit(page, 'Preferences');
+  await expect.poll(() => held).toBe(true);
+  await showAppNavigation(page);
+  const response = page.waitForResponse((response) => response.url().endsWith('/auth/me'));
+  release();
+  await response;
+  await expect(page.getByLabel('Theme')).toBeVisible();
+  await expect(page.locator('#app-drawer')).toBeVisible();
+  await page.locator('#app-navigation').getByRole('link', { name: 'Account profile' }).click();
+  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+});
