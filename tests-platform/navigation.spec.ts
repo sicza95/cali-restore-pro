@@ -120,6 +120,9 @@ test('protected direct entries return through sign-in using only allowlisted des
     return route.fulfill({ json: {} });
   });
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/passkeys', (route) =>
+    route.fulfill({ json: { available: true, passkeys: [] } }),
+  );
   for (const control of accountNavigationControls.filter(
     ({ labelKey }) => !['login', 'register', 'offline'].includes(labelKey),
   )) {

@@ -1,6 +1,7 @@
 import { For, Show } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
 import { VaultSection } from './VaultSection';
+import { PasskeySection } from './PasskeySection';
 import { ConfirmField } from '../confirm-field/ConfirmField';
 import { EmailField } from '../email-field/EmailField';
 import { PasswordField } from '../password-field/PasswordField';
@@ -73,6 +74,7 @@ export function AccountSecurity() {
               </button>
             </form>
           </section>
+          <PasskeySection />
           <section class="account-section">
             <div>
               <h2>{app.t('sessions')}</h2>

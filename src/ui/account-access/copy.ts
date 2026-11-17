@@ -59,6 +59,32 @@ export const accountCopy = defineCopy({
     revokeHelp:
       'Revoking this session signs you out here. Revoking all sessions signs you out everywhere.',
     specimen: 'Painted plaster · Illustrative reference',
+    passkeys: 'Passkeys',
+    passkeySignIn: 'Sign in with a passkey',
+    passkeyHelp:
+      'A passkey signs you in without your password. It does not unlock your projects; that stays a separate step. Adding or removing a passkey needs a recent password confirmation, and so does every other security change.',
+    passkeyName: 'Passkey name',
+    addPasskey: 'Add passkey',
+    removePasskey: 'Remove passkey',
+    noPasskeys: 'No passkeys yet.',
+    passkeySynced: 'Synced',
+    passkeySyncable: 'Can sync',
+    passkeyDevice: 'One device only',
+    passkeyAddedAt: 'Added',
+    passkeyLastUsed: 'Last used',
+    passkeyNeverUsed: 'Not used yet',
+    passkeyWarning:
+      'This passkey reported an older use count and was refused. Remove it if you do not recognise it.',
+    passkeyLoadFailed: 'Could not load passkeys. Try reloading the page.',
+    passkeyAdded: 'Passkey added.',
+    passkeyRemoved: 'Passkey removed.',
+    passkeyCancelled: 'The passkey request was cancelled or timed out.',
+    passkeyExists: 'This passkey is already added to your account.',
+    passkeyRejected: 'The passkey could not be verified. Try again.',
+    passkeyUnavailable:
+      'Passkeys are not available on this server address. Sign in with your password.',
+    passkeyUnsupported:
+      'This browser or server address cannot use passkeys. Password sign-in still works.',
   },
   hu: {
     account: 'A fiókod',
@@ -120,5 +146,31 @@ export const accountCopy = defineCopy({
     revokeHelp:
       'Ennek a munkamenetnek a visszavonása itt jelentkeztet ki. Az összes visszavonása mindenhol kijelentkeztet.',
     specimen: 'Festett vakolat · Illusztráció',
+    passkeys: 'Azonosítókulcsok',
+    passkeySignIn: 'Bejelentkezés azonosítókulccsal',
+    passkeyHelp:
+      'Az azonosítókulccsal jelszó nélkül jelentkezhetsz be. A projekteket nem oldja fel: az továbbra is külön lépés. Azonosítókulcs hozzáadásához vagy eltávolításához friss jelszó-megerősítés kell, ahogy minden más biztonsági módosításhoz is.',
+    passkeyName: 'Azonosítókulcs neve',
+    addPasskey: 'Azonosítókulcs hozzáadása',
+    removePasskey: 'Azonosítókulcs eltávolítása',
+    noPasskeys: 'Még nincs azonosítókulcs.',
+    passkeySynced: 'Szinkronizálva',
+    passkeySyncable: 'Szinkronizálható',
+    passkeyDevice: 'Csak egy eszközön',
+    passkeyAddedAt: 'Hozzáadva',
+    passkeyLastUsed: 'Utoljára használva',
+    passkeyNeverUsed: 'Még nem használtad',
+    passkeyWarning:
+      'Ez az azonosítókulcs korábbi használatszámot jelzett, ezért elutasítottuk. Távolítsd el, ha nem ismered fel.',
+    passkeyLoadFailed: 'Az azonosítókulcsok nem tölthetők be. Próbáld újra betölteni az oldalt.',
+    passkeyAdded: 'Azonosítókulcs hozzáadva.',
+    passkeyRemoved: 'Azonosítókulcs eltávolítva.',
+    passkeyCancelled: 'Az azonosítókulcs-kérés megszakadt vagy lejárt.',
+    passkeyExists: 'Ez az azonosítókulcs már a fiókodhoz tartozik.',
+    passkeyRejected: 'Az azonosítókulcs nem ellenőrizhető. Próbáld újra.',
+    passkeyUnavailable:
+      'Ezen a szervercímen nem használhatók azonosítókulcsok. Jelentkezz be jelszóval.',
+    passkeyUnsupported:
+      'Ez a böngésző vagy szervercím nem támogatja az azonosítókulcsokat. A jelszavas bejelentkezés továbbra is működik.',
   },
 });

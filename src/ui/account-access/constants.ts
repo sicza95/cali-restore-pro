@@ -5,6 +5,10 @@ export const authErrorMessages = {
   try_later: 'limited',
   credential_confirmation_required: 'recent',
   not_permitted: 'forbidden',
+  passkey_cancelled: 'passkeyCancelled',
+  passkey_exists: 'passkeyExists',
+  passkey_rejected: 'passkeyRejected',
+  passkeys_unavailable: 'passkeyUnavailable',
 } as const;
 
 export const sessionEndingActions = [

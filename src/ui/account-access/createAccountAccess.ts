@@ -6,6 +6,7 @@ import {
 import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/offline-account';
 import { createEffect, createMemo, createSignal, on, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
+import { passkeyAssertion, passkeyRegistration } from './passkeys';
 import { sessionEndingActions } from './constants';
 import { accountCopy as copy } from './copy';
 import { authErrorMessage, authFormBody } from './utils';
@@ -106,7 +107,7 @@ export function createAccountAccess(router: Router) {
     try {
       const result = await api(action, body);
       if (!active || generation !== sessionGeneration) return false;
-      if (action === 'login') {
+      if (action === 'login' || action === 'passkey-login') {
         clearSession(false);
         rememberOfflineAccount();
         sessionChanges?.postMessage(null);
@@ -157,6 +158,26 @@ export function createAccountAccess(router: Router) {
     } finally {
       setBusy(false);
     }
+  };
+  // Passkey ceremonies talk to the authenticator before the identity request.
+  const runPrepared = async (prepare: () => Promise<object>, action: string, success: Message) => {
+    if (busy()) return false;
+    setBusy(true);
+    setMessage(undefined);
+    setFailed(false);
+    let body: object;
+    try {
+      body = await prepare();
+    } catch (error) {
+      const code = error instanceof Error ? error.message : '';
+      if (code === 'credential_confirmation_required') setConfirmed(false);
+      setFailed(true);
+      setMessage(authErrorMessage(code));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+    return run(action, body, success);
   };
   const submit = (event: SubmitEvent, action: string, success: Message) => {
     event.preventDefault();
@@ -295,6 +316,9 @@ export function createAccountAccess(router: Router) {
       void run('logout', {}, 'success');
     },
     submit,
+    signInWithPasskey: () => void runPrepared(passkeyAssertion, 'passkey-login', 'success'),
+    addPasskey: (name: string) =>
+      runPrepared(() => passkeyRegistration(csrf(), name), 'passkeys/register', 'passkeyAdded'),
     t,
   };
 }

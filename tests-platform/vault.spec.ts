@@ -17,6 +17,9 @@ async function session(page: Page, account: () => string = () => first) {
     }),
   );
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/passkeys', (route) =>
+    route.fulfill({ json: { available: true, passkeys: [] } }),
+  );
   await page.route('**/api/v1/auth/logout', (route) => route.fulfill({ json: { ok: true } }));
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { ready: true } }));
   await page.goto('/settings/security');

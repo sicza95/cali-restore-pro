@@ -3,6 +3,7 @@ import { showAppNavigation } from './app-navigation';
 
 const account = { id: 'account-navigation', email: 'navigation@example.test' };
 const marker = 'same-document';
+const noPasskeys = { available: true, passkeys: [] };
 const mark = (page: Page) =>
   page.locator('html').evaluate((el, value) => {
     el.setAttribute('data-navigation-marker', value);
@@ -21,6 +22,7 @@ test('account and app links, inline security, drawer and history retain the docu
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ json: { account, csrfToken: 'fixture' } }),
   );
+  await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
   await page.route('**/api/v1/auth/sessions', (route) => {
     sessions++;
     return route.fulfill({ json: { sessions: [] } });
@@ -156,6 +158,7 @@ test('a delayed password confirmation cannot enable controls after leaving and r
     route.fulfill({ json: { account, csrfToken: 'fixture' } }),
   );
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
   await page.route('**/api/v1/auth/confirm', async (route) => {
     confirming = true;
     await pending;
@@ -234,6 +237,7 @@ test('a delayed admin authentication failure cannot sign out a different account
     return route.fulfill({ json: {} });
   });
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/admin');
   await expect.poll(() => requested).toBe(true);
@@ -267,6 +271,7 @@ test('a delayed failure after navigation does not show an error or clear the ses
     route.fulfill({ json: { account, csrfToken: 'fixture' } }),
   );
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
   await page.route('**/api/v1/auth/confirm', async (route) => {
     requested = true;
     await pending;
@@ -300,6 +305,7 @@ test('a delayed response cannot replace the CSRF token of a refreshed session', 
     route.fulfill({ json: { account, csrfToken: 'current' } }),
   );
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
   await page.route('**/api/v1/auth/confirm', async (route) => {
     if (!requested) {
       requested = true;

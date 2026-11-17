@@ -3,6 +3,7 @@ import { EmailField } from '../email-field/EmailField';
 import { PasswordField } from '../password-field/PasswordField';
 import { SubmitButton } from '../submit-button/SubmitButton';
 import { Icon } from '../../icon/Icon';
+import { passkeysSupported } from '../../account-access/passkeys';
 import plaster from './painted-plaster.jpg';
 import type { AccessFormProps } from './types';
 
@@ -65,6 +66,16 @@ export function AccessForm(props: AccessFormProps) {
               <a href="/forgot-password">{props.t('forgot')}</a>
             </Show>
           </form>
+        </Show>
+        <Show when={props.view === 'login' && props.passkeySignIn && passkeysSupported()}>
+          <button
+            type="button"
+            data-control-id="auth.passkey"
+            disabled={props.busy()}
+            onClick={() => props.passkeySignIn?.()}
+          >
+            {props.t('passkeySignIn')}
+          </button>
         </Show>
         <Show when={props.view === 'login'}>
           <div class="access-recovery">

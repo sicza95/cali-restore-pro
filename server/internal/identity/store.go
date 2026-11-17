@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
@@ -33,6 +34,8 @@ type Service struct {
 	dummy      string
 	mailCipher cipher.AEAD
 	origin     string
+	// relyingParty is nil when APP_ORIGIN cannot host passkeys (IP address).
+	relyingParty *webauthn.WebAuthn
 }
 
 type Session struct {
@@ -93,10 +96,16 @@ func beginMutation(ctx context.Context, pool *pgxpool.Pool) (pgx.Tx, error) {
 // Fixed windows are shared by all API processes. No IP, User-Agent or raw
 // attempted address is retained; address hashes are pseudonymous, not anonymous.
 func (s *Service) Rate(ctx context.Context, email string) error {
-	for _, b := range []struct {
-		key            string
-		seconds, limit int
-	}{{"global", 60, 120}, {"account:" + email, 900, 10}} {
+	return s.rate(ctx, bucket{"global", 60, 120}, bucket{"account:" + email, 900, 10})
+}
+
+type bucket struct {
+	key            string
+	seconds, limit int
+}
+
+func (s *Service) rate(ctx context.Context, buckets ...bucket) error {
+	for _, b := range buckets {
 		result, err := s.pool.Exec(ctx, `INSERT INTO auth_rate_limits (bucket,window_at,attempts)
             VALUES ($1, date_bin(make_interval(secs => $2), clock_timestamp(), '2000-01-01'::timestamptz), 1)
             ON CONFLICT (bucket,window_at) DO UPDATE SET attempts=auth_rate_limits.attempts+1

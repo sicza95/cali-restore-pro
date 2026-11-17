@@ -178,6 +178,9 @@ func run(ctx context.Context, args []string) error {
 	if _, err := os.Stat(filepath.Join(c.StaticDir, "index.html")); err != nil {
 		return errors.New("frontend build missing")
 	}
+	if identities.ConfigurePasskeys(c.Origin) != nil {
+		slog.Info("passkey sign-in unavailable for this APP_ORIGIN; password sign-in only")
+	}
 	auth := identity.NewHTTP(identities, c.Origin, strings.HasPrefix(c.Origin, "https://"))
 	files := projects.NewHTTP(auth, hosted)
 	files.EnableFiles(objectRoot)

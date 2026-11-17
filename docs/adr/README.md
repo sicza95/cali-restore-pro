@@ -16,3 +16,4 @@ One short file per decision that shapes the code or the way we work and would be
 | [0006](0006-router-and-app-context.md)    | One router module and an app context instead of `model` props  | Partly superseded by 0007 |
 | [0007](0007-account-client-navigation.md) | Account pages use client-side navigation                       | Accepted                  |
 | [0008](0008-recipient-own-reports.md)     | Recipients author their own report copies, kept in their vault | Accepted                  |
+| [0009](0009-passkey-sign-in-factor.md)    | Passkeys are an optional sign-in factor only                   | Accepted                  |

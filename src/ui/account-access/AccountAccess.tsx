@@ -107,6 +107,7 @@ function AccountShell() {
                   submit={submit}
                   t={t}
                   busy={busy}
+                  passkeySignIn={app.signInWithPasskey}
                 />
               </Show>
             )}

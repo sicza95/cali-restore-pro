@@ -76,7 +76,7 @@ Source: the owner-confirmed C-121/D-121 baseline and the workspace rebuild catal
 | OUT-12      | Must     | Inherited output units with an individual-output override           | M-05  | M-16       | Partial |
 | PRIV-01     | Must     | Client-side content encryption                                      | M-03  | M-16       | Partial |
 | PRIV-02     | Must     | Trusted-device and recovery-key content recovery                    | M-03  | M-16       | Partial |
-| PRIV-03     | Should   | Optional passkey sign-in and compatible content unlock              | M-03  | M-16       | Planned |
+| PRIV-03     | Should   | Optional passkey sign-in and compatible content unlock              | M-03  | M-16       | Partial |
 | PRIV-04     | Must     | Explicit opt-in remembered trust and session-only shared devices    | M-03  | M-16       | Partial |
 | PRIV-05     | Must     | No routine automatic logout; manual-only local locking              | M-01  | M-16       | Partial |
 | PRIV-06     | Must     | Minimum server-readable metadata allowlist                          | M-00  | M-16       | Partial |
@@ -141,6 +141,8 @@ M-01b adds [account lifecycle and verification evidence](../milestones/m01b-acco
 M-02 adds [account settings, administration and verification](../milestones/m02-account-administration.md). Personal branding defaults and diagnostics consent stay in the browser; reporting remains inactive. Feature grants and quotas are explicit. Account deletion preflight blocks deletion until continuity can be established. Project accounting, withdrawal, and recovery are still open.
 
 M-03 adds [the vault format, threat model and verification](../milestones/m03-client-vault.md). PROJ-03 and PRIV-01/02/04/07 have synthetic encrypted local save, recovery, trust, lock and forget evidence. Remote sync, real project data, physical devices, production deployment and cryptographic review remain open. The future scope/history design is documented, but no collaborative grant, editor draft/history or passkey path is implemented.
+
+PRIV-03 (#121) adds optional passkey sign-in as a sign-in factor only ([ADR 0009](../adr/0009-passkey-sign-in-factor.md)): registration and removal after a recent password confirmation, discoverable sign-in with user verification, single-use server challenges, signature-counter and backup-flag tracking, rate limits and security events. Evidence: Go tests with a software authenticator (`server/internal/identity/passkeys_test.go`), conversion unit tests (`src/platform/passkeys/webauthn-json.test.ts`) and a Chromium virtual-authenticator flow (`tests-platform/passkeys.spec.ts`). Content unlock stays with the vault secret by owner decision; physical iPad Safari, synced and third-party passkeys remain the compatibility gate.
 
 M-04 adds [encrypted original storage and transfer](../milestones/m04-encrypted-files.md). IMG-02/03/05 have opaque, byte-preserving staged import and bounded synthetic transfer evidence; editor integration, format qualification and physical iPad checks remain open. ADMIN-04/05 have single-owner accounting, atomic reservations and hosting-withdrawal evidence; shared ownership and accepted hosting transfer remain open.
 

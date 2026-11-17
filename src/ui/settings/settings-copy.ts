@@ -91,6 +91,8 @@ export const settingsCopy = defineCopy({
     email_change_requested: 'Email change requested',
     entitlements_changed: 'Feature grant or quota changed',
     delegation_changed: 'Delegated permissions changed',
+    passkey_added: 'Passkey added',
+    passkey_removed: 'Passkey removed',
   },
   hu: {
     profile: 'Fiókprofil',
@@ -185,5 +187,7 @@ export const settingsCopy = defineCopy({
     email_change_requested: 'E-mail-cím módosítását kérték',
     entitlements_changed: 'Hozzáférés vagy kvóta változott',
     delegation_changed: 'Delegált jogosultságok változtak',
+    passkey_added: 'Azonosítókulcs hozzáadva',
+    passkey_removed: 'Azonosítókulcs eltávolítva',
   },
 });

@@ -19,7 +19,9 @@ export type IdentityError = {
     | 'try_later'
     | 'unavailable'
     | 'json_required'
-    | 'invalid_request';
+    | 'invalid_request'
+    | 'passkey_rejected'
+    | 'passkeys_unavailable';
 };
 
 export type LoginRequest = {
@@ -67,6 +69,57 @@ export type SessionInfo = {
 
 export type SessionsResponse = {
   sessions: Array<SessionInfo>;
+};
+
+export type PasskeyInfo = {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  backupEligible: boolean;
+  backupState: boolean;
+  cloneWarning: boolean;
+};
+
+export type PasskeysResponse = {
+  available: boolean;
+  passkeys: Array<PasskeyInfo>;
+};
+
+export type PasskeyCeremony = {
+  ceremony: string;
+  /**
+   * PublicKeyCredentialCreationOptionsJSON or PublicKeyCredentialRequestOptionsJSON.
+   */
+  publicKey: {
+    [key: string]: unknown;
+  };
+};
+
+export type PasskeyRegistrationRequest = {
+  ceremony: string;
+  name: string;
+  /**
+   * PublicKeyCredential JSON with base64url binary fields (WebAuthn Level 3).
+   */
+  credential: {
+    [key: string]: unknown;
+  };
+};
+
+export type PasskeyLoginRequest = {
+  ceremony: string;
+  /**
+   * PublicKeyCredential JSON with base64url binary fields (WebAuthn Level 3).
+   */
+  credential: {
+    [key: string]: unknown;
+  };
+};
+
+export type RemovePasskeyRequest = {
+  passkeyId: string;
+  confirm: true;
 };
 
 export type EmptyRequest = {
@@ -597,6 +650,367 @@ export type IdentityRevokeSessionsResponses = {
 
 export type IdentityRevokeSessionsResponse =
   IdentityRevokeSessionsResponses[keyof IdentityRevokeSessionsResponses];
+
+export type IdentityPasskeysData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/passkeys';
+};
+
+export type IdentityPasskeysErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN (IP-address origins)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeysError = IdentityPasskeysErrors[keyof IdentityPasskeysErrors];
+
+export type IdentityPasskeysResponses = {
+  /**
+   * Success
+   */
+  200: PasskeysResponse;
+};
+
+export type IdentityPasskeysResponse = IdentityPasskeysResponses[keyof IdentityPasskeysResponses];
+
+export type IdentityPasskeyRegistrationOptionsData = {
+  body: EmptyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/passkeys/register/options';
+};
+
+export type IdentityPasskeyRegistrationOptionsErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN (IP-address origins)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeyRegistrationOptionsError =
+  IdentityPasskeyRegistrationOptionsErrors[keyof IdentityPasskeyRegistrationOptionsErrors];
+
+export type IdentityPasskeyRegistrationOptionsResponses = {
+  /**
+   * Success
+   */
+  200: PasskeyCeremony;
+};
+
+export type IdentityPasskeyRegistrationOptionsResponse =
+  IdentityPasskeyRegistrationOptionsResponses[keyof IdentityPasskeyRegistrationOptionsResponses];
+
+export type IdentityPasskeyRegisterData = {
+  body: PasskeyRegistrationRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/passkeys/register';
+};
+
+export type IdentityPasskeyRegisterErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN (IP-address origins)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeyRegisterError =
+  IdentityPasskeyRegisterErrors[keyof IdentityPasskeyRegisterErrors];
+
+export type IdentityPasskeyRegisterResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type IdentityPasskeyRegisterResponse =
+  IdentityPasskeyRegisterResponses[keyof IdentityPasskeyRegisterResponses];
+
+export type IdentityPasskeyRemoveData = {
+  body: RemovePasskeyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/passkeys/remove';
+};
+
+export type IdentityPasskeyRemoveErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN (IP-address origins)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeyRemoveError =
+  IdentityPasskeyRemoveErrors[keyof IdentityPasskeyRemoveErrors];
+
+export type IdentityPasskeyRemoveResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type IdentityPasskeyRemoveResponse =
+  IdentityPasskeyRemoveResponses[keyof IdentityPasskeyRemoveResponses];
+
+export type IdentityPasskeyLoginOptionsData = {
+  body: EmptyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/passkey-login/options';
+};
+
+export type IdentityPasskeyLoginOptionsErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN (IP-address origins)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeyLoginOptionsError =
+  IdentityPasskeyLoginOptionsErrors[keyof IdentityPasskeyLoginOptionsErrors];
+
+export type IdentityPasskeyLoginOptionsResponses = {
+  /**
+   * Success
+   */
+  200: PasskeyCeremony;
+};
+
+export type IdentityPasskeyLoginOptionsResponse =
+  IdentityPasskeyLoginOptionsResponses[keyof IdentityPasskeyLoginOptionsResponses];
+
+export type IdentityPasskeyLoginData = {
+  body: PasskeyLoginRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/passkey-login';
+};
+
+export type IdentityPasskeyLoginErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN (IP-address origins)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeyLoginError =
+  IdentityPasskeyLoginErrors[keyof IdentityPasskeyLoginErrors];
+
+export type IdentityPasskeyLoginResponses = {
+  /**
+   * Success
+   */
+  200: CsrfResponse;
+};
+
+export type IdentityPasskeyLoginResponse =
+  IdentityPasskeyLoginResponses[keyof IdentityPasskeyLoginResponses];
 
 export type IdentitySetPolicyData = {
   body: PolicyRequest;

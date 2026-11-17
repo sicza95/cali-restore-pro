@@ -135,6 +135,35 @@ export const accountControls = [
   ),
   ...registerPlatformControls(
     {
+      composition: 'Passkey sign-in',
+      owner: 'M-03',
+      permission: 'Public sign-in; changes need a signed-in account',
+      valueSource: 'Browser passkey ceremony and identity passkey API',
+      helpKey: 'passkeyHelp',
+      unavailable: {
+        failure: 'Show cancelled, rejected or unavailable passkey error; password sign-in stays.',
+        empty: 'Hide passkey actions on IP-address origins and browsers without passkeys.',
+        locked: 'A passkey signs in only; the vault unlocks separately.',
+      },
+    },
+    [
+      ['auth.passkey', 'passkeySignIn', 'Sign in with a discoverable passkey', 'Login page'],
+      [
+        'account.passkeys.add',
+        'addPasskey',
+        'Register a passkey for this account',
+        'Recent password confirmation and passkey name',
+      ],
+      [
+        'account.passkeys.remove',
+        'removePasskey',
+        'Remove the selected passkey',
+        'Recent password confirmation and acknowledgement',
+      ],
+    ],
+  ),
+  ...registerPlatformControls(
+    {
       composition: 'Account lifecycle',
       owner: 'M-07',
       permission: 'Account owner or lifecycle administrator',
