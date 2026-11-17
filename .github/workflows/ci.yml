@@ -92,6 +92,29 @@ jobs:
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 
+  # Informational (#51): never blocks a merge. Linux only, since Windows WebKit lacks
+  # OffscreenCanvas. Known gaps per engine: docs/browser-support.md.
+  browsers:
+    name: Files suite (${{ matrix.browser }}, informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    env:
+      FILES_BROWSERS: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm run test:files
+
   e2e:
     name: Platform E2E
     runs-on: ubuntu-latest

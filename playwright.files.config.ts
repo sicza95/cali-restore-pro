@@ -1,7 +1,25 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, type PlaywrightTestConfig } from '@playwright/test';
 import { devOrigin, filesPorts, previewOrigin } from './tests-platform/files-origins';
 
+// Comma-separated Playwright engines, e.g. FILES_BROWSERS=firefox,webkit (#51). Unset keeps the
+// default single Chrome run; the informational CI browser job sets it.
+const browsers = (process.env.FILES_BROWSERS ?? '')
+  .split(',')
+  .map((name) => name.trim())
+  .filter(Boolean);
+
+const projects: PlaywrightTestConfig['projects'] = browsers.length
+  ? browsers.map((browserName) => ({
+      name: browserName,
+      use: {
+        browserName: browserName as 'chromium' | 'firefox' | 'webkit',
+        channel: browserName === 'chromium' && !process.env.CI ? 'chrome' : undefined,
+      },
+    }))
+  : undefined;
+
 export default defineConfig({
+  projects,
   testDir: 'tests-platform',
   testMatch: [
     'estimates.browser.ts',
