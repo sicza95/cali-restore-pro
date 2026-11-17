@@ -93,7 +93,7 @@ func TestAdminHTTP(t *testing.T) {
 	if !strings.Contains(ops, `"attempts":2`) || strings.Contains(ops, "payload") {
 		t.Fatal(ops)
 	}
-	if !strings.Contains(ops, "delegation_changed") || strings.Contains(ops, "@") {
+	if !strings.Contains(ops, "delegation_changed") || !strings.Contains(ops, `"actorEmail":"operator@example.test"`) || !strings.Contains(ops, `"subjectEmail":"delegate@example.test"`) {
 		t.Fatal(ops)
 	}
 	result := call("GET", "account/deletion-preflight", member, "", 200)

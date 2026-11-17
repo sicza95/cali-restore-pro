@@ -6024,7 +6024,7 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["actorId", "subjectId", "action", "at"],
+              "required": ["actorId", "subjectId", "action", "at", "actorEmail", "subjectEmail"],
               "properties": {
                 "actorId": {
                   "type": "string",
@@ -6040,6 +6040,16 @@
                 "at": {
                   "type": "string",
                   "format": "date-time"
+                },
+                "actorEmail": {
+                  "type": ["string", "null"],
+                  "format": "email",
+                  "description": "Current account email; null when the account no longer exists. Available only with operations.view."
+                },
+                "subjectEmail": {
+                  "type": ["string", "null"],
+                  "format": "email",
+                  "description": "Current account email; null when the account no longer exists. Available only with operations.view."
                 }
               }
             },
@@ -6070,7 +6080,7 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["id", "status", "attempts", "at"],
+              "required": ["id", "status", "attempts", "at", "kind"],
               "properties": {
                 "id": {
                   "type": "string",
@@ -6087,6 +6097,11 @@
                 "at": {
                   "type": "string",
                   "format": "date-time"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": ["", "verify", "reset", "email", "security", "project-invitation"],
+                  "description": "Mail purpose retained after payload erasure. Empty for jobs created before kind metadata was recorded."
                 }
               }
             }

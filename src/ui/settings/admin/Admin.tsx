@@ -5,6 +5,7 @@ import { settingsCopy } from '../settings-copy';
 import type { AccountPage, Operations } from '../types';
 import { AccountRow } from '../account-row/AccountRow';
 import { AdminReference } from './AdminReference';
+import { mailKindCopy } from './mail-kind-copy';
 
 export function Admin() {
   const app = useApp();
@@ -135,7 +136,12 @@ export function Admin() {
                             <div class="field-help">
                               {c().attempts}: {job.attempts.toLocaleString(app.lang())}
                             </div>
-                            <AdminReference id={job.id} label={c().mailJob} />
+                            <AdminReference
+                              id={job.id}
+                              label={
+                                (job.kind && mailKindCopy[app.lang()][job.kind]) || c().mailJob
+                              }
+                            />
                           </li>
                         )}
                       </For>
@@ -159,8 +165,11 @@ export function Admin() {
                         <time datetime={event.at}>
                           {new Date(event.at).toLocaleString(app.lang())}
                         </time>
-                        <AdminReference id={event.actorId} label={c().actor} />
-                        <AdminReference id={event.subjectId} label={c().subject} />
+                        <AdminReference id={event.actorId} label={event.actorEmail || c().actor} />
+                        <AdminReference
+                          id={event.subjectId}
+                          label={event.subjectEmail || c().subject}
+                        />
                       </li>
                     )}
                   </For>

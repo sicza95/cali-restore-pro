@@ -2,6 +2,25 @@ import { expect, test } from '@playwright/test';
 import { operations, routeAdmin } from './admin-fixtures';
 import { expectTaskLanguage } from './copy-guard';
 
+const labels = {
+  en: [
+    'Mail job',
+    'Email verification',
+    'Password reset',
+    'New email confirmation',
+    'Account security notice',
+    'Project invitation',
+  ],
+  hu: [
+    'Levélküldés',
+    'E-mail-cím megerősítése',
+    'Jelszó visszaállítása',
+    'Új e-mail-cím megerősítése',
+    'Fiókbiztonsági értesítés',
+    'Projektmeghívó',
+  ],
+};
+
 for (const lang of ['en', 'hu'] as const)
   test(`admin references copy complete ids with localized feedback: ${lang}`, async ({ page }) => {
     await page.addInitScript(() => {
@@ -20,11 +39,29 @@ for (const lang of ['en', 'hu'] as const)
       ...operations.audit.flatMap((event) => [event.actorId, event.subjectId]),
     ];
     await expect(refs).toHaveCount(ids.length);
+    for (const [index, label] of labels[lang].entries()) {
+      await expect(refs.nth(index).locator('..').locator('span').first()).toHaveText(label);
+    }
+    for (const [index, event] of operations.audit.entries()) {
+      const expected = [
+        event.actorEmail || (lang === 'hu' ? 'Végrehajtó' : 'Actor'),
+        event.subjectEmail || (lang === 'hu' ? 'Fiók' : 'Account'),
+      ];
+      for (const [offset, label] of expected.entries()) {
+        await expect(
+          refs
+            .nth(20 + index * 2 + offset)
+            .locator('..')
+            .locator('span')
+            .first(),
+        ).toHaveText(label);
+      }
+    }
     for (const [index, id] of ids.entries()) {
       await expect(refs.nth(index)).toHaveText(id.slice(0, 8));
       await expect(refs.nth(index)).toHaveAttribute('title', id);
     }
-    for (const index of [0, 20, 21]) {
+    for (const index of [0, 1, 20, 21, 22, 25]) {
       await refs.nth(index).click();
       expect(await page.evaluate(() => sessionStorage.getItem('copiedId'))).toBe(ids[index]);
       await expect(refs.nth(index).locator('..').getByRole('status')).toHaveText(

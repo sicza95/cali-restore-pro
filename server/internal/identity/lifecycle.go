@@ -60,7 +60,7 @@ func (s *Service) Enqueue(ctx context.Context, tx pgx.Tx, account, to, lang, pur
 	nonce := make([]byte, s.mailCipher.NonceSize())
 	_, _ = rand.Read(nonce)
 	sealed := s.mailCipher.Seal(nonce, nonce, plain, []byte("calirestore-mail-v1"))
-	_, err = tx.Exec(ctx, `INSERT INTO mail_outbox(payload,expires_at,account_id) VALUES($1,$2,$3)`, sealed, expiry, account)
+	_, err = tx.Exec(ctx, `INSERT INTO mail_outbox(payload,expires_at,account_id,kind) VALUES($1,$2,$3,$4)`, sealed, expiry, account, purpose)
 	return err
 }
 

@@ -202,4 +202,6 @@ ADMIN-06, ADMIN-07 and ADMIN-08 evidence is in [M-07 deletion and retention](../
 
 Issue #77 extends ADMIN-01 and UX-02 evidence with bilingual readable operational labels and short copyable references; filled admin pages and expanded mail lists now pass the copy guard. See [M-02 reference evidence](../milestones/m02-account-administration.md#readable-operational-references-77). API metadata, requirement status and physical-device qualification are unchanged.
 
+Issue #111 extends that evidence with current actor/subject account emails and retained mail kinds from the `operations.view`-gated API. PostgreSQL HTTP tests verify access denial, deleted-account nulls and mail kinds after payload erasure; synthetic EN/HU browser checks cover readable labels, fallback labels, full-ID copying and long-email wrapping in both iPad orientations. Requirement status and physical-device qualification remain unchanged.
+
 [raw-mask]: ../milestones/out01-raw-mask-export.md

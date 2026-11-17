@@ -43,6 +43,8 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 
 ## Words that stay
 
+- **Admin mail kinds**: Email verification (_E-mail-cím megerősítése_), Password reset (_Jelszó visszaállítása_), New email confirmation (_Új e-mail-cím megerősítése_), Account security notice (_Fiókbiztonsági értesítés_), Project invitation (_Projektmeghívó_). Unknown older jobs use Mail job (_Levélküldés_). Security event references show the current account email, falling back to Actor (_Végrehajtó_) or Account (_Fiók_) when the account is gone. Short references remain beside these labels.
+
 - **Raw mask** (_nyers maszk_): one saved layer as an opaque black mask with transparent surroundings, in the reference photo's original pixel coordinates and dimensions. It excludes the photo, crop, grid, legend and layer styling.
 
 - **Draft** (_vázlat_ for drawing, _piszkozat_ for reports): an unfinished, unsaved piece of work is a real idea for the user.

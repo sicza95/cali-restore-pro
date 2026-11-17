@@ -161,6 +161,14 @@ export type AdminOperations = {
     subjectId: string;
     action: string;
     at: string;
+    /**
+     * Current account email; null when the account no longer exists. Available only with operations.view.
+     */
+    actorEmail: string | null;
+    /**
+     * Current account email; null when the account no longer exists. Available only with operations.view.
+     */
+    subjectEmail: string | null;
   }>;
   mail: {
     pending: number;
@@ -172,6 +180,10 @@ export type AdminOperations = {
     status: 'pending' | 'sent' | 'failed';
     attempts: number;
     at: string;
+    /**
+     * Mail purpose retained after payload erasure. Empty for jobs created before kind metadata was recorded.
+     */
+    kind: '' | 'verify' | 'reset' | 'email' | 'security' | 'project-invitation';
   }>;
 };
 

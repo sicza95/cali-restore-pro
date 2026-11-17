@@ -18,13 +18,16 @@ type AdminAccount struct {
 	Sessions       int  `json:"sessions"`
 }
 type AuditEvent struct {
-	Actor   string    `json:"actorId"`
-	Subject string    `json:"subjectId"`
-	Action  string    `json:"action"`
-	At      time.Time `json:"at"`
+	Actor        string    `json:"actorId"`
+	Subject      string    `json:"subjectId"`
+	ActorEmail   *string   `json:"actorEmail"`
+	SubjectEmail *string   `json:"subjectEmail"`
+	Action       string    `json:"action"`
+	At           time.Time `json:"at"`
 }
 type MailJob struct {
 	ID       string    `json:"id"`
+	Kind     string    `json:"kind"`
 	Status   string    `json:"status"`
 	Attempts int       `json:"attempts"`
 	At       time.Time `json:"at"`
@@ -83,13 +86,17 @@ func (s *Service) Operations(ctx context.Context, raw string) (AdminOperations, 
 	if !actor.Account.Allows(ViewOperations) {
 		return result, ErrForbidden
 	}
-	rows, err := tx.Query(ctx, `SELECT actor_id,subject_id,action,created_at FROM identity_audit ORDER BY id DESC LIMIT 25`)
+	rows, err := tx.Query(ctx, `SELECT e.actor_id,e.subject_id,a.email,s.email,e.action,e.created_at
+    FROM identity_audit e
+    LEFT JOIN accounts a ON a.id=e.actor_id
+    LEFT JOIN accounts s ON s.id=e.subject_id
+    ORDER BY e.id DESC LIMIT 25`)
 	if err != nil {
 		return result, err
 	}
 	result.Audit, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (AuditEvent, error) {
 		var a AuditEvent
-		err := row.Scan(&a.Actor, &a.Subject, &a.Action, &a.At)
+		err := row.Scan(&a.Actor, &a.Subject, &a.ActorEmail, &a.SubjectEmail, &a.Action, &a.At)
 		return a, err
 	})
 	if err != nil {
@@ -111,13 +118,13 @@ func (s *Service) Operations(ctx context.Context, raw string) (AdminOperations, 
 	if err = rows.Err(); err != nil {
 		return result, err
 	}
-	rows, err = tx.Query(ctx, `SELECT id,status,attempts,created_at FROM mail_outbox ORDER BY created_at DESC,id DESC LIMIT 20`)
+	rows, err = tx.Query(ctx, `SELECT id,kind,status,attempts,created_at FROM mail_outbox ORDER BY created_at DESC,id DESC LIMIT 20`)
 	if err != nil {
 		return result, err
 	}
 	result.Jobs, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (MailJob, error) {
 		var job MailJob
-		err := row.Scan(&job.ID, &job.Status, &job.Attempts, &job.At)
+		err := row.Scan(&job.ID, &job.Kind, &job.Status, &job.Attempts, &job.At)
 		return job, err
 	})
 	return result, err

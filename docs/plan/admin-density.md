@@ -52,3 +52,5 @@ HU at 1194 with rows: 2,722 px. Changes from the approach above:
 ### Follow-up #77: readable references
 
 The owner selected readable labels plus short, copyable references. Mail jobs now pair a localized mail-job label with the first eight ID characters; security events keep their localized action and pair actor/account labels with short references. Buttons copy complete IDs and retain them in titles. The operations API is unchanged. The copy guard now runs on filled and empty pages and on expanded mail lists in both languages; `admin-references.browser.ts` covers complete-ID copying and clipboard failures. The raw-ID limitation described above is historical.
+
+Follow-up #111 replaces the generic labels with current account emails and localized mail kinds from the capability-gated operations API. Deleted accounts and older jobs retain the generic fallback labels. Full-ID copying and the layout/copy guards cover both cases; see [M-02 evidence](../milestones/m02-account-administration.md#readable-operational-references-77).

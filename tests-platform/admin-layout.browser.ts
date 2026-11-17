@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { routeAdmin } from './admin-fixtures';
+import { operations, routeAdmin } from './admin-fixtures';
 import { measureAdmin, type AdminGeometry } from './admin-measure';
 import { expectTaskLanguage } from './copy-guard';
 
@@ -110,6 +110,11 @@ for (const state of ['rows', 'empty'] as const)
         if (state === 'rows') {
           // An open account and the open jobs list keep their long values inside the page.
           await jobs.click();
+          // A long email in an audit reference must wrap in both orientations.
+          const longReference = page
+            .locator('.admin-reference')
+            .getByText(operations.audit[1].subjectEmail!, { exact: true });
+          await expect(longReference.first()).toBeVisible();
           await expectTaskLanguage(page, `admin open jobs ${lang}`);
           await page.locator('[data-control-id="admin.account.open"]').nth(1).click();
           for (const size of [

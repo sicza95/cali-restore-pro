@@ -47,19 +47,23 @@ const actions = [
 ];
 const at = (minutes: number) =>
   new Date(Date.UTC(2026, 10, 16, 9, 0) - minutes * 60_000).toISOString();
+const mailKinds = ['', 'verify', 'reset', 'email', 'security', 'project-invitation'];
 
 /** The server's limits: 20 mail jobs and 25 audit events. */
 export const operations = {
   mail: { pending: 3, sent: 1248, failed: 2 },
   jobs: Array.from({ length: 20 }, (_, n) => ({
     id: id(500 + n),
+    kind: mailKinds[n % mailKinds.length],
     status: n < 3 ? 'pending' : n < 5 ? 'failed' : 'sent',
     attempts: n < 5 ? 3 : 1,
     at: at(n * 7),
   })),
   audit: Array.from({ length: 25 }, (_, n) => ({
-    actorId: id(1),
-    subjectId: id(100 + (n % emails.length)),
+    actorId: n === 1 ? id(999) : id(1),
+    subjectId: n === 2 ? id(998) : id(100 + (n % emails.length)),
+    actorEmail: n === 1 ? null : operator.email,
+    subjectEmail: n === 2 ? null : emails[n % emails.length],
     action: actions[n % actions.length],
     at: at(n * 11),
   })),
