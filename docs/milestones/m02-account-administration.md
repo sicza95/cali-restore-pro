@@ -19,3 +19,9 @@ Device trust, local unlock and recovery start in M-03. Ownership/hosting transfe
 `server/internal/identity/admin_test.go` exercises the real HTTP handlers with the restricted app role on PostgreSQL, including direct calls that bypass the UI. `tests-platform/settings.spec.ts` uses synthetic API responses to exercise browser controls, reload, account separation, credential confirmation and mutation payloads. Its landscape and portrait screenshots are fixture evidence. Physical iPad and Safari qualification remain separate.
 
 Local verification passed: the Go race suite against PostgreSQL, npm type/lint/format checks, production and Storybook builds, 11 Storybook browser tests, and two account settings browser tests with axe. The screenshots use synthetic accounts: [admin in landscape](../evidence/m02/admin-landscape-light.png) and [preferences in portrait](../evidence/m02/preferences-portrait-dark.png).
+
+## Readable operational references (#77)
+
+Mail jobs show a localized mail-job label, status, time, attempts and an eight-character reference. Security events retain their localized action and show labelled actor/account references. Each reference is a 44 px copy button: it copies the complete ID, exposes it in the title, and reports success or failure in EN/HU. The operations API and its metadata boundary are unchanged; no email lookup depends on the account search page or on account-view permission.
+
+Synthetic browser evidence: `admin-layout.browser.ts` covers filled and empty pages in EN/HU, light/dark and both iPad orientations, including expanded mail jobs, copy guards, axe and touch targets. `admin-references.browser.ts` checks every displayed reference/title and copying full mail, actor and subject IDs, plus denied clipboard feedback. These are mocked API and clipboard checks, not live mail delivery or physical iPad qualification.

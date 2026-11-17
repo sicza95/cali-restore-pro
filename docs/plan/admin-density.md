@@ -48,3 +48,7 @@ HU at 1194 with rows: 2,722 px. Changes from the approach above:
 - Long emails use `word-break: break-all` in the account list: in the narrower left column, a 55-character email otherwise left the disclosure marker alone on its line.
 - With rows, the columns end together, so the Accounts panel has about 1,450 px of empty panel below eight accounts (a full page of 20 accounts roughly fills it). Loading and error show the panels with their status line or the shell's message.
 - The copy guard runs on the empty page only (see Verification); the jobs and events still show opaque ids, as the help text says.
+
+### Follow-up #77: readable references
+
+The owner selected readable labels plus short, copyable references. Mail jobs now pair a localized mail-job label with the first eight ID characters; security events keep their localized action and pair actor/account labels with short references. Buttons copy complete IDs and retain them in titles. The operations API is unchanged. The copy guard now runs on filled and empty pages and on expanded mail lists in both languages; `admin-references.browser.ts` covers complete-ID copying and clipboard failures. The raw-ID limitation described above is historical.

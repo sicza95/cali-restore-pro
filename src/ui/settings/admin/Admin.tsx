@@ -4,6 +4,7 @@ import { PasswordField } from '../../account/password-field/PasswordField';
 import { settingsCopy } from '../settings-copy';
 import type { AccountPage, Operations } from '../types';
 import { AccountRow } from '../account-row/AccountRow';
+import { AdminReference } from './AdminReference';
 
 export function Admin() {
   const app = useApp();
@@ -132,8 +133,9 @@ export function Admin() {
                               {new Date(job.at).toLocaleString(app.lang())}
                             </time>
                             <div class="field-help">
-                              {c().attempts}: {job.attempts.toLocaleString(app.lang())} · {job.id}
+                              {c().attempts}: {job.attempts.toLocaleString(app.lang())}
                             </div>
+                            <AdminReference id={job.id} label={c().mailJob} />
                           </li>
                         )}
                       </For>
@@ -157,9 +159,8 @@ export function Admin() {
                         <time datetime={event.at}>
                           {new Date(event.at).toLocaleString(app.lang())}
                         </time>
-                        <div class="field-help">
-                          {c().actor}: {event.actorId} · {c().subject}: {event.subjectId}
-                        </div>
+                        <AdminReference id={event.actorId} label={c().actor} />
+                        <AdminReference id={event.subjectId} label={c().subject} />
                       </li>
                     )}
                   </For>

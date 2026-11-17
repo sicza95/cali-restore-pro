@@ -93,7 +93,7 @@ for (const state of ['rows', 'empty'] as const)
         expectNoEmptyColumn(landscape);
         expect((await jobs.boundingBox())!.y, 'jobs in the first screen').toBeLessThan(834 - 44);
         await expectSheet(page, landscape);
-        if (state === 'empty') await expectTaskLanguage(page, `admin ${lang}`);
+        await expectTaskLanguage(page, `admin ${state} ${lang}`);
         await page.screenshot({
           path: info.outputPath(`admin-1194-${state}-${lang}-${theme}.png`),
         });
@@ -107,9 +107,10 @@ for (const state of ['rows', 'empty'] as const)
           fullPage: true,
         });
 
-        if (state === 'rows' && lang === 'en') {
+        if (state === 'rows') {
           // An open account and the open jobs list keep their long values inside the page.
           await jobs.click();
+          await expectTaskLanguage(page, `admin open jobs ${lang}`);
           await page.locator('[data-control-id="admin.account.open"]').nth(1).click();
           for (const size of [
             { width: 834, height: 1194 },
