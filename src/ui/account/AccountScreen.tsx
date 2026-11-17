@@ -1,16 +1,27 @@
 import { Match, Switch } from 'solid-js';
+import { lazyView } from '../shared/lazyView';
 import { useApp } from '../app-context/AppContext';
 import { accountPaths } from '../router/constants';
 import type { AccountDestination } from '../router/types';
-import { AccountSecurity } from './account-security/AccountSecurity';
 import { VaultSection } from './account-security/VaultSection';
-import { InvitationInbox } from '../sharing/InvitationInbox';
 import { navigationText } from '../account-access/navigation-copy';
 import { ProjectWorkspace } from '../projects/ProjectWorkspace';
-import { Admin } from '../settings/admin/Admin';
-import { Preferences } from '../settings/preferences/Preferences';
-import { PrivateLibraries } from '../settings/preferences/PrivateLibraries';
-import { Profile } from '../settings/profile/Profile';
+
+// Rarely opened screens load on demand; the offline worker precaches every chunk.
+const AccountSecurity = lazyView(() =>
+  import('./account-security/AccountSecurity').then((m) => m.AccountSecurity),
+).View;
+const InvitationInbox = lazyView(() =>
+  import('../sharing/InvitationInbox').then((m) => m.InvitationInbox),
+).View;
+const Admin = lazyView(() => import('../settings/admin/Admin').then((m) => m.Admin)).View;
+const Preferences = lazyView(() =>
+  import('../settings/preferences/Preferences').then((m) => m.Preferences),
+).View;
+const PrivateLibraries = lazyView(() =>
+  import('../settings/preferences/PrivateLibraries').then((m) => m.PrivateLibraries),
+).View;
+const Profile = lazyView(() => import('../settings/profile/Profile').then((m) => m.Profile)).View;
 
 /** The screen of a signed-in destination, rendered once its route guard allows it. */
 export function AccountScreen(props: { destination: AccountDestination; account: string }) {

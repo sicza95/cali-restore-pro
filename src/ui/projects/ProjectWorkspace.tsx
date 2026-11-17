@@ -1,6 +1,15 @@
 import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
 import { useApp } from '../app-context/AppContext';
-import { createResource, createMemo, createSignal, Match, Show, Switch, untrack } from 'solid-js';
+import {
+  createResource,
+  createMemo,
+  createSignal,
+  Match,
+  onMount,
+  Show,
+  Switch,
+  untrack,
+} from 'solid-js';
 import { localProjects, newProject } from '../../platform/projects/projects';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
@@ -17,13 +26,24 @@ import { NameForm } from './forms';
 import { ReceiveProjectKey } from './ProjectKeyTransfer';
 import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
-import { ProjectReview, ProjectReviewLinks } from '../project-review/ProjectReview';
-import { SurfaceWorkspace } from './SurfaceWorkspace';
+import { ProjectReviewLinks } from '../project-review/ProjectReviewLinks';
+import { lazyView } from '../shared/lazyView';
 import { projectHref } from '../router/routes';
 import { syncCopy } from './sync-copy';
 import './styles.css';
 
+// The editor and the review pages load on demand; the offline worker precaches the chunks.
+const surfaceWorkspace = lazyView(() =>
+  import('./SurfaceWorkspace').then((m) => m.SurfaceWorkspace),
+);
+const SurfaceWorkspace = surfaceWorkspace.View;
+const ProjectReview = lazyView(() =>
+  import('../project-review/ProjectReview').then((m) => m.ProjectReview),
+).View;
+
 export function ProjectWorkspace(props: { vault: LocalVault; language: Language }) {
+  // Fetch the editor while the project list is read, so opening a surface shows no loading state.
+  onMount(() => surfaceWorkspace.preload().catch(() => undefined));
   const app = useApp();
   const c = () => projectCopy[props.language];
   const local = localProjects(untrack(() => props.vault));
