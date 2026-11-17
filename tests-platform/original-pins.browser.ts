@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { build } from 'vite';
 import { previewOrigin } from './files-origins';
+import { offlineSwitch } from './go-offline';
 
 const recipient = 'a1000000-0000-4000-8000-000000000000';
 const sender = 'a2000000-0000-4000-8000-000000000000';
@@ -17,6 +18,14 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   context,
   browserName,
 }, info) => {
+  // WebKit does not route fetches of a page that a service worker controls, not even ones the
+  // worker passes through: the mocks below would never answer, and the app reads the preview
+  // server's HTML as its API replies. The worker is what this test needs, so WebKit cannot run it
+  // (#51). Firefox and Chromium route those fetches.
+  test.skip(
+    browserName === 'webkit',
+    'WebKit routes do not apply to fetches of service-worker-controlled pages',
+  );
   let page = onlinePage;
   const source = randomBytes((1 << 20) + 31);
   const key = randomBytes(32);
@@ -33,6 +42,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
     },
   );
 
+  const setOffline = await offlineSwitch(context, browserName, /\/api\/v1\//);
   let revoked = false;
   let interrupt = true;
   let requests = 0;
@@ -128,10 +138,12 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   );
   await page.close();
   page = await context.newPage();
-  await context.setOffline(true);
-  await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
+  await setOffline(true);
+  if (browserName === 'chromium')
+    await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   const shell = await page.goto(origin + offlinePath);
   expect(shell?.fromServiceWorker()).toBe(true);
+  await setOffline.sync(page);
   // Chromium headless shell can reset the page's connectivity signal on a
   // service-worker navigation. Reapply it to the loaded page before unlocking. CDP is
   // Chromium-only; the other engines keep the context's offline state (#51).
@@ -179,7 +191,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   const denial = page.waitForResponse(
     (response) => response.url().endsWith(path) && response.status() === 404,
   );
-  await context.setOffline(false);
+  await setOffline(false);
   await showOffline(false);
   await denial;
   await expect(shelf().getByText(name)).toHaveCount(0);
@@ -187,7 +199,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await expect(shelf().getByRole('status')).toHaveText(
     'Removed offline copies you can no longer access.',
   );
-  await context.setOffline(true);
+  await setOffline(true);
   await unlock();
   await expect(shelf().getByText('No originals are pinned on this browser.')).toBeVisible();
   await expect(shelf().getByRole('button', { name: 'Prepare a copy' })).toHaveCount(0);
