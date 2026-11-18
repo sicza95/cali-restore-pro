@@ -18,6 +18,7 @@ import (
 	"github.com/go-webauthn/webauthn/protocol/webauthncbor"
 	"github.com/go-webauthn/webauthn/protocol/webauthncose"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity/passhash"
+	"github.com/sicza95/cali-restore-pro/server/internal/identity/sessiontoken"
 	"github.com/sicza95/cali-restore-pro/server/internal/testdb"
 )
 
@@ -365,6 +366,30 @@ func TestPostgresPasskeys(t *testing.T) {
 		}
 		if _, err := s.Login(ctx, "owner@example.test", testdb.Password, ""); err != nil {
 			t.Fatal("password sign-in broken", err)
+		}
+	})
+	t.Run("a password reset by email removes the account's passkeys", func(t *testing.T) {
+		if _, err := admin.Exec(ctx, `DELETE FROM auth_rate_limits`); err != nil {
+			t.Fatal(err)
+		}
+		other := newSoftAuthenticator(t, 0)
+		if err := register(login("other"), other, "Laptop"); err != nil {
+			t.Fatal(err)
+		}
+		raw := sessiontoken.New()
+		if _, err := admin.Exec(ctx, `INSERT INTO identity_links(token_digest,account_id,purpose,target_email,expires_at) VALUES($1,$2,'reset','other@example.test',now()+interval '1 hour')`,
+			sessiontoken.Digest(raw), ids["other"]); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.ConsumeLink(ctx, raw, "reset", testdb.Password); err != nil {
+			t.Fatal(err)
+		}
+		if n := count(`SELECT count(*) FROM passkeys WHERE account_id=$1`, ids["other"]); n != 0 {
+			t.Fatal("passkeys survived the reset", n)
+		}
+		other.count = 5
+		if _, err := signIn(other); !errors.Is(err, ErrPasskey) {
+			t.Fatal("passkey still signs in after reset", err)
 		}
 	})
 	t.Run("the app role cannot rewrite ceremonies or record unknown audit actions", func(t *testing.T) {

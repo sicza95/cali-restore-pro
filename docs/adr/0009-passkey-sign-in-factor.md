@@ -18,7 +18,7 @@ A passkey signs an account in and does nothing else. The vault still unlocks wit
 ## Consequences
 
 - Passkeys add a sign-in route without changing the threat model for content: losing every passkey loses nothing but convenience, and a stolen passkey still cannot open a vault.
-- Password reset by email does not remove passkeys. Owners remove unknown passkeys themselves; the security notice on every change is the signal.
+- Password reset by email removes every passkey on the account (owner decision 2026-11-18): a reset suggests the account may be compromised, so a passkey someone else added cannot outlive it. The owner adds passkeys again after signing in with the new password.
 - Changing `APP_ORIGIN`'s host invalidates existing passkeys (their relying party ID no longer matches). Operators must keep the host stable or tell users to add passkeys again.
 - Browser coverage is a Chromium virtual authenticator (`tests-platform/passkeys.spec.ts`) and Go tests with a software authenticator. Physical iPad Safari, iCloud Keychain and third-party password managers remain a compatibility gate before PRIV-03 is accepted (M-16).
 - Any later passkey unlock needs a new ADR, reviewed key provisioning, and must keep the trusted-device and recovery-key routes.

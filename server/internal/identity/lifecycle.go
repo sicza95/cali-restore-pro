@@ -199,6 +199,13 @@ func (s *Service) ConsumeLink(ctx context.Context, raw, purpose, password string
 	if _, err = tx.Exec(ctx, `DELETE FROM sessions WHERE account_id=$1`, id); err != nil {
 		return err
 	}
+	// A reset by email suggests the account may be compromised: passkeys go too,
+	// so a passkey someone else added cannot outlive it (owner decision 2026-11-18).
+	if purpose == "reset" {
+		if _, err = tx.Exec(ctx, `DELETE FROM passkeys WHERE account_id=$1`, id); err != nil {
+			return err
+		}
+	}
 	if _, err = tx.Exec(ctx, `DELETE FROM identity_links WHERE account_id=$1`, id); err != nil {
 		return err
 	}
