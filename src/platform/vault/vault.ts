@@ -64,8 +64,20 @@ export class LocalVault {
   }
 
   async #install(root: CryptoKey, envelope: Envelope, remember: boolean, epoch: number) {
+    // The sharing key is created with the vault, so no later first write races other handles.
+    const sharingIdentity = await seal(
+      root,
+      this.account,
+      'sharing-identity',
+      JSON.stringify({ seed: newCode(), pins: {} }),
+    );
     this.#assert(epoch);
-    const row = { envelope, stamp: newCode(), remembered: remember ? root : undefined };
+    const row = {
+      envelope,
+      stamp: newCode(),
+      remembered: remember ? root : undefined,
+      sharingIdentity,
+    };
     await commitVault(this.account, undefined, row);
     this.#assert(epoch);
     this.#root = root;
@@ -102,21 +114,17 @@ export class LocalVault {
    */
   async openWithoutKey() {
     let row = await readVault(this.account);
-    let text = '';
     if (!row) {
       try {
         await this.create(plaintextCode, true);
+        return '';
       } catch (error) {
         // Another tab or handle created it first: open that one.
         row = await readVault(this.account);
         if (!row) throw error;
       }
     }
-    if (row) text = await this.unlock(row.remembered ? undefined : plaintextCode);
-    // Create the sharing key now, before pages run vault work that a later first write would
-    // interrupt ("vault changed"). Sharing pages publish it as they open.
-    if (!this.#row?.sharingIdentity) await this.sharingIdentity().catch(() => undefined);
-    return text;
+    return this.unlock(row.remembered ? undefined : plaintextCode);
   }
 
   async restore(file: string, code: string, remember: boolean) {

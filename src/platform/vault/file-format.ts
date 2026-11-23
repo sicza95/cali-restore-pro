@@ -1,4 +1,4 @@
-import { decrypt, encrypt } from './aead';
+import { decrypt, encrypt } from './aead.ts';
 export const chunkBytes = 1 << 20;
 export const maxSourceBytes = 256 * chunkBytes;
 export const maxManifestBytes = 16 * 1024;
