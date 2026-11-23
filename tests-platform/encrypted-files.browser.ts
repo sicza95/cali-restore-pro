@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { aead } from '../src/platform/vault/aead';
 
 test('encrypted originals survive reload, reject tampering, and disappear on vault forget', async ({
   page,
@@ -114,10 +115,11 @@ test('encrypted originals survive reload, reject tampering, and disappear on vau
   expect(result).toEqual({
     metadata: { name, type: 'image/x-adobe-dng', size },
     complete: true,
-    hidden: true,
+    // Without encryption (aead.ts) the bytes are readable and tampering goes unnoticed.
+    hidden: aead.enabled,
     count: 6,
-    swapped: true,
-    corrupt: true,
+    swapped: aead.enabled,
+    corrupt: aead.enabled,
     removed: 0,
   });
 });

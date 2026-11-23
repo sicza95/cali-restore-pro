@@ -23,7 +23,7 @@ import { ProjectBackup } from './ProjectBackup';
 import { projectCopy } from './project-copy';
 import { loadPreferences } from '../settings/preferences/utils';
 import { NameForm } from './forms';
-import { ReceiveProjectKey } from './ProjectKeyTransfer';
+import { CloudProjects } from './CloudProjects';
 import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
 import { ProjectReviewLinks } from '../project-review/ProjectReviewLinks';
@@ -235,12 +235,13 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
                 status={rowSync}
                 navigate={navigate}
               />
-              <ReceiveProjectKey
+              <CloudProjects
                 language={props.language}
                 busy={busy()}
-                model={sync.transfer}
+                model={sync.cloud}
+                local={() => new Set(projects()?.rows.map(({ id }) => id))}
                 run={run}
-                onReceived={(received) => {
+                onOpened={(received) => {
                   if (received.created) update(received.document);
                   navigate(projectHref(received.project));
                   void sync.refresh();

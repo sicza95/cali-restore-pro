@@ -57,7 +57,6 @@ async function expectDraftKept(page: Page, step: string) {
 
 async function reopen(page: Page) {
   await page.reload();
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(control(page, 'surface.view.photo')).toBeEnabled();
 }
 

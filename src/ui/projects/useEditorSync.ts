@@ -1,12 +1,12 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
-import { revisionKeyTransfer } from '../../platform/projects/revision-key-transfer';
+import { cloudProjects } from '../../platform/projects/cloud-projects';
 import { editorSync } from '../../platform/projects/editor-sync';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
 
 export function useEditorSync(vault: LocalVault, csrf: () => string) {
   const sync = editorSync(vault);
-  const transfer = revisionKeyTransfer(vault, csrf);
+  const cloud = cloudProjects(vault);
   const [state, setState] = createSignal<Awaited<ReturnType<typeof sync.status>>>();
   const [errors, setErrors] = createSignal<string[]>([]);
   const [unavailable, setUnavailable] = createSignal(false);
@@ -54,5 +54,5 @@ export function useEditorSync(vault: LocalVault, csrf: () => string) {
     if (errors().includes(project.id)) return 'staging';
     return draft || project.revision > base.localRevision ? 'pending' : 'saved';
   }
-  return { sync, transfer, refresh, state, statusKey, unavailable };
+  return { sync, cloud, refresh, state, statusKey, unavailable };
 }

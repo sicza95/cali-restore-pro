@@ -19,8 +19,6 @@ export const accountPaths = {
   security: '/settings/security',
   preferences: '/settings/preferences',
   libraries: '/settings/libraries',
-  unlock: '/unlock',
-  'devices/approve': '/devices/approve',
   admin: '/admin',
 } as const;
 
@@ -44,7 +42,5 @@ export const routeAccess: Record<RouteName, RouteAccess> = {
   security: 'signed-in',
   preferences: 'signed-in',
   libraries: 'signed-in',
-  unlock: 'signed-in',
-  'devices/approve': 'signed-in',
   admin: 'admin',
 };

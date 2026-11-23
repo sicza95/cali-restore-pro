@@ -33,7 +33,7 @@ function recipientKey(page: Page) {
     )) as typeof import('../src/platform/projects/fixture-sharing');
     const vault = new LocalVault(account, () => undefined);
     try {
-      await vault.create('ef'.repeat(32), true);
+      await vault.openWithoutKey();
       return (await localSharingKey(vault)).publicKey;
     } finally {
       vault.close();
@@ -72,7 +72,7 @@ function ownerGrants(page: Page, recipientKey: string) {
       )) as typeof import('./fixtures/large-estimate');
       const vault = new LocalVault(owner, () => undefined);
       try {
-        await vault.create('ab'.repeat(32), true);
+        await vault.openWithoutKey();
         const project = newProject('Synthetic chapel', 'North wall', 'Upper plaster', 'HUF');
         const saved = await localProjects(vault).save(project);
         const input = largeEstimate(1, 1, 1, project.id);
@@ -150,8 +150,14 @@ test('a recipient authors, exports and keeps their own report within their grant
     let listed = [invitation(withEstimate, 'estimate-full'), invitation(assessmentOnly, 'none')];
     const sent: string[] = [];
     inbox.on('request', (request) => {
-      if (request.method() !== 'GET' && request.url().includes('/api/v1/'))
-        sent.push(request.url());
+      // Publishing this account's sharing key is not sharing data.
+      const url = request.url();
+      if (
+        request.method() !== 'GET' &&
+        url.includes('/api/v1/') &&
+        !url.endsWith('/sharing-identity')
+      )
+        sent.push(url);
     });
     await recipientContext.route('**/api/v1/invitations', (route) =>
       route.fulfill({ json: { invitations: listed } }),
@@ -167,13 +173,11 @@ test('a recipient authors, exports and keeps their own report within their grant
     });
 
     await inbox.goto('/invitations');
-    await inbox.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
     const rows = inbox.locator('.invitation-panel .session-list > li');
     const full = rows.filter({ has: inbox.getByRole('button', { name: 'Full estimate sample' }) });
     const plain = rows.filter({
       hasNot: inbox.getByRole('button', { name: 'Full estimate sample' }),
     });
-    await full.getByLabel('Verified owner fingerprint').fill(grants.fingerprint);
     await full.getByRole('button', { name: 'Full estimate sample' }).click();
     await expect(full.locator('[data-control-id="estimate.scope.projection"]')).toBeVisible();
     await full.getByRole('button', { name: 'Open shared content' }).click();
@@ -192,7 +196,6 @@ test('a recipient authors, exports and keeps their own report within their grant
     await editor.getByRole('button', { name: 'Save my report' }).click();
     await expect(editor.getByRole('status')).toHaveText('Saved on this device');
 
-    await plain.getByLabel('Verified owner fingerprint').fill(grants.fingerprint);
     await plain.getByRole('button', { name: 'Open shared content' }).click();
     const limited = plain.locator('[data-control-id="recipient-report.author"]');
     await limited.locator('summary').click();

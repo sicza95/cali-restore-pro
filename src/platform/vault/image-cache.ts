@@ -1,3 +1,4 @@
+import { decrypt, encrypt } from './aead';
 import {
   assertDimensions,
   imageLayout,
@@ -59,17 +60,13 @@ export async function imageCipher(root: CryptoKey, account: string, project: str
   async function open(part: number, bytes: ArrayBuffer) {
     if (bytes.byteLength < 29 || bytes.byteLength > limit(part) + 28)
       throw new Error('Invalid working image size');
-    return crypto.subtle.decrypt(
-      params(part, new Uint8Array(bytes, 0, 12)),
-      key,
-      new Uint8Array(bytes, 12),
-    );
+    return decrypt(params(part, new Uint8Array(bytes, 0, 12)), key, new Uint8Array(bytes, 12));
   }
   async function seal(part: number, bytes: BufferSource) {
     if (!bytes.byteLength || bytes.byteLength > limit(part))
       throw new Error('Invalid working image size');
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await crypto.subtle.encrypt(params(part, iv), key, bytes);
+    const encrypted = await encrypt(params(part, iv), key, bytes);
     const combined = new Uint8Array(12 + encrypted.byteLength);
     combined.set(iv);
     combined.set(new Uint8Array(encrypted), 12);

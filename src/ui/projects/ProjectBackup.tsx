@@ -1,5 +1,6 @@
 import { createSignal, onCleanup, Show } from 'solid-js';
 import type { SavedProject } from '../../platform/projects/types';
+import { plaintextCode } from '../../platform/vault/aead';
 import type { LocalVault } from '../../platform/vault/vault';
 import type { Language } from '../account-access/types';
 import { projectCopy } from './project-copy';
@@ -22,14 +23,12 @@ export function ProjectBackup(props: Props) {
   const [progress, setProgress] = createSignal(0);
   const [error, setError] = createSignal('');
   const [cancelled, setCancelled] = createSignal(false);
-  const [download, setDownload] = createSignal<{ url: string; code: string }>();
-  const [saved, setSaved] = createSignal(false);
+  const [download, setDownload] = createSignal<string>();
 
   function clearDownload() {
-    const result = download();
-    if (result) URL.revokeObjectURL(result.url);
+    const url = download();
+    if (url) URL.revokeObjectURL(url);
     setDownload(undefined);
-    setSaved(false);
   }
 
   onCleanup(() => {
@@ -82,9 +81,11 @@ export function ProjectBackup(props: Props) {
               const fields = new FormData(form);
               const file = fields.get('archive');
               if (!(file instanceof File)) return;
-              const code = String(fields.get('backup-key') ?? '');
               execute(async (options) => {
-                const project = await props.vault.projectBackups().import(file, code, options);
+                // No backup key while encryption is off (aead.ts).
+                const project = await props.vault
+                  .projectBackups()
+                  .import(file, plaintextCode, options);
                 form.reset();
                 props.onRestored?.(project);
               });
@@ -96,16 +97,6 @@ export function ProjectBackup(props: Props) {
                 type="file"
                 name="archive"
                 accept=".crproject"
-                required
-                disabled={props.busy}
-              />
-            </label>
-            <label>
-              {c().key}
-              <input
-                name="backup-key"
-                type="password"
-                autocomplete="off"
                 required
                 disabled={props.busy}
               />
@@ -122,9 +113,9 @@ export function ProjectBackup(props: Props) {
             disabled={props.busy}
             onClick={() =>
               execute(async (options) => {
-                const { blob, code } = await props.vault.projectBackups().export(id(), options);
+                const { blob } = await props.vault.projectBackups().export(id(), options);
                 options.signal.throwIfAborted();
-                setDownload({ url: URL.createObjectURL(blob), code });
+                setDownload(URL.createObjectURL(blob));
               })
             }
           >
@@ -141,32 +132,11 @@ export function ProjectBackup(props: Props) {
         </div>
       </Show>
       <Show when={download()}>
-        {(result) => (
+        {(url) => (
           <div class="project-backup-result">
-            <p role="status">{c().keep}</p>
-            <label>
-              {c().key}
-              <textarea
-                class="project-key-code"
-                readOnly
-                rows={2}
-                value={result().code}
-                spellcheck={false}
-              />
-            </label>
-            <label class="confirmation">
-              <input
-                type="checkbox"
-                checked={saved()}
-                onChange={(event) => setSaved(event.currentTarget.checked)}
-              />
-              {c().saved}
-            </label>
-            <Show when={saved()}>
-              <a download="calirestore-project.crproject" href={result().url}>
-                {c().download}
-              </a>
-            </Show>
+            <a download="calirestore-project.crproject" href={url()}>
+              {c().download}
+            </a>
           </div>
         )}
       </Show>

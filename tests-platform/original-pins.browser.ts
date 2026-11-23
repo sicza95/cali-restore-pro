@@ -2,6 +2,7 @@ import { createCipheriv, randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { build } from 'vite';
+import { aead } from '../src/platform/vault/aead';
 import { previewOrigin } from './files-origins';
 import { offlineSwitch } from './go-offline';
 
@@ -32,6 +33,8 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   const manifest = Buffer.from(JSON.stringify({ v: 1, name, type: '', size: source.length }));
   const parts = [manifest, source.subarray(0, 1 << 20), source.subarray(1 << 20)].map(
     (plain, index) => {
+      // While encryption is off (aead.ts), a part is its bytes plus a zero tag.
+      if (!aead.enabled) return Buffer.concat([plain, Buffer.alloc(16)]);
       const iv = Buffer.alloc(12);
       iv.writeUInt32BE(index, 8);
       const cipher = createCipheriv('aes-256-gcm', key, iv);
@@ -107,12 +110,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await context.route('**/api/v1/invitations/' + invitation + '/content', (route) =>
     route.fulfill({ json: grant.envelope }),
   );
-  const unlock = async () => {
-    await page.reload();
-    await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
-  };
-  await unlock();
-  await page.getByLabel('Verified owner fingerprint').fill(grant.fingerprint);
+  await page.reload();
   await page.getByRole('button', { name: 'Open shared content' }).click();
   const pin = page.getByRole('button', { name: 'Make available offline' });
   const shelf = () => page.getByRole('region', { name: 'Offline originals' });
@@ -159,20 +157,6 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
   await showOffline(true);
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
   await page.setViewportSize({ width: 834, height: 1194 });
-  await expect(page.getByText('Vault locked', { exact: true })).toBeVisible();
-  await expect(page.getByText(name)).toHaveCount(0);
-  const recovery = page.getByLabel('Recovery key', { exact: true });
-  const unlockWithKey = page.getByRole('button', { name: 'Unlock with recovery key' });
-  await recovery.fill('ff'.repeat(32));
-  await unlockWithKey.click();
-  await expect(page.getByRole('alert')).toContainText('The vault action failed');
-  await expect(page.getByText(name)).toHaveCount(0);
-  await recovery.fill('aa'.repeat(32));
-  await unlockWithKey.click();
-  await expect(shelf().getByText(name)).toBeVisible();
-  await page.getByRole('button', { name: 'Lock vault', exact: true }).click();
-  await expect(page.getByText(name)).toHaveCount(0);
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(shelf().getByText(name)).toBeVisible();
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.screenshot({ path: info.outputPath('pins-landscape.png'), fullPage: true });
@@ -200,7 +184,7 @@ test('an interrupted pin can retry; a completed pin works offline until revocati
     'Removed offline copies you can no longer access.',
   );
   await setOffline(true);
-  await unlock();
+  await page.reload();
   await expect(shelf().getByText('No originals are pinned on this browser.')).toBeVisible();
   await expect(shelf().getByRole('button', { name: 'Prepare a copy' })).toHaveCount(0);
 });

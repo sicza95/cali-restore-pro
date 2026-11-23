@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, hkdfSync } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { aead } from './aead';
 import {
   DocumentTooLargeError,
   importCode,
@@ -54,6 +55,14 @@ function nodeOpen(purpose: string, envelope: Envelope) {
     Buffer.concat([decipher.update(raw.subarray(0, -16)), decipher.final()]).toString('utf8'),
   ) as unknown;
 }
+
+// These tests cover the AES-GCM path, which is off in the app for now (see aead.ts).
+beforeAll(() => {
+  aead.enabled = true;
+});
+afterAll(() => {
+  aead.enabled = false;
+});
 
 describe('vault envelope', () => {
   it('round-trips text and has the documented shape', async () => {

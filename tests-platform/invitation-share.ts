@@ -2,7 +2,6 @@ import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { orientedJpeg } from './fixtures/images';
 import { enableHostingAndSync } from './invitation-hosting';
-import { setupRememberedVault } from './vault-setup';
 
 /** Estimate scopes are shared only from an issued estimate: 20 h at HUF 62.50 per hour. */
 async function issueEstimate(project: Page) {
@@ -33,7 +32,7 @@ async function issueEstimate(project: Page) {
 
 /**
  * The owner creates a project with two objects and one original, issues an estimate, invites the recipient and
- * shares a snapshot once the fingerprints are verified (a wrong fingerprint is refused first).
+ * shares a snapshot (no fingerprint check while encryption is off, see aead.ts).
  * Checks that the activation, the sealed content and the estimate scopes reveal no plain project
  * data.
  */
@@ -41,7 +40,6 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   const owner = project.request;
   const recipient = inbox.request;
   await project.goto('/projects');
-  await setupRememberedVault(project);
   await project.getByLabel('Project name').fill('Synthetic chapel');
   await project.getByRole('button', { name: 'New project' }).click();
   // Two objects: the full estimate scope (about 1.8 KB sealed) went over the old 1536-byte
@@ -70,11 +68,8 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   await expect(project.getByText('Awaiting acceptance')).toBeVisible();
   await expect(project.locator('[data-control-id="sharing.resend"]')).toBeDisabled();
   await expect(project.locator('[data-control-id="sharing.cancel"]')).toBeEnabled();
-  await project.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
-  const ownerCode = await project.locator('.invitation-panel code').innerText();
 
   await inbox.goto('/invitations');
-  await setupRememberedVault(inbox);
   await inbox.getByRole('button', { name: 'Accept invitation' }).click();
   await expect(inbox.getByText('Awaiting secure activation')).toBeVisible();
   const list = await (await recipient.get('/api/v1/invitations')).json();
@@ -82,15 +77,8 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   const scopes = '/api/v1/invitations/' + list.invitations[0].id + '/scopes/';
   expect((await recipient.get(content)).status()).toBe(404);
   expect((await recipient.get(scopes + 'estimate-summary')).status()).toBe(404);
-  await inbox.getByRole('button', { name: 'Show my sharing fingerprint' }).click();
-  const recipientCode = await inbox.locator('.invitation-panel code').innerText();
 
   await project.getByRole('button', { name: 'Refresh invitations' }).click();
-  await project.getByLabel('Verified recipient fingerprint').fill('0'.repeat(64));
-  await project.getByRole('button', { name: 'Share project snapshot' }).click();
-  await expect(project.locator('.invitation-panel [role=alert]')).toBeVisible();
-  expect((await recipient.get(content)).status()).toBe(404);
-  await project.getByLabel('Verified recipient fingerprint').fill(recipientCode);
   await project.getByRole('checkbox', { name: 'Include all attached original files' }).check();
   const upload = project.waitForRequest(
     (request) => request.method() === 'POST' && request.url().endsWith('/activate'),
@@ -116,5 +104,5 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   expect((await recipient.get(scopes + 'estimate-full')).status()).toBe(404);
   expect((await recipient.get(scopes + 'history')).status()).toBe(404);
   expect((await owner.get(scopes + 'estimate-summary')).status()).toBe(404);
-  return { ownerCode, recipientCode, list, content, scopes, activation, original };
+  return { list, content, scopes, activation, original };
 }

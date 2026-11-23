@@ -1,3 +1,4 @@
+import { decrypt, encrypt } from './aead';
 const maxText = 64 * 1024;
 export const maxLocalDocument = 768 * 1024;
 export const maxFile = 600_000;
@@ -111,11 +112,7 @@ export async function seal(root: CryptoKey, account: string, purpose: Purpose, t
   if (text.length > limit) throw new DocumentTooLargeError(text.length, limit);
   const salt = crypto.getRandomValues(new Uint8Array(32));
   const { key, algorithm } = await parameters(root, account, purpose, salt);
-  const ciphertext = await crypto.subtle.encrypt(
-    algorithm,
-    key,
-    encode.encode(JSON.stringify(text)),
-  );
+  const ciphertext = await encrypt(algorithm, key, encode.encode(JSON.stringify(text)));
   return {
     version: 1,
     salt: base64(salt),
@@ -130,7 +127,7 @@ export async function open(root: CryptoKey, account: string, purpose: Purpose, e
     limit === maxText ? maxFile : limit * 8 + 256,
   );
   const { key, algorithm } = await parameters(root, account, purpose, unbase64(parsed.salt));
-  const bytes = await crypto.subtle.decrypt(algorithm, key, unbase64(parsed.ciphertext));
+  const bytes = await decrypt(algorithm, key, unbase64(parsed.ciphertext));
   const text: unknown = JSON.parse(decode.decode(bytes));
   if (typeof text !== 'string' || text.length > limit) throw new Error('Invalid snapshot');
   return text;

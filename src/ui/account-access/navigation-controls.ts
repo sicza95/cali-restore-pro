@@ -52,13 +52,6 @@ export const accountNavigationControls = [
   navigationControl('profile', 'signed-in', 'Account profile', 'M-02'),
   navigationControl('security', 'signed-in', 'Account security', 'M-02'),
   navigationControl('preferences', 'signed-in', 'Local account preferences', 'M-02'),
-  navigationControl('unlock', 'signed-in', 'Local vault unlock requires local vault', 'M-03'),
-  navigationControl(
-    'devices/approve',
-    'signed-in',
-    'Device approval requires unlocked vault for approval',
-    'M-03',
-  ),
   navigationControl(
     'offline',
     'Explicit offline account marker',

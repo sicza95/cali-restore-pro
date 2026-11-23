@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { beforeEach, expect, it, onTestFinished, vi } from 'vitest';
+import { aead } from './aead';
 import { newProject } from '../projects/projects';
 import { importCode } from './crypto';
 import { projectBackups } from './project-backups';
@@ -64,6 +65,10 @@ it('keys recipient drafts by project and invitation and checks the expected revi
 });
 
 it('seals each draft to its key so a row moved to another grant does not open', async () => {
+  aead.enabled = true;
+  onTestFinished(() => {
+    aead.enabled = false;
+  });
   await store().save({ project, invitation }, 0, 'Private recipient notes');
   const rows = await rawRows(recipientReportTable);
   expect(JSON.stringify(rows)).not.toContain('Private recipient notes');

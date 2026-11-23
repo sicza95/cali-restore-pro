@@ -17,7 +17,7 @@ import { estimateCopy } from '../../platform/estimates/copy';
 import { invitationCopy } from './copy';
 import type { InboxInvitation } from './types';
 import { useInvitations } from './useInvitations';
-import { SharingFingerprint } from './SharingFingerprint';
+import { usePublishSharingKey } from './publish-sharing-key';
 import { ProjectInvitations } from './ProjectInvitations';
 import { Checkpoints } from './Checkpoints';
 import { SharedOriginals } from './SharedOriginals';
@@ -30,6 +30,7 @@ import './styles.css';
 
 export function InvitationInbox(props: { vault: LocalVault }) {
   const app = useApp();
+  usePublishSharingKey(untrack(() => props.vault));
   const c = () => invitationCopy[app.lang()];
   const inbox = useInvitations<InboxInvitation>('/invitations');
   // The vault is fixed for the mounted inbox (the vault section mounts it once unlocked).
@@ -52,7 +53,6 @@ export function InvitationInbox(props: { vault: LocalVault }) {
   return (
     <section class="invitation-panel" aria-label={c().heading}>
       <OfflineOriginals model={offline} language={app.lang()} />
-      <SharingFingerprint vault={props.vault} busy={inbox.busy()} run={inbox.run} />
       <Show when={inbox.failed() || inbox.error()}>
         <p role="alert">{c().error}</p>
       </Show>
@@ -102,9 +102,6 @@ export function InvitationInbox(props: { vault: LocalVault }) {
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
-                    const code = String(new FormData(event.currentTarget).get('fingerprint') ?? '')
-                      .trim()
-                      .toLowerCase();
                     const selected = optionalScopes(item).find(
                       (scope) => scope === (event.submitter as HTMLButtonElement | null)?.value,
                     );
@@ -116,7 +113,6 @@ export function InvitationInbox(props: { vault: LocalVault }) {
                         '/invitations/' + item.id + (selected ? '/scopes/' + selected : '/content'),
                       );
                       const fingerprint = await sharingFingerprint(grant.senderKey);
-                      if (code !== fingerprint) throw new Error('Fingerprint mismatch');
                       const key = await localSharingKey(props.vault, {
                         account: grant.senderId,
                         fingerprint,
@@ -170,17 +166,6 @@ export function InvitationInbox(props: { vault: LocalVault }) {
                     }, false);
                   }}
                 >
-                  <label>
-                    {c().senderCode}
-                    <input
-                      data-control-id="invitations.owner-code"
-                      name="fingerprint"
-                      required
-                      pattern="[a-fA-F0-9]{64}"
-                      spellcheck={false}
-                      disabled={inbox.loading() || inbox.busy()}
-                    />
-                  </label>
                   <button
                     data-control-id="invitations.open"
                     disabled={inbox.loading() || inbox.busy()}

@@ -166,7 +166,6 @@ async function landReferenceOnlyMain(page: Page) {
     }
   });
   await page.reload();
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(drawingControl(page, 'mode.photo')).toBeVisible();
 }
 

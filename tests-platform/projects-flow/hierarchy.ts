@@ -1,7 +1,6 @@
 import { expect } from '@playwright/test';
 import type { TestInfo } from '@playwright/test';
 import { drawingControl } from '../drawing-review';
-import { setupRememberedVault } from '../vault-setup';
 import { expectPageTrail } from '../app-navigation';
 import { controls, review } from './flow';
 import type { ProjectsFlow } from './flow';
@@ -16,7 +15,6 @@ export async function createProjectHierarchy(flow: ProjectsFlow, info: TestInfo)
   const control = (id: string) => controls(page, id);
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/projects');
-  await setupRememberedVault(page);
   for (const id of ['projects.search', 'projects.sort', 'projects.restore', 'projects.offline']) {
     await expect(control(id)).toBeVisible();
   }

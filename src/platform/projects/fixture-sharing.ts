@@ -1,5 +1,6 @@
 import type { Checkpoint } from './checkpoint-samples';
 import { Aes128Gcm, CipherSuite, DhkemP256HkdfSha256, HkdfSha256 } from '@hpke/core';
+import { aead, frame, unframe } from '../vault/aead';
 import type { LocalVault } from '../vault/vault';
 import { parseSharedProject } from './shared-project';
 import type { SharedProject } from './shared-project';
@@ -19,6 +20,27 @@ const suite = new CipherSuite({
   kdf: new HkdfSha256(),
   aead: new Aes128Gcm(),
 });
+
+// While encryption is off (aead.ts) the key exchange still runs, so the server gets a valid
+// encapsulation, but the content is stored readable (framed like an AES-GCM ciphertext).
+async function hpkeSeal(
+  params: Parameters<typeof suite.seal>[0],
+  plaintext: Uint8Array<ArrayBuffer>,
+  aad: Uint8Array,
+) {
+  if (aead.enabled) return suite.seal(params, plaintext, aad);
+  const { enc } = await suite.seal(params, new Uint8Array(0), aad);
+  return { enc, ct: frame(plaintext) };
+}
+
+function hpkeOpen(
+  params: Parameters<typeof suite.open>[0],
+  ct: Uint8Array<ArrayBuffer>,
+  aad: Uint8Array,
+) {
+  return aead.enabled ? suite.open(params, ct, aad) : Promise.resolve(unframe(ct));
+}
+
 const encoder = new TextEncoder();
 const fixture = 'Synthetic assessment: surface condition recorded.';
 const bytes = (value: string) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
@@ -84,7 +106,7 @@ export async function sealProjectSnapshot(
   );
   if (plaintext.byteLength > 64 * 1024) throw new Error('Project snapshot exceeds 64 KiB');
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
-  const result = await suite.seal(
+  const result = await hpkeSeal(
     { senderKey, recipientPublicKey },
     plaintext,
     binding(context, format),
@@ -101,7 +123,7 @@ export async function openSharedContent(
   if (envelope.format !== 'fixture-v1' && envelope.format !== 'project-v1')
     throw new Error('Unknown sharing format');
   const senderPublicKey = await suite.kem.deserializePublicKey(bytes(sender));
-  const result = await suite.open(
+  const result = await hpkeOpen(
     { recipientKey, senderPublicKey, enc: bytes(envelope.encapsulation) },
     bytes(envelope.ciphertext),
     binding(context, envelope.format),
@@ -145,7 +167,7 @@ export async function sealScope(
   if (plaintext.byteLength + 16 > scopeGrantMaxBytes)
     throw new ScopeTooLargeError(scope, plaintext.byteLength + 16);
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
-  const { enc, ct } = await suite.seal(
+  const { enc, ct } = await hpkeSeal(
     { senderKey, recipientPublicKey },
     plaintext,
     scopeBinding(context, scope),
@@ -162,7 +184,7 @@ export async function openScope(
 ) {
   if (envelope.scope !== scope) throw new Error('Unexpected scope');
   const senderPublicKey = await suite.kem.deserializePublicKey(bytes(sender));
-  const result = await suite.open(
+  const result = await hpkeOpen(
     { recipientKey, senderPublicKey, enc: bytes(envelope.encapsulation) },
     bytes(envelope.ciphertext),
     scopeBinding(context, scope),
@@ -198,7 +220,7 @@ export async function sealCheckpoint(
   checkpoint: Checkpoint,
 ) {
   const recipientPublicKey = await suite.kem.deserializePublicKey(bytes(recipient));
-  const { enc, ct } = await suite.seal(
+  const { enc, ct } = await hpkeSeal(
     { senderKey, recipientPublicKey },
     encoder.encode(JSON.stringify([checkpoint.title, checkpoint.description])),
     checkpointBinding(context, checkpoint.id),
@@ -215,7 +237,7 @@ export async function openCheckpoint(
 ): Promise<Checkpoint> {
   if (envelope.checkpointId !== id) throw new Error('Unexpected checkpoint');
   const senderPublicKey = await suite.kem.deserializePublicKey(bytes(sender));
-  const result = await suite.open(
+  const result = await hpkeOpen(
     { recipientKey, senderPublicKey, enc: bytes(envelope.encapsulation) },
     bytes(envelope.ciphertext),
     checkpointBinding(context, id),

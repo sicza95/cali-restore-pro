@@ -7,8 +7,6 @@ import { defineCopy } from '../../platform/i18n/define';
 
 const navigationCopy = defineCopy({
   en: {
-    unlock: 'Unlock vault',
-    'devices/approve': 'Approve a device',
     notFound: 'Page not found',
     menu: 'Menu',
     closeMenu: 'Close menu',
@@ -17,15 +15,10 @@ const navigationCopy = defineCopy({
     surface: 'Surface',
     language: 'App language',
     languageHelp: 'Changes the interface language. Report language is set separately.',
-    unlockHelp: 'Unlock the vault for this page. Projects and Invitations unlock separately.',
-    approvalHelp: 'Unlock this vault and enter the pairing code from the device requesting access.',
-    vaultSetup: 'Set up or restore a vault in Account security.',
     backToProjects: 'Back to projects',
     retryAccess: 'Retry account access',
   },
   hu: {
-    unlock: 'Tartalomtár feloldása',
-    'devices/approve': 'Eszköz jóváhagyása',
     notFound: 'Az oldal nem található',
     menu: 'Menü',
     closeMenu: 'Menü bezárása',
@@ -34,10 +27,6 @@ const navigationCopy = defineCopy({
     surface: 'Felület',
     language: 'Az alkalmazás nyelve',
     languageHelp: 'A kezelőfelület nyelve. A jelentések nyelve külön állítható be.',
-    unlockHelp:
-      'Oldja fel a tárat ezen az oldalon. A Projektek és a Meghívók külön feloldást igényelnek.',
-    approvalHelp: 'Oldja fel a tárat, majd adja meg a hozzáférést kérő eszköz párosítási kódját.',
-    vaultSetup: 'A Fiókbiztonság oldalon beállíthatja vagy visszaállíthatja a tartalomtárat.',
     backToProjects: 'Vissza a projektekhez',
     retryAccess: 'Fiókhozzáférés újrapróbálása',
   },

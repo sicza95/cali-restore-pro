@@ -19,8 +19,6 @@ const destinationIcons: Record<(typeof accountNavigationControls)[number]['label
   profile: 'account',
   security: 'lock',
   preferences: 'settings',
-  unlock: 'lock',
-  'devices/approve': 'check',
   offline: 'photo',
   admin: 'layers',
   login: 'account',

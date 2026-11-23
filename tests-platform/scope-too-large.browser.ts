@@ -12,7 +12,14 @@ test('an estimate too large to share shows its own error and sends nothing', asy
   page.on('pageerror', (error) => errors.push(error.message));
   const sent: string[] = [];
   page.on('request', (request) => {
-    if (request.method() !== 'GET' && request.url().includes('/api/v1/')) sent.push(request.url());
+    // Publishing this account's sharing key is not sharing data.
+    const url = request.url();
+    if (
+      request.method() !== 'GET' &&
+      url.includes('/api/v1/') &&
+      !url.endsWith('/sharing-identity')
+    )
+      sent.push(url);
   });
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({
@@ -43,7 +50,7 @@ test('an estimate too large to share shows its own error and sends nothing', asy
       )) as typeof import('./fixtures/large-estimate');
       const vault = new LocalVault(owner, () => undefined);
       try {
-        await vault.create('ab'.repeat(32), true);
+        await vault.openWithoutKey();
         const project = newProject('Large chapel', 'North wall', 'Upper plaster', 'HUF');
         await localProjects(vault).save(project);
         // The device keeps an estimate in 768 Ki characters, so only three-byte characters take a
@@ -101,9 +108,7 @@ test('an estimate too large to share shows its own error and sends nothing', asy
   );
 
   await page.goto('/projects/' + fixture.id);
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await page.locator('[data-control-id="project.collaboration"]').click();
-  await page.locator('[data-control-id="sharing.recipient-code"]').fill(fixture.fingerprint);
   await page.locator('[data-control-id="sharing.activate"]').click();
   const alert = page.locator('.invitation-panel [role=alert]');
   await expect(alert).toHaveText(

@@ -4,7 +4,6 @@ import type { Project, SavedProject } from '../../platform/projects/types';
 import type { Language } from '../account-access/types';
 import type { useEditorSync } from './useEditorSync';
 import { syncCopy } from './sync-copy';
-import { SendProjectKey } from './ProjectKeyTransfer';
 import { projectCopy } from './project-copy';
 
 export function ProjectSync(props: {
@@ -61,15 +60,6 @@ export function ProjectSync(props: {
         >
           {c().enable}
         </button>
-      </Show>
-      <Show when={base() && base()!.revision > 0}>
-        <SendProjectKey
-          project={props.projectId}
-          language={props.language}
-          busy={props.busy}
-          model={props.model.transfer}
-          run={props.run}
-        />
       </Show>
       <Show when={draft()?.blocked}>
         <button

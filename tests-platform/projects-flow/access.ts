@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
 import type { TestInfo } from '@playwright/test';
-import { setupRememberedVault } from '../vault-setup';
 import { controls, otherAccount, required } from './flow';
 import type { ProjectsFlow } from './flow';
 
@@ -53,7 +52,6 @@ export async function verifyUnavailable(flow: ProjectsFlow) {
   const surfacePath = required(flow.surfacePath, 'surfacePath');
   const control = (id: string) => controls(page, id);
   await page.goto(projectPath + '/surfaces/00000000-0000-4000-8000-000000000099');
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(
     page.getByText('This project or surface is unavailable on this device.'),
   ).toBeVisible();
@@ -62,7 +60,6 @@ export async function verifyUnavailable(flow: ProjectsFlow) {
   await expect(control('originals.attach')).toHaveCount(0);
   flow.account = otherAccount;
   await page.goto(surfacePath);
-  await setupRememberedVault(page);
   await expect(
     page.getByText('This project or surface is unavailable on this device.'),
   ).toBeVisible();
@@ -70,13 +67,9 @@ export async function verifyUnavailable(flow: ProjectsFlow) {
   await page.goto('/settings/preferences');
   await page.locator('[data-control-id="settings.libraries"]').click();
   await expect(page).toHaveURL('/settings/libraries');
-  await expect(page.getByRole('heading', { name: 'Pattern editor' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Unlock with recovery key' })).toBeVisible();
   const rates = page.locator('[data-control-id="libraries.rates"]');
-  await expect(rates).toHaveCount(0);
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(rates).toBeEnabled();
-  await expect(rates).toHaveAccessibleDescription(/Encrypted on this device/);
+  await expect(rates).toHaveAccessibleDescription(/Saved on this device/);
   await expect(page.locator('[data-control-id="libraries.productivity"]')).toBeEnabled();
   await expect(page.locator('[data-control-id="libraries.branding"]')).toHaveAttribute(
     'href',

@@ -47,16 +47,7 @@ describe('routeGuard', () => {
     expect(byAccess('admin')).toEqual(['admin']);
     expect(byAccess('open')).toEqual(['offline']);
     expect(byAccess('signed-in').sort()).toEqual(
-      [
-        'projects',
-        'invitations',
-        'profile',
-        'security',
-        'preferences',
-        'libraries',
-        'unlock',
-        'devices/approve',
-      ].sort(),
+      ['projects', 'invitations', 'profile', 'security', 'preferences', 'libraries'].sort(),
     );
   });
 });

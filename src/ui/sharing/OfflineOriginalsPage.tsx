@@ -58,7 +58,6 @@ export function OfflineOriginalsPage() {
           <VaultSection
             account={id}
             language={language}
-            unlockOnly={c.help}
             workspace={(vault) => <Shelf vault={vault} language={language} />}
           />
         )}

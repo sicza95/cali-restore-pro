@@ -75,10 +75,6 @@ export async function reopenSurface(flow: ProjectsFlow, info: TestInfo) {
   await expect(page).toHaveURL(projectPath);
   await expect(page.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
   await page.goto(surfacePath);
-  await expect(page.getByRole('heading', { name: 'Upper plaster' })).toHaveCount(0);
-  await expect(drawing('mode.drawing')).toHaveCount(0);
-  await expect(page.getByText('East Chapel')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
   await drawing('mode.drawing').click();
   await expect(phase).toContainText('3 · Mark');

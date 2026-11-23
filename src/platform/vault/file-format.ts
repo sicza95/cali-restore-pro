@@ -1,3 +1,4 @@
+import { decrypt, encrypt } from './aead';
 export const chunkBytes = 1 << 20;
 export const maxSourceBytes = 256 * chunkBytes;
 export const maxManifestBytes = 16 * 1024;
@@ -72,8 +73,8 @@ export function fileCipherWithKey(key: CryptoKey, account: string, project: stri
     };
   };
   return {
-    seal: (part: number, bytes: BufferSource) => crypto.subtle.encrypt(params(part), key, bytes),
-    open: (part: number, bytes: BufferSource) => crypto.subtle.decrypt(params(part), key, bytes),
+    seal: (part: number, bytes: BufferSource) => encrypt(params(part), key, bytes),
+    open: (part: number, bytes: BufferSource) => decrypt(params(part), key, bytes),
   };
 }
 

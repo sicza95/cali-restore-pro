@@ -1,5 +1,4 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { setupRememberedVault } from './vault-setup';
 import { expectTaskLanguage } from './copy-guard';
 import { touchTarget } from './touch-target';
 
@@ -83,7 +82,6 @@ test('estimate rows show whole values at tablet sizes in EN and HU', async ({ pa
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/projects');
-  await setupRememberedVault(page);
   await page.getByLabel('Project name').fill('Long row fixture');
   await page.getByRole('button', { name: 'New project' }).click();
   for (const [control, name, select] of [

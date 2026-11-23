@@ -17,13 +17,6 @@ function control(page: Page, id: string) {
   return page.locator(`[data-control-id="${id}"]`);
 }
 
-async function openVault(page: Page) {
-  await page.getByLabel(/Remember this browser/).check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-  await page.getByLabel('I saved the recovery key').check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-}
-
 async function revisions(page: Page, tables = [projectTable, revisionQueueTable]) {
   return page.evaluate(async (tables) => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -93,7 +86,6 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   );
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
   await page.goto('/projects');
-  await openVault(page);
   await page.getByLabel('Project name').fill('East Chapel');
   await page.getByRole('button', { name: 'New project' }).click();
   await expect(page.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
@@ -329,9 +321,6 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   expect(JSON.stringify(stored)).not.toContain('Inspect fragile edges.');
   expect(JSON.stringify(stored)).not.toContain('Chapel Studio');
   await page.goto(path + '/outputs');
-  await expect(report('preview')).toHaveCount(0);
-  await expect(page.getByText('East Chapel')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(report('preview')).toBeVisible();
   await expect(report('units')).toHaveValue('ft²');
   await expect(report('language')).toHaveValue('en');
@@ -339,16 +328,10 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(report('compare')).toHaveValue('');
   const breadcrumbs = page.getByRole('navigation', { name: 'Breadcrumbs' });
   await expect(breadcrumbs).toContainText('East Chapel');
-  await page.getByRole('button', { name: 'Lock vault' }).click();
-  await expect(report('preview')).toHaveCount(0);
-  // Project names are vault data: they leave the shell when the vault locks (#58).
-  await expect(breadcrumbs).not.toContainText('East Chapel');
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await page.locator('[data-control-id="project.review.parent"]').click();
   await page.getByRole('button', { name: 'Archive', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Restore project' })).toBeVisible();
   await page.goto(path + '/outputs');
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(page.locator('.project-workspace')).toBeVisible();
   await expect(page.getByText('Opening projects…')).toHaveCount(0);
   await expect(report('preview')).toHaveCount(0);
@@ -356,7 +339,6 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await expect(page.getByText('East Chapel')).toHaveCount(0);
   account = other;
   await page.goto(path + '/estimates?scope=estimate-full');
-  await openVault(page);
   await expect(
     page.getByText('This project or surface is unavailable on this device.'),
   ).toBeVisible();

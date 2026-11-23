@@ -21,9 +21,6 @@ test('the hosted trash names projects this device holds and numbers the rest', a
   );
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
   await page.goto('/projects');
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-  await page.getByLabel('I saved the recovery key').check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
   await page.getByLabel('Project name').fill('East Chapel');
   await page.getByRole('button', { name: 'New project' }).click();
   await expect(page).toHaveURL(/\/projects\/[0-9a-f-]{36}$/);

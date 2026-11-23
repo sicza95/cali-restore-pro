@@ -32,7 +32,7 @@ test('account and app links, inline security, drawer and history retain the docu
   );
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/projects');
-  await expect(page.getByText('No vault on this browser')).toBeVisible();
+  await expect(page.locator('.project-workspace')).toBeVisible();
   await mark(page);
   await visit(page, 'Account profile');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Account profile');
@@ -54,7 +54,7 @@ test('account and app links, inline security, drawer and history retain the docu
   await page.goForward();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Preferences');
   await visit(page, 'Projects');
-  await expect(page.getByText('No vault on this browser')).toBeVisible();
+  await expect(page.locator('.project-workspace')).toBeVisible();
   await visit(page, 'Offline originals');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Offline originals');
   await page.getByRole('link').click();
@@ -85,7 +85,7 @@ test('sign-in keeps next and returns to a project deep link without loading anot
   await page.getByLabel('Password', { exact: true }).fill('synthetic password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(deep + '$'));
-  await expect(page.getByText('No vault on this browser')).toBeVisible();
+  await expect(page.locator('.project-workspace')).toBeVisible();
   await sameDocument(page);
 });
 

@@ -43,12 +43,6 @@ export const sharingControls = [
         'Pending or active invitation, with confirmation',
       ],
       [
-        'sharing.recipient-code',
-        'recipientCode',
-        'Verify recipient sharing fingerprint',
-        'Accepted grant or pending rotation',
-      ],
-      [
         'sharing.originals',
         'includeOriginals',
         'Include encrypted original-file grants',
@@ -118,12 +112,6 @@ export const sharingControls = [
         'Invitation awaiting acceptance',
       ],
       [
-        'invitations.owner-code',
-        'senderCode',
-        'Verify sender fingerprint before decryption',
-        'Active grant',
-      ],
-      [
         'invitations.open',
         'open',
         'Open authorized encrypted project snapshot',
@@ -152,12 +140,6 @@ export const sharingControls = [
         'history',
         'Verify and decrypt history envelope read-only',
         'Active invitation with separate history grant and verified sender fingerprint',
-      ],
-      [
-        'sharing.fingerprint',
-        'identity',
-        'Show current vault sharing fingerprint for external verification',
-        'Unlocked vault and invitation panel',
       ],
     ],
   ),

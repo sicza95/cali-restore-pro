@@ -40,9 +40,6 @@ export function EditScopes(props: {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            const code = String(new FormData(event.currentTarget).get('fingerprint') ?? '')
-              .trim()
-              .toLowerCase();
             const desired = next();
             const added = additions();
             void props.run(async () => {
@@ -50,7 +47,6 @@ export function EditScopes(props: {
               const recipientKey = props.item.recipientKey;
               if (!recipientKey) throw new Error('Recipient unavailable');
               const fingerprint = await sharingFingerprint(recipientKey);
-              if (fingerprint !== code) throw new Error('Fingerprint mismatch');
               const key = await localSharingKey(props.vault, {
                 account: props.item.recipientId,
                 fingerprint,
@@ -107,12 +103,6 @@ export function EditScopes(props: {
             />
             {c().includeHistory}
           </label>
-          <Show when={additions().length}>
-            <label>
-              {c().recipientCode}
-              <input name="fingerprint" required pattern="[a-fA-F0-9]{64}" spellcheck={false} />
-            </label>
-          </Show>
           <button
             data-control-id="sharing.scopes.apply"
             disabled={

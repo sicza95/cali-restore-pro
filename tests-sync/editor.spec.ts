@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import type { RevisionHead, RevisionWrite } from '../src/platform/projects/revisions';
+import { aead } from '../src/platform/vault/aead';
 
 const account = '00000000-0000-4000-8000-000000000011';
 const other = '00000000-0000-4000-8000-000000000014';
@@ -15,7 +16,7 @@ test('the editor recovers offline edits and rotates the project key', async ({
   let head: RevisionHead | null = null;
   let disconnected = false;
   let revoked = false;
-  let transfer: { path: string; recipient: string; epoch: string; syncEpoch: string } | undefined;
+  let cloudProject = '';
   async function routes(device: typeof page, owner: string) {
     await device.route('**/api/v1/auth/me', (route) =>
       route.fulfill({
@@ -23,28 +24,12 @@ test('the editor recovers offline edits and rotates the project key', async ({
       }),
     );
     await device.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
-    await device.route('**/hosted-projects/*/revision-key/*', (route) => {
-      const request = route.request();
-      const path = new URL(request.url()).pathname;
-      expect(request.headers()['x-sync-account']).toBe(owner);
-      if (owner === other && revoked) return route.fulfill({ status: 404 });
-      if (request.method() === 'PUT') {
-        expect(request.headers()['x-csrf-token']).toBe('editor-token');
-        const next = request.postDataJSON();
-        expect(Object.keys(next).sort()).toEqual([
-          'ciphertext',
-          'epoch',
-          'recipient',
-          'salt',
-          'syncEpoch',
-        ]);
-        transfer = { ...next, path };
-        return route.fulfill({ status: 204 });
-      }
-      if (transfer?.path !== path || transfer.recipient !== owner || transfer.syncEpoch !== epoch)
-        return route.fulfill({ status: 404 });
-      return route.fulfill({ json: transfer });
-    });
+    // Owners list their synced projects; no transfer code while encryption is off (aead.ts).
+    await device.route('**/api/v1/hosted-projects', (route) =>
+      route.fulfill({
+        json: cloudProject && head && !(owner === other && revoked) ? [{ id: cloudProject }] : [],
+      }),
+    );
     await device.route('**/hosted-projects/*/revision', (route) => {
       if (owner === other && revoked) return route.fulfill({ status: 404 });
       if (device === page && disconnected) return route.abort('internetdisconnected');
@@ -62,10 +47,6 @@ test('the editor recovers offline edits and rotates the project key', async ({
   }
   async function setupVault(device: typeof page) {
     await device.goto('/projects');
-    await device.getByLabel(/Remember this browser/).check();
-    await device.getByRole('button', { name: 'Set up vault' }).click();
-    await device.getByLabel('I saved the recovery key').check();
-    await device.getByRole('button', { name: 'Set up vault' }).click();
   }
   await routes(page, account);
 
@@ -84,26 +65,9 @@ test('the editor recovers offline edits and rotates the project key', async ({
   const second = await secondContext.newPage();
   await routes(second, other);
   await setupVault(second);
-  await page.getByText('Share sync access with a device', { exact: true }).click();
-  await page.getByLabel('Recipient owner account ID').fill(other);
-  await page.getByRole('button', { name: 'Create transfer code' }).click();
-  await expect(page.getByLabel('Transfer code')).toHaveValue(/^cr1\./);
-  const code = await page.getByLabel('Transfer code').inputValue();
-  expect(JSON.stringify(transfer)).not.toContain(code.split('.').at(-1));
-  await page.screenshot({
-    path: info.outputPath('pairing-landscape.png'),
-    fullPage: true,
-    mask: [page.getByLabel('Transfer code')],
-  });
-
+  cloudProject = project;
   await second.getByText('Open a synced project on this device', { exact: true }).click();
-  const redeem = async (value: string) => {
-    await second.getByLabel('Transfer code').fill(value);
-    await second.getByRole('button', { name: 'Open synced project' }).click();
-  };
-  await redeem(code.slice(0, -1) + (code.endsWith('0') ? '1' : '0'));
-  await expect(second.getByRole('alert').first()).toBeVisible();
-  await redeem(code);
+  await second.getByRole('button', { name: 'Open on this device: East Chapel' }).click();
   const secondSync = second.getByRole('region', { name: 'Cloud sync' });
   await expect(secondSync.getByRole('status')).toHaveText('Cloud copy saved');
   await second.getByLabel('Currency code').fill('CAD');
@@ -128,7 +92,6 @@ test('the editor recovers offline edits and rotates the project key', async ({
   await editCurrency('USD');
   await editCurrency('GBP');
   await page.reload();
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(page.getByLabel('Currency code')).toHaveValue('GBP');
   await expect(sync.getByRole('status')).toContainText('waiting to sync');
   await reconnect();
@@ -154,8 +117,7 @@ test('the editor recovers offline edits and rotates the project key', async ({
   await expect(secondSync.getByRole('button', { name: 'Review sync conflict' })).toBeVisible();
   await second.locator('[data-control-id="project.library"]').click();
   await second.getByText('Open a synced project on this device', { exact: true }).click();
-  await redeem(code);
-  await expect(second.getByRole('alert').first()).toBeVisible();
+  await expect(second.getByText('Every synced project is already on this device.')).toBeVisible();
   await reconnect();
   await expect(sync.getByRole('region', { name: 'This device' })).toContainText(
     'East Chapel · HUF',
@@ -203,7 +165,8 @@ test('the editor recovers offline edits and rotates the project key', async ({
     },
     { account, project, oldHead, head: head! },
   );
-  expect(keys).toMatchObject({ oldKeyRejected: true, forgotten: true });
+  // The rotated-out key still opens the head while encryption is off (aead.ts).
+  expect(keys).toMatchObject({ oldKeyRejected: aead.enabled, forgotten: true });
   expect(JSON.parse(keys.text)).toMatchObject({ settings: { currency: 'GBP' } });
   await secondContext.close();
 });

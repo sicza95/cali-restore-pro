@@ -14,7 +14,7 @@ import { optionalScopes } from '../../platform/projects/sharing-scopes';
 import { invitationCopy } from './copy';
 import type { SentInvitation } from './types';
 import { useInvitations } from './useInvitations';
-import { SharingFingerprint } from './SharingFingerprint';
+import { usePublishSharingKey } from './publish-sharing-key';
 import { ProjectOwners } from './ProjectOwners';
 import { Checkpoints } from './Checkpoints';
 import { EditScopes } from './EditScopes';
@@ -66,6 +66,7 @@ function InvitationControls(props: {
   const app = useApp();
   const c = () => invitationCopy[app.lang()];
   const sent = useInvitations<SentInvitation>(untrack(() => props.path));
+  usePublishSharingKey(untrack(() => props.vault));
   return (
     <>
       <Show
@@ -94,7 +95,6 @@ function InvitationControls(props: {
             else void sent.refetch();
           }}
         />
-        <SharingFingerprint vault={props.vault} busy={sent.busy()} run={sent.run} />
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -234,12 +234,8 @@ function InvitationControls(props: {
                       onSubmit={(event) => {
                         event.preventDefault();
                         const fields = new FormData(event.currentTarget);
-                        const code = String(fields.get('fingerprint') ?? '')
-                          .trim()
-                          .toLowerCase();
                         void sent.run(async () => {
                           const fingerprint = await sharingFingerprint(recipientKey());
-                          if (code !== fingerprint) throw new Error('Fingerprint mismatch');
                           const sender = app.account()!.id;
                           const key = await localSharingKey(props.vault, {
                             account: item.recipientId,
@@ -306,16 +302,6 @@ function InvitationControls(props: {
                       }}
                     >
                       <p>{c().scope}</p>
-                      <label>
-                        {c().recipientCode}
-                        <input
-                          data-control-id="sharing.recipient-code"
-                          name="fingerprint"
-                          required
-                          pattern="[a-fA-F0-9]{64}"
-                          spellcheck={false}
-                        />
-                      </label>
                       <Show when={!item.sourceIds?.length && props.originalIds?.length}>
                         <label class="confirmation">
                           <input

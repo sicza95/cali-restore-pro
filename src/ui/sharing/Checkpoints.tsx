@@ -60,9 +60,8 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
   function context(sender: string, recipient: string) {
     return { project: props.project, invitation: props.invitation, sender, recipient };
   }
-  async function verifiedKey(account: string, publicKey: string, code: string) {
+  async function verifiedKey(account: string, publicKey: string) {
     const fingerprint = await sharingFingerprint(publicKey);
-    if (fingerprint !== code) throw new Error('Fingerprint mismatch');
     return localSharingKey(props.vault, { account, fingerprint });
   }
 
@@ -94,9 +93,6 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  const code = String(new FormData(event.currentTarget).get('fingerprint') ?? '')
-                    .trim()
-                    .toLowerCase();
                   const id = (event.submitter as HTMLButtonElement | null)?.value;
                   if (!id) return;
                   void run(async () => {
@@ -107,7 +103,7 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                       if (!checkpoint || !recipientKey || current().checkpointIds.includes(id))
                         return;
                       const recipient = owner.item.recipientId;
-                      const key = await verifiedKey(recipient, recipientKey, code);
+                      const key = await verifiedKey(recipient, recipientKey);
                       const envelope = await sealCheckpoint(
                         key.pair,
                         recipientKey,
@@ -123,7 +119,7 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                       const grant = await app.request<
                         CheckpointEnvelope & { senderId: string; senderKey: string }
                       >(path + '/' + id);
-                      const key = await verifiedKey(grant.senderId, grant.senderKey, code);
+                      const key = await verifiedKey(grant.senderId, grant.senderKey);
                       const checkpoint = await openCheckpoint(
                         key.pair,
                         grant.senderKey,
@@ -141,10 +137,6 @@ export function Checkpoints(props: Common & { owner?: { path: string; item: Sent
                   });
                 }}
               >
-                <label>
-                  {owner ? c().recipientCode : c().checkpointSenderCode}
-                  <input name="fingerprint" required pattern="[a-fA-F0-9]{64}" spellcheck={false} />
-                </label>
                 <Show
                   when={owner}
                   fallback={

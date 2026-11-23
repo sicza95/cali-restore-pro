@@ -21,7 +21,7 @@ export async function createGrant({
 }) {
   const receiver = new LocalVault(recipient, () => undefined);
   const owner = new LocalVault(sender, () => undefined);
-  await receiver.create('aa'.repeat(32), true);
+  await receiver.openWithoutKey();
   await owner.create('bb'.repeat(32), false);
   const from = await localSharingKey(owner);
   const to = await localSharingKey(receiver);

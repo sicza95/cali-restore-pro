@@ -1,3 +1,4 @@
+import { decrypt, encrypt } from './aead';
 import { importCode } from './crypto';
 
 const encode = new TextEncoder();
@@ -50,7 +51,7 @@ export async function backupCipher(code: string, header: Uint8Array<ArrayBuffer>
     return { name: 'AES-GCM', iv, additionalData: header, tagLength: 128 };
   };
   return {
-    seal: (bytes: BufferSource) => crypto.subtle.encrypt(parameters(), key, bytes),
-    open: (bytes: BufferSource) => crypto.subtle.decrypt(parameters(), key, bytes),
+    seal: (bytes: BufferSource) => encrypt(parameters(), key, bytes),
+    open: (bytes: BufferSource) => decrypt(parameters(), key, bytes),
   };
 }

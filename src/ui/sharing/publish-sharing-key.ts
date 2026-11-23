@@ -1,41 +1,23 @@
-import { createSignal, Show } from 'solid-js';
+import { onMount } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
-import { localSharingKey, sharingFingerprint } from '../../platform/projects/fixture-sharing';
+import { localSharingKey } from '../../platform/projects/fixture-sharing';
 import type { LocalVault } from '../../platform/vault/vault';
-import { invitationCopy } from './copy';
 
-export function SharingFingerprint(props: {
-  vault: LocalVault;
-  busy: boolean;
-  run: (action: () => Promise<unknown>, refresh?: boolean) => Promise<boolean>;
-}) {
+/**
+ * Publishes this account's sharing key when a sharing page opens, so others can share with it.
+ * While encryption is off (aead.ts) there is no fingerprint to show or compare.
+ */
+export function usePublishSharingKey(vault: LocalVault) {
   const app = useApp();
-  const c = () => invitationCopy[app.lang()];
-  const [code, setCode] = createSignal('');
-  return (
-    <div>
-      <p>{c().identityHelp}</p>
-      <button
-        data-control-id="sharing.fingerprint"
-        disabled={props.busy}
-        onClick={() =>
-          void props.run(async () => {
-            const key = await localSharingKey(props.vault);
-            const fingerprint = await sharingFingerprint(key.publicKey);
-            key.signal.throwIfAborted();
-            await app.request('/sharing-identity', { publicKey: key.publicKey });
-            key.signal.throwIfAborted();
-            setCode(fingerprint);
-          }, false)
-        }
-      >
-        {c().identity}
-      </button>
-      <Show when={code()}>
-        <p role="status">
-          <code>{code()}</code>
-        </p>
-      </Show>
-    </div>
-  );
+  onMount(() => {
+    void (async () => {
+      try {
+        const key = await localSharingKey(vault);
+        key.signal.throwIfAborted();
+        await app.request('/sharing-identity', { publicKey: key.publicKey });
+      } catch {
+        // Retried the next time a sharing page opens; sharing actions publish it again too.
+      }
+    })();
+  });
 }

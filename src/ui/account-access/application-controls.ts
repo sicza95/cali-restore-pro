@@ -1,8 +1,6 @@
 import { checkpointControls } from '../editor/checkpoint-review/registry';
 import { drawingControls } from '../editor/drawing-review/registry';
 import { accountControls } from '../account/account-controls';
-import { vaultEntryControls } from '../account/account-security/entry-controls';
-import { vaultControls } from '../account/account-security/vault-controls';
 import { sharingControls } from '../sharing/sharing-controls';
 import { recipientReportControls } from '../recipient-reports/recipient-report-controls';
 import {
@@ -23,9 +21,7 @@ export const applicationControls = [
   languageControl,
   menuControl,
   signOutControl,
-  ...Object.values(vaultEntryControls),
   ...accountControls,
-  ...vaultControls,
   ...settingsControls,
   ...projectControls,
   ...projectOperationControls,

@@ -137,15 +137,10 @@ test('protected direct entries return through sign-in using only allowlisted des
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   };
 
-  await page.goto('/devices/approve');
+  await page.goto('/invitations');
   await page.getByRole('main').getByRole('link', { name: 'Sign in' }).click();
   await submit();
-  await expect(page).toHaveURL(/\/devices\/approve$/);
-  await expect(page.getByText('No vault on this browser')).toBeVisible();
-  await expect(page.getByRole('link', { name: /Set up or restore a vault/ })).toHaveAttribute(
-    'href',
-    '/settings/security',
-  );
+  await expect(page).toHaveURL(/\/invitations$/);
 
   await page.goto('/login?next=https%3A%2F%2Fexample.test');
   await submit();

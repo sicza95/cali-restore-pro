@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { checkpointSamples } from '../src/platform/projects/checkpoint-samples';
+import { aead } from '../src/platform/vault/aead';
 
 export async function verifyCheckpointGrants(
   ownerRow: Locator,
@@ -9,9 +10,6 @@ export async function verifyCheckpointGrants(
   remainingInbox: Page,
   recipientPath: string,
   remainingPath: string,
-  ownerCode: string,
-  recipientCode: string,
-  remainingCode: string,
 ) {
   const [baseline, followUp, final] = checkpointSamples;
   const recipient = inbox.request;
@@ -19,11 +17,10 @@ export async function verifyCheckpointGrants(
   const checkPath = (path: string) => path.replace(/scopes\/$/, 'checkpoints');
   const first = checkPath(recipientPath);
   const second = checkPath(remainingPath);
-  const grant = async (row: Locator, code: string, title: string) => {
+  const grant = async (row: Locator, title: string) => {
     const panel = row.locator('details').filter({ hasText: 'Share selected checkpoints' });
     if (!(await panel.evaluate((element: HTMLDetailsElement) => element.open))) {
       await panel.getByText('Share selected checkpoints', { exact: true }).click();
-      await panel.getByLabel('Verified recipient fingerprint').fill(code);
     }
     await panel.getByRole('button', { name: 'Share checkpoint: ' + title }).click();
     await expect(
@@ -42,9 +39,9 @@ export async function verifyCheckpointGrants(
   };
 
   expect(await (await recipient.get(first)).json()).toEqual({ checkpointIds: [] });
-  await grant(ownerRow, recipientCode, baseline.title);
-  const controls = await grant(remainingRow, remainingCode, followUp.title);
-  await grant(remainingRow, remainingCode, final.title);
+  await grant(ownerRow, baseline.title);
+  const controls = await grant(remainingRow, followUp.title);
+  await grant(remainingRow, final.title);
 
   expect(await (await recipient.get(first)).json()).toEqual({ checkpointIds: [baseline.id] });
   expect(await (await remaining.get(second)).json()).toEqual({
@@ -60,13 +57,11 @@ export async function verifyCheckpointGrants(
     expect(response.status()).toBe(404);
 
   const firstPanel = await refresh(inbox);
-  await firstPanel.getByLabel('Verified checkpoint sender fingerprint').fill(ownerCode);
   await expect(firstPanel.getByRole('button', { name: /^Open checkpoint/ })).toHaveCount(1);
   await firstPanel.getByRole('button', { name: 'Open checkpoint 1' }).click();
   await expect(firstPanel.getByRole('heading', { name: baseline.title })).toBeVisible();
 
   const secondPanel = await refresh(remainingInbox);
-  await secondPanel.getByLabel('Verified checkpoint sender fingerprint').fill(ownerCode);
   const envelopeResponse = await remaining.get(second + '/' + followUp.id);
   expect(envelopeResponse.status()).toBe(200);
   const session = await (await recipient.get('/api/v1/auth/me')).json();
@@ -88,14 +83,17 @@ export async function verifyCheckpointGrants(
   const envelope = await envelopeResponse.json();
   expect(envelope).not.toHaveProperty('title');
   const secondButton = secondPanel.getByRole('button', { name: 'Open checkpoint 2' });
-  await remainingInbox.route(
-    '**' + second + '/' + final.id,
-    (route) => route.fulfill({ json: { ...envelope, checkpointId: final.id } }),
-    { times: 1 },
-  );
-  await secondButton.click();
-  await expect(secondPanel.getByRole('alert')).toBeVisible();
-  await expect(secondPanel.getByRole('heading')).toHaveCount(0);
+  // A checkpoint served under another id is refused only while encryption is on (aead.ts).
+  if (aead.enabled) {
+    await remainingInbox.route(
+      '**' + second + '/' + final.id,
+      (route) => route.fulfill({ json: { ...envelope, checkpointId: final.id } }),
+      { times: 1 },
+    );
+    await secondButton.click();
+    await expect(secondPanel.getByRole('alert')).toBeVisible();
+    await expect(secondPanel.getByRole('heading')).toHaveCount(0);
+  }
   await secondButton.click();
   await expect(secondPanel.getByRole('heading', { name: final.title })).toBeVisible();
   await secondPanel.getByRole('button', { name: 'Open checkpoint 1' }).click();

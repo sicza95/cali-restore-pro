@@ -35,7 +35,7 @@ export const accountCopy = defineCopy({
       'Sessions stay signed in until you sign out or revoke them. Password and email changes sign out every session.',
     securityHelp:
       'Confirm your current password before changing credentials or revoking sessions. Confirmation lasts five minutes.',
-    accessHelp: 'Sign in to your restoration account. Content unlock is a separate step.',
+    accessHelp: 'Sign in to your restoration account.',
     upcoming: 'Projects are saved in this browser. Restoration tools are coming in later releases.',
     neutral:
       'If this address is eligible, an email is queued. Check your inbox and spam folder. Delivery may take a few minutes.',
@@ -62,7 +62,7 @@ export const accountCopy = defineCopy({
     passkeys: 'Passkeys',
     passkeySignIn: 'Sign in with a passkey',
     passkeyHelp:
-      'A passkey signs you in without your password. It does not unlock your projects; that stays a separate step. Adding or removing a passkey needs a recent password confirmation, and so does every other security change.',
+      'A passkey signs you in without your password. Adding or removing a passkey needs a recent password confirmation, and so does every other security change.',
     passkeyName: 'Passkey name',
     addPasskey: 'Add passkey',
     removePasskey: 'Remove passkey',
@@ -120,7 +120,7 @@ export const accountCopy = defineCopy({
       'A munkamenetek kijelentkezésig vagy visszavonásig aktívak. A jelszó és az e-mail-cím módosítása minden munkamenetet kijelentkeztet.',
     securityHelp:
       'A módosítások és a munkamenetek visszavonása előtt erősítsd meg a jelenlegi jelszavad. A megerősítés öt percig érvényes.',
-    accessHelp: 'Jelentkezz be a restaurálási fiókodba. A tartalom feloldása külön lépés.',
+    accessHelp: 'Jelentkezz be a restaurálási fiókodba.',
     upcoming:
       'A projektek ebben a böngészőben tárolódnak. A restaurálási eszközök később érkeznek.',
     neutral:
@@ -149,7 +149,7 @@ export const accountCopy = defineCopy({
     passkeys: 'Azonosítókulcsok',
     passkeySignIn: 'Bejelentkezés azonosítókulccsal',
     passkeyHelp:
-      'Az azonosítókulccsal jelszó nélkül jelentkezhetsz be. A projekteket nem oldja fel: az továbbra is külön lépés. Azonosítókulcs hozzáadásához vagy eltávolításához friss jelszó-megerősítés kell, ahogy minden más biztonsági módosításhoz is.',
+      'Az azonosítókulccsal jelszó nélkül jelentkezhetsz be. Azonosítókulcs hozzáadásához vagy eltávolításához friss jelszó-megerősítés kell, ahogy minden más biztonsági módosításhoz is.',
     passkeyName: 'Azonosítókulcs neve',
     addPasskey: 'Azonosítókulcs hozzáadása',
     removePasskey: 'Azonosítókulcs eltávolítása',

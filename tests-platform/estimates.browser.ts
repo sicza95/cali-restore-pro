@@ -217,10 +217,6 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await page.goto(
     process.env.ESTIMATE_APP_ORIGIN ? process.env.ESTIMATE_APP_ORIGIN + '/projects' : '/projects',
   );
-  await page.getByLabel('Remember this browser').check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
-  await page.getByLabel('I saved the recovery key').check();
-  await page.getByRole('button', { name: 'Set up vault' }).click();
   await page.getByLabel('Project name').fill('Fixture estimate');
   await page.getByRole('button', { name: 'New project' }).click();
   await page.locator('[data-control-id="project.review.estimates"]').click();
@@ -253,7 +249,6 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await finance('issue').click();
   await expect(page.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
   await page.reload();
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(page.locator('[data-control-id="estimate.step.issue"]')).toContainText(
     'Version 1 · Issued',
   );
@@ -332,9 +327,7 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await page.locator('[data-control-id="project.backup"]').click();
   await expect(page.locator('[data-control-id="backup.export"]')).toBeEnabled();
   await page.locator('[data-control-id="backup.export"]').click();
-  await expect(page.getByRole('textbox', { name: 'Backup key', exact: true })).toHaveValue(
-    /^[a-f0-9]{64}$/,
-  );
+  await expect(page.getByRole('link', { name: 'Download backup' })).toBeVisible();
   await expectTaskLanguage(page, 'project backup');
   await page.screenshot({ path: info.outputPath('project-backup.png'), fullPage: true });
   await page.locator('[data-control-id="project.review.estimates"]').click();

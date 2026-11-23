@@ -31,7 +31,7 @@ test('empty and partial assessments survive reopening and a draft estimate workb
       )) as typeof import('./fixtures/measured-assessment');
       const vault = new LocalVault(owner, () => undefined);
       try {
-        await vault.create('ab'.repeat(32), true);
+        await vault.openWithoutKey();
         const project = newProject('Incomplete fixture', 'Wall', 'Empty', 'EUR');
         const partial = newSurface('Partial');
         project.objects[0]!.surfaces.push(partial);
@@ -66,7 +66,6 @@ test('empty and partial assessments survive reopening and a draft estimate workb
   const step = (id: string) => page.locator(`[data-control-id="estimate.step.${id}"]`).click();
   const report = (id: string) => page.locator(`[data-control-id="report.review.${id}"]`);
   await page.goto(fixture.path + '/estimates');
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await step('phases');
   await phase('newName').fill('Manual empty');
   await phase('add').click();
@@ -89,7 +88,6 @@ test('empty and partial assessments survive reopening and a draft estimate workb
   await finance('snapshot').click();
   await expect(page.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
   await page.reload();
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await step('phases');
   await expect(phase('phase').locator('option')).toHaveCount(2);
   await phase('phase').selectOption({ label: 'Partial area' });

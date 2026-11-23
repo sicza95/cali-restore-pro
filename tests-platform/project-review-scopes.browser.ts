@@ -135,12 +135,9 @@ test('encrypted invitation grants separate assessment, summary and full estimate
 
   await page.goto('/invitations');
   await expect(page.getByText('Shared chapel')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
-  const code = page.getByLabel('Verified owner fingerprint');
   expect(reportControls.some(({ id }) => id === 'estimate.scope.projection')).toBe(true);
   const projection = page.locator('[data-control-id="estimate.scope.projection"]');
   await expect(page.getByRole('button', { name: /estimate .*sample/i })).toHaveCount(0);
-  await code.fill(fixture.code);
   await page.getByRole('button', { name: 'Open shared content' }).click();
   await expect(page.getByRole('heading', { name: 'Shared chapel' })).toBeVisible();
   await expect(projection).toHaveCount(0);
@@ -149,11 +146,6 @@ test('encrypted invitation grants separate assessment, summary and full estimate
   await page.getByRole('button', { name: 'Refresh invitations' }).click();
   const summary = page.getByRole('button', { name: 'Estimate summary sample' });
   await expect(page.getByRole('button', { name: 'Full estimate sample' })).toHaveCount(0);
-  await code.fill('0'.repeat(64));
-  await summary.click();
-  await expect(page.getByRole('alert')).toBeVisible();
-  await expect(projection).toHaveCount(0);
-  await code.fill(fixture.code);
   await summary.click();
   await expect(projection).toContainText('€1,250.00');
   await projection.getByRole('button', { name: 'Preview draft' }).click();
@@ -170,7 +162,6 @@ test('encrypted invitation grants separate assessment, summary and full estimate
   estimateScope = 'estimate-full';
   await page.getByRole('button', { name: 'Refresh invitations' }).click();
   await expect(projection).toHaveCount(0);
-  await code.fill(fixture.code);
   await page.getByRole('button', { name: 'Full estimate sample' }).click();
   await projection.getByRole('button', { name: 'Preview draft' }).click();
   await expect(draft).toContainText('€1,250.00');
@@ -179,9 +170,8 @@ test('encrypted invitation grants separate assessment, summary and full estimate
   await expect(draft).toContainText('€62.50/h');
   await draft.getByRole('button', { name: 'Cancel preview' }).click();
   await expect(page.locator('[data-control-id="estimate.finance.snapshot"]')).toHaveCount(0);
-  expect(sent).toEqual(['estimate-summary', 'estimate-summary', 'estimate-full']);
+  expect(sent).toEqual(['estimate-summary', 'estimate-full']);
   await page.goto('/projects/' + ids.project + '/reports');
-  await page.getByRole('button', { name: 'Unlock on this remembered browser' }).click();
   await expect(
     page.getByText('This project or surface is unavailable on this device.'),
   ).toBeVisible();

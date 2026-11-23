@@ -31,8 +31,6 @@ describe('parseRoute', () => {
       ['/settings/security', { name: 'security' }],
       ['/settings/preferences', { name: 'preferences' }],
       ['/settings/libraries', { name: 'libraries' }],
-      ['/unlock', { name: 'unlock' }],
-      ['/devices/approve', { name: 'devices/approve' }],
       ['/admin', { name: 'admin' }],
       ['/offline-originals', { name: 'offline' }],
     ];
@@ -112,7 +110,6 @@ describe('sign-in deep links', () => {
     const deep = projectReviewHref(project, 'estimates');
     expect(signInLink('projects', deep)).toBe('/login?next=' + encodeURIComponent(deep));
     expect(signInLink('projects', '/projects/east-chapel')).toBe('/login?next=projects');
-    expect(signInLink('devices/approve', '/devices/approve')).toBe('/login?next=devices%2Fapprove');
     expect(signInLink('security')).toBe('/login?next=security');
   });
 

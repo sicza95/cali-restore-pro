@@ -1,4 +1,5 @@
 import { importCode, newCode, open, parseEnvelope, seal } from './crypto';
+import { aead, plaintextCode } from './aead';
 import type { Envelope } from './crypto';
 import {
   commitVault,
@@ -92,6 +93,29 @@ export class LocalVault {
     this.#assert(epoch);
     this.#root = root;
     this.#row = row;
+    return text;
+  }
+
+  /**
+   * Opens the vault with no key screen: creates a remembered vault on first use, then unlocks it.
+   * Only meaningful while encryption is off (aead.ts); the fixed code protects nothing.
+   */
+  async openWithoutKey() {
+    let row = await readVault(this.account);
+    let text = '';
+    if (!row) {
+      try {
+        await this.create(plaintextCode, true);
+      } catch (error) {
+        // Another tab or handle created it first: open that one.
+        row = await readVault(this.account);
+        if (!row) throw error;
+      }
+    }
+    if (row) text = await this.unlock(row.remembered ? undefined : plaintextCode);
+    // Create the sharing key now, before pages run vault work that a later first write would
+    // interrupt ("vault changed"). Sharing pages publish it as they open.
+    if (!this.#row?.sharingIdentity) await this.sharingIdentity().catch(() => undefined);
     return text;
   }
 
@@ -196,7 +220,13 @@ export class LocalVault {
         })
       : { seed: newCode(), pins: {} as Record<string, string> };
     this.#assert(epoch);
-    if (pin && Object.hasOwn(data.pins, pin.account) && data.pins[pin.account] !== pin.fingerprint)
+    // With encryption off (aead.ts) nobody compares fingerprints, so a changed key just re-pins.
+    if (
+      aead.enabled &&
+      pin &&
+      Object.hasOwn(data.pins, pin.account) &&
+      data.pins[pin.account] !== pin.fingerprint
+    )
       throw new Error('Sharing identity changed');
     if (!saved || (pin && data.pins[pin.account] !== pin.fingerprint)) {
       if (pin) data.pins[pin.account] = pin.fingerprint;

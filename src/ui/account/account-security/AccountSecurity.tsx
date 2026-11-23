@@ -1,6 +1,5 @@
 import { For, Show } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
-import { VaultSection } from './VaultSection';
 import { PasskeySection } from './PasskeySection';
 import { ConfirmField } from '../confirm-field/ConfirmField';
 import { EmailField } from '../email-field/EmailField';
@@ -21,9 +20,6 @@ export function AccountSecurity() {
       {(owner) => (
         <>
           <p class="account-email">{owner().email}</p>
-          <Show when={owner().id} keyed>
-            {(id) => <VaultSection account={id} language={app.lang()} />}
-          </Show>
           <section class="account-section">
             <div>
               <h2>{app.t('confirmPassword')}</h2>
