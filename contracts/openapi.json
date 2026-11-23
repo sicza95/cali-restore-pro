@@ -2926,6 +2926,48 @@
         }
       }
     },
+    "/api/v1/hosted-projects": {
+      "get": {
+        "operationId": "listCloudProjects",
+        "responses": {
+          "200": {
+            "description": "Synced projects this account owns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CloudProject" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/IdentityError" } }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/IdentityError" } }
+            }
+          },
+          "403": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/IdentityError" } }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/IdentityError" } }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/hosted-projects/{project}": {
       "parameters": [
         {
@@ -7181,6 +7223,12 @@
             "maxLength": 87404
           }
         }
+      },
+      "CloudProject": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id"],
+        "properties": { "id": { "type": "string", "format": "uuid" } }
       },
       "DeletionStatus": {
         "type": "object",

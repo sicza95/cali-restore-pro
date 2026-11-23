@@ -107,6 +107,28 @@ func TestPostgresProjectRevisions(t *testing.T) {
 	}
 	second := write(1, empty.Epoch, 3)
 	call("PUT", revision, alice, aliceToken, second, 200)
+	cloud := func(raw string) []cloudProject {
+		t.Helper()
+		r := httptest.NewRequest("GET", "/api/v1/hosted-projects", nil)
+		r.Header.Set("Origin", origin)
+		r.AddCookie(&http.Cookie{Name: auth.CookieName(), Value: raw})
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, r)
+		var list []cloudProject
+		if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &list) != nil {
+			t.Fatalf("list cloud projects: %d %s", w.Code, w.Body)
+		}
+		return list
+	}
+	if got := cloud(aliceToken); len(got) != 1 || got[0].ID != project {
+		t.Fatalf("owner list: %+v", got)
+	}
+	if got := cloud(bobToken); len(got) != 1 || got[0].ID != project {
+		t.Fatalf("co-owner list: %+v", got)
+	}
+	if got := cloud(charlieToken); len(got) != 0 {
+		t.Fatalf("non-owner sees cloud projects: %+v", got)
+	}
 	const grant = "/revision-key/c0ffee00-0000-4000-8000-000000000009"
 	key := revisionKeyTransfer{Epoch: empty.Epoch, SyncEpoch: empty.Epoch, Recipient: bob,
 		revisionCiphertext: revisionCiphertext{Salt: bytes.Repeat([]byte{1}, 32), Ciphertext: bytes.Repeat([]byte{2}, 82)}}

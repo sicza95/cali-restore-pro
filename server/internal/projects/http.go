@@ -37,6 +37,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		h.ownerRoutes(route)
 		h.hostingRoutes(route)
 		h.revisionRoutes(route)
+		h.cloudProjectRoutes(route)
 		h.revisionKeyRoutes(route)
 	}
 }

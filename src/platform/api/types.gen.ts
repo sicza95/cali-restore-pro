@@ -297,6 +297,10 @@ export type ProjectRevisionWrite = {
   ciphertext: string;
 };
 
+export type CloudProject = {
+  id: string;
+};
+
 export type DeletionStatus = {
   id: string;
   recoverUntil: string;
@@ -1796,6 +1800,44 @@ export type AdminDeletionPreflightResponses = {
 
 export type AdminDeletionPreflightResponse =
   AdminDeletionPreflightResponses[keyof AdminDeletionPreflightResponses];
+
+export type ListCloudProjectsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/hosted-projects';
+};
+
+export type ListCloudProjectsErrors = {
+  /**
+   * Request rejected
+   */
+  400: IdentityError;
+  /**
+   * Request rejected
+   */
+  401: IdentityError;
+  /**
+   * Request rejected
+   */
+  403: IdentityError;
+  /**
+   * Request rejected
+   */
+  503: IdentityError;
+};
+
+export type ListCloudProjectsError = ListCloudProjectsErrors[keyof ListCloudProjectsErrors];
+
+export type ListCloudProjectsResponses = {
+  /**
+   * Synced projects this account owns
+   */
+  200: Array<CloudProject>;
+};
+
+export type ListCloudProjectsResponse =
+  ListCloudProjectsResponses[keyof ListCloudProjectsResponses];
 
 export type EnableProjectHostingData = {
   body: EmptyRequest;
