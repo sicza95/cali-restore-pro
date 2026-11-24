@@ -152,7 +152,8 @@ func (h *HTTP) revisionRoutes(route func(string, bool, http.HandlerFunc)) {
 
 // cloudProject is a hosted project this account owns that has a synced revision.
 type cloudProject struct {
-	ID string `json:"id"`
+	ID           string `json:"id"`
+	Organisation string `json:"organisation"`
 }
 
 // cloudProjectRoutes lists the account's synced projects so another device can open them without
@@ -161,8 +162,8 @@ func (h *HTTP) cloudProjectRoutes(route func(string, bool, http.HandlerFunc)) {
 	route("GET /api/v1/hosted-projects", true, func(w http.ResponseWriter, r *http.Request) {
 		list := []cloudProject{}
 		err := h.service.withFiles(r.Context(), h.raw(r), func(a fileAccess) error {
-			rows, err := a.tx.Query(r.Context(), `SELECT h.project_id::text FROM project_revision_heads h
- JOIN project_owners o ON o.project_id=h.project_id
+			rows, err := a.tx.Query(r.Context(), `SELECT h.project_id::text,p.organisation_id::text FROM project_revision_heads h
+ JOIN project_owners o ON o.project_id=h.project_id JOIN hosted_projects p ON p.id=h.project_id
  WHERE o.account_id=$1 AND NOT EXISTS (SELECT 1 FROM project_deletions d WHERE d.id=h.project_id)
  ORDER BY h.project_id`, a.account)
 			if err != nil {

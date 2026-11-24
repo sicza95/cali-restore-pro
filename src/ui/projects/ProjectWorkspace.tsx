@@ -30,6 +30,7 @@ import { ProjectReviewLinks } from '../project-review/ProjectReviewLinks';
 import { lazyView } from '../shared/lazyView';
 import { projectHref } from '../router/routes';
 import { syncCopy } from './sync-copy';
+import { projectOrganisation, useOrganisations } from '../organisations/organisation-state';
 import './styles.css';
 
 // The editor and the review pages load on demand; the offline worker precaches the chunks.
@@ -93,6 +94,10 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
     const shown = activeSurface();
     return shown ? { [shown.surface.id]: shown.object.name } : {};
   });
+  const orgs = useOrganisations();
+  // Projects of the organisation chosen in the top bar; all of them until the list is known.
+  const inOrganisation = (organisation?: string) =>
+    !orgs.selected() || projectOrganisation(organisation, orgs.list()) === orgs.selected()!.id;
   const visible = () => {
     const language = props.language;
     const showArchived = archived();
@@ -100,7 +105,10 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
     const recent = sort() === 'recent';
     return (projects()?.rows ?? [])
       .filter(
-        (p) => p.archived === showArchived && p.name.toLocaleLowerCase(language).includes(search),
+        (p) =>
+          p.archived === showArchived &&
+          inOrganisation(p.organisation) &&
+          p.name.toLocaleLowerCase(language).includes(search),
       )
       .sort(
         (a, b) =>
@@ -190,6 +198,7 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
                         c().firstObject,
                         c().firstSurface,
                         loadPreferences(app.account()!.id).currency,
+                        orgs.selected()?.id,
                       );
                       await save(project);
                       navigate(projectHref(project.id));
@@ -240,6 +249,7 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
                 busy={busy()}
                 model={sync.cloud}
                 local={() => new Set(projects()?.rows.map(({ id }) => id))}
+                inOrganisation={inOrganisation}
                 run={run}
                 onOpened={(received) => {
                   if (received.created) update(received.document);
@@ -341,6 +351,7 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
                                 ),
                               ]}
                               canHost
+                              organisation={current()!.organisation}
                               vault={props.vault}
                             />
                           )}

@@ -20,8 +20,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sicza95/cali-restore-pro/server/internal/config"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity"
+	"github.com/sicza95/cali-restore-pro/server/internal/live"
 	"github.com/sicza95/cali-restore-pro/server/internal/mailer"
 	"github.com/sicza95/cali-restore-pro/server/internal/oparchive"
+	"github.com/sicza95/cali-restore-pro/server/internal/orgs"
 	"github.com/sicza95/cali-restore-pro/server/internal/platform"
 	"github.com/sicza95/cali-restore-pro/server/internal/projects"
 	"github.com/sicza95/cali-restore-pro/server/migrations"
@@ -184,7 +186,11 @@ func run(ctx context.Context, args []string) error {
 	auth := identity.NewHTTP(identities, c.Origin, strings.HasPrefix(c.Origin, "https://"))
 	files := projects.NewHTTP(auth, hosted)
 	files.EnableFiles(objectRoot)
-	srv := &http.Server{ErrorLog: log.New(httpDiagnostic{slog.Default()}, "", 0), Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register, files.Register), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+	organisations := orgs.NewHTTP(auth, orgs.New(pool, identities))
+	notices := live.NewHub()
+	go notices.Run(ctx, pool)
+	srv := &http.Server{ErrorLog: log.New(httpDiagnostic{slog.Default()}, "", 0), Addr: c.Address, Handler: platform.Handler(os.DirFS(c.StaticDir), ready, auth.Register, files.Register, organisations.Register, notices.Routes(auth, pool)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 1 << 20}
+	srv.RegisterOnShutdown(notices.Close)
 	stopped := make(chan error, 1)
 	go func() { stopped <- srv.ListenAndServe() }()
 	slog.Info("HTTP server started")

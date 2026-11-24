@@ -20,6 +20,8 @@ export function usePageTrail() {
         return app.names()[crumb.id] ?? c.project;
       case 'surface':
         return app.names()[crumb.id] ?? c.surface;
+      case 'organisation':
+        return app.names()[crumb.id] ?? c.organisationCrumb;
       case 'review':
         return estimateCopy[app.lang()][crumb.step];
     }

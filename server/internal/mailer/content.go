@@ -27,6 +27,7 @@ type words struct {
 	greeting, welcomeNamed              string
 	verify, notRegistered, reset        [4]string // heading, intro, button, note
 	exists, email, security, invite     [4]string
+	orgInvite                           [4]string
 	welcome, passwordReset, passwordSet [4]string
 }
 
@@ -67,6 +68,10 @@ var catalogue = map[string]words{
 		invite: [4]string{"You’re invited to a project",
 			"You received a CaliRestore Pro project invitation. Sign in with this email address to see pending invitations.",
 			"See invitations",
+			""},
+		orgInvite: [4]string{"You’re invited to an organisation",
+			"You received an invitation to join an organisation in CaliRestore Pro. Sign in with this email address and open Organisations to accept or decline it.",
+			"Open Organisations",
 			""},
 		welcome: [4]string{"Welcome to CaliRestore Pro",
 			"Your account is ready and you are signed in. Next time, sign in with this email address and the password you chose. You can also add a passkey on the Account security page, so this device signs you in without a password.",
@@ -115,6 +120,10 @@ var catalogue = map[string]words{
 		invite: [4]string{"Meghívtak egy projektbe",
 			"CaliRestore Pro projektmeghívót kaptál. Jelentkezz be ezzel az e-mail-címmel a függő meghívók megtekintéséhez.",
 			"Meghívók megtekintése",
+			""},
+		orgInvite: [4]string{"Meghívtak egy szervezetbe",
+			"Meghívót kaptál egy CaliRestore Pro-szervezetbe. Jelentkezz be ezzel az e-mail-címmel, és a Szervezetek oldalon fogadd el vagy utasítsd el.",
+			"Szervezetek megnyitása",
 			""},
 		welcome: [4]string{"Üdvözlünk a CaliRestore Pro-ban",
 			"Elkészült a fiókod, és már be is jelentkeztél. Legközelebb ezzel az e-mail-címmel és a választott jelszavaddal jelentkezz be. A Fiókbiztonság oldalon azonosítókulcsot is hozzáadhatsz, így ez az eszköz jelszó nélkül is bejelentkeztet.",
@@ -173,6 +182,8 @@ func Compose(p Payload, origin string) Letter {
 		letter = fill(w.email, w.email[0], link("/confirm-email"))
 	case "project-invitation":
 		letter = fill(w.invite, w.invite[0], origin+"/invitations")
+	case "organisation-invitation":
+		letter = fill(w.orgInvite, w.orgInvite[0], origin+"/organisations")
 	case "welcome":
 		letter = fill(w.welcome, w.welcome[0], origin+"/projects")
 	case "password-reset":

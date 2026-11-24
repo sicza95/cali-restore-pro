@@ -83,7 +83,7 @@ function AccountShell() {
           <Show when={message()} keyed>
             {(key) => (
               <Toast
-                text={t(key)}
+                text={typeof key === 'string' ? t(key) : key.text}
                 error={failed()}
                 closeLabel={t('closeMessage')}
                 dismiss={app.dismissMessage}

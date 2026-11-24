@@ -37,7 +37,8 @@ export function createAccountAccess(router: Router) {
   const [csrf, setCsrf] = createSignal('');
   const [sessions, setSessions] = createSignal<Session[]>([]);
   const [busy, setBusy] = createSignal(false);
-  const [message, setMessage] = createSignal<Message>();
+  // A copy key, or text a screen already wrote in the app language.
+  const [message, setMessage] = createSignal<Message | { text: string }>();
   const [failed, setFailed] = createSignal(false);
   const [confirmedState, setConfirmedState] = createSignal(false);
   const confirmed = confirmedState;
@@ -368,7 +369,7 @@ export function createAccountAccess(router: Router) {
     message,
     dismissMessage: () => setMessage(undefined),
     /** A floating message for changes saved in this browser, like settings. */
-    notify: (text: Message, problem = false) => {
+    notify: (text: Message | { text: string }, problem = false) => {
       setFailed(problem);
       setMessage(text);
     },

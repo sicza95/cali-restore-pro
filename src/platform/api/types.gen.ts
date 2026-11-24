@@ -242,7 +242,15 @@ export type AdminOperations = {
     /**
      * Mail purpose retained after payload erasure. Empty for jobs created before kind metadata was recorded.
      */
-    kind: '' | 'verify' | 'reset' | 'email' | 'security' | 'project-invitation' | 'welcome';
+    kind:
+      | ''
+      | 'verify'
+      | 'reset'
+      | 'email'
+      | 'security'
+      | 'project-invitation'
+      | 'organisation-invitation'
+      | 'welcome';
   }>;
 };
 
@@ -305,6 +313,7 @@ export type ProjectRevisionWrite = {
 
 export type CloudProject = {
   id: string;
+  organisation: string;
 };
 
 export type DeletionStatus = {
@@ -346,6 +355,141 @@ export type ProfileUpdateRequest = {
    * Square JPEG from 16 to 1024 pixels a side, at most 256 KiB. An empty string removes the photo.
    */
   photo?: string;
+};
+
+export type OrganisationSummary = {
+  id: string;
+  /**
+   * Empty for a personal organisation
+   */
+  name: string;
+  personal: boolean;
+  role: 'admin' | 'member';
+  memberCount: number;
+};
+
+export type OrganisationInvitation = {
+  id: string;
+  organisation: string;
+  name: string;
+  role: 'admin' | 'member';
+  /**
+   * Full name, or email when the sender has no name
+   */
+  invitedBy: string;
+  expiresAt: string;
+};
+
+export type OrganisationOverview = {
+  organisations: Array<OrganisationSummary>;
+  invitations: Array<OrganisationInvitation>;
+};
+
+export type OrganisationSections = {
+  core?: 'none' | 'read' | 'write';
+  client?: 'none' | 'read' | 'write';
+  assessment?: 'none' | 'read' | 'write';
+  photos?: 'none' | 'read' | 'write';
+  'scope-of-work'?: 'none' | 'read' | 'write';
+  pricing?: 'none' | 'read' | 'write';
+  'pricing-summary'?: 'none' | 'read' | 'write';
+  'internal-notes'?: 'none' | 'read' | 'write';
+  admin?: 'none' | 'read' | 'write';
+};
+
+export type OrganisationAction =
+  'members.manage' | 'project.settings' | 'estimate.publish' | 'photos.delete' | 'project.export';
+
+export type OrganisationGroupWrite = {
+  name: string;
+  sections: OrganisationSections;
+  actions?: Array<OrganisationAction>;
+  /**
+   * Give this group on every project of the organisation
+   */
+  allProjects?: boolean;
+};
+
+export type OrganisationGroup = {
+  id: string;
+  name: string;
+  sections: OrganisationSections;
+  actions: Array<OrganisationAction>;
+  /**
+   * Give this group on every project of the organisation
+   */
+  allProjects: boolean;
+};
+
+export type OrganisationMember = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'member';
+  groups: Array<string>;
+};
+
+export type OrganisationSentInvitation = {
+  id: string;
+  email: string;
+  role: 'admin' | 'member';
+  groups: Array<string>;
+  expiresAt: string;
+};
+
+export type OrganisationDetail = {
+  id: string;
+  /**
+   * Empty for a personal organisation
+   */
+  name: string;
+  personal: boolean;
+  role: 'admin' | 'member';
+  memberCount: number;
+  members: Array<OrganisationMember>;
+  groups: Array<OrganisationGroup>;
+  /**
+   * Pending invitations; empty unless the account is an admin
+   */
+  invitations: Array<OrganisationSentInvitation>;
+  /**
+   * Hosted projects in the organisation
+   */
+  projects: number;
+};
+
+export type OrganisationCreateRequest = {
+  name: string;
+  /**
+   * Language of the starter group names
+   */
+  language?: 'en' | 'hu';
+};
+
+export type OrganisationRenameRequest = {
+  name: string;
+};
+
+export type OrganisationInviteRequest = {
+  email: string;
+  role: 'admin' | 'member';
+  groups?: Array<string>;
+};
+
+export type OrganisationMemberRequest = {
+  role: 'admin' | 'member';
+  groups?: Array<string>;
+};
+
+export type CreatedId = {
+  id: string;
+};
+
+export type ProjectHostingRequest = {
+  /**
+   * Organisation the project belongs to; the host must be a member. Omitted: the host personal organisation.
+   */
+  organisation?: string;
 };
 
 export type PlatformStatusData = {
@@ -1824,7 +1968,7 @@ export type ListCloudProjectsResponse =
   ListCloudProjectsResponses[keyof ListCloudProjectsResponses];
 
 export type EnableProjectHostingData = {
-  body: EmptyRequest;
+  body: ProjectHostingRequest;
   headers: {
     Origin: string;
     'X-CSRF-Token': string;
@@ -3725,3 +3869,764 @@ export type IdentityPasskeyConfirmResponses = {
 
 export type IdentityPasskeyConfirmResponse =
   IdentityPasskeyConfirmResponses[keyof IdentityPasskeyConfirmResponses];
+
+export type ListOrganisationsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/v1/organisations';
+};
+
+export type ListOrganisationsErrors = {
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type ListOrganisationsError = ListOrganisationsErrors[keyof ListOrganisationsErrors];
+
+export type ListOrganisationsResponses = {
+  /**
+   * Success
+   */
+  200: OrganisationOverview;
+};
+
+export type ListOrganisationsResponse =
+  ListOrganisationsResponses[keyof ListOrganisationsResponses];
+
+export type CreateOrganisationData = {
+  body: OrganisationCreateRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/organisations';
+};
+
+export type CreateOrganisationErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Too many organisations (limit_reached)
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type CreateOrganisationError = CreateOrganisationErrors[keyof CreateOrganisationErrors];
+
+export type CreateOrganisationResponses = {
+  /**
+   * Success
+   */
+  200: CreatedId;
+};
+
+export type CreateOrganisationResponse =
+  CreateOrganisationResponses[keyof CreateOrganisationResponses];
+
+export type DeleteOrganisationData = {
+  body?: never;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}';
+};
+
+export type DeleteOrganisationErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * personal_organisation or organisation_has_projects
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type DeleteOrganisationError = DeleteOrganisationErrors[keyof DeleteOrganisationErrors];
+
+export type DeleteOrganisationResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type DeleteOrganisationResponse =
+  DeleteOrganisationResponses[keyof DeleteOrganisationResponses];
+
+export type GetOrganisationData = {
+  body?: never;
+  path: {
+    org: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}';
+};
+
+export type GetOrganisationErrors = {
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type GetOrganisationError = GetOrganisationErrors[keyof GetOrganisationErrors];
+
+export type GetOrganisationResponses = {
+  /**
+   * Success
+   */
+  200: OrganisationDetail;
+};
+
+export type GetOrganisationResponse = GetOrganisationResponses[keyof GetOrganisationResponses];
+
+export type RenameOrganisationData = {
+  body: OrganisationRenameRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}';
+};
+
+export type RenameOrganisationErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * personal_organisation
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type RenameOrganisationError = RenameOrganisationErrors[keyof RenameOrganisationErrors];
+
+export type RenameOrganisationResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type RenameOrganisationResponse =
+  RenameOrganisationResponses[keyof RenameOrganisationResponses];
+
+export type InviteToOrganisationData = {
+  body: OrganisationInviteRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/invitations';
+};
+
+export type InviteToOrganisationErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * already_member, personal_organisation or limit_reached
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type InviteToOrganisationError =
+  InviteToOrganisationErrors[keyof InviteToOrganisationErrors];
+
+export type InviteToOrganisationResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type InviteToOrganisationResponse =
+  InviteToOrganisationResponses[keyof InviteToOrganisationResponses];
+
+export type CancelOrganisationInvitationData = {
+  body?: never;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/invitations/{invitation}';
+};
+
+export type CancelOrganisationInvitationErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type CancelOrganisationInvitationError =
+  CancelOrganisationInvitationErrors[keyof CancelOrganisationInvitationErrors];
+
+export type CancelOrganisationInvitationResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type CancelOrganisationInvitationResponse =
+  CancelOrganisationInvitationResponses[keyof CancelOrganisationInvitationResponses];
+
+export type RemoveOrganisationMemberData = {
+  body?: never;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+    member: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/members/{member}';
+};
+
+export type RemoveOrganisationMemberErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * last_admin or personal_organisation
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type RemoveOrganisationMemberError =
+  RemoveOrganisationMemberErrors[keyof RemoveOrganisationMemberErrors];
+
+export type RemoveOrganisationMemberResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type RemoveOrganisationMemberResponse =
+  RemoveOrganisationMemberResponses[keyof RemoveOrganisationMemberResponses];
+
+export type UpdateOrganisationMemberData = {
+  body: OrganisationMemberRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+    member: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/members/{member}';
+};
+
+export type UpdateOrganisationMemberErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * last_admin
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type UpdateOrganisationMemberError =
+  UpdateOrganisationMemberErrors[keyof UpdateOrganisationMemberErrors];
+
+export type UpdateOrganisationMemberResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type UpdateOrganisationMemberResponse =
+  UpdateOrganisationMemberResponses[keyof UpdateOrganisationMemberResponses];
+
+export type CreateOrganisationGroupData = {
+  body: OrganisationGroupWrite;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/groups';
+};
+
+export type CreateOrganisationGroupErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * limit_reached
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type CreateOrganisationGroupError =
+  CreateOrganisationGroupErrors[keyof CreateOrganisationGroupErrors];
+
+export type CreateOrganisationGroupResponses = {
+  /**
+   * Success
+   */
+  200: CreatedId;
+};
+
+export type CreateOrganisationGroupResponse =
+  CreateOrganisationGroupResponses[keyof CreateOrganisationGroupResponses];
+
+export type DeleteOrganisationGroupData = {
+  body?: never;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+    group: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/groups/{group}';
+};
+
+export type DeleteOrganisationGroupErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type DeleteOrganisationGroupError =
+  DeleteOrganisationGroupErrors[keyof DeleteOrganisationGroupErrors];
+
+export type DeleteOrganisationGroupResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type DeleteOrganisationGroupResponse =
+  DeleteOrganisationGroupResponses[keyof DeleteOrganisationGroupResponses];
+
+export type UpdateOrganisationGroupData = {
+  body: OrganisationGroupWrite;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+    group: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/groups/{group}';
+};
+
+export type UpdateOrganisationGroupErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type UpdateOrganisationGroupError =
+  UpdateOrganisationGroupErrors[keyof UpdateOrganisationGroupErrors];
+
+export type UpdateOrganisationGroupResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type UpdateOrganisationGroupResponse =
+  UpdateOrganisationGroupResponses[keyof UpdateOrganisationGroupResponses];
+
+export type AcceptOrganisationInvitationData = {
+  body: EmptyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/organisation-invitations/{invitation}/accept';
+};
+
+export type AcceptOrganisationInvitationErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type AcceptOrganisationInvitationError =
+  AcceptOrganisationInvitationErrors[keyof AcceptOrganisationInvitationErrors];
+
+export type AcceptOrganisationInvitationResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type AcceptOrganisationInvitationResponse =
+  AcceptOrganisationInvitationResponses[keyof AcceptOrganisationInvitationResponses];
+
+export type DeclineOrganisationInvitationData = {
+  body: EmptyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    invitation: string;
+  };
+  query?: never;
+  url: '/api/v1/organisation-invitations/{invitation}/decline';
+};
+
+export type DeclineOrganisationInvitationErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type DeclineOrganisationInvitationError =
+  DeclineOrganisationInvitationErrors[keyof DeclineOrganisationInvitationErrors];
+
+export type DeclineOrganisationInvitationResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type DeclineOrganisationInvitationResponse =
+  DeclineOrganisationInvitationResponses[keyof DeclineOrganisationInvitationResponses];

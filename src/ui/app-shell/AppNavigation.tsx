@@ -10,6 +10,10 @@ import { useApp } from '../app-context/AppContext';
 import { Icon } from '../icon/Icon';
 import { ThemeToggle } from './ThemeToggle';
 import { AccountMenu } from './AccountMenu';
+import { OrganisationSwitcher } from '../organisations/OrganisationSwitcher';
+import { useLiveUpdates } from '../organisations/live-updates';
+import { useOrganisations } from '../organisations/organisation-state';
+import { organisationCopy } from '../organisations/organisation-copy';
 import { setSidebarPinned, sidebarPinned } from './sidebar-state';
 import type { IconName } from '../icon/types';
 import { accountPaths } from '../router/constants';
@@ -18,6 +22,8 @@ import './shell.css';
 
 const destinationIcons: Record<(typeof accountNavigationControls)[number]['labelKey'], IconName> = {
   projects: 'folder',
+  organisations: 'organisation',
+  settings: 'settings',
   invitations: 'envelope',
   profile: 'account',
   security: 'lock',
@@ -77,6 +83,7 @@ function PublicBar() {
 /** Always visible: the sidebar switch, the product name and the account menu. */
 function AppBar() {
   const app = useApp();
+  useLiveUpdates();
   const c = () => navigationText(app.lang());
   const label = () => (sidebarPinned() ? c().hideSidebar : c().showSidebar);
   return (
@@ -102,7 +109,10 @@ function AppBar() {
           CaliRestore <strong>Pro</strong>
         </span>
       </a>
-      <AccountMenu />
+      <div class="app-bar-end">
+        <OrganisationSwitcher />
+        <AccountMenu />
+      </div>
     </header>
   );
 }
@@ -114,6 +124,7 @@ function AppBar() {
 function Sidebar(props: { rail: boolean }) {
   const app = useApp();
   const c = () => navigationText(app.lang());
+  const orgs = useOrganisations();
   const [peek, setPeek] = createSignal(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
   onCleanup(() => clearTimeout(timer));
@@ -125,6 +136,11 @@ function Sidebar(props: { rail: boolean }) {
       if (labelKey === 'admin') return app.canAdmin();
       return true;
     });
+  const settingsRoutes: readonly string[] = ['profile', 'security', 'preferences'];
+  const current = (key: string) => {
+    const name = app.router.route().name;
+    return key === 'settings' ? settingsRoutes.includes(name) : name === key;
+  };
   const Links = (linkProps: { rail: boolean }) => (
     <nav id="app-navigation" class="app-nav-links" aria-label={c().menu}>
       <For each={links()}>
@@ -134,10 +150,20 @@ function Sidebar(props: { rail: boolean }) {
             onClick={(event) => followLink(event, app.router.navigate)}
             data-control-id={control.id}
             title={linkProps.rail ? c()[control.labelKey] : undefined}
-            aria-current={app.router.route().name === control.labelKey ? 'page' : undefined}
+            aria-current={current(control.labelKey) ? 'page' : undefined}
           >
             <Icon name={destinationIcons[control.labelKey]} size={18} />
             <span class="app-nav-label">{c()[control.labelKey]}</span>
+            <Show when={control.labelKey === 'organisations' && orgs.invitations().length}>
+              {(count) => (
+                <span class="app-nav-badge">
+                  <span aria-hidden="true">{count()}</span>
+                  <span class="account-visually-hidden">
+                    , {organisationCopy[app.lang()].waiting(count())}
+                  </span>
+                </span>
+              )}
+            </Show>
           </a>
         )}
       </For>

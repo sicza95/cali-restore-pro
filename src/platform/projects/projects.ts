@@ -30,6 +30,7 @@ export function newProject(
   object: string,
   surface: string,
   currency: string,
+  organisation?: string,
 ): SavedProject {
   return {
     id: crypto.randomUUID(),
@@ -37,6 +38,7 @@ export function newProject(
     revision: 0,
     name: projectName(name),
     archived: false,
+    ...(organisation ? { organisation } : {}),
     updatedAt: Date.now(),
     settings: { version: 1, units: 'metric', currency },
     objects: [newObject(object, surface)],
@@ -49,6 +51,11 @@ export function validateProject(project: Project, id: string) {
   if (!project.objects.length || project.objects.some((object) => !object.surfaces.length))
     throw new Error('Incomplete project hierarchy');
   if (!/^[A-Z]{3}$/.test(project.settings.currency)) throw new Error('Invalid currency');
+  if (
+    project.organisation !== undefined &&
+    !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(project.organisation)
+  )
+    throw new Error('Invalid organisation');
   for (const object of project.objects) {
     for (const surface of object.surfaces) {
       const assessments = surface.assessments ?? [];

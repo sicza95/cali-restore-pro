@@ -125,18 +125,97 @@
 }
 
 /* The account menu, under the round photo at the right of the bar. */
-.account-menu {
-  position: relative;
+.app-bar-end {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
   margin-inline-start: auto;
 }
-.account-menu-button {
-  display: grid;
+.account-menu,
+.org-switcher {
+  position: relative;
+  min-width: 0;
+}
+/* Invitations waiting: a count after Organisations, a dot on the icon in the rail. */
+.app-nav-badge {
+  display: inline-grid;
   place-items: center;
-  width: var(--cr-touch);
-  height: var(--cr-touch);
+  min-width: 20px;
+  height: 20px;
+  margin-inline-start: auto;
+  padding: 0 6px;
+  color: var(--cr-accent-ink);
+  background: var(--cr-accent);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.app-sidebar[data-rail] .app-nav-links a {
+  position: relative;
+}
+.app-sidebar[data-rail] .app-nav-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 10px;
+  height: 10px;
   padding: 0;
-  border-radius: 50%;
+  font-size: 0;
+}
+/* The organisation reads as a link: no border, no fill, underlined on hover. */
+.org-switcher-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: var(--cr-touch);
+  padding: 0 8px;
+  color: var(--cr-accent);
   background: transparent;
+  border: 0;
+  font-weight: 600;
+  text-decoration: none;
+}
+.org-switcher-button:hover .org-switcher-name,
+.org-switcher-button[aria-expanded='true'] .org-switcher-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.org-switcher-name {
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.org-switcher-chevron {
+  flex: none;
+  transform: rotate(90deg);
+}
+.org-switcher-panel .account-menu-item > span:last-child {
+  overflow-wrap: anywhere;
+}
+/* The account: the person's name, then their round photo. */
+.account-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: var(--cr-touch);
+  padding: 0 0 0 12px;
+  color: var(--cr-ink);
+  border-radius: calc(var(--cr-touch) / 2);
+  background: transparent;
+  font-weight: 550;
+}
+.account-menu-name {
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.account-menu-button .profile-avatar {
+  flex: none;
 }
 .account-menu-button[aria-expanded='true'] {
   background: var(--cr-hover);

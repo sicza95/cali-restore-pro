@@ -82,6 +82,15 @@ func TestPostgresProjectRevisions(t *testing.T) {
 			t.Fatalf("expected %s: %s", code, w.Body)
 		}
 	}
+	personal := func(account string) (org string) {
+		t.Helper()
+		if err := admin.QueryRow(ctx, `SELECT id::text FROM organisations WHERE personal_account=$1`, account).Scan(&org); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	// A project can be hosted only in an organisation the host belongs to.
+	call("PUT", "", alice, aliceToken, map[string]string{"organisation": personal(bob)}, 403)
 	call("PUT", "", alice, aliceToken, struct{}{}, 204)
 	call("GET", revision, bob, bobToken, nil, 404)
 	if _, err := admin.Exec(ctx, `INSERT INTO project_owners(project_id,account_id) VALUES ($1,$2)`, project, bob); err != nil {
@@ -120,7 +129,7 @@ func TestPostgresProjectRevisions(t *testing.T) {
 		}
 		return list
 	}
-	if got := cloud(aliceToken); len(got) != 1 || got[0].ID != project {
+	if got := cloud(aliceToken); len(got) != 1 || got[0].ID != project || got[0].Organisation != personal(alice) {
 		t.Fatalf("owner list: %+v", got)
 	}
 	if got := cloud(bobToken); len(got) != 1 || got[0].ID != project {

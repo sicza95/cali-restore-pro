@@ -25,6 +25,8 @@ export function ProjectInvitations(props: {
   project: SharedProject;
   originalIds?: string[];
   canHost?: boolean;
+  /** The organisation the project is hosted in; none means the personal one. */
+  organisation?: string;
   onLeave?: () => void;
   vault: LocalVault;
 }) {
@@ -46,6 +48,7 @@ export function ProjectInvitations(props: {
           originalIds={props.originalIds}
           vault={props.vault}
           canHost={props.canHost}
+          organisation={props.organisation}
           onLeave={props.onLeave}
         />
       </Show>
@@ -60,6 +63,7 @@ function InvitationControls(props: {
   project: SharedProject;
   originalIds?: string[];
   canHost?: boolean;
+  organisation?: string;
   onLeave?: () => void;
   vault: LocalVault;
 }) {
@@ -82,7 +86,15 @@ function InvitationControls(props: {
         <button
           disabled={sent.busy()}
           data-control-id="project.host"
-          onClick={() => void sent.run(() => app.request(props.projectPath, {}, 'PUT'))}
+          onClick={() =>
+            void sent.run(() =>
+              app.request(
+                props.projectPath,
+                props.organisation ? { organisation: props.organisation } : {},
+                'PUT',
+              ),
+            )
+          }
         >
           {c().enable}
         </button>

@@ -27,6 +27,8 @@ describe('parseRoute', () => {
       ['/verify-email', { name: 'verify-email' }],
       ['/confirm-email', { name: 'confirm-email' }],
       ['/invitations', { name: 'invitations' }],
+      ['/organisations', { name: 'organisations' }],
+      [`/organisations/${project}`, { name: 'organisations', organisation: project }],
       ['/settings/account', { name: 'profile' }],
       ['/settings/security', { name: 'security' }],
       ['/settings/preferences', { name: 'preferences' }],
@@ -71,6 +73,8 @@ describe('parseRoute', () => {
       '/projects/ABCDEF00-0000-4000-8000-000000000001',
       '/settings',
       '/settings/security/extra',
+      '/organisations/acme',
+      `/organisations/${project}/members`,
       '/Login',
     ])
       expect(parseRoute(path), path).toEqual({ name: 'notFound' });

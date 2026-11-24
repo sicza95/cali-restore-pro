@@ -13,6 +13,8 @@ const projectPattern = new RegExp(
   `^/projects(?:/(${uuid})(?:/surfaces/(${uuid})|/(${reviewSteps.join('|')}))?)?/*$`,
 );
 
+const organisationPattern = new RegExp(`^/organisations(?:/(${uuid}))?/*$`);
+
 export function normalizePath(path: string) {
   return path.replace(/\/+$/, '') || '/';
 }
@@ -39,6 +41,11 @@ export function parseRoute(path: string): AppRoute {
   if (normalized === offlinePath) return { name: 'offline' };
   const project = projectLocation(normalized);
   if (project) return { name: 'projects', ...project };
+  const organisation = organisationPattern.exec(normalized);
+  if (organisation)
+    return organisation[1]
+      ? { name: 'organisations', organisation: organisation[1] }
+      : { name: 'organisations' };
   const destination = Object.entries(accountPaths).find(([, href]) => href === normalized);
   if (destination) return { name: destination[0] } as AppRoute;
   const name = normalized.slice(1);
@@ -48,6 +55,10 @@ export function parseRoute(path: string): AppRoute {
 export function projectHref(project?: string, surface?: string) {
   if (!project) return accountPaths.projects;
   return accountPaths.projects + '/' + project + (surface ? '/surfaces/' + surface : '');
+}
+
+export function organisationHref(organisation?: string) {
+  return accountPaths.organisations + (organisation ? '/' + organisation : '');
 }
 
 export function projectReviewHref(project: string, step: ReviewStep) {
@@ -60,6 +71,7 @@ export function routeHref(route: Exclude<AppRoute, { name: 'notFound' }>): strin
     return route.project && route.review
       ? projectReviewHref(route.project, route.review)
       : projectHref(route.project, route.surface);
+  if (route.name === 'organisations') return organisationHref(route.organisation);
   if (route.name === 'login') return loginPath;
   if (route.name === 'offline') return offlinePath;
   if (isAccountDestination(route.name)) return accountPaths[route.name];

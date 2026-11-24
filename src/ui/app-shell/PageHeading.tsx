@@ -30,7 +30,11 @@ export function PageHeading() {
   return (
     <header
       class="app-page-heading"
-      classList={{ 'app-page-heading--settings': settingsPages.includes(app.router.route().name) }}
+      classList={{
+        'app-page-heading--settings': [...settingsPages, 'organisations'].includes(
+          app.router.route().name,
+        ),
+      }}
     >
       <Show when={parents().length}>
         <nav class="app-breadcrumbs" aria-label={navigationText(app.lang()).breadcrumbs}>

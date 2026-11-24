@@ -22,6 +22,8 @@ export type Project = {
   id: string;
   name: string;
   archived: boolean;
+  /** The organisation the project belongs to; none means the account's personal one. */
+  organisation?: string;
   updatedAt: number;
   settings: { version: 1; units: Units; currency: string };
   objects: RestorationObject[];

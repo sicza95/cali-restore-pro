@@ -11,11 +11,13 @@ export function CloudProjects(props: {
   busy: boolean;
   model: Model;
   local: () => ReadonlySet<string>;
+  inOrganisation: (organisation: string) => boolean;
   run: (task: () => Promise<void>) => Promise<boolean>;
   onOpened: (result: Awaited<ReturnType<Model['open']>>) => void;
 }) {
   const c = () => copy[props.language];
-  const [rows, setRows] = createSignal<{ id: string; name: string }[]>();
+  const [all, setRows] = createSignal<{ id: string; name: string; organisation: string }[]>();
+  const rows = () => all()?.filter((row) => props.inOrganisation(row.organisation));
   const [failed, setFailed] = createSignal(false);
   const load = async () => {
     setRows(undefined);

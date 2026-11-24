@@ -4,6 +4,7 @@ import { accountPaths } from '../router/constants';
 const destinations = {
   ...accountPaths,
   offline: '/offline-originals',
+  settings: accountPaths.profile,
   login: '/login',
   register: '/register',
 } as const;
@@ -44,6 +45,12 @@ export const accountNavigationControls = [
     'M-05',
   ),
   navigationControl(
+    'organisations',
+    'signed-in',
+    'Organisations, their members, groups and invitations',
+    'M-02',
+  ),
+  navigationControl(
     'invitations',
     'signed-in',
     'Invitation inbox requires unlocked vault for inbox',
@@ -57,6 +64,7 @@ export const accountNavigationControls = [
     'M-07',
   ),
   navigationControl('admin', 'accounts.view or operations.view', 'Administration', 'M-02'),
+  navigationControl('settings', 'signed-in', 'Settings: profile, security, preferences', 'M-08'),
   navigationControl('login', 'public', 'Sign-in', 'M-01'),
   navigationControl('register', 'public', 'Registration', 'M-01'),
 ];

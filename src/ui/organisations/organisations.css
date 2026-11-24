@@ -1,0 +1,73 @@
+/* A row that opens a page instead of opening in place: an organisation in the list. */
+.settings-option-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 14px clamp(16px, 3vw, 24px);
+  color: var(--cr-ink);
+  text-decoration: none;
+}
+.settings-option-link .settings-option-value {
+  flex: none;
+  max-width: none;
+}
+.settings-option-link:hover {
+  background: var(--cr-hover);
+}
+.settings-option-link:focus-visible {
+  outline-offset: -3px;
+}
+.settings-options > * + * {
+  border-top: 1px solid var(--cr-rule);
+}
+.org-invitation {
+  flex-wrap: nowrap;
+}
+.org-invitation .settings-option-text {
+  flex: 1 1 auto;
+}
+.org-switch-here {
+  margin-bottom: -24px;
+}
+
+/* A group: a name, then one select per part of a project, then the actions. */
+.org-group-editor fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.org-group-editor legend {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.org-group-section {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.org-group-section > span {
+  display: grid;
+}
+.org-group-section small {
+  color: var(--cr-muted);
+  font-size: 13px;
+}
+.org-group-section select {
+  flex: 0 0 180px;
+}
+.org-member-groups {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.org-member-groups legend {
+  margin-bottom: 6px;
+  font-weight: 600;
+}

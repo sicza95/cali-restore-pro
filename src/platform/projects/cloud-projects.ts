@@ -36,11 +36,11 @@ export function cloudProjects(vault: LocalVault) {
       });
       if (!response.ok) throw new Error('Cloud projects unavailable');
       const rows = (await response.json()) as CloudProject[];
-      const found: { id: string; name: string }[] = [];
-      for (const { id } of rows) {
+      const found: { id: string; name: string; organisation: string }[] = [];
+      for (const { id, organisation } of rows) {
         if (local.has(id)) continue;
         try {
-          found.push({ id, name: (await read(id)).document.name });
+          found.push({ id, organisation, name: (await read(id)).document.name });
         } catch {
           queue.signal.throwIfAborted();
         }

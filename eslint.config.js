@@ -32,7 +32,10 @@ export default tseslint.config(
     rules: {
       // `run` and `onRun` take deferred commands that read the current props when they run
       // (after a click or submit), which is what we want. See docs/plan/lint-disables.md.
-      'solid/reactivity': ['warn', { customReactiveFunctions: ['run', 'onRun'] }],
+      'solid/reactivity': [
+        'warn',
+        { customReactiveFunctions: ['run', 'onRun', 'act', 'provideNames'] },
+      ],
     },
   },
   {

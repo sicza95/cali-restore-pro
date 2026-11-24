@@ -12,6 +12,9 @@ const SettingsPage = lazyView(() =>
 const InvitationInbox = lazyView(() =>
   import('../sharing/InvitationInbox').then((m) => m.InvitationInbox),
 ).View;
+const OrganisationsPage = lazyView(() =>
+  import('../organisations/OrganisationsPage').then((m) => m.OrganisationsPage),
+).View;
 const Admin = lazyView(() => import('../settings/admin/Admin').then((m) => m.Admin)).View;
 const PrivateLibraries = lazyView(() =>
   import('../settings/preferences/PrivateLibraries').then((m) => m.PrivateLibraries),
@@ -39,6 +42,9 @@ export function AccountScreen(props: { destination: AccountDestination; account:
           language={lang()}
           workspace={(vault) => <PrivateLibraries vault={vault} language={lang()} />}
         />
+      </Match>
+      <Match when={props.destination === 'organisations'}>
+        <OrganisationsPage />
       </Match>
       <Match when={props.destination === 'admin'}>
         <Admin />

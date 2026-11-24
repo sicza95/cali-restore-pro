@@ -23,6 +23,8 @@ const navigationCopy = defineCopy({
     hideSidebar: 'Hide the menu',
     themeMenu: 'Theme',
     languageMenu: 'Language',
+    organisations: 'Organisations',
+    organisationCrumb: 'Organisation',
   },
   hu: {
     notFound: 'Az oldal nem található',
@@ -42,6 +44,8 @@ const navigationCopy = defineCopy({
     hideSidebar: 'Menü elrejtése',
     themeMenu: 'Téma',
     languageMenu: 'Nyelv',
+    organisations: 'Szervezetek',
+    organisationCrumb: 'Szervezet',
   },
 });
 

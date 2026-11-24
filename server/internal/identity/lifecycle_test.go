@@ -351,7 +351,7 @@ func TestMailKeyAndTemplates(t *testing.T) {
 		t.Fatal("short key")
 	}
 	for _, lang := range []string{"en", "hu"} {
-		for _, purpose := range []string{"verify", "not-registered", "reset", "email", "security", "account-exists", "project-invitation", "welcome", "password-reset", "password-changed"} {
+		for _, purpose := range []string{"verify", "not-registered", "reset", "email", "security", "account-exists", "project-invitation", "organisation-invitation", "welcome", "password-reset", "password-changed"} {
 			subject, body := mailer.Text(mailer.Payload{Language: lang, Purpose: purpose}, "https://example.test")
 			if subject == "" || body == "" || strings.Contains(body, "token=") {
 				t.Fatal("template")

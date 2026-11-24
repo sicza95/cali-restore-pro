@@ -123,11 +123,11 @@ export function AccountMenu() {
             aria-haspopup="menu"
             aria-expanded={open()}
             aria-controls={open() ? 'account-menu' : undefined}
-            // The visible initial belongs in the name too: "Account menu, Anna Kovács".
+            // The visible name belongs in the accessible name too: "Account menu, Anna Kovács".
             aria-label={`${c().accountMenu}, ${account().name || account().email}`}
-            title={account().name || account().email}
             onClick={toggle}
           >
+            <span class="account-menu-name">{account().name || account().email}</span>
             <ProfileAvatar name={account().name} email={account().email} photo={account().photo} />
           </button>
           <Show when={open()}>

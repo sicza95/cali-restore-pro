@@ -15,6 +15,7 @@ export const publicRouteNames = [
 export const accountPaths = {
   projects: '/projects',
   invitations: '/invitations',
+  organisations: '/organisations',
   profile: '/settings/account',
   security: '/settings/security',
   preferences: '/settings/preferences',
@@ -38,6 +39,7 @@ export const routeAccess: Record<RouteName, RouteAccess> = {
   'confirm-email': 'public',
   projects: 'signed-in',
   invitations: 'signed-in',
+  organisations: 'signed-in',
   profile: 'signed-in',
   security: 'signed-in',
   preferences: 'signed-in',

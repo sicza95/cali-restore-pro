@@ -300,8 +300,8 @@ test('a delayed failure after navigation does not show an error or clear the ses
   await response;
   await expect(page.locator('[data-control-id="app.nav.account-menu"]')).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
-  await expect(page.locator('[data-control-id="app.nav.account-menu"]')).toHaveAttribute(
-    'title',
+  // The top bar still names the signed-in account.
+  await expect(page.locator('[data-control-id="app.nav.account-menu"]')).toContainText(
     account.email,
   );
 });

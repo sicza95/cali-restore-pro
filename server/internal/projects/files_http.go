@@ -11,6 +11,7 @@ import (
 	"github.com/sicza95/cali-restore-pro/server/internal/httpjson"
 	"github.com/sicza95/cali-restore-pro/server/internal/identity"
 	"github.com/sicza95/cali-restore-pro/server/internal/objectstore"
+	"github.com/sicza95/cali-restore-pro/server/internal/orgs"
 )
 
 func fileFailure(w http.ResponseWriter, err error) {
@@ -78,9 +79,20 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 	}
 	empty := func(w http.ResponseWriter) func() { return func() { w.WriteHeader(http.StatusNoContent) } }
 	handle("PUT "+projects, func(w http.ResponseWriter, r *http.Request, a fileAccess, project, _ string) (func(), error) {
-		var b struct{}
+		// The project's organisation; none means the host's personal organisation.
+		var b struct {
+			Organisation *string `json:"organisation"`
+		}
 		if !httpjson.Decode(w, r, &b) {
 			return nil, nil
+		}
+		if b.Organisation != nil {
+			if !httpjson.UUID(*b.Organisation) {
+				return nil, identity.ErrInvalid
+			}
+			if err := orgs.RequireMember(r.Context(), a.tx, *b.Organisation, a.account); err != nil {
+				return nil, err
+			}
 		}
 		if err := a.hosts(r.Context(), project); err == nil {
 			return empty(w), nil
@@ -91,10 +103,10 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 			return nil, identity.ErrForbidden
 		}
 		tag, err := a.tx.Exec(r.Context(), `WITH created AS (
- INSERT INTO hosted_projects(id,host_id) SELECT $1::uuid,$2::uuid WHERE NOT EXISTS (SELECT 1 FROM project_deletions WHERE id=$1)
+ INSERT INTO hosted_projects(id,host_id,organisation_id) SELECT $1::uuid,$2::uuid,$3::uuid WHERE NOT EXISTS (SELECT 1 FROM project_deletions WHERE id=$1)
  ON CONFLICT DO NOTHING RETURNING id,host_id
  )
- INSERT INTO project_owners(project_id,account_id) SELECT id,host_id FROM created`, project, a.account)
+ INSERT INTO project_owners(project_id,account_id) SELECT id,host_id FROM created`, project, a.account, b.Organisation)
 		if err == nil && tag.RowsAffected() == 0 {
 			err = errFileMissing
 		}
