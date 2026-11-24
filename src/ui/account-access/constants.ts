@@ -9,6 +9,7 @@ export const authErrorMessages = {
   passkey_exists: 'passkeyExists',
   passkey_rejected: 'passkeyRejected',
   passkeys_unavailable: 'passkeyUnavailable',
+  no_passkeys: 'noPasskeysToConfirm',
 } as const;
 
 export const sessionEndingActions = [

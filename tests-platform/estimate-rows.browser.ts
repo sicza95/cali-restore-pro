@@ -1,6 +1,7 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { expectTaskLanguage } from './copy-guard';
 import { touchTarget } from './touch-target';
+import { chooseLanguage } from './app-navigation';
 
 const objectName = 'North elevation sandstone balustrade';
 const surfaceName = 'Lower cornice and frieze, west bay';
@@ -111,7 +112,7 @@ test('estimate rows show whole values at tablet sizes in EN and HU', async ({ pa
   await finance('extraRate').fill('987654.5');
   await finance('extraHours').fill('123456.75');
   for (const language of ['en', 'hu'] as const) {
-    if (language === 'hu') await page.getByLabel('App language').selectOption('hu');
+    if (language === 'hu') await chooseLanguage(page, 'hu');
     for (const viewport of [
       { width: 1194, height: 834 },
       { width: 834, height: 1194 },
@@ -137,6 +138,6 @@ test('estimate rows show whole values at tablet sizes in EN and HU', async ({ pa
   const open = { en: 'Open surface: ', hu: 'Felület megnyitása: ' };
   await page.locator('[data-control-id="estimate.step.phases"]').click();
   await expect(phase('scopeLink')).toHaveText(open.hu + objectName + ' / ' + surfaceName);
-  await page.getByLabel('Az alkalmazás nyelve').selectOption('en');
+  await chooseLanguage(page, 'en');
   await expect(phase('scopeLink')).toHaveText(open.en + objectName + ' / ' + surfaceName);
 });

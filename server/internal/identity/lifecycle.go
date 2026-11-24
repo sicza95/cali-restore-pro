@@ -58,7 +58,15 @@ func (s *Service) enqueue(ctx context.Context, tx pgx.Tx, account, to, lang, pur
 	if s.mailCipher == nil {
 		return errors.New("mail not configured")
 	}
-	plain, err := json.Marshal(mailer.Payload{To: to, Language: language(lang), Purpose: purpose, Token: raw, Code: code})
+	// Every email greets the account's full name once it has one.
+	var name string
+	if account != "" {
+		err := tx.QueryRow(ctx, `SELECT full_name FROM accounts WHERE id=$1`, account).Scan(&name)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
+	}
+	plain, err := json.Marshal(mailer.Payload{To: to, Language: language(lang), Purpose: purpose, Token: raw, Code: code, Name: name})
 	if err != nil {
 		return err
 	}

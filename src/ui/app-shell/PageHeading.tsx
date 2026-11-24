@@ -6,6 +6,9 @@ import type { Crumb } from '../router/breadcrumbs';
 import { followLink } from '../router/routes';
 import { usePageTrail } from './usePageTrail';
 
+/** Profile, Security and Preferences are sections of one Settings page. */
+const settingsPages: string[] = ['profile', 'security', 'preferences'];
+
 /**
  * Control ids of the crumb links, kept from the back links they replace so tests and the control
  * registry still find them.
@@ -25,7 +28,10 @@ export function PageHeading() {
   const page = usePageTrail();
   const parents = () => page.trail().slice(0, -1);
   return (
-    <header class="app-page-heading">
+    <header
+      class="app-page-heading"
+      classList={{ 'app-page-heading--settings': settingsPages.includes(app.router.route().name) }}
+    >
       <Show when={parents().length}>
         <nav class="app-breadcrumbs" aria-label={navigationText(app.lang()).breadcrumbs}>
           <ol>
@@ -55,7 +61,9 @@ export function PageHeading() {
           </ol>
         </nav>
       </Show>
-      <h1 class="app-page-title">{page.title()}</h1>
+      <h1 class="app-page-title">
+        {settingsPages.includes(app.router.route().name) ? app.t('settings') : page.title()}
+      </h1>
     </header>
   );
 }

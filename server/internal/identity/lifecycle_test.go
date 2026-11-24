@@ -95,24 +95,52 @@ func TestPostgresLifecycle(t *testing.T) {
 	if err = s.CheckCode(ctx, byCode(verify.Code)); !errors.Is(err, ErrLink) {
 		t.Fatal("code survived its attempts", err)
 	}
-	if _, err = s.CompleteCode(ctx, CodeProof{Token: verify.Token}, "short"); !errors.Is(err, ErrCredentials) {
+	if _, err = s.CompleteCode(ctx, CodeProof{Token: verify.Token}, "short", Profile{}); !errors.Is(err, ErrCredentials) {
 		t.Fatal("weak password", err)
 	}
-	signedIn, err := s.CompleteCode(ctx, CodeProof{Token: verify.Token}, testdb.Password)
+	// The profile is checked before anything changes: a bad photo keeps the code.
+	notPhoto := "bm90IGEgcGhvdG8="
+	if _, err = s.CompleteCode(ctx, CodeProof{Token: verify.Token}, testdb.Password, Profile{Name: "Anna", Photo: &notPhoto}); !errors.Is(err, ErrInvalid) {
+		t.Fatal("photo that is not a JPEG", err)
+	}
+	if _, err = s.CompleteCode(ctx, CodeProof{Token: verify.Token}, testdb.Password, Profile{Name: strings.Repeat("a", 101)}); !errors.Is(err, ErrInvalid) {
+		t.Fatal("long name", err)
+	}
+	photo := testJPEG(t, 64)
+	signedIn, err := s.CompleteCode(ctx, CodeProof{Token: verify.Token}, testdb.Password, Profile{Name: "  Kovács   Anna ", Photo: &photo})
 	must(err)
+	if me, _ := s.Current(ctx, signedIn); me.Account.Name != "Kovács Anna" || me.Account.Photo == nil {
+		t.Fatal("profile after sign-up", me.Account)
+	}
+	if picture, _, err := s.Photo(ctx, signedIn); err != nil || len(picture) == 0 {
+		t.Fatal("photo", err)
+	}
 	if _, err = s.Current(ctx, signedIn); err != nil {
 		t.Fatal("signup did not sign in", err)
 	}
-	if welcome := latest("welcome"); welcome.Token != "" || welcome.Code != "" || welcome.To != verify.To {
+	if welcome := latest("welcome"); welcome.Token != "" || welcome.Code != "" || welcome.To != verify.To || welcome.Name != "Kovács Anna" {
 		t.Fatal("welcome mail", welcome)
 	}
-	if _, err = s.CompleteCode(ctx, CodeProof{Token: verify.Token}, testdb.Password); !errors.Is(err, ErrLink) {
+	if _, err = s.CompleteCode(ctx, CodeProof{Token: verify.Token}, testdb.Password, Profile{}); !errors.Is(err, ErrLink) {
 		t.Fatal("replay", err)
 	}
 	// An active account gets a notice, never a new link, and its password stays.
 	must(s.RegisterAccount(ctx, verify.To, "en"))
-	if notice := latest("account-exists"); notice.Token != "" || notice.Code != "" {
-		t.Fatal("notice carries a secret")
+	if notice := latest("account-exists"); notice.Token != "" || notice.Code != "" || notice.Name != "Kovács Anna" {
+		t.Fatal("notice carries a secret or lost the name", notice)
+	}
+	// A profile change keeps or removes the photo and greets with the new name.
+	empty := ""
+	must(s.UpdateProfile(ctx, signedIn, Profile{Name: "Anna Kovács"}))
+	if me, _ := s.Current(ctx, signedIn); me.Account.Name != "Anna Kovács" || me.Account.Photo == nil {
+		t.Fatal("name change dropped the photo", me.Account)
+	}
+	must(s.UpdateProfile(ctx, signedIn, Profile{Name: "Anna Kovács", Photo: &empty}))
+	if _, _, err = s.Photo(ctx, signedIn); !errors.Is(err, errNoPhoto) {
+		t.Fatal("photo not removed", err)
+	}
+	if err = s.UpdateProfile(ctx, signedIn, Profile{Name: "bad\x00name"}); !errors.Is(err, ErrInvalid) {
+		t.Fatal("control character", err)
 	}
 	var kind string
 	must(admin.QueryRow(ctx, `SELECT kind FROM mail_outbox ORDER BY created_at DESC,id DESC LIMIT 1`).Scan(&kind))
@@ -123,7 +151,7 @@ func TestPostgresLifecycle(t *testing.T) {
 	query(`DELETE FROM auth_rate_limits`)
 	must(s.RegisterAccount(ctx, "code@example.test", "en"))
 	byMail := latest("verify")
-	if _, err = s.CompleteCode(ctx, CodeProof{Email: "CODE@example.test", Code: byMail.Code}, testdb.Password); err != nil {
+	if _, err = s.CompleteCode(ctx, CodeProof{Email: "CODE@example.test", Code: byMail.Code}, testdb.Password, Profile{}); err != nil {
 		t.Fatal("code signup", err)
 	}
 	must(s.RegisterAccount(ctx, "late@example.test", "en"))
@@ -138,7 +166,7 @@ func TestPostgresLifecycle(t *testing.T) {
 	must(s.ForgotPassword(ctx, verify.To, "hu"))
 	reset := latest("reset")
 	query(`UPDATE identity_links SET expires_at=now()-interval '1 second'`)
-	if _, err = s.CompleteCode(ctx, CodeProof{Token: reset.Token}, testdb.Password); !errors.Is(err, ErrLink) {
+	if _, err = s.CompleteCode(ctx, CodeProof{Token: reset.Token}, testdb.Password, Profile{}); !errors.Is(err, ErrLink) {
 		t.Fatal("expired", err)
 	}
 	// A reset by code: checking does not use it up, a wrong code is refused, and
@@ -154,12 +182,12 @@ func TestPostgresLifecycle(t *testing.T) {
 	if reset.Code == bad {
 		bad = "111111"
 	}
-	if _, err = s.CompleteCode(ctx, CodeProof{Email: verify.To, Code: bad}, testdb.Password); !errors.Is(err, ErrLink) {
+	if _, err = s.CompleteCode(ctx, CodeProof{Email: verify.To, Code: bad}, testdb.Password, Profile{}); !errors.Is(err, ErrLink) {
 		t.Fatal("wrong reset code", err)
 	}
 	other, err := s.Login(ctx, verify.To, testdb.Password, "")
 	must(err)
-	byReset, err := s.CompleteCode(ctx, CodeProof{Email: verify.To, Code: reset.Code}, "a reset synthetic password value")
+	byReset, err := s.CompleteCode(ctx, CodeProof{Email: verify.To, Code: reset.Code}, "a reset synthetic password value", Profile{})
 	must(err)
 	if _, err = s.Current(ctx, byReset); err != nil {
 		t.Fatal("reset did not sign in", err)
@@ -179,7 +207,7 @@ func TestPostgresLifecycle(t *testing.T) {
 	var wg sync.WaitGroup
 	for range 2 {
 		wg.Go(func() {
-			if _, e := s.CompleteCode(ctx, CodeProof{Token: reset.Token}, "a replacement synthetic password"); e == nil {
+			if _, e := s.CompleteCode(ctx, CodeProof{Token: reset.Token}, "a replacement synthetic password", Profile{}); e == nil {
 				successes.Add(1)
 			}
 		})
@@ -306,11 +334,11 @@ func TestPostgresLifecycle(t *testing.T) {
 	operator, err := s.Login(ctx, "operator@example.test", testdb.Password, "")
 	must(err)
 	must(s.SetPolicy(ctx, operator, current.Account.ID, "member", "suspended"))
-	if _, err = s.CompleteCode(ctx, CodeProof{Token: stale.Token}, testdb.Password); !errors.Is(err, ErrLink) {
+	if _, err = s.CompleteCode(ctx, CodeProof{Token: stale.Token}, testdb.Password, Profile{}); !errors.Is(err, ErrLink) {
 		t.Fatal("suspended reset", err)
 	}
 	must(s.SetPolicy(ctx, operator, current.Account.ID, "member", "active"))
-	if _, err = s.CompleteCode(ctx, CodeProof{Token: stale.Token}, testdb.Password); !errors.Is(err, ErrLink) {
+	if _, err = s.CompleteCode(ctx, CodeProof{Token: stale.Token}, testdb.Password, Profile{}); !errors.Is(err, ErrLink) {
 		t.Fatal("old link resurrected", err)
 	}
 	query(`UPDATE mail_outbox SET expires_at=now()-interval '1 second'`)

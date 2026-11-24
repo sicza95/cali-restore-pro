@@ -1,0 +1,241 @@
+/* The Settings title sits on the same centred column as its sections. */
+.app-page-heading--settings {
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+}
+/* Settings: one centred column of sections; each lists its settings as rows that open in place. */
+.settings-page {
+  display: grid;
+  gap: 40px;
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+}
+.settings-section {
+  display: grid;
+  gap: 14px;
+  scroll-margin-top: calc(var(--app-bar-height, 60px) + 16px);
+}
+.settings-section > header h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.settings-section > header p {
+  margin: 4px 0 0;
+  color: var(--cr-muted);
+  font-size: 14px;
+}
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+button.danger {
+  color: var(--cr-negative);
+  box-shadow: inset 0 0 0 1px currentColor;
+  background: transparent;
+}
+button.danger:hover:enabled {
+  color: var(--cr-negative);
+}
+.settings-current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0;
+}
+.settings-current > span {
+  color: var(--cr-muted);
+  font-size: 14px;
+}
+
+/* A line that only shows a value, like the sign-in email. */
+.settings-static {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  min-height: 72px;
+  padding: 14px clamp(16px, 3vw, 24px);
+}
+.settings-static > span {
+  font-weight: 600;
+}
+.settings-static + .settings-option {
+  border-top: 1px solid var(--cr-rule);
+}
+
+/* The rows of a section. */
+.settings-options {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-panel-radius);
+}
+.settings-option + .settings-option {
+  border-top: 1px solid var(--cr-rule);
+}
+.settings-option > summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 72px;
+  padding: 14px clamp(16px, 3vw, 24px);
+  cursor: pointer;
+  list-style: none;
+}
+.settings-option > summary::-webkit-details-marker {
+  display: none;
+}
+.settings-option > summary:hover {
+  background: var(--cr-hover);
+}
+.settings-option > summary:focus-visible {
+  outline-offset: -3px;
+}
+.settings-option-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--cr-accent);
+  background: var(--cr-selected);
+}
+.settings-option-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.settings-option-text > span {
+  color: var(--cr-muted);
+  font-size: 14px;
+}
+.settings-option-value {
+  flex: 0 1 auto;
+  max-width: 40%;
+  margin-inline-start: auto;
+  overflow: hidden;
+  color: var(--cr-muted);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-option-chevron {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--cr-muted);
+  transition: transform 140ms ease-out;
+}
+.settings-option[open] .settings-option-chevron {
+  transform: rotate(90deg);
+}
+.settings-option-body {
+  display: grid;
+  gap: 16px;
+  padding: 4px clamp(16px, 3vw, 24px) 24px;
+}
+/* Rows with an icon line their content up with the title. */
+.settings-option-body[data-icon] {
+  padding-inline-start: calc(clamp(16px, 3vw, 24px) + 56px);
+}
+.settings-option-body .account-panel {
+  margin: 0;
+  padding: 0;
+  background: none;
+}
+.settings-option-body form,
+.passkey-section {
+  display: grid;
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .settings-option-body[data-icon] {
+    padding-inline-start: clamp(16px, 3vw, 24px);
+  }
+}
+
+/* Rows with an action at the end: sessions and passkeys. */
+.settings-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-radius);
+}
+.settings-list > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 14px;
+}
+.settings-list > li + li {
+  border-top: 1px solid var(--cr-rule);
+}
+.settings-list-empty {
+  color: var(--cr-muted);
+}
+.passkey-add {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.passkey-add label {
+  flex: 1 1 220px;
+}
+
+/* A few choices side by side: theme and language. */
+.settings-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.settings-choices label {
+  display: block;
+}
+.settings-choices input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.settings-choices span {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cr-touch);
+  padding: 0 16px;
+  font-weight: 600;
+  border-radius: var(--cr-radius);
+  box-shadow: inset 0 0 0 1px var(--cr-rule);
+  cursor: pointer;
+}
+.settings-choices span:hover {
+  background: var(--cr-hover);
+}
+.settings-choices input:checked + span {
+  color: var(--cr-accent);
+  background: var(--cr-selected);
+  box-shadow: inset 0 0 0 2px var(--cr-accent);
+}
+.settings-choices input:focus-visible + span {
+  outline: var(--cr-focus-width) solid var(--cr-accent);
+  outline-offset: 3px;
+}
+.settings-option-body .report-logo {
+  max-width: 200px;
+  max-height: 80px;
+  object-fit: contain;
+}
+.settings-option-value + .settings-option-chevron {
+  margin-inline-start: 4px;
+}

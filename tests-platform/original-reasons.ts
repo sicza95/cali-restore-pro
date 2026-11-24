@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect } from '@playwright/test';
 import type { Locator, Page, TestInfo } from '@playwright/test';
+import { chooseLanguage } from './app-navigation';
 
 /** Why a photo's controls are blocked (#72, #75), as the originals list says it (#79). */
 export const reasons = {
@@ -117,8 +118,6 @@ export async function expectNoReason(page: Page, name: string, step: string) {
   await expect(notes(page, name), step).toHaveCount(0);
 }
 
-const language = (page: Page) => page.locator('[data-control-id="app.nav.language"]');
-
 /**
  * Screenshots of the originals list at 1194 and 834 in EN and HU, with the reasons checked in
  * each; `rows` names the photos whose reasons to check. With `dark`, also dark at 834, and axe on
@@ -133,7 +132,7 @@ export async function reasonShots(
 ) {
   const list = page.locator('.project-originals');
   for (const lang of ['en', 'hu'] as const) {
-    if (lang === 'hu') await language(page).selectOption('hu');
+    if (lang === 'hu') await chooseLanguage(page, 'hu');
     for (const viewport of [
       { width: 1194, height: 834 },
       { width: 834, height: 1194 },
@@ -152,7 +151,7 @@ export async function reasonShots(
       });
     }
   }
-  await language(page).selectOption('en');
+  await chooseLanguage(page, 'en');
   if (dark) {
     for (const colorScheme of ['light', 'dark'] as const) {
       await page.emulateMedia({ colorScheme });

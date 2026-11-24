@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { input } from '../tests-estimates/fixtures';
 import { expectTaskLanguage } from './copy-guard';
+import { chooseLanguage } from './app-navigation';
 
 test('encrypted estimate and preset persistence, immutable versions, isolation and lock', async ({
   page,
@@ -331,7 +332,7 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   await expectTaskLanguage(page, 'project backup');
   await page.screenshot({ path: info.outputPath('project-backup.png'), fullPage: true });
   await page.locator('[data-control-id="project.review.estimates"]').click();
-  await page.getByLabel('App language').selectOption('hu');
+  await chooseLanguage(page, 'hu');
   await step('issue');
   await expect(page.getByRole('button', { name: 'Becslési verzió mentése' })).toBeVisible();
   await expectTaskLanguage(page, 'estimate hu');

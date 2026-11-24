@@ -57,7 +57,7 @@ func (s *Service) AdminAccounts(ctx context.Context, raw, prefix, after string) 
 	if !actor.Account.Allows(ViewAccounts) {
 		return nil, ErrForbidden
 	}
-	rows, err := tx.Query(ctx, `SELECT a.id,a.email,a.state,a.role,a.admin_permissions,a.server_features,a.quota_mib,
+	rows, err := tx.Query(ctx, `SELECT a.id,a.email,a.full_name,a.state,a.role,a.admin_permissions,a.server_features,a.quota_mib,
     (SELECT count(*) FROM sessions WHERE account_id=a.id)
     FROM accounts a WHERE ($1 OR a.role='member') AND a.email LIKE $2 ESCAPE '!'
     AND a.id > COALESCE(NULLIF($3,'')::uuid,'00000000-0000-0000-0000-000000000000')
@@ -67,7 +67,7 @@ func (s *Service) AdminAccounts(ctx context.Context, raw, prefix, after string) 
 	}
 	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (AdminAccount, error) {
 		var a AdminAccount
-		err := row.Scan(&a.ID, &a.Email, &a.State, &a.Role, &a.Permissions, &a.ServerFeatures, &a.QuotaMiB, &a.Sessions)
+		err := row.Scan(&a.ID, &a.Email, &a.Name, &a.State, &a.Role, &a.Permissions, &a.ServerFeatures, &a.QuotaMiB, &a.Sessions)
 		return a, err
 	})
 }

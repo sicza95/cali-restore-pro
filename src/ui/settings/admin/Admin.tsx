@@ -1,6 +1,5 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
-import { PasswordField } from '../../account/password-field/PasswordField';
 import { settingsCopy } from '../settings-copy';
 import type { AccountPage, Operations } from '../types';
 import { AccountRow } from '../account-row/AccountRow';
@@ -50,13 +49,6 @@ export function Admin() {
               {c().search}
             </button>
           </form>
-          <form class="admin-search" onSubmit={(e) => app.submit(e, 'confirm', 'confirmed')}>
-            <PasswordField t={app.t} kind="currentPassword" />
-            <button data-control-id="admin.confirm" disabled={app.busy()}>
-              {app.t('confirmPassword')}
-            </button>
-          </form>
-          <p class="field-help">{c().adminPasswordHelp}</p>
           <Show when={page.loading}>
             <p role="status">{app.t('working')}</p>
           </Show>

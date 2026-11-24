@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { operations, routeAdmin } from './admin-fixtures';
 import { expectTaskLanguage } from './copy-guard';
+import { chooseLanguage } from './app-navigation';
 
 const labels = {
   en: [
@@ -31,7 +32,7 @@ for (const lang of ['en', 'hu'] as const)
     });
     await routeAdmin(page, 'rows');
     await page.goto('/admin');
-    if (lang === 'hu') await page.getByLabel('App language').selectOption('hu');
+    if (lang === 'hu') await chooseLanguage(page, 'hu');
     await page.locator('[data-control-id="admin.operations.mail"]').click();
     const refs = page.locator('[data-control-id="admin.reference.copy"]');
     const ids = [

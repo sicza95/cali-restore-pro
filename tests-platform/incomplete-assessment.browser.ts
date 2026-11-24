@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { orientedJpeg } from './fixtures/images';
+import { chooseLanguage } from './app-navigation';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 
@@ -134,7 +135,7 @@ test('empty and partial assessments survive reopening and a draft estimate workb
   await report('cancel').click();
   await report('language').selectOption('hu');
   await expect(report('final')).toBeDisabled();
-  await page.locator('[data-control-id="app.nav.language"]').selectOption('hu');
+  await chooseLanguage(page, 'hu');
   await expect(page.locator('#report-final-reason')).toContainText('Ez a becslés hiányos.');
   await page.screenshot({ path: info.outputPath('final-blocked-hu.png') });
   await report('preview').click();

@@ -10,7 +10,8 @@ export function AccountRow(props: { account: AdminAccount; refresh: () => void }
   const a = () => props.account;
   const c = () => settingsCopy[app.lang()];
   const ready = () => a().state === 'active' || a().state === 'suspended';
-  const disabled = () => app.busy() || !app.confirmed();
+  // The server asks for a fresh confirmation when it needs one; "Confirm it's you" handles it.
+  const disabled = () => app.busy();
   const apply = (action: string, body: object) =>
     app.run('/admin/accounts/' + a().id + '/' + action, body, 'adminSaved').then((ok) => {
       if (ok) props.refresh();

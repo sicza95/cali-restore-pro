@@ -6508,6 +6508,437 @@
           }
         }
       }
+    },
+    "/api/v1/auth/profile": {
+      "post": {
+        "operationId": "identityUpdateProfile",
+        "summary": "Change the own full name and profile photo (a session, no recent confirmation)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name or photo, or invalid or oversized JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdateRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/photo": {
+      "get": {
+        "operationId": "identityOwnPhoto",
+        "summary": "The own profile photo; the URL in the account carries its version",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "v",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Photo version; changes with the photo."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JPEG photo",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No photo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/confirm/passkey/options": {
+      "post": {
+        "operationId": "identityPasskeyConfirmOptions",
+        "summary": "Start confirming the signed-in person with one of their own passkeys",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyCeremony"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or oversized JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Passkeys unavailable for this APP_ORIGIN, or no passkey on this account (no_passkeys)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/confirm/passkey": {
+      "post": {
+        "operationId": "identityPasskeyConfirm",
+        "summary": "Confirm the signed-in person with a passkey; replaces the session with a confirmed one",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CSRFResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or oversized JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication or credentials rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Policy, recent confirmation, Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Passkeys unavailable for this APP_ORIGIN (IP-address origins)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Account or session safeguard conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Shared rate or hashing concurrency limit; Retry-After: 900",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyLoginRequest"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6606,6 +7037,15 @@
           "role": {
             "type": "string",
             "enum": ["member", "administrator", "superuser"]
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Full name; empty for accounts created before names existed."
+          },
+          "photo": {
+            "type": "string",
+            "description": "Versioned URL of the own profile photo; absent without one."
           }
         }
       },
@@ -7420,7 +7860,7 @@
       "CodeCompleteRequest": {
         "type": "object",
         "additionalProperties": false,
-        "description": "Either the link token, or the email address with the six-digit code, and the first password.",
+        "description": "Either the link token, or the email address with the six-digit code, and the first password. A new account also takes its name and optional photo; a reset ignores them.",
         "oneOf": [
           {
             "required": ["token", "password"]
@@ -7446,6 +7886,38 @@
             "type": "string",
             "minLength": 15,
             "maxLength": 1024
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Full name; spaces are trimmed and collapsed. Empty means no name."
+          },
+          "photo": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "contentMediaType": "image/jpeg",
+            "maxLength": 349528,
+            "description": "Square JPEG from 16 to 1024 pixels a side, at most 256 KiB. An empty string removes the photo."
+          }
+        }
+      },
+      "ProfileUpdateRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "description": "Change the own full name, and the photo when given (absent keeps it).",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Full name; spaces are trimmed and collapsed. Empty means no name."
+          },
+          "photo": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "contentMediaType": "image/jpeg",
+            "maxLength": 349528,
+            "description": "Square JPEG from 16 to 1024 pixels a side, at most 256 KiB. An empty string removes the photo."
           }
         }
       }

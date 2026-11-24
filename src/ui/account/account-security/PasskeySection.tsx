@@ -13,12 +13,11 @@ function deviceName() {
   );
 }
 
-/** Optional passkeys: a sign-in factor only, managed after a recent password confirmation. */
+/** Optional passkeys: a sign-in factor only. Adding or removing one confirms the person first. */
 export function PasskeySection() {
   const app = useApp();
   const [passkeys, setPasskeys] = createSignal<PasskeyInfo[]>([]);
   const [available, setAvailable] = createSignal(passkeysSupported());
-  const [removeConfirmed, setRemoveConfirmed] = createSignal(false);
   const [loadFailed, setLoadFailed] = createSignal(false);
   const date = (iso: string) => new Date(iso).toLocaleString(app.lang());
   // Like the session list, a failed load stays inside this section; /auth/me owns the session.
@@ -39,41 +38,33 @@ export function PasskeySection() {
       : item.backupEligible
         ? app.t('passkeySyncable')
         : app.t('passkeyDevice');
-  // One step: when the last confirmation has lapsed, the password goes in this form too.
   const add = async (event: SubmitEvent) => {
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
-    const data = new FormData(form);
-    const name = String(data.get('passkey-name') ?? '');
-    if (!app.confirmed()) {
-      const password = String(data.get('password') ?? '');
-      if (!(await app.run('confirm', { password }, 'confirmed'))) return;
-    }
+    const name = String(new FormData(form).get('passkey-name') ?? '');
     if (await app.addPasskey(name)) form.reset();
     await refresh();
   };
   const remove = async (item: PasskeyInfo) => {
     await app.run('passkeys/remove', { passkeyId: item.id, confirm: true }, 'passkeyRemoved');
-    setRemoveConfirmed(false);
     await refresh();
   };
   return (
-    <section class="account-section" aria-labelledby="passkeys-heading">
-      <div>
-        <h2 id="passkeys-heading">{app.t('passkeys')}</h2>
-        <p>{app.t('passkeyHelp')}</p>
-      </div>
-      <div class="account-panel">
-        <Show when={loadFailed()}>
-          <p role="alert">{app.t('passkeyLoadFailed')}</p>
-        </Show>
-        <ul class="passkey-list">
-          <For each={passkeys()} fallback={<li>{app.t('noPasskeys')}</li>}>
-            {(item) => (
-              <li>
-                <span>
-                  <strong>{item.name}</strong> · {sync(item)}
-                  <br />
+    <div class="passkey-section">
+      <Show when={loadFailed()}>
+        <p role="alert">{app.t('passkeyLoadFailed')}</p>
+      </Show>
+      <ul class="settings-list passkey-list" aria-label={app.t('passkeys')}>
+        <For
+          each={passkeys()}
+          fallback={<li class="settings-list-empty">{app.t('noPasskeys')}</li>}
+        >
+          {(item) => (
+            <li>
+              <span>
+                <strong>{item.name}</strong> · {sync(item)}
+                <br />
+                <span class="field-help">
                   {app.t('passkeyAddedAt')}{' '}
                   <time datetime={item.createdAt}>{date(item.createdAt)}</time>
                   {' · '}
@@ -85,63 +76,41 @@ export function PasskeySection() {
                     )}
                   </Show>
                 </span>
-                <Show when={item.cloneWarning}>
-                  <span role="note" class="passkey-warning">
-                    {app.t('passkeyWarning')}
-                  </span>
-                </Show>
-                <button
-                  data-control-id="account.passkeys.remove"
-                  aria-label={`${app.t('removePasskey')}: ${item.name}`}
-                  disabled={app.busy() || !app.confirmed() || !removeConfirmed()}
-                  onClick={() => void remove(item)}
-                >
-                  {app.t('removePasskey')}
-                </button>
-              </li>
-            )}
-          </For>
-        </ul>
-        <Show when={passkeys().length > 0}>
-          <label class="confirmation">
+              </span>
+              <Show when={item.cloneWarning}>
+                <span role="note" class="passkey-warning">
+                  {app.t('passkeyWarning')}
+                </span>
+              </Show>
+              <button
+                data-control-id="account.passkeys.remove"
+                aria-label={`${app.t('removePasskey')}: ${item.name}`}
+                disabled={app.busy()}
+                onClick={() => void remove(item)}
+              >
+                {app.t('removePasskey')}
+              </button>
+            </li>
+          )}
+        </For>
+      </ul>
+      <Show when={available()} fallback={<p>{app.t('passkeyUnsupported')}</p>}>
+        <form class="passkey-add" onSubmit={(e) => void add(e)}>
+          <label>
+            {app.t('passkeyName')}
             <input
-              type="checkbox"
-              checked={removeConfirmed()}
-              onChange={(e) => setRemoveConfirmed(e.currentTarget.checked)}
+              name="passkey-name"
+              required
+              maxlength={64}
+              autocomplete="off"
+              value={deviceName() ?? app.t('passkeyDefaultName')}
             />
-            {app.t('confirmation')}
           </label>
-        </Show>
-        <Show when={available()} fallback={<p>{app.t('passkeyUnsupported')}</p>}>
-          <form class="passkey-add" onSubmit={(e) => void add(e)}>
-            <label>
-              {app.t('passkeyName')}
-              <input
-                name="passkey-name"
-                required
-                maxlength={64}
-                autocomplete="off"
-                value={deviceName() ?? app.t('passkeyDefaultName')}
-              />
-            </label>
-            <Show when={!app.confirmed()}>
-              <label>
-                {app.t('password')}
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  autocomplete="current-password"
-                  data-control-id="account.passkeys.password"
-                />
-              </label>
-            </Show>
-            <button data-control-id="account.passkeys.add" disabled={app.busy()}>
-              {app.t('addPasskey')}
-            </button>
-          </form>
-        </Show>
-      </div>
-    </section>
+          <button class="primary" data-control-id="account.passkeys.add" disabled={app.busy()}>
+            {app.t('addPasskey')}
+          </button>
+        </form>
+      </Show>
+    </div>
   );
 }

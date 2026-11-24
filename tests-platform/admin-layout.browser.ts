@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { operations, routeAdmin } from './admin-fixtures';
 import { measureAdmin, type AdminGeometry } from './admin-measure';
 import { expectTaskLanguage } from './copy-guard';
+import { chooseLanguage } from './app-navigation';
 
 const copy = {
   en: { parts: ['Accounts', 'Mail queue', 'Recent security events'], jobs: 'Recent mail jobs' },
@@ -86,7 +87,7 @@ for (const state of ['rows', 'empty'] as const)
         await page.setViewportSize({ width: 1194, height: 834 });
         await routeAdmin(page, state);
         await page.goto('/admin');
-        if (lang === 'hu') await page.getByLabel('App language').selectOption('hu');
+        if (lang === 'hu') await chooseLanguage(page, 'hu');
         await expect(page.getByRole('heading', { name: c.parts[2] })).toBeVisible();
         const jobs = page.getByText(c.jobs, { exact: true });
         const landscape = await measureAdmin(page, c.parts);

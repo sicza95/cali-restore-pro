@@ -381,7 +381,7 @@ func TestPostgresPasskeys(t *testing.T) {
 			sessiontoken.Digest(raw), ids["other"]); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := s.CompleteCode(ctx, CodeProof{Token: raw}, testdb.Password); err != nil {
+		if _, err := s.CompleteCode(ctx, CodeProof{Token: raw}, testdb.Password, Profile{}); err != nil {
 			t.Fatal(err)
 		}
 		if n := count(`SELECT count(*) FROM passkeys WHERE account_id=$1`, ids["other"]); n != 0 {
@@ -398,6 +398,53 @@ func TestPostgresPasskeys(t *testing.T) {
 		}
 		if _, err := app.Exec(ctx, `UPDATE passkey_ceremonies SET purpose='login'`); err == nil {
 			t.Fatal("app can rewrite ceremonies")
+		}
+	})
+	t.Run("a passkey confirms the signed-in person like the password does", func(t *testing.T) {
+		if _, err := admin.Exec(ctx, `DELETE FROM auth_rate_limits`); err != nil {
+			t.Fatal(err)
+		}
+		for _, name := range []string{"third", "fourth"} {
+			if _, err := admin.Exec(ctx, `INSERT INTO accounts(email,password_hash,state) VALUES ($1,$2,'active')`, name+"@example.test", hash); err != nil {
+				t.Fatal(err)
+			}
+		}
+		key := newSoftAuthenticator(t, 0)
+		if err := register(login("third"), key, "Laptop"); err != nil {
+			t.Fatal(err)
+		}
+		key.count = 1
+		raw, err := signIn(key)
+		if err != nil {
+			t.Fatal(err)
+		}
+		options, ceremony, err := s.BeginPasskeyConfirm(ctx, raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		key.count = 2
+		fresh, err := s.FinishPasskeyConfirm(ctx, raw, ceremony, key.get(t, options))
+		if err != nil {
+			t.Fatal(err)
+		}
+		current, err := s.Current(ctx, fresh)
+		if err != nil || RequireRecent(current) != nil || current.Account.Email != "third@example.test" {
+			t.Fatal("confirmed session", current, err)
+		}
+		if _, err := s.Current(ctx, raw); !errors.Is(err, ErrUnauthorized) {
+			t.Fatal("the confirmed session replaces the old one", err)
+		}
+		if _, _, err := s.BeginPasskeyConfirm(ctx, login("fourth")); !errors.Is(err, ErrNoPasskeys) {
+			t.Fatal("account without passkeys", err)
+		}
+		// Another account's session cannot use this session's ceremony.
+		options, ceremony, err = s.BeginPasskeyConfirm(ctx, fresh)
+		if err != nil {
+			t.Fatal(err)
+		}
+		key.count = 3
+		if _, err := s.FinishPasskeyConfirm(ctx, login("fourth"), ceremony, key.get(t, options)); !errors.Is(err, ErrPasskey) {
+			t.Fatal("ceremony of another session", err)
 		}
 	})
 }

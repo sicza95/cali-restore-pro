@@ -49,6 +49,8 @@ func Failure(w http.ResponseWriter, err error) {
 		status, code = 400, "invalid_request"
 	case errors.Is(err, ErrPasskey):
 		status, code = 400, "passkey_rejected"
+	case errors.Is(err, ErrNoPasskeys):
+		status, code = 404, "no_passkeys"
 	case errors.Is(err, ErrPasskeysUnavailable):
 		status, code = 404, "passkeys_unavailable"
 	case errors.Is(err, ErrCredentials):
@@ -115,6 +117,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 	h.codeRoutes(route)
 	h.adminRoutes(route)
 	h.passkeyRoutes(route)
+	h.profileRoutes(route)
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			Email    string `json:"email"`

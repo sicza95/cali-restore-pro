@@ -6,7 +6,8 @@ import {
 import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/offline-account';
 import { createEffect, createMemo, createSignal, on, onCleanup, onMount } from 'solid-js';
 import { checkConnection, requestAuth } from './api';
-import { passkeyAssertion, passkeyRegistration } from './passkeys';
+import { passkeyAssertion, passkeyConfirmation, passkeyRegistration } from './passkeys';
+import { createIdentityCheck } from './identity-check';
 import { sessionEndingActions } from './constants';
 import { accountCopy as copy } from './copy';
 import { authErrorMessage, authFormBody } from './utils';
@@ -49,7 +50,6 @@ export function createAccountAccess(router: Router) {
     setConfirmedState(left > 0);
     if (left > 0) confirmationTimer = setTimeout(() => setConfirmedState(false), left);
   };
-  const [revokeConfirmed, setRevokeConfirmed] = createSignal(false);
   const [connection, setConnection] = createSignal<'checking' | 'ready' | 'unavailable'>(
     'checking',
   );
@@ -93,7 +93,6 @@ export function createAccountAccess(router: Router) {
     setCsrf('');
     setSessions([]);
     setConfirmed(false);
-    setRevokeConfirmed(false);
   };
   const refreshSessions = async () => {
     const generation = sessionGeneration;
@@ -109,7 +108,20 @@ export function createAccountAccess(router: Router) {
     setConnection('checking');
     setConnection(await checkConnection());
   };
+  const identity = createIdentityCheck();
+  // Profile, Security and Preferences open the one Settings page, which lists the sessions.
+  const isSettings = (name: string) => ['profile', 'security', 'preferences'].includes(name);
+  // Sent when the server wants a fresh confirmation: the caller asks and tries once more.
+  const needsConfirmation = Symbol('needs confirmation');
+  /** A change the server refuses for want of a recent confirmation asks "Confirm it's you" first. */
   const run = async (action: string, body: object, success: Message) => {
+    const first = await runOnce(action, body, success, true);
+    if (first !== needsConfirmation) return first;
+    if (!(await identity.ask())) return false;
+    const second = await runOnce(action, body, success, false);
+    return second === needsConfirmation ? false : second;
+  };
+  const runOnce = async (action: string, body: object, success: Message, mayAsk: boolean) => {
     if (busy()) return false;
     const requestPage = navigationGeneration;
     const generation = sessionGeneration;
@@ -154,7 +166,8 @@ export function createAccountAccess(router: Router) {
       if (requestPage !== navigationGeneration) return result;
       if (action === 'confirm') setConfirmed(true);
       setMessage(success);
-      if (action.startsWith('/admin/')) {
+      // The new name and photo show at once in the navigation and on the profile page.
+      if (action.startsWith('/admin/') || action === 'profile') {
         try {
           await refreshAccount();
         } catch {
@@ -165,10 +178,13 @@ export function createAccountAccess(router: Router) {
     } catch (error) {
       if (!active || requestPage !== navigationGeneration || generation !== sessionGeneration)
         return false;
-      setFailed(true);
       const code = error instanceof Error ? error.message : '';
+      if (code === 'credential_confirmation_required') {
+        setConfirmed(false);
+        if (mayAsk) return needsConfirmation;
+      }
+      setFailed(true);
       setMessage(authErrorMessage(code));
-      if (code === 'credential_confirmation_required') setConfirmed(false);
       if (code === 'authentication_required') {
         clearSession();
       }
@@ -178,7 +194,12 @@ export function createAccountAccess(router: Router) {
     }
   };
   // Passkey ceremonies talk to the authenticator before the identity request.
-  const runPrepared = async (prepare: () => Promise<object>, action: string, success: Message) => {
+  const runPrepared = async (
+    prepare: () => Promise<object>,
+    action: string,
+    success: Message,
+    mayAsk = true,
+  ): Promise<unknown> => {
     if (busy()) return false;
     setBusy(true);
     setMessage(undefined);
@@ -188,7 +209,13 @@ export function createAccountAccess(router: Router) {
       body = await prepare();
     } catch (error) {
       const code = error instanceof Error ? error.message : '';
-      if (code === 'credential_confirmation_required') setConfirmed(false);
+      if (code === 'credential_confirmation_required') {
+        setConfirmed(false);
+        if (mayAsk) {
+          setBusy(false);
+          return (await identity.ask()) && runPrepared(prepare, action, success, false);
+        }
+      }
       setFailed(true);
       setMessage(authErrorMessage(code));
       return false;
@@ -196,6 +223,22 @@ export function createAccountAccess(router: Router) {
       setBusy(false);
     }
     return run(action, body, success);
+  };
+  /** The dialog's two ways to confirm; returns the problem to show inside it, if any. */
+  const confirmIdentity = async (password?: string): Promise<Message | undefined> => {
+    const generation = sessionGeneration;
+    try {
+      if (password === undefined) await api('confirm/passkey', await passkeyConfirmation(csrf()));
+      else await api('confirm', { password });
+      // A late answer after leaving the page confirms nothing here.
+      if (generation !== sessionGeneration) return undefined;
+      setConfirmed(true);
+      identity.settle(true);
+      return undefined;
+    } catch (error) {
+      const code = error instanceof Error ? error.message : '';
+      return code === 'invalid_credentials' ? 'wrongPassword' : authErrorMessage(code);
+    }
   };
   const submit = (event: SubmitEvent, action: string, success: Message) => {
     event.preventDefault();
@@ -260,12 +303,11 @@ export function createAccountAccess(router: Router) {
       setMessage(undefined);
       setFailed(false);
       setConfirmed(false);
-      setRevokeConfirmed(false);
       setSessions([]);
       setDeletionReceipt(undefined);
       void refreshAccount()
         .then(() => {
-          if (generation === navigationGeneration && destination === 'security' && account())
+          if (generation === navigationGeneration && isSettings(destination) && account())
             void refreshSessions();
         })
         .catch((error: unknown) => {
@@ -325,15 +367,18 @@ export function createAccountAccess(router: Router) {
     linkToken,
     message,
     dismissMessage: () => setMessage(undefined),
+    /** A floating message for changes saved in this browser, like settings. */
+    notify: (text: Message, problem = false) => {
+      setFailed(problem);
+      setMessage(text);
+    },
     refreshConnection,
     refreshSessions,
     revokeAll,
-    revokeConfirmed,
     revokeSession,
     selectLanguage,
     sessionError,
     sessions,
-    setRevokeConfirmed,
     signOut: async () => {
       rememberOfflineAccount();
       lockVault();
@@ -344,6 +389,8 @@ export function createAccountAccess(router: Router) {
       router.navigate(isAccountDestination(from) ? signInLink(from, location.pathname) : '/login');
     },
     submit,
+    identityCheck: { open: identity.open, cancel: () => identity.settle(false) },
+    confirmIdentity,
     signInWithPasskey: () => void runPrepared(passkeyAssertion, 'passkey-login', 'success'),
     addPasskey: (name: string) =>
       runPrepared(() => passkeyRegistration(csrf(), name), 'passkeys/register', 'passkeyAdded'),

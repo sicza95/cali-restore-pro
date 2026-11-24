@@ -45,6 +45,14 @@ export type IdentityAccount = {
   email: string;
   state: 'pending_verification' | 'active' | 'suspended' | 'pending_deletion';
   role: 'member' | 'administrator' | 'superuser';
+  /**
+   * Full name; empty for accounts created before names existed.
+   */
+  name?: string;
+  /**
+   * Versioned URL of the own profile photo; absent without one.
+   */
+  photo?: string;
 };
 
 export type CurrentIdentity = {
@@ -316,6 +324,28 @@ export type CodeCompleteRequest = unknown & {
   code?: string;
   token?: string;
   password?: string;
+  /**
+   * Full name; spaces are trimmed and collapsed. Empty means no name.
+   */
+  name?: string;
+  /**
+   * Square JPEG from 16 to 1024 pixels a side, at most 256 KiB. An empty string removes the photo.
+   */
+  photo?: string;
+};
+
+/**
+ * Change the own full name, and the photo when given (absent keeps it).
+ */
+export type ProfileUpdateRequest = {
+  /**
+   * Full name; spaces are trimmed and collapsed. Empty means no name.
+   */
+  name: string;
+  /**
+   * Square JPEG from 16 to 1024 pixels a side, at most 256 KiB. An empty string removes the photo.
+   */
+  photo?: string;
 };
 
 export type PlatformStatusData = {
@@ -3483,3 +3513,215 @@ export type IdentityCompleteCodeResponses = {
 
 export type IdentityCompleteCodeResponse =
   IdentityCompleteCodeResponses[keyof IdentityCompleteCodeResponses];
+
+export type IdentityUpdateProfileData = {
+  body: ProfileUpdateRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/profile';
+};
+
+export type IdentityUpdateProfileErrors = {
+  /**
+   * Invalid name or photo, or invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityUpdateProfileError =
+  IdentityUpdateProfileErrors[keyof IdentityUpdateProfileErrors];
+
+export type IdentityUpdateProfileResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type IdentityUpdateProfileResponse =
+  IdentityUpdateProfileResponses[keyof IdentityUpdateProfileResponses];
+
+export type IdentityOwnPhotoData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * Photo version; changes with the photo.
+     */
+    v?: string;
+  };
+  url: '/api/v1/auth/photo';
+};
+
+export type IdentityOwnPhotoErrors = {
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * No photo
+   */
+  404: IdentityError;
+};
+
+export type IdentityOwnPhotoError = IdentityOwnPhotoErrors[keyof IdentityOwnPhotoErrors];
+
+export type IdentityOwnPhotoResponses = {
+  /**
+   * JPEG photo
+   */
+  200: Blob | File;
+};
+
+export type IdentityOwnPhotoResponse = IdentityOwnPhotoResponses[keyof IdentityOwnPhotoResponses];
+
+export type IdentityPasskeyConfirmOptionsData = {
+  body: EmptyRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/confirm/passkey/options';
+};
+
+export type IdentityPasskeyConfirmOptionsErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN, or no passkey on this account (no_passkeys)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeyConfirmOptionsError =
+  IdentityPasskeyConfirmOptionsErrors[keyof IdentityPasskeyConfirmOptionsErrors];
+
+export type IdentityPasskeyConfirmOptionsResponses = {
+  /**
+   * Success
+   */
+  200: PasskeyCeremony;
+};
+
+export type IdentityPasskeyConfirmOptionsResponse =
+  IdentityPasskeyConfirmOptionsResponses[keyof IdentityPasskeyConfirmOptionsResponses];
+
+export type IdentityPasskeyConfirmData = {
+  body: PasskeyLoginRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/confirm/passkey';
+};
+
+export type IdentityPasskeyConfirmErrors = {
+  /**
+   * Invalid or oversized JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Passkeys unavailable for this APP_ORIGIN (IP-address origins)
+   */
+  404: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityPasskeyConfirmError =
+  IdentityPasskeyConfirmErrors[keyof IdentityPasskeyConfirmErrors];
+
+export type IdentityPasskeyConfirmResponses = {
+  /**
+   * Success
+   */
+  200: CsrfResponse;
+};
+
+export type IdentityPasskeyConfirmResponse =
+  IdentityPasskeyConfirmResponses[keyof IdentityPasskeyConfirmResponses];

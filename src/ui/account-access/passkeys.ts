@@ -46,6 +46,23 @@ export async function passkeyAssertion() {
   };
 }
 
+/** One of the signed-in account's own passkeys confirms the person before a security change. */
+export async function passkeyConfirmation(csrf: string) {
+  const options = await requestAuth<Ceremony<RequestOptionsJSON>>(
+    'confirm/passkey/options',
+    csrf,
+    {},
+  ).catch(fail);
+  const credential = await navigator.credentials
+    .get({ publicKey: requestOptions(options.publicKey) })
+    .catch(fail);
+  if (!(credential instanceof PublicKeyCredential)) fail(new Error('passkey_cancelled'));
+  return {
+    ceremony: options.ceremony,
+    credential: assertionJSON(credential as PublicKeyCredential),
+  };
+}
+
 export async function passkeyRegistration(csrf: string, name: string) {
   const options = await requestAuth<Ceremony<CreationOptionsJSON>>(
     'passkeys/register/options',

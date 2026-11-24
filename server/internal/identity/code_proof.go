@@ -122,9 +122,17 @@ func (s *Service) CheckCode(ctx context.Context, proof CodeProof) error {
 // signed in. A pending account becomes active. A reset ends every other session
 // and removes the passkeys, since a reset by email suggests the account may be
 // compromised (owner decision 2026-11-18). Either way the link and code end.
-func (s *Service) CompleteCode(ctx context.Context, proof CodeProof, password string) (string, error) {
+//
+// A new account also takes the profile chosen with the password (name and
+// optional photo), so the welcome email already greets the person by name.
+// A reset leaves the profile as it is.
+func (s *Service) CompleteCode(ctx context.Context, proof CodeProof, password string, profile Profile) (string, error) {
 	if !passhash.Valid(password) {
 		return "", ErrCredentials
+	}
+	checked, err := profile.check()
+	if err != nil {
+		return "", err
 	}
 	if err := s.rateCode(ctx, proof); err != nil {
 		return "", err
@@ -150,6 +158,11 @@ func (s *Service) CompleteCode(ctx context.Context, proof CodeProof, password st
 	}
 	if _, err = tx.Exec(ctx, `UPDATE accounts SET password_hash=$2,state='active' WHERE id=$1`, id, verifier); err != nil {
 		return "", err
+	}
+	if purpose == "verify" {
+		if err = checked.store(ctx, tx, id); err != nil {
+			return "", err
+		}
 	}
 	var email, lang string
 	if err = tx.QueryRow(ctx, `SELECT email,language FROM accounts WHERE id=$1`, id).Scan(&email, &lang); err != nil {

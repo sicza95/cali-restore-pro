@@ -93,16 +93,24 @@ func (h *HTTP) lifecycleRoutes(route func(string, bool, http.HandlerFunc)) {
 // codeRoutes check a sign-up or reset code or link (no side effect beyond
 // counting a wrong code) and set the password, which signs the person in.
 func (h *HTTP) codeRoutes(route func(string, bool, http.HandlerFunc)) {
-	decode := func(w http.ResponseWriter, r *http.Request, withPassword bool) (CodeProof, string, bool) {
+	// The completing request may carry the new account's profile; its photo
+	// makes the body larger than the 4 KiB credential forms.
+	decode := func(w http.ResponseWriter, r *http.Request, withPassword bool) (CodeProof, string, Profile, bool) {
 		var fields map[string]json.RawMessage
-		if !httpjson.Decode(w, r, &fields) {
-			return CodeProof{}, "", false
+		limit := int64(4096)
+		if withPassword {
+			limit = profileBodyLimit
+		}
+		if !httpjson.DecodeBounded(w, r, &fields, limit) {
+			return CodeProof{}, "", Profile{}, false
 		}
 		var body struct {
-			Email    string `json:"email"`
-			Code     string `json:"code"`
-			Token    string `json:"token"`
-			Password string `json:"password"`
+			Email    string  `json:"email"`
+			Code     string  `json:"code"`
+			Token    string  `json:"token"`
+			Password string  `json:"password"`
+			Name     string  `json:"name"`
+			Photo    *string `json:"photo"`
 		}
 		encoded, _ := json.Marshal(fields)
 		_, hasToken := fields["token"]
@@ -111,19 +119,20 @@ func (h *HTTP) codeRoutes(route func(string, bool, http.HandlerFunc)) {
 		_, hasPassword := fields["password"]
 		shape := (hasToken && !hasEmail && !hasCode) || (!hasToken && hasEmail && hasCode)
 		for key, value := range fields {
-			known := key == "token" || key == "email" || key == "code" || key == "password"
+			known := key == "token" || key == "email" || key == "code" || key == "password" ||
+				(withPassword && (key == "name" || key == "photo"))
 			if !known || string(value) == "null" {
 				shape = false
 			}
 		}
 		if !shape || hasPassword != withPassword || json.Unmarshal(encoded, &body) != nil {
 			httpjson.Respond(w, 400, map[string]string{"error": "invalid_request"})
-			return CodeProof{}, "", false
+			return CodeProof{}, "", Profile{}, false
 		}
-		return CodeProof{Email: body.Email, Code: body.Code, Token: body.Token}, body.Password, true
+		return CodeProof{Email: body.Email, Code: body.Code, Token: body.Token}, body.Password, Profile{Name: body.Name, Photo: body.Photo}, true
 	}
 	route("POST /api/v1/auth/code/check", false, func(w http.ResponseWriter, r *http.Request) {
-		proof, _, ok := decode(w, r, false)
+		proof, _, _, ok := decode(w, r, false)
 		if !ok {
 			return
 		}
@@ -134,11 +143,11 @@ func (h *HTTP) codeRoutes(route func(string, bool, http.HandlerFunc)) {
 		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
 	route("POST /api/v1/auth/code/complete", false, func(w http.ResponseWriter, r *http.Request) {
-		proof, password, ok := decode(w, r, true)
+		proof, password, profile, ok := decode(w, r, true)
 		if !ok {
 			return
 		}
-		raw, err := h.service.CompleteCode(r.Context(), proof, password)
+		raw, err := h.service.CompleteCode(r.Context(), proof, password, profile)
 		if err != nil {
 			Failure(w, err)
 			return

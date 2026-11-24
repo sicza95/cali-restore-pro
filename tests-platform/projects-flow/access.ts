@@ -65,7 +65,8 @@ export async function verifyUnavailable(flow: ProjectsFlow) {
   ).toBeVisible();
   await expect(page.getByText('plaster-detail.dng')).toHaveCount(0);
   await page.goto('/settings/preferences');
-  await page.locator('[data-control-id="settings.libraries"]').click();
+  // The pattern library has its own entry in the menu sidebar.
+  await page.locator('[data-control-id="app.nav.libraries"]').click();
   await expect(page).toHaveURL('/settings/libraries');
   const rates = page.locator('[data-control-id="libraries.rates"]');
   await expect(rates).toBeEnabled();

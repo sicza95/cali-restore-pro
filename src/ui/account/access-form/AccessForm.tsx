@@ -24,7 +24,7 @@ export function AccessForm(props: AccessFormProps) {
           {props.view === 'login'
             ? props.t(heading())
             : props.view === 'verify-email'
-              ? props.t('choosePassword')
+              ? props.t('finishAccount')
               : props.t(props.view)}
         </h1>
       </header>

@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"errors"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 
@@ -68,11 +69,19 @@ func LookupSession(ctx context.Context, q rowQuery, raw string) (Session, error)
 	if !sessiontoken.Valid(raw) {
 		return s, ErrUnauthorized
 	}
-	err := q.QueryRow(ctx, `SELECT s.id, a.id, a.email, a.state, a.role, a.admin_permissions, s.created_at, s.verified_at
+	var photo *time.Time
+	err := q.QueryRow(ctx, `SELECT s.id, a.id, a.email, a.state, a.role, a.admin_permissions, s.created_at, s.verified_at,
+        a.full_name, (SELECT p.updated_at FROM account_photos p WHERE p.account_id=a.id)
         FROM sessions s JOIN accounts a ON a.id=s.account_id WHERE s.token_digest=$1 AND a.state='active'`, sessiontoken.Digest(raw)).Scan(
-		&s.ID, &s.Account.ID, &s.Account.Email, &s.Account.State, &s.Account.Role, &s.Account.AdminPermissions, &s.CreatedAt, &s.VerifiedAt)
+		&s.ID, &s.Account.ID, &s.Account.Email, &s.Account.State, &s.Account.Role, &s.Account.AdminPermissions, &s.CreatedAt, &s.VerifiedAt,
+		&s.Account.Name, &photo)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return s, ErrUnauthorized
+	}
+	if photo != nil {
+		// The version makes the URL change with the photo, so it can be cached.
+		url := "/api/v1/auth/photo?v=" + strconv.FormatInt(photo.UnixMilli(), 36)
+		s.Account.Photo = &url
 	}
 	return s, err
 }

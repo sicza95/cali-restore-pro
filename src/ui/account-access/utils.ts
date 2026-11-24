@@ -14,7 +14,8 @@ export function authFormBody(
   const fields = new FormData(form);
   const email = String(fields.get('email') ?? '');
   const password = String(fields.get('password') ?? '');
-  const confirm = fields.get('confirm') === 'on';
+  // Submitting the form is the acknowledgement; "Confirm it's you" guards it when needed.
+  const confirm = true;
   return action === 'login' || action === 'recover-deleted-account'
     ? { email, password }
     : action === 'confirm'

@@ -4,9 +4,9 @@ import type { Page, TestInfo } from '@playwright/test';
 import { drawingCopy } from '../src/ui/editor/drawing-review/copy';
 import { drawingControl } from './drawing-review';
 import { expectUnclipped } from './original-reasons';
+import { chooseLanguage } from './app-navigation';
 
 type Language = 'en' | 'hu';
-const language = (page: Page) => page.locator('[data-control-id="app.nav.language"]');
 const editor = (page: Page) => page.locator('.drawing-workspace .cr-editor');
 
 /**
@@ -75,7 +75,7 @@ export async function verifyDrawingReasons(page: Page, info: TestInfo) {
   await expect(c('layer.select').first()).toBeVisible();
   await c('layer.properties').click();
   for (const lang of ['en', 'hu'] as const) {
-    if (lang === 'hu') await language(page).selectOption('hu');
+    if (lang === 'hu') await chooseLanguage(page, 'hu');
     const copy = drawingCopy(lang);
     for (const viewport of [
       { width: 1194, height: 834 },
@@ -105,7 +105,7 @@ export async function verifyDrawingReasons(page: Page, info: TestInfo) {
       );
     }
   }
-  await language(page).selectOption('en');
+  await chooseLanguage(page, 'en');
   await page.setViewportSize({ width: 834, height: 1194 });
   await c('tool.nodes').click({ force: true });
   for (const colorScheme of ['light', 'dark'] as const) {

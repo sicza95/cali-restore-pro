@@ -66,16 +66,17 @@ test('passkey registration, discoverable sign-in and removal beside password sig
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/security$/);
   };
-  const confirmPassword = async () => {
-    const form = page
-      .locator('form')
-      .filter({ has: page.getByRole('button', { name: 'Confirm password', exact: true }) });
-    await form.getByLabel('Current password', { exact: true }).fill(password);
-    await form.getByRole('button', { name: 'Confirm password', exact: true }).click();
-    await expect(page.getByRole('status').filter({ hasText: 'Password confirmed.' })).toBeVisible();
+  // The Passkeys option of the Security tab, opened.
+  const passkeys = async (p: Page) => {
+    const row = p.locator('details#passkeys');
+    if (!(await row.evaluate((el) => (el as HTMLDetailsElement).open)))
+      await p.locator('[data-control-id="account.security.passkeys"]').click();
+    return row;
   };
-  const passkeys = (p: Page) =>
-    p.locator('section').filter({ has: p.getByRole('heading', { name: 'Passkeys', exact: true }) });
+  const confirmDialog = page.getByRole('dialog', { name: 'Confirm it’s you' });
+  const signedInAs = async () =>
+    ((await (await page.request.get('/api/v1/auth/me')).json()) as { account?: { email: string } })
+      .account?.email;
 
   // The mailed link goes straight to the password step; the first password signs in.
   await page.goto('/register');
@@ -83,21 +84,21 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByLabel('Digit 1 / 6', { exact: true })).toBeVisible();
   await page.goto(await mailLink('/verify-email'));
+  await page.getByLabel('Full name', { exact: true }).fill('Passkey Person');
   await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByLabel('Repeat password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
   await expect(page).toHaveURL(/\/projects$/);
   await page.goto('/settings/security');
-  const section = passkeys(page);
+  const section = await passkeys(page);
   await expect(section.getByText('No passkeys yet.')).toBeVisible();
-  const add = section.getByRole('button', { name: 'Add passkey', exact: true });
-  // Setting the first password just now counts as a confirmation, and the name
-  // starts as the platform, so one click adds the passkey.
-  await expect(section.getByLabel('Password', { exact: true })).toHaveCount(0);
+  // Setting the first password just now counts as a confirmation, and the name starts as the
+  // platform, so one click adds the passkey without "Confirm it's you".
   await expect(section.getByLabel('Passkey name', { exact: true })).not.toHaveValue('');
   await section.getByLabel('Passkey name', { exact: true }).fill('Studio iPad');
-  await add.click();
+  await section.getByRole('button', { name: 'Add passkey', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Passkey added.' })).toBeVisible();
+  await expect(confirmDialog).toBeHidden();
   await expect(section.getByText('Studio iPad')).toBeVisible();
   await expect(section.getByText('Not used yet')).toBeVisible();
   const stored = await cdp.send('WebAuthn.getCredentials', { authenticatorId });
@@ -114,13 +115,16 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   }
 
   // Discoverable sign-in: no email is typed, the authenticator picks the account.
-  await page.context().clearCookies();
-  await page.goto('/login');
-  await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
-  await expect(page).toHaveURL(/\/settings\/security$/);
-  await expect(page.getByText(email, { exact: true })).toBeVisible();
-  await expect(passkeys(page).getByText('Last used')).toBeVisible();
-  // A passkey session is not a password confirmation: security changes still ask for it.
+  const passkeySignIn = async () => {
+    await page.context().clearCookies();
+    await page.goto('/login');
+    await page.getByRole('button', { name: 'Sign in with a passkey', exact: true }).click();
+    await expect(page).toHaveURL(/\/settings\/security$/);
+    await expect.poll(signedInAs).toBe(email);
+  };
+  await passkeySignIn();
+  await expect((await passkeys(page)).getByText('Last used')).toBeVisible();
+  // A passkey session is not a recent confirmation: the server asks for one.
   const { csrfToken } = (await (await page.request.get('/api/v1/auth/me')).json()) as {
     csrfToken: string;
   };
@@ -130,26 +134,39 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   });
   expect(begin.status()).toBe(403);
   expect(await begin.json()).toEqual({ error: 'credential_confirmation_required' });
-  await expect(page.getByRole('button', { name: 'Change password', exact: true })).toBeDisabled();
-  // Adding a passkey asks for the password in the same form. This authenticator
-  // already holds one, so the ceremony runs after the confirmation and is refused.
-  const section2 = passkeys(page);
-  await expect(section2.getByLabel('Password', { exact: true })).toBeVisible();
-  await section2.getByLabel('Password', { exact: true }).fill(password);
-  await section2.getByRole('button', { name: 'Add passkey', exact: true }).click();
+  // So adding one asks "Confirm it's you" as its last step. A passkey confirms; this
+  // authenticator already holds the account's passkey, so the new ceremony is then refused.
+  await (await passkeys(page)).getByRole('button', { name: 'Add passkey', exact: true }).click();
+  await expect(confirmDialog).toBeVisible();
+  // The dialog fades in; check contrast once it is fully shown.
+  await confirmDialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.screenshot({ path: info.outputPath('confirm-identity.png') });
+  await confirmDialog.getByRole('button', { name: 'Use a passkey instead', exact: true }).click();
+  await expect(confirmDialog).toBeHidden();
   await expect(page.getByRole('alert')).toContainText(
     'This passkey is already added to your account.',
   );
-  await expect(section2.getByLabel('Password', { exact: true })).toHaveCount(0);
-  await page.reload();
 
-  await confirmPassword();
-  await passkeys(page).getByRole('checkbox').check();
-  await passkeys(page)
+  // From a new passkey session, removing asks again; this time the password confirms.
+  await passkeySignIn();
+  await (
+    await passkeys(page)
+  )
     .getByRole('button', { name: 'Remove passkey: Studio iPad', exact: true })
     .click();
+  await confirmDialog
+    .getByLabel('Current password', { exact: true })
+    .fill('not the password at all');
+  await confirmDialog.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await expect(confirmDialog.getByRole('alert')).toHaveText(
+    'That password is not right. Try again.',
+  );
+  await confirmDialog.getByLabel('Current password', { exact: true }).fill(password);
+  await confirmDialog.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await expect(confirmDialog).toBeHidden();
   await expect(page.getByRole('status').filter({ hasText: 'Passkey removed.' })).toBeVisible();
-  await expect(passkeys(page).getByText('No passkeys yet.')).toBeVisible();
+  await expect((await passkeys(page)).getByText('No passkeys yet.')).toBeVisible();
 
   // The authenticator still holds the credential, but the server no longer accepts it.
   await page.context().clearCookies();
@@ -158,7 +175,7 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   await expect(page.getByRole('alert')).toContainText('The passkey could not be verified.');
   await expect(page).toHaveURL(/\/login$/);
   await passwordSignIn();
-  await expect(page.getByText(email, { exact: true })).toBeVisible();
+  await expect.poll(signedInAs).toBe(email);
 
   await page.context().clearCookies();
   await page.goto('/login');

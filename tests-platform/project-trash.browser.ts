@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { chooseLanguage } from './app-navigation';
 
 const unknown = '00000000-0000-4000-8000-0000000000aa';
 
@@ -53,7 +54,7 @@ test('the hosted trash names projects this device holds and numbers the rest', a
   await page.screenshot({ path: info.outputPath('project-trash-1194.png'), fullPage: true });
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
-  await page.getByLabel('App language').selectOption('hu');
+  await chooseLanguage(page, 'hu');
   await expect(list.getByRole('link')).toHaveText(['Törölt projekt 1', 'East Chapel']);
   await expect(
     page.getByText('Az ezen az eszközön nem tárolt projektek sorszámot kapnak.'),

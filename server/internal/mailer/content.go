@@ -1,9 +1,13 @@
 package mailer
 
-import "net/url"
+import (
+	"net/url"
+	"strings"
+)
 
-// Code is the six-digit code sent beside a verify or reset link.
-type Payload struct{ To, Language, Purpose, Token, Code string }
+// Code is the six-digit code sent beside a verify or reset link. Name is the
+// account's full name when it has one; every email then greets it.
+type Payload struct{ To, Language, Purpose, Token, Code, Name string }
 
 // Letter is one account email before rendering: the plain-text and HTML parts
 // are both built from it, so they always say the same thing.
@@ -18,7 +22,9 @@ type Letter struct {
 }
 
 type words struct {
-	codeSubject, codeLabel, or, ignore  string
+	codeSubject, codeLabel, or, ignore string
+	// greeting and welcomeNamed hold {name}.
+	greeting, welcomeNamed              string
 	verify, notRegistered, reset        [4]string // heading, intro, button, note
 	exists, email, security, invite     [4]string
 	welcome, passwordReset, passwordSet [4]string
@@ -28,10 +34,12 @@ type words struct {
 // browsers do not send the secret to proxies or static request logs.
 var catalogue = map[string]words{
 	"en": {
-		codeSubject: " is your CaliRestore Pro code",
-		codeLabel:   "Your verification code",
-		or:          "Or continue with one click:",
-		ignore:      "The code and the link work for 15 minutes.",
+		codeSubject:  " is your CaliRestore Pro code",
+		greeting:     "Hi {name},",
+		welcomeNamed: "Welcome to CaliRestore Pro, {name}",
+		codeLabel:    "Your verification code",
+		or:           "Or continue with one click:",
+		ignore:       "The code and the link work for 15 minutes.",
 		verify: [4]string{"Finish creating your account",
 			"Enter this code on the Create account page to choose your password.",
 			"Choose a password",
@@ -74,10 +82,12 @@ var catalogue = map[string]words{
 			"If this was you, there is nothing else to do. If it wasn’t, reset your password now and contact your operator."},
 	},
 	"hu": {
-		codeSubject: " a CaliRestore Pro kódod",
-		codeLabel:   "Ellenőrző kód",
-		or:          "Vagy folytasd egy kattintással:",
-		ignore:      "A kód és a hivatkozás 15 percig érvényes.",
+		codeSubject:  " a CaliRestore Pro kódod",
+		greeting:     "Kedves {name}!",
+		welcomeNamed: "Üdvözlünk a CaliRestore Pro-ban, {name}!",
+		codeLabel:    "Ellenőrző kód",
+		or:           "Vagy folytasd egy kattintással:",
+		ignore:       "A kód és a hivatkozás 15 percig érvényes.",
 		verify: [4]string{"Fejezd be a fiókod létrehozását",
 			"Írd be ezt a kódot a Fiók létrehozása oldalon, és add meg a jelszavad.",
 			"Jelszó megadása",
@@ -174,6 +184,14 @@ func Compose(p Payload, origin string) Letter {
 	}
 	if letter.URL == "" {
 		letter.Action = ""
+	}
+	// The welcome heading greets by name; every other email opens with a greeting.
+	if p.Name != "" {
+		if p.Purpose == "welcome" {
+			letter.Heading = strings.ReplaceAll(w.welcomeNamed, "{name}", p.Name)
+		} else {
+			letter.Paragraphs = append([]string{strings.ReplaceAll(w.greeting, "{name}", p.Name)}, letter.Paragraphs...)
+		}
 	}
 	// Notices keep the product name in the subject so they are recognisable in a list.
 	if p.Code == "" {

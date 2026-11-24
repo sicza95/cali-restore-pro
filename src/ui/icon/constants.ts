@@ -35,4 +35,10 @@ export const paths = {
   moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z',
   focus: 'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5',
   folder: 'M3 6h7l2 3h9v12H3V6Z',
+  globe:
+    'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3Z',
+  sidebar: 'M4 5h16v14H4V5Zm5 0v14',
+  key: 'M15 3a6 6 0 1 1-5.2 9L3 18.8V21h3v-2h2v-2h2l1.2-1.2A6 6 0 0 1 15 3Zm1.5 4.5h.01',
+  devices: 'M3 5h14v10H3V5Zm4 14h6m-3-4v4m9-12h2v12h-4',
+  mail: 'M3 6h18v12H3V6Zm0 0 9 7 9-7',
 } as const;

@@ -1,0 +1,66 @@
+.confirm-identity {
+  width: min(400px, calc(100vw - 32px));
+  max-width: none;
+  margin: auto;
+  padding: 0;
+  color: var(--cr-ink);
+  background: var(--cr-surface);
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-panel-radius);
+  box-shadow: var(--cr-shadow-floating);
+}
+.confirm-identity::backdrop {
+  background: var(--cr-dialog-backdrop);
+}
+.confirm-identity form {
+  display: grid;
+  gap: 16px;
+  padding: 28px;
+}
+.confirm-identity h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.confirm-identity p {
+  margin: -8px 0 0;
+  color: var(--cr-muted);
+}
+.confirm-identity-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--cr-accent);
+  background: var(--cr-selected);
+}
+.confirm-identity .confirm-identity-problem {
+  margin: -8px 0 0;
+  color: var(--cr-negative);
+}
+.confirm-identity-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.confirm-identity-passkey {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--cr-accent);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--cr-rule);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .confirm-identity[open] {
+    animation: confirm-identity-in 160ms ease-out;
+  }
+}
+@keyframes confirm-identity-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}

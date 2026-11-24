@@ -7,6 +7,7 @@ import { reportControls } from '../src/ui/reports/report-controls';
 import { projectTable, reportTable, revisionQueueTable } from '../src/platform/vault/store';
 import { expectTaskLanguage } from './copy-guard';
 import { touchTarget } from './touch-target';
+import { chooseLanguage } from './app-navigation';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const other = '00000000-0000-4000-8000-000000000002';
@@ -240,7 +241,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   await report('references').click();
   await report('reference').check();
   await report('language').selectOption('hu');
-  await expect(page.getByLabel('App language')).toHaveValue('en');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await report('units').selectOption('ft²');
   await report('map').uncheck();
   await report('legend').uncheck();
@@ -294,7 +295,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
     await report('cancel').tap();
     await expect(draft).toHaveCount(0);
   }
-  await page.getByLabel('App language').selectOption('hu');
+  await chooseLanguage(page, 'hu');
   await expect(page.getByRole('heading', { name: 'Exportálás', exact: true })).toBeVisible();
   await report('language').selectOption('en');
   await page.emulateMedia({ colorScheme: 'dark' });
@@ -306,7 +307,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('report-preview-dark-834.png') });
   await report('cancel').tap();
-  await page.getByLabel('Az alkalmazás nyelve').selectOption('en');
+  await chooseLanguage(page, 'en');
   await page.emulateMedia({ colorScheme: 'light' });
   expect(await revisions(page)).toEqual(before);
   await page.goBack();

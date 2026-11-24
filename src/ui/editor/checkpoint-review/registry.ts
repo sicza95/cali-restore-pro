@@ -72,7 +72,7 @@ export const checkpointControls: readonly ControlContract[] = [
       locked: 'Clear review',
     },
   })),
-  ...['pattern.review.library', 'settings.libraries'].map((id): ControlContract => ({
+  ...['pattern.review.library'].map((id): ControlContract => ({
     id,
     labelKey: 'openLibrary',
     helpKey: 'personal',
@@ -82,7 +82,7 @@ export const checkpointControls: readonly ControlContract[] = [
     valueSource: 'Application route',
     behavior: 'functional',
     owner: 'M-08',
-    composition: 'Preferences and surface pattern review',
+    composition: 'Surface pattern review',
     unavailable: {
       failure: 'Show access or vault error',
       empty: 'Show empty review library',

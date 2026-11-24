@@ -1,4 +1,3 @@
-import { checkpointCopy } from '../editor/checkpoint-review/copy';
 import { pinCopy } from '../sharing/pin-copy';
 import { settingsCopy } from '../settings/settings-copy';
 import { accountCopy as copy } from './copy';
@@ -19,6 +18,11 @@ const navigationCopy = defineCopy({
     retryAccess: 'Retry account access',
     themeToDark: 'Switch to dark mode',
     themeToLight: 'Switch to light mode',
+    accountMenu: 'Account menu',
+    showSidebar: 'Keep the menu open',
+    hideSidebar: 'Hide the menu',
+    themeMenu: 'Theme',
+    languageMenu: 'Language',
   },
   hu: {
     notFound: 'Az oldal nem található',
@@ -33,6 +37,11 @@ const navigationCopy = defineCopy({
     retryAccess: 'Fiókhozzáférés újrapróbálása',
     themeToDark: 'Váltás sötét módra',
     themeToLight: 'Váltás világos módra',
+    accountMenu: 'Fiókmenü',
+    showSidebar: 'Menü állandó megjelenítése',
+    hideSidebar: 'Menü elrejtése',
+    themeMenu: 'Téma',
+    languageMenu: 'Nyelv',
   },
 });
 
@@ -42,6 +51,6 @@ export function navigationText(language: Language) {
     ...settingsCopy[language],
     ...navigationCopy[language],
     offline: pinCopy[language].heading,
-    libraries: checkpointCopy[language].libraries,
+    libraries: copy[language].patternLibrary,
   };
 }

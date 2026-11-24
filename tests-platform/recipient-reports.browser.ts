@@ -1,6 +1,7 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
+import { chooseLanguage } from './app-navigation';
 
 const owner = '00000000-0000-4000-8000-000000000031';
 const recipient = '00000000-0000-4000-8000-000000000032';
@@ -260,11 +261,11 @@ test('a recipient authors, exports and keeps their own report within their grant
     );
     await expect(plainReport.getByRole('note')).toHaveCount(0);
     expect((await download(inbox, fullReport)).bytes.toString()).toContain(label);
-    await inbox.getByLabel('App language').selectOption('hu');
+    await chooseLanguage(inbox, 'hu');
     await expect(fullReport.getByRole('note')).toHaveText(
       'A projekthez való hozzáférése megszűnt. Ez a példány ezen az eszközön marad, és már nem frissül.',
     );
-    await inbox.getByLabel('Az alkalmazás nyelve').selectOption('en');
+    await chooseLanguage(inbox, 'en');
     await inbox.setViewportSize({ width: 1194, height: 834 });
     await inbox.screenshot({
       path: info.outputPath('recipient-reports-landscape.png'),

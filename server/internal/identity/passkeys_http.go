@@ -74,6 +74,38 @@ func (h *HTTP) passkeyRoutes(route func(string, bool, http.HandlerFunc)) {
 		}
 		httpjson.Respond(w, 200, map[string]bool{"ok": true})
 	})
+	route("POST /api/v1/auth/confirm/passkey/options", true, func(w http.ResponseWriter, r *http.Request) {
+		var body struct{}
+		if !httpjson.Decode(w, r, &body) {
+			return
+		}
+		options, ceremony, err := h.service.BeginPasskeyConfirm(r.Context(), h.Token(r))
+		if err != nil {
+			Failure(w, err)
+			return
+		}
+		httpjson.Respond(w, 200, ceremonyResponse{ceremony, options})
+	})
+	route("POST /api/v1/auth/confirm/passkey", true, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Ceremony   string          `json:"ceremony"`
+			Credential json.RawMessage `json:"credential"`
+		}
+		if !httpjson.DecodeBounded(w, r, &body, passkeyBodyLimit) {
+			return
+		}
+		if len(body.Credential) == 0 {
+			Failure(w, ErrInvalid)
+			return
+		}
+		raw, err := h.service.FinishPasskeyConfirm(r.Context(), h.Token(r), body.Ceremony, body.Credential)
+		if err != nil {
+			Failure(w, err)
+			return
+		}
+		h.SetCookie(w, raw)
+		httpjson.Respond(w, 200, map[string]string{"csrfToken": sessiontoken.CSRF(raw)})
+	})
 	route("POST /api/v1/auth/passkey-login/options", false, func(w http.ResponseWriter, r *http.Request) {
 		var body struct{}
 		if !httpjson.Decode(w, r, &body) {

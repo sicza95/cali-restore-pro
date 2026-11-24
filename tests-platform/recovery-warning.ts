@@ -3,6 +3,7 @@ import type { Page, TestInfo } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { drawingCopy } from '../src/ui/editor/drawing-review/copy';
 import { touchTarget } from './touch-target';
+import { chooseLanguage } from './app-navigation';
 
 /**
  * The recovery conflict is a warning on the first screen with its action beside it (#38).
@@ -14,10 +15,9 @@ export async function verifyRecoveryWarning(page: Page, info: TestInfo) {
   const notice = page.locator('.surface-recovery');
   const message = notice.locator('p');
   const discard = notice.getByRole('button');
-  const language = page.locator('[data-control-id="app.nav.language"]');
   for (const lang of ['en', 'hu'] as const) {
     const copy = drawingCopy(lang);
-    await language.selectOption(lang);
+    await chooseLanguage(page, lang);
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     for (const colorScheme of ['light', 'dark'] as const) {
       await page.emulateMedia({ colorScheme });
@@ -73,7 +73,7 @@ export async function verifyRecoveryWarning(page: Page, info: TestInfo) {
   await page.keyboard.press('Tab');
   await expect(discard).toBeFocused();
   await expect(discard).toHaveCSS('outline-style', 'solid');
-  await language.selectOption('en');
+  await chooseLanguage(page, 'en');
   await page.emulateMedia({ colorScheme: 'light' });
   await page.setViewportSize({ width: 1194, height: 834 });
 }

@@ -1,18 +1,20 @@
-import { createEffect, createMemo, createSignal, For, on, Show } from 'solid-js';
+import { createEffect, createSignal, For, on, onCleanup, Show } from 'solid-js';
 import { navigationText } from '../account-access/navigation-copy';
 import {
   accountNavigationControls,
   languageControl,
   menuControl,
-  signOutControl,
 } from '../account-access/navigation-controls';
 import { languageNames, languages, parseLanguage } from '../../platform/i18n/language';
 import { useApp } from '../app-context/AppContext';
 import { Icon } from '../icon/Icon';
 import { ThemeToggle } from './ThemeToggle';
+import { AccountMenu } from './AccountMenu';
+import { setSidebarPinned, sidebarPinned } from './sidebar-state';
 import type { IconName } from '../icon/types';
 import { accountPaths } from '../router/constants';
 import { followLink } from '../router/routes';
+import './shell.css';
 
 const destinationIcons: Record<(typeof accountNavigationControls)[number]['labelKey'], IconName> = {
   projects: 'folder',
@@ -24,152 +26,30 @@ const destinationIcons: Record<(typeof accountNavigationControls)[number]['label
   admin: 'layers',
   login: 'account',
   register: 'plus',
-  libraries: 'layers',
+  libraries: 'shape',
 };
 
-/**
- * `sidebar`: landscape. `rail`: landscape on a surface, icons only so the canvas keeps its width.
- * `compact`: portrait header with a Menu button that opens a modal drawer. `public`: signed-out
- * top bar.
- */
-export type NavigationMode = 'sidebar' | 'rail' | 'compact' | 'public';
+/** `app`: signed in, top bar and menu sidebar. `public`: signed-out pages, language and theme. */
+export type NavigationMode = 'app' | 'public';
 
-export function AppNavigation(props: { mode: NavigationMode }) {
+export function AppNavigation(props: { mode: NavigationMode; rail: boolean }) {
+  return (
+    <Show when={props.mode === 'app'} fallback={<PublicBar />}>
+      <AppBar />
+      <Sidebar rail={props.rail} />
+    </Show>
+  );
+}
+
+/** Signed-out pages: only the language choice and theme, top right. The card carries the brand. */
+function PublicBar() {
   const app = useApp();
   const c = () => navigationText(app.lang());
-  const rail = () => props.mode === 'rail';
-  // Signed-out pages show only the language choice; the card carries the brand and links.
-  const publicMode = () => props.mode === 'public';
-  const [open, setOpen] = createSignal(false);
-  const [drawer, setDrawer] = createSignal<HTMLDialogElement>();
-  const [menuButton, setMenuButton] = createSignal<HTMLButtonElement>();
-  const links = () =>
-    accountNavigationControls.filter(({ labelKey }) => {
-      if (labelKey === 'login' || labelKey === 'register') return !app.account();
-      if (labelKey === 'admin') return !!app.account() && app.canAdmin();
-      return !!app.account();
-    });
-  const close = () => {
-    const dialog = drawer();
-    if (dialog?.open) dialog.close();
-  };
-  createEffect(on(app.router.route, close, { defer: true }));
-  createEffect(on(() => props.mode, close, { defer: true }));
-  // Every in-app navigation rechecks the session and stores a fresh account object. `on` reruns
-  // whenever its source does, so compare ids in a memo: only another account (or signing out)
-  // closes the drawer, not that recheck finishing while it is open.
-  const accountId = createMemo(() => app.account()?.id);
-  createEffect(on(accountId, close, { defer: true }));
-
-  // A component, not a shared node: each layout mode renders its own copy.
-  const Destinations = () => (
-    <nav id="app-navigation" class="app-nav-links" aria-label={c().account}>
-      <For each={links()}>
-        {(control) => (
-          <a
-            href={control.href}
-            onClick={(event) => followLink(event, app.router.navigate)}
-            data-control-id={control.id}
-            title={rail() ? c()[control.labelKey] : undefined}
-            aria-current={app.router.route().name === control.labelKey ? 'page' : undefined}
-          >
-            <Icon name={destinationIcons[control.labelKey]} size={18} />
-            <span class="app-nav-label">{c()[control.labelKey]}</span>
-          </a>
-        )}
-      </For>
-      <Show when={app.account()}>
-        <button
-          type="button"
-          class="app-sign-out"
-          data-control-id={signOutControl.id}
-          title={rail() ? c().logout : undefined}
-          disabled={app.busy()}
-          onClick={() => app.signOut()}
-        >
-          <Icon name="exit" size={18} />
-          <span class="app-nav-label">{c().logout}</span>
-        </button>
-      </Show>
-    </nav>
-  );
-
   return (
-    <aside class="account-nav app-nav" data-mode={props.mode}>
-      <Show when={props.mode === 'compact'}>
-        <button
-          ref={setMenuButton}
-          type="button"
-          class="app-menu-button"
-          data-control-id={menuControl.id}
-          aria-controls="app-drawer"
-          aria-expanded={open()}
-          aria-haspopup="dialog"
-          onClick={() => {
-            drawer()?.showModal();
-            setOpen(true);
-          }}
-        >
-          <Icon name="menu" size={20} />
-          {c().menu}
-        </button>
-      </Show>
-      <Show when={!publicMode()}>
-        <a
-          class="product-name"
-          href={app.account() ? accountPaths.projects : '/'}
-          onClick={(event) => followLink(event, app.router.navigate)}
-          title={rail() ? 'CaliRestore Pro' : undefined}
-        >
-          <Icon name="brand" size={26} />
-          <span class="app-nav-label">
-            CaliRestore <strong>Pro</strong>
-          </span>
-        </a>
-      </Show>
-      <Show
-        when={props.mode === 'compact'}
-        fallback={
-          <Show when={!publicMode()}>
-            <Destinations />
-          </Show>
-        }
-      >
-        <dialog
-          ref={setDrawer}
-          id="app-drawer"
-          class="app-drawer"
-          aria-labelledby="app-drawer-title"
-          onClose={() => {
-            setOpen(false);
-            menuButton()?.focus();
-          }}
-          onClick={(event) => {
-            // A click on the dialog box itself, not its content, is a click on the backdrop.
-            if (event.target === event.currentTarget) close();
-          }}
-        >
-          <div class="app-drawer-body">
-            <header>
-              <h2 id="app-drawer-title">{c().menu}</h2>
-              <button
-                type="button"
-                class="app-drawer-close"
-                aria-label={c().closeMenu}
-                onClick={close}
-              >
-                <Icon name="close" size={20} />
-              </button>
-            </header>
-            <Destinations />
-          </div>
-        </dialog>
-      </Show>
+    <aside class="account-nav app-nav" data-mode="public">
       <div class="app-nav-prefs">
         <label class="language">
-          <span class={rail() || publicMode() ? 'account-visually-hidden' : undefined}>
-            {c().language}
-          </span>
+          <span class="account-visually-hidden">{c().language}</span>
           <select
             data-control-id={languageControl.id}
             value={app.lang()}
@@ -179,7 +59,7 @@ export function AppNavigation(props: { mode: NavigationMode }) {
             <For each={languages}>
               {(code) => (
                 <option value={code} selected={app.lang() === code}>
-                  {rail() ? code.toUpperCase() : languageNames[code]}
+                  {languageNames[code]}
                 </option>
               )}
             </For>
@@ -191,5 +71,111 @@ export function AppNavigation(props: { mode: NavigationMode }) {
         {c().languageHelp}
       </span>
     </aside>
+  );
+}
+
+/** Always visible: the sidebar switch, the product name and the account menu. */
+function AppBar() {
+  const app = useApp();
+  const c = () => navigationText(app.lang());
+  const label = () => (sidebarPinned() ? c().hideSidebar : c().showSidebar);
+  return (
+    <header class="app-bar">
+      <button
+        type="button"
+        class="app-bar-icon"
+        data-control-id={menuControl.id}
+        aria-pressed={sidebarPinned()}
+        aria-label={label()}
+        title={label()}
+        onClick={() => setSidebarPinned(!sidebarPinned())}
+      >
+        <Icon name="sidebar" size={20} />
+      </button>
+      <a
+        class="product-name"
+        href={accountPaths.projects}
+        onClick={(event) => followLink(event, app.router.navigate)}
+      >
+        <Icon name="brand" size={26} />
+        <span>
+          CaliRestore <strong>Pro</strong>
+        </span>
+      </a>
+      <AccountMenu />
+    </header>
+  );
+}
+
+/**
+ * The menu sidebar. Pinned, it is a column beside the page (icons only on a surface or a narrow
+ * screen). Not pinned, it floats over the page while the pointer is at the left edge or on it.
+ */
+function Sidebar(props: { rail: boolean }) {
+  const app = useApp();
+  const c = () => navigationText(app.lang());
+  const [peek, setPeek] = createSignal(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(timer));
+  createEffect(on(app.router.route, () => setPeek(false), { defer: true }));
+  createEffect(on(sidebarPinned, () => setPeek(false), { defer: true }));
+  const links = () =>
+    accountNavigationControls.filter(({ labelKey }) => {
+      if (!app.account() || labelKey === 'login' || labelKey === 'register') return false;
+      if (labelKey === 'admin') return app.canAdmin();
+      return true;
+    });
+  const Links = (linkProps: { rail: boolean }) => (
+    <nav id="app-navigation" class="app-nav-links" aria-label={c().menu}>
+      <For each={links()}>
+        {(control) => (
+          <a
+            href={control.href}
+            onClick={(event) => followLink(event, app.router.navigate)}
+            data-control-id={control.id}
+            title={linkProps.rail ? c()[control.labelKey] : undefined}
+            aria-current={app.router.route().name === control.labelKey ? 'page' : undefined}
+          >
+            <Icon name={destinationIcons[control.labelKey]} size={18} />
+            <span class="app-nav-label">{c()[control.labelKey]}</span>
+          </a>
+        )}
+      </For>
+    </nav>
+  );
+  return (
+    <Show
+      when={sidebarPinned()}
+      fallback={
+        <>
+          {/* A short pause at the edge, so passing over it does not open the menu. */}
+          <div
+            class="app-sidebar-edge"
+            aria-hidden="true"
+            onPointerEnter={(event) => {
+              if (event.pointerType !== 'mouse') return;
+              timer = setTimeout(() => setPeek(true), 90);
+            }}
+            onPointerLeave={() => clearTimeout(timer)}
+          />
+          <Show when={peek()}>
+            <aside
+              class="app-sidebar"
+              data-floating=""
+              onPointerLeave={(event) => {
+                if (event.pointerType === 'mouse') setPeek(false);
+              }}
+              onKeyDown={(event) => event.key === 'Escape' && setPeek(false)}
+            >
+              <Links rail={false} />
+            </aside>
+          </Show>
+        </>
+      }
+    >
+      <aside class="app-sidebar" data-rail={props.rail ? '' : undefined}>
+        <Links rail={props.rail} />
+      </aside>
+    </Show>
   );
 }

@@ -4,6 +4,8 @@ import { AppNavigation } from '../app-shell/AppNavigation';
 import type { NavigationMode } from '../app-shell/AppNavigation';
 import { PageHeading } from '../app-shell/PageHeading';
 import { Toast } from '../app-shell/Toast';
+import { ConfirmIdentity } from '../app-shell/ConfirmIdentity';
+import { sidebarPinned } from '../app-shell/sidebar-state';
 import { useCompactLayout } from '../app-shell/useCompactLayout';
 import { accountPaths } from '../router/constants';
 import { routeGuard } from '../router/guard';
@@ -56,19 +58,22 @@ function AccountShell() {
     const route = router.route();
     return route.name === 'projects' && !!route.surface;
   };
-  const mode = (): NavigationMode => {
-    if (publicView()) return 'public';
-    if (compact()) return 'compact';
-    return surface() ? 'rail' : 'sidebar';
-  };
+  const mode = (): NavigationMode => (publicView() ? 'public' : 'app');
+  // A pinned sidebar shows icons only on a surface (the canvas keeps its width) or a narrow screen.
+  const rail = () => compact() || surface();
+  const sidebar = () => (!sidebarPinned() ? 'hidden' : rail() ? 'rail' : 'full');
   return (
     <div
       class="account-shell"
       classList={{ 'account-shell--public': !!publicView() }}
       data-nav={mode()}
+      data-sidebar={mode() === 'app' ? sidebar() : undefined}
       data-surface={surface() || undefined}
     >
-      <AppNavigation mode={mode()} />
+      <AppNavigation mode={mode()} rail={rail()} />
+      <Show when={mode() === 'app'}>
+        <ConfirmIdentity />
+      </Show>
       <main class="account-content">
         <Show when={!publicView()}>
           <PageHeading />

@@ -16,6 +16,7 @@ const exceptions: Record<string, string> = {
   'ui/editor/drawing-review/constants.ts': 'default colour of a new layer, saved in the drawing',
   'ui/settings/preferences/utils.ts': 'default report accent preference',
   'ui/reports/useReport.ts': 'fallback report accent for an invalid saved preference',
+  'ui/account/profile-fields/photo.ts': 'background behind a transparent photo, saved in the JPEG',
   'ui/colour-literals.test.ts': 'this test',
 };
 

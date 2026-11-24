@@ -53,6 +53,12 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 
 - **Verification code** (_Ellenőrző kód_): the six-digit code in the Create account and Can’t sign in emails, valid for 15 minutes together with the link in the same email. Say "code", never "one-time password" or "PIN". The first password is chosen with New password and Repeat password (_Új jelszó_, _Jelszó újra_); a reset ends with Save password (_Jelszó mentése_). An address with no account that asks for a reset gets a "You don’t have an account yet" (_Még nincs fiókod_) email with a sign-up code, so the page always asks for a code.
 
+- **Confirm it’s you** (_Erősítsd meg, hogy te vagy az_): the dialog that asks for the password, or one of the account’s passkeys (Use a passkey instead, _Inkább azonosítókulccsal_), as the last step of a security change, only when the server wants a fresh confirmation. Nothing asks for the password up front; never say "unlock" or "sudo".
+
+- **Settings** (_Beállítások_) is one page of sections, each with a short description and its settings as rows that open in place: Profile (full name, profile photo, account deletion), Security (Change password, Change email, Manage passkeys, Manage sessions; _Azonosítókulcsok kezelése_, _Munkamenetek kezelése_), Appearance (theme, language, reduce transparency), Restoration defaults, Report branding and Optional diagnostics. Preferences save as soon as they change (Saved., _Mentve._). The account menu (_Fiókmenü_, the round photo in the top bar) holds Theme and Language (_Téma_, _Nyelv_), Profile and Sign out. The menu sidebar links the **Pattern library** (_Mintakönyvtár_).
+
+- **Full name** (_Teljes név_) and **Profile photo** (_Profilkép_): asked for together with the first password when an account is created, and changed on the Account page with Save profile (_Profil mentése_). Every email greets the full name ("Hi Anna Kovács," / _Kedves Kovács Anna!_), written as the person typed it; the welcome email says "Welcome to CaliRestore Pro, {name}". The photo is optional; say Add photo, Change photo, Remove photo (_Kép hozzáadása_, _Kép cseréje_, _Kép eltávolítása_).
+
 - **Raw mask** (_nyers maszk_): one saved layer as an opaque black mask with transparent surroundings, in the reference photo's original pixel coordinates and dimensions. It excludes the photo, crop, grid, legend and layer styling.
 
 - **Draft** (_vázlat_ for drawing, _piszkozat_ for reports): an unfinished, unsaved piece of work is a real idea for the user.

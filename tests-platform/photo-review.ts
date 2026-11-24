@@ -4,6 +4,7 @@ import { surfaceControls } from '../src/ui/projects/surface-review-controls';
 import { expectTaskLanguage } from './copy-guard';
 import { canvasShare, verifyPhotoGestures } from './photo-gestures';
 import { touchTarget } from './touch-target';
+import { chooseLanguage } from './app-navigation';
 
 export function photoControl(page: Page, key: string) {
   const id = 'surface.' + key;
@@ -27,9 +28,8 @@ export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
   await expect(frame.locator('rect')).toHaveAttribute('width', '72');
   await expect.poll(() => frame.getAttribute('style')).not.toBe(tilted);
 
-  const language = page.locator('[data-control-id="app.nav.language"]');
   for (const lang of ['en', 'hu']) {
-    await language.selectOption(lang);
+    await chooseLanguage(page, lang);
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await expect(c('review.rectify')).toHaveAccessibleName(
       lang === 'en' ? 'Correct perspective tilt' : 'A perspektíva dőlésének helyesbítése',
@@ -68,7 +68,7 @@ export async function verifyPhotoMatrix(page: Page, info: TestInfo) {
       }
     }
   }
-  await language.selectOption('en');
+  await chooseLanguage(page, 'en');
   await page.emulateMedia({ colorScheme: 'light' });
   await c('review.perspective').press('Escape');
   await expect(c('review.prepare')).toBeFocused();

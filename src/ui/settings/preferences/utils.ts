@@ -53,16 +53,31 @@ export function signedOutPreferences(): typeof preferenceDefaults {
   return { ...preferenceDefaults, theme };
 }
 
-/** Flips between light and dark and keeps the choice (account preference or this device). */
-export function toggleTheme(accountId?: string) {
-  const theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+export type ThemeChoice = 'light' | 'dark' | 'system';
+
+/** What the person chose: the account's own choice, else this device's, else the device setting. */
+export function themeChoice(accountId?: string): ThemeChoice {
+  const own = accountId ? loadPreferences(accountId).theme : 'system';
+  const theme = own === 'light' || own === 'dark' ? own : signedOutPreferences().theme;
+  return theme === 'light' || theme === 'dark' ? theme : 'system';
+}
+
+/** Keeps the choice for the account (signed out, for this device) and applies it at once. */
+export function chooseTheme(accountId: string | undefined, theme: ThemeChoice) {
   const value = { ...(accountId ? loadPreferences(accountId) : preferenceDefaults), theme };
   try {
     if (accountId) localStorage.setItem('cr-preferences:' + accountId, JSON.stringify(value));
-    else localStorage.setItem(signedOutThemeKey, theme);
+    else if (theme !== 'system') localStorage.setItem(signedOutThemeKey, theme);
+    // "System" means the device setting, so a theme picked on the sign-in page stops applying.
+    if (theme === 'system') localStorage.removeItem(signedOutThemeKey);
   } catch {
     /* Still switch for this page when storage is blocked. */
   }
   applyPreferences(value);
   window.dispatchEvent(new CustomEvent(themeChangeEvent, { detail: theme }));
+}
+
+/** Flips between light and dark (the sign-in page's toggle). */
+export function toggleTheme(accountId?: string) {
+  chooseTheme(accountId, document.body.dataset.theme === 'dark' ? 'light' : 'dark');
 }

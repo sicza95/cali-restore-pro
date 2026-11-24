@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { showAppNavigation } from './app-navigation';
+import { openAccountMenu, openSetting } from './app-navigation';
 
 const member = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -25,12 +25,25 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   );
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.goto('/settings/preferences');
-  await page.getByLabel('Theme').selectOption('dark');
-  await page.getByLabel('Reduce transparency').check();
-  await page.getByLabel('Report language').selectOption('hu');
-  await expect(page.getByLabel('Allow optional crash and performance reports')).not.toBeChecked();
-  await page.getByRole('button', { name: 'Save preferences' }).click();
-  await expect(page.getByText('Preferences saved.')).toBeVisible();
+  // The theme is chosen in the account menu and applies at once.
+  await openAccountMenu(page);
+  await page.locator('[data-control-id="app.menu.theme"]').click();
+  await page.locator('[data-control-id="app.menu.theme.dark"]').click();
+  await page.keyboard.press('Escape');
+  // Each setting is its own row and is saved as soon as it changes.
+  await (await openSetting(page, 'transparency')).getByLabel('Reduce transparency').check();
+  await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
+  await (
+    await openSetting(page, 'report-language')
+  )
+    .getByLabel('Report language')
+    .selectOption('hu');
+  await expect(page.locator('details#report-language summary')).toContainText('Magyar');
+  await expect(
+    (await openSetting(page, 'crash-reports')).getByLabel(
+      'Allow optional crash and performance reports',
+    ),
+  ).not.toBeChecked();
   await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-transparency', 'opaque');
@@ -38,13 +51,18 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: info.outputPath('preferences-portrait-dark.png'), fullPage: true });
-  await showAppNavigation(page);
-  await page.getByRole('link', { name: 'Account profile' }).click();
-  await page.getByRole('button', { name: 'Check deletion eligibility' }).click();
+  await (
+    await openSetting(page, 'delete-account')
+  )
+    .getByRole('button', { name: 'Check deletion eligibility' })
+    .click();
   await expect(page.getByText(/Transfer hosting and resolve last-owner projects/)).toBeVisible();
   account = operator;
   await page.goto('/settings/preferences');
-  await expect(page.getByLabel('Theme')).toHaveValue('system');
+  await expect(page.locator('body')).not.toHaveAttribute('data-theme', 'dark');
+  await openAccountMenu(page);
+  await expect(page.locator('[data-control-id="app.menu.theme"]')).toContainText('Follow device');
+  await page.keyboard.press('Escape');
   await expect(page.getByLabel('Report language')).toHaveValue('en');
 });
 
@@ -52,6 +70,8 @@ test('administration submits a confirmed grant and reloads the server values', a
   page,
 }, info) => {
   let quota = 0;
+  // The first try is refused for want of a recent confirmation; "Confirm it's you" then retries.
+  let confirmedOnce = false;
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.emulateMedia({ colorScheme: 'light' });
   await page.route('**/api/v1/auth/me', (route) =>
@@ -63,9 +83,10 @@ test('administration submits a confirmed grant and reloads the server values', a
       },
     }),
   );
-  await page.route('**/api/v1/auth/confirm', (route) =>
-    route.fulfill({ json: { csrfToken: 'rotated' } }),
-  );
+  await page.route('**/api/v1/auth/confirm', (route) => {
+    confirmedOnce = true;
+    return route.fulfill({ json: { csrfToken: 'rotated' } });
+  });
   await page.route('**/api/v1/admin/accounts?**', (route) =>
     route.fulfill({
       json: {
@@ -80,6 +101,8 @@ test('administration submits a confirmed grant and reloads the server values', a
     route.fulfill({ json: { mail: { pending: 0, sent: 2, failed: 0 }, audit: [], jobs: [] } }),
   );
   await page.route('**/api/v1/admin/accounts/*/controls', (route) => {
+    if (!confirmedOnce)
+      return route.fulfill({ status: 403, json: { error: 'credential_confirmation_required' } });
     expect(route.request().headers()['x-csrf-token']).toBe('rotated');
     expect(route.request().postDataJSON()).toEqual({
       confirm: true,
@@ -91,13 +114,14 @@ test('administration submits a confirmed grant and reloads the server values', a
   await page.goto('/admin');
   await page.getByText(member.email).click();
   const save = page.getByRole('button', { name: 'Save feature grant and quota' });
-  await expect(save).toBeDisabled();
-  await page.getByLabel('Current password').fill('synthetic browser password');
-  await page.getByRole('button', { name: 'Confirm password' }).click();
   await page.getByLabel('Allow server features').check();
   await page.getByLabel('Hosting quota (MiB)').fill('128');
   await page.getByLabel('I confirm this security change.').check();
   await save.click();
+  const dialog = page.getByRole('dialog', { name: 'Confirm it’s you' });
+  await dialog.getByLabel('Current password').fill('synthetic browser password');
+  await dialog.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await expect(dialog).toBeHidden();
   await expect(page.getByText('Signed-in sessions: 1 · Hosting quota (MiB): 128')).toBeAttached();
   await page.getByText(member.email).click();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);

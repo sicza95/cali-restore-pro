@@ -2,10 +2,10 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {
   accountNavigationControls,
-  languageControl,
   menuControl,
   signOutControl,
 } from '../src/ui/account-access/navigation-controls';
+import { openAccountMenu, openSetting } from './app-navigation';
 
 const account = { id: 'm08-navigation', email: 'member@example.test' };
 const byId = (id: string) => '[data-control-id="' + id + '"]';
@@ -36,22 +36,35 @@ test('navigation registry, capability changes, language, theme and Back', async 
       await expect(link).toHaveCount(0);
     else await expect(link).toHaveAttribute('href', control.href);
   }
-  await expect(page.locator(byId(signOutControl.id))).toBeVisible();
+  await expect(page.locator(byId('app.nav.account-menu'))).toBeVisible();
+  await expect(page.locator(byId('app.nav.profile'))).toHaveCount(0);
+  await expect(page.locator(byId('app.nav.security'))).toHaveCount(0);
+  await expect(page.locator(byId('app.nav.preferences'))).toHaveCount(0);
   await expect(page.locator(byId('app.nav.admin'))).toHaveAttribute('aria-current', 'page');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('admin-landscape-en-light.png') });
 
-  await page.locator(byId('app.nav.preferences')).click();
-  await page.getByLabel('Theme').selectOption('dark');
-  await page.getByLabel('Reduce transparency').check();
-  await page.getByRole('button', { name: 'Save preferences' }).click();
-  await expect(page.getByText('Preferences saved.')).toBeVisible();
-  await page.locator(byId(languageControl.id)).selectOption('hu');
-  await page.locator(byId('app.nav.profile')).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fiókprofil');
+  // Settings opens from the account menu's Profile; Appearance is a section of the same page.
+  await openAccountMenu(page);
+  await page.locator(byId('app.menu.profile')).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Settings');
+  // The theme lives in the account menu, as a submenu, and applies at once.
+  await openAccountMenu(page);
+  await page.locator(byId('app.menu.theme')).click();
+  await expect(page.locator(byId('app.menu.theme.system'))).toHaveAttribute('aria-checked', 'true');
+  await page.locator(byId('app.menu.theme.dark')).click();
+  await expect(page.locator(byId('app.menu.theme'))).toContainText('Dark');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('details#theme summary')).toContainText('Dark');
+  await (await openSetting(page, 'transparency')).getByLabel('Reduce transparency').check();
+  await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
+  // Language from the Appearance section.
+  await (await openSetting(page, 'language')).getByText('Magyar', { exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Beállítások');
+  await page.locator(byId('app.nav.libraries')).click();
+  await expect(page.locator(byId('app.nav.libraries'))).toHaveAttribute('aria-current', 'page');
   await page.goBack();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Beállítások');
-  await expect(page.locator(byId('app.nav.preferences'))).toHaveAttribute('aria-current', 'page');
   await expect(page.locator('html')).toHaveAttribute('lang', 'hu');
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-transparency', 'opaque');
@@ -59,42 +72,47 @@ test('navigation registry, capability changes, language, theme and Back', async 
     await page.setViewportSize(viewport);
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-    await page.screenshot({ path: info.outputPath(`preferences-${viewport.width}-hu-dark.png`) });
+    await page.screenshot({ path: info.outputPath(`settings-${viewport.width}-hu-dark.png`) });
   }
 
-  // Portrait: the links sit in a modal drawer behind Menu.
-  await page.setViewportSize({ width: 834, height: 1194 });
-  const menu = page.locator(byId(menuControl.id));
-  const preferences = page.locator(byId('app.nav.preferences'));
-  await expect(menu).toHaveAttribute('aria-expanded', 'false');
-  await expect(preferences).toBeHidden();
-  await menu.focus();
-  await menu.press('Enter');
-  await expect(menu).toHaveAttribute('aria-expanded', 'true');
-  const drawer = page.getByRole('dialog', { name: 'Menü' });
-  await expect(drawer).toBeVisible();
-  await drawer.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
-  await expect(preferences).toBeVisible();
+  // The account menu works from the keyboard: open on Enter, arrows move, Escape returns.
+  const avatar = page.locator(byId('app.nav.account-menu'));
+  await avatar.focus();
+  await avatar.press('Enter');
+  await expect(page.locator('#account-menu')).toBeVisible();
+  await expect(page.locator(byId('app.menu.theme'))).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator(byId('app.menu.language'))).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(page.locator(byId(signOutControl.id))).toBeFocused();
+  // The menu fades in; check contrast once it is fully shown.
+  await page
+    .locator('#account-menu')
+    .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  await page.screenshot({ path: info.outputPath('drawer-834-hu-dark.png') });
-  // Focus stays in the drawer: the page behind it is inert.
-  for (let step = 0; step < 16; step++) {
-    await page.keyboard.press('Tab');
-    expect(
-      await page.evaluate(
-        () =>
-          document.activeElement === document.body || !!document.activeElement?.closest('dialog'),
-      ),
-    ).toBe(true);
-  }
+  await page.screenshot({ path: info.outputPath('account-menu-834-hu-dark.png') });
   await page.keyboard.press('Escape');
-  await expect(menu).toHaveAttribute('aria-expanded', 'false');
-  await expect(menu).toBeFocused();
-  await expect(preferences).toBeHidden();
-  await menu.click();
-  await page.getByRole('button', { name: 'Menü bezárása' }).click();
-  await expect(menu).toBeFocused();
-  await menu.click();
+  await expect(page.locator('#account-menu')).toHaveCount(0);
+  await expect(avatar).toBeFocused();
+
+  // The sidebar stays pinned until switched off; then it floats in at the left edge.
+  const toggle = page.locator(byId(menuControl.id));
+  const preferences = page.locator(byId('app.nav.libraries'));
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(preferences).toBeVisible();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(preferences).toHaveCount(0);
+  await page.mouse.move(400, 600);
+  await page.mouse.move(4, 600);
+  await expect(page.locator('.app-sidebar[data-floating]')).toBeVisible();
+  await expect(preferences).toBeVisible();
+  await page.screenshot({ path: info.outputPath('sidebar-floating-834.png') });
+  await page.mouse.move(600, 600);
+  await expect(preferences).toHaveCount(0);
+  await page.reload();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await toggle.click();
   await expect(preferences).toBeVisible();
 
   capabilities = [];

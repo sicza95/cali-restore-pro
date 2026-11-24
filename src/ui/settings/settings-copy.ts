@@ -65,7 +65,7 @@ export const settingsCopy = defineCopy({
     mail: 'Mail queue',
     refreshOperations: 'Refresh mail and audit',
     adminPasswordHelp:
-      'Confirm your password to change an account. Confirmation lasts five minutes.',
+      'Changing an account asks you to confirm it’s you first, at most every five minutes.',
     mailJobs: 'Recent mail jobs',
     attempts: 'Attempts',
     noMail: 'No recent mail jobs.',
@@ -161,7 +161,7 @@ export const settingsCopy = defineCopy({
     mail: 'Levélküldési sor',
     refreshOperations: 'Levelek és események frissítése',
     adminPasswordHelp:
-      'A fiók módosításához erősítsd meg a jelszavad. A megerősítés öt percig érvényes.',
+      'Egy fiók módosítása előtt meg kell erősítened, hogy te vagy az, legfeljebb ötpercenként.',
     mailJobs: 'Legutóbbi levélküldések',
     attempts: 'Kísérletek',
     noMail: 'Nincs új levélküldés.',

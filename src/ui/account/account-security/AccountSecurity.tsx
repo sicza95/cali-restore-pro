@@ -1,12 +1,40 @@
-import { For, Show } from 'solid-js';
+import { For, Show, type JSX } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
+import type { IconName } from '../../icon/types';
+import type { Message } from '../../account-access/types';
+import { SettingsItem } from '../../settings/SettingsItem';
 import { PasskeySection } from './PasskeySection';
-import { ConfirmField } from '../confirm-field/ConfirmField';
 import { EmailField } from '../email-field/EmailField';
 import { PasswordField } from '../password-field/PasswordField';
-import { SubmitButton } from '../submit-button/SubmitButton';
 
-export function AccountSecurity() {
+/** A security row; its summary keeps the `account.security.*` control id. */
+function SecurityOption(props: {
+  id: string;
+  icon: IconName;
+  title: Message;
+  help: Message;
+  children: JSX.Element;
+}) {
+  const app = useApp();
+  return (
+    <SettingsItem
+      id={props.id}
+      group="security"
+      icon={props.icon}
+      title={app.t(props.title)}
+      help={app.t(props.help)}
+      control={`account.security.${props.id}`}
+    >
+      {props.children}
+    </SettingsItem>
+  );
+}
+
+/**
+ * The Security section: what the person can change, in order. Nothing asks for the password up front;
+ * a change the server wants confirmed opens "Confirm it's you" as its last step.
+ */
+export function SecurityItems() {
   const app = useApp();
   return (
     <Show
@@ -17,117 +45,96 @@ export function AccountSecurity() {
         </p>
       }
     >
-      {(owner) => (
-        <>
-          <p class="account-email">{owner().email}</p>
-          <section class="account-section">
-            <div>
-              <h2>{app.t('confirmPassword')}</h2>
-              <p>{app.t('securityHelp')}</p>
-            </div>
-            <form class="account-panel" onSubmit={(e) => app.submit(e, 'confirm', 'confirmed')}>
-              <PasswordField t={app.t} kind={'currentPassword'} />
-              <SubmitButton
-                t={app.t}
-                busy={app.busy()}
-                label="confirmPassword"
-                controlId="account.confirm"
-              />
-            </form>
-          </section>
-          <section class="account-section">
-            <div>
-              <h2>{app.t('changePassword')}</h2>
-              <p id="password-help">{app.t('passwordHelp')}</p>
-            </div>
-            <form
-              class="account-panel"
-              onSubmit={(e) => app.submit(e, 'change-password', 'success')}
-            >
-              <PasswordField t={app.t} kind={'newPassword'} />
-              <ConfirmField t={app.t} />
+      <>
+        <SecurityOption id="password" icon="key" title="changePassword" help="passwordOptionHelp">
+          <form onSubmit={(e) => app.submit(e, 'change-password', 'success')}>
+            <PasswordField t={app.t} kind="newPassword" />
+            <p id="password-help" class="field-help">
+              {app.t('passwordHelp')}
+            </p>
+            <div class="settings-actions">
               <button
+                class="primary"
                 data-control-id="account.password.change"
-                disabled={app.busy() || !app.confirmed()}
+                disabled={app.busy()}
               >
                 {app.t('changePassword')}
               </button>
-            </form>
-          </section>
-          <section class="account-section">
-            <div>
-              <h2>{app.t('changeEmail')}</h2>
-              <p>{app.t('neutral')}</p>
             </div>
-            <form class="account-panel" onSubmit={(e) => app.submit(e, 'change-email', 'neutral')}>
-              <EmailField t={app.t} />
-              <ConfirmField t={app.t} />
-              <button
-                data-control-id="account.email.change"
-                disabled={app.busy() || !app.confirmed()}
-              >
+          </form>
+        </SecurityOption>
+        <SecurityOption id="email" icon="mail" title="changeEmail" help="changeEmailHelp">
+          <form onSubmit={(e) => app.submit(e, 'change-email', 'neutral')}>
+            <p class="settings-current">
+              <span>{app.t('signInEmail')}</span>
+              <strong class="account-email">{app.account()?.email}</strong>
+            </p>
+            <EmailField t={app.t} />
+            <div class="settings-actions">
+              <button class="primary" data-control-id="account.email.change" disabled={app.busy()}>
                 {app.t('changeEmail')}
               </button>
-            </form>
-          </section>
+            </div>
+          </form>
+        </SecurityOption>
+        <SecurityOption id="passkeys" icon="lock" title="managePasskeys" help="passkeyHelp">
           <PasskeySection />
-          <section class="account-section">
-            <div>
-              <h2>{app.t('sessions')}</h2>
-              <p>{app.t('sessionHelp')}</p>
-              <p>{app.t('revokeHelp')}</p>
-            </div>
-            <div class="account-panel">
-              <Show when={app.sessionError()}>
-                <p role="alert">{app.t('sessionFailed')}</p>
-              </Show>
-              <button
-                data-control-id="account.sessions.refresh"
-                disabled={app.busy()}
-                onClick={() => void app.refreshSessions()}
-              >
-                {app.t('refresh')}
-              </button>
-              <label class="confirmation">
-                <input
-                  type="checkbox"
-                  checked={app.revokeConfirmed()}
-                  onChange={(e) => app.setRevokeConfirmed(e.currentTarget.checked)}
-                />
-                {app.t('confirmation')}
-              </label>
-              <ul class="session-list">
-                <For each={app.sessions()}>
-                  {(session) => (
-                    <li>
-                      <span>
-                        <Show when={session.current}>{app.t('current')} · </Show>
-                        <time datetime={session.createdAt}>
-                          {new Date(session.createdAt).toLocaleString(app.lang())}
-                        </time>
-                      </span>
-                      <button
-                        data-control-id="account.sessions.revoke"
-                        disabled={app.busy() || !app.confirmed() || !app.revokeConfirmed()}
-                        onClick={() => void app.revokeSession(session)}
-                      >
-                        {app.t('revoke')}
-                      </button>
-                    </li>
-                  )}
-                </For>
-              </ul>
-              <button
-                data-control-id="account.sessions.revoke-all"
-                disabled={app.busy() || !app.confirmed() || !app.revokeConfirmed()}
-                onClick={() => void app.revokeAll()}
-              >
-                {app.t('revokeAll')}
-              </button>
-            </div>
-          </section>
-        </>
-      )}
+        </SecurityOption>
+        <SecurityOption
+          id="sessions"
+          icon="devices"
+          title="manageSessions"
+          help="sessionsOptionHelp"
+        >
+          <Show when={app.sessionError()}>
+            <p role="alert">{app.t('sessionFailed')}</p>
+          </Show>
+          <ul class="settings-list session-list">
+            <For each={app.sessions()}>
+              {(session) => (
+                <li>
+                  <span>
+                    <Show when={session.current}>
+                      <strong>{app.t('current')}</strong>
+                      <br />
+                    </Show>
+                    <time datetime={session.createdAt}>
+                      {new Date(session.createdAt).toLocaleString(app.lang())}
+                    </time>
+                  </span>
+                  <button
+                    data-control-id="account.sessions.revoke"
+                    disabled={app.busy()}
+                    onClick={() => void app.revokeSession(session)}
+                  >
+                    {app.t('revoke')}
+                  </button>
+                </li>
+              )}
+            </For>
+          </ul>
+          <p class="field-help">
+            {app.t('sessionHelp')} {app.t('revokeHelp')}
+          </p>
+          <div class="settings-actions">
+            <button
+              data-control-id="account.sessions.refresh"
+              disabled={app.busy()}
+              onClick={() => void app.refreshSessions()}
+            >
+              {app.t('refresh')}
+            </button>
+            <button
+              class="danger"
+              data-control-id="account.sessions.revoke-all"
+              disabled={app.busy()}
+              onClick={() => void app.revokeAll()}
+            >
+              {app.t('revokeAll')}
+            </button>
+          </div>
+        </SecurityOption>
+      </>
     </Show>
   );
 }

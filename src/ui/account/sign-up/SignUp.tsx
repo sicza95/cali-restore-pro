@@ -5,6 +5,7 @@ import { PasswordField } from '../password-field/PasswordField';
 import { SubmitButton } from '../submit-button/SubmitButton';
 import { typedEmail } from '../sign-in/remembered-accounts';
 import { CodeInput } from './CodeInput';
+import { ProfileFields } from '../profile-fields/ProfileFields';
 
 type Step = 'email' | 'code' | 'checking' | 'password' | 'invalidLink';
 type Proof = { email: string; code: string } | { token: string };
@@ -53,6 +54,8 @@ export function SignUp(props: { token?: string; mode?: keyof typeof modes }) {
   const [wrongCode, setWrongCode] = createSignal<Problem>();
   const [sendProblem, setSendProblem] = createSignal<Problem>();
   const [sending, setSending] = createSignal(false);
+  // A new account is named and may get a photo together with its first password.
+  const [photo, setPhoto] = createSignal<string>();
   const problem = (error: unknown, link: Problem): Problem => {
     const code = error instanceof Error ? error.message : '';
     return code === 'try_later'
@@ -186,7 +189,14 @@ export function SignUp(props: { token?: string; mode?: keyof typeof modes }) {
               repeat.reportValidity();
               return;
             }
-            void app.run('code/complete', { ...proof(), password }, 'success');
+            const profile =
+              mode.send === 'register'
+                ? {
+                    name: (form.elements.namedItem('full-name') as HTMLInputElement).value,
+                    ...(photo() ? { photo: photo() } : {}),
+                  }
+                : {};
+            void app.run('code/complete', { ...proof(), password, ...profile }, 'success');
           }}
         >
           <Show when={email()}>
@@ -203,7 +213,20 @@ export function SignUp(props: { token?: string; mode?: keyof typeof modes }) {
               aria-hidden="true"
             />
           </Show>
-          <PasswordField t={t} kind="newPassword" ref={(el) => queueMicrotask(() => el.focus())} />
+          <Show when={mode.send === 'register'}>
+            <ProfileFields
+              t={t}
+              controls="auth.register"
+              email={email()}
+              onPhoto={setPhoto}
+              autofocus
+            />
+          </Show>
+          <PasswordField
+            t={t}
+            kind="newPassword"
+            ref={(el) => mode.send !== 'register' && queueMicrotask(() => el.focus())}
+          />
           <label>
             {t('repeatPassword')}
             <input

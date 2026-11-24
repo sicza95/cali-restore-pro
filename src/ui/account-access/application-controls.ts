@@ -4,6 +4,7 @@ import { accountControls } from '../account/account-controls';
 import { sharingControls } from '../sharing/sharing-controls';
 import { recipientReportControls } from '../recipient-reports/recipient-report-controls';
 import {
+  accountMenuControls,
   accountNavigationControls,
   languageControl,
   themeControl,
@@ -23,6 +24,7 @@ export const applicationControls = [
   themeControl,
   menuControl,
   signOutControl,
+  ...accountMenuControls,
   ...accountControls,
   ...settingsControls,
   ...projectControls,

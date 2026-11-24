@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { expectTaskLanguage } from './copy-guard';
+import { chooseLanguage } from './app-navigation';
 
 export async function verifyRawMaskDownload(page: Page, info: TestInfo, checkpoint: string) {
   const control = (key: string) => page.locator('[data-control-id="report.raw.' + key + '"]');
@@ -52,7 +53,7 @@ export async function verifyRawMaskDownload(page: Page, info: TestInfo, checkpoi
     await expectTaskLanguage(page, 'raw mask EN ' + width);
     await panel.screenshot({ path: info.outputPath('raw-mask-en-' + width + '.png') });
   }
-  await page.getByLabel('App language').selectOption('hu');
+  await chooseLanguage(page, 'hu');
   await page.emulateMedia({ colorScheme: 'dark' });
   const hu = page.getByRole('region', { name: 'Nyers maszk', exact: true });
   await expect(control('download')).toHaveText('Nyers maszk letöltése PNG-ként');

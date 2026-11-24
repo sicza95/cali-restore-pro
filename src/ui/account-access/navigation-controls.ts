@@ -49,9 +49,7 @@ export const accountNavigationControls = [
     'Invitation inbox requires unlocked vault for inbox',
     'M-06',
   ),
-  navigationControl('profile', 'signed-in', 'Account profile', 'M-02'),
-  navigationControl('security', 'signed-in', 'Account security', 'M-02'),
-  navigationControl('preferences', 'signed-in', 'Local account preferences', 'M-02'),
+  navigationControl('libraries', 'signed-in', 'Pattern library requires unlocked vault', 'M-05'),
   navigationControl(
     'offline',
     'Explicit offline account marker',
@@ -121,16 +119,49 @@ export const menuControl = {
   id: 'app.nav.menu',
   labelKey: 'menu',
   helpKey: 'account',
-  command: 'Expand or collapse navigation',
-  permission: 'public',
-  prerequisite: 'Phone layout',
-  valueSource: 'Current menu disclosure state',
+  command: 'Keep the menu sidebar open, or hide it until the pointer reaches the left edge',
+  permission: 'signed-in',
+  prerequisite: 'Top bar',
+  valueSource: 'cr-sidebar on this device (pinned by default)',
   behavior: 'functional',
   owner: 'M-08',
-  composition: 'Phone application navigation',
+  composition: 'Application top bar',
   unavailable: {
     failure: 'The disclosure changes local UI state.',
     empty: 'Show signed-out destinations.',
     locked: 'Available while the vault is locked.',
   },
 } as const satisfies ControlContract;
+
+function menuEntry(id: string, labelKey: string, command: string): ControlContract {
+  return {
+    id,
+    labelKey,
+    helpKey: 'accountMenu',
+    command,
+    permission: 'signed-in',
+    prerequisite: 'Account menu open',
+    valueSource: 'Account preferences, app language and current route',
+    behavior: 'functional',
+    owner: 'M-08',
+    composition: 'Account menu',
+    unavailable: {
+      failure: 'Apply the choice for the current page when storage is blocked.',
+      empty: 'Omit for signed-out visitors.',
+      locked: 'Available while the vault is locked.',
+    },
+  };
+}
+
+/** The round photo in the top bar and its menu. Sign out reuses `signOutControl`. */
+export const accountMenuControls = [
+  menuEntry('app.nav.account-menu', 'accountMenu', 'Open or close the account menu'),
+  menuEntry('app.menu.theme', 'themeMenu', 'Open the theme choices'),
+  menuEntry('app.menu.theme.light', 'light', 'Use the light theme on this account and device'),
+  menuEntry('app.menu.theme.dark', 'dark', 'Use the dark theme on this account and device'),
+  menuEntry('app.menu.theme.system', 'system', 'Follow the device theme'),
+  menuEntry('app.menu.language', 'languageMenu', 'Open the language choices'),
+  menuEntry('app.menu.language.en', 'language', 'Use English for the interface'),
+  menuEntry('app.menu.language.hu', 'language', 'Use Hungarian for the interface'),
+  menuEntry('app.menu.profile', 'profileTab', 'GET /settings/account'),
+];

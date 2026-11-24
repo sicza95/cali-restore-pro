@@ -53,9 +53,6 @@ export function AccountDeletion(props: { path: string; pending?: boolean; onChan
               {d().exportHelp} <a href="/projects">{app.t('projects')}</a>
             </p>
           </Show>
-          <p>
-            {d().recentPassword} <a href="/settings/security">{app.t('security')}</a>
-          </p>
           <label class="confirmation">
             <input type="checkbox" required />
             {force() ? d().confirmForce : d().confirm}
@@ -66,7 +63,7 @@ export function AccountDeletion(props: { path: string; pending?: boolean; onChan
               {d().skipRecovery}
             </label>
           </Show>
-          <button data-control-id="account.deletion.apply" disabled={app.busy()}>
+          <button class="danger" data-control-id="account.deletion.apply" disabled={app.busy()}>
             {props.pending ? d().purge : force() ? d().deleteForced : d().delete}
           </button>
         </form>

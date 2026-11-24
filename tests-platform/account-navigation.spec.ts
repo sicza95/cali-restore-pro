@@ -1,5 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
-import { showAppNavigation } from './app-navigation';
+import {
+  confirmChange,
+  confirmDialog,
+  openAccountMenu,
+  openProfile,
+  profileEmail,
+  refuseChanges,
+  showAppNavigation,
+  signOutFromMenu,
+} from './app-navigation';
 
 const account = { id: 'account-navigation', email: 'navigation@example.test' };
 const marker = 'same-document';
@@ -14,10 +23,7 @@ const visit = async (page: Page, name: string) => {
   await showAppNavigation(page);
   await page.locator('#app-navigation').getByRole('link', { name, exact: true }).click();
 };
-
-test('account and app links, inline security, drawer and history retain the document', async ({
-  page,
-}) => {
+test('account menu, settings tabs, sidebar and history retain the document', async ({ page }) => {
   let sessions = 0;
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ json: { account, csrfToken: 'fixture' } }),
@@ -27,37 +33,34 @@ test('account and app links, inline security, drawer and history retain the docu
     sessions++;
     return route.fulfill({ json: { sessions: [] } });
   });
-  await page.route('**/api/v1/auth/confirm', (route) =>
-    route.fulfill({ json: { csrfToken: 'confirmed' } }),
-  );
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/projects');
   await expect(page.locator('.project-workspace')).toBeVisible();
   await mark(page);
-  await visit(page, 'Account profile');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Account profile');
-  await page.getByRole('main').getByRole('link', { name: 'Account security' }).click();
-  await expect(page.getByLabel('Current password')).toBeVisible();
+  // The account menu's Profile opens Settings on the Profile tab.
+  await openProfile(page);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Settings');
+  await expect(page.locator('#profile')).toBeVisible();
+  await expect(page.locator('#account-menu')).toHaveCount(0);
+  // Security is a section of the same page, and its sessions load with it.
+  await expect(page.locator('[data-control-id="account.security.password"]')).toBeVisible();
   await expect.poll(() => sessions).toBe(1);
-  await page.getByLabel('Current password').fill('synthetic password');
-  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Change password', exact: true })).toBeEnabled();
+  // Nothing asks for the password up front.
+  await expect(confirmDialog(page)).toBeHidden();
   await page.setViewportSize({ width: 834, height: 1194 });
-  await visit(page, 'Preferences');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Preferences');
+  await visit(page, 'Pattern library');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pattern library');
   await expect(page.getByRole('dialog')).toBeHidden();
-  await expect(page.getByText(/Password confirmed\./)).toHaveCount(0);
   await page.goBack();
-  await expect(page.getByLabel('Current password')).toHaveValue('');
-  await expect(page.getByRole('button', { name: 'Change password', exact: true })).toBeDisabled();
+  await expect(page.locator('#security')).toBeVisible();
   await expect.poll(() => sessions).toBe(2);
   await page.goForward();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Preferences');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pattern library');
   await visit(page, 'Projects');
   await expect(page.locator('.project-workspace')).toBeVisible();
   await visit(page, 'Offline originals');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Offline originals');
-  await page.getByRole('link').click();
+  await page.getByRole('main').getByRole('link').click();
   await expect(page).toHaveURL(/\/invitations$/);
   await sameDocument(page);
 });
@@ -104,18 +107,18 @@ test('Back and Forward recheck expired sessions and fail closed when the check i
   );
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/settings/account');
-  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  await expect(profileEmail(page, account.email)).toBeVisible();
   await mark(page);
-  await visit(page, 'Preferences');
-  await expect(page.getByLabel('Theme')).toBeVisible();
+  await visit(page, 'Pattern library');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pattern library');
   state = 'expired';
   await page.goBack();
   await expect(page.getByText('Sign in to open this page.')).toBeVisible();
-  await expect(page.getByText(account.email, { exact: true })).toHaveCount(0);
+  await expect(profileEmail(page, account.email)).toHaveCount(0);
   state = 'unavailable';
   await page.goForward();
   await expect(page.locator('[data-control-id="app.session.retry"]')).toBeVisible();
-  await expect(page.getByLabel('Theme')).toHaveCount(0);
+  await expect(page.getByLabel('Report language')).toHaveCount(0);
   await sameDocument(page);
 });
 
@@ -151,10 +154,9 @@ test('public inline links reset forms and never reuse an email token on history 
   await sameDocument(page);
 });
 
-test('a delayed password confirmation cannot enable controls after leaving and returning', async ({
-  page,
-}) => {
+test('leaving the page cancels "Confirm it’s you" and the change it guards', async ({ page }) => {
   let confirming = false;
+  let changes = 0;
   let release = () => {};
   const pending = new Promise<void>((resolve) => {
     release = resolve;
@@ -164,24 +166,27 @@ test('a delayed password confirmation cannot enable controls after leaving and r
   );
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
   await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
+  await refuseChanges(page, () => changes++);
   await page.route('**/api/v1/auth/confirm', async (route) => {
     confirming = true;
     await pending;
     await route.fulfill({ json: { csrfToken: 'confirmed' } });
   });
   await page.setViewportSize({ width: 1194, height: 834 });
-  await page.goto('/settings/security');
-  await page.getByLabel('Current password').fill('synthetic password');
-  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+  await page.goto('/projects');
+  await openProfile(page);
+  await confirmChange(page);
   await expect.poll(() => confirming).toBe(true);
-  await visit(page, 'Preferences');
-  await expect(page.getByLabel('Theme')).toBeVisible();
   await page.goBack();
-  await expect(page.getByLabel('Current password')).toHaveValue('');
+  await expect(confirmDialog(page)).toBeHidden();
+  await expect(page).toHaveURL(/\/projects$/);
   release();
-  await expect(page.getByRole('button', { name: 'Confirm password', exact: true })).toBeEnabled();
-  await expect(page.getByRole('button', { name: 'Change password', exact: true })).toBeDisabled();
-  await expect(page.getByText(/Password confirmed\./)).toHaveCount(0);
+  await page.goForward();
+  await expect(page.locator('#security')).toBeVisible();
+  await expect(confirmDialog(page)).toBeHidden();
+  // The late confirmation neither retried the change nor reported anything.
+  expect(changes).toBe(1);
+  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toHaveCount(0);
 });
 
 test('an email fragment opened on the same page is consumed once across history and hash events', async ({
@@ -245,7 +250,7 @@ test('a delayed admin authentication failure cannot sign out a different account
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/admin');
   await expect.poll(() => requested).toBe(true);
-  await page.locator('[data-control-id="app.nav.sign-out"]').click();
+  await signOutFromMenu(page);
   // Signing out goes straight to the sign-in page and keeps the way back.
   await expect(page).toHaveURL(/\/login\?next=admin$/);
   await page.getByLabel('Email address', { exact: true }).fill(other.email);
@@ -253,14 +258,14 @@ test('a delayed admin authentication failure cannot sign out a different account
   await page.getByLabel('Password', { exact: true }).fill('synthetic password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  await visit(page, 'Account profile');
-  await expect(page.getByText(other.email, { exact: true })).toBeVisible();
+  await openProfile(page);
+  await expect(profileEmail(page, other.email)).toBeVisible();
   const response = page.waitForResponse(
     (response) => response.url().endsWith('/admin/operations') && response.status() === 401,
   );
   release();
   await response;
-  await expect(page.getByText(other.email, { exact: true })).toBeVisible();
+  await expect(profileEmail(page, other.email)).toBeVisible();
   await expect(page.getByText('Sign in to open this page.')).toHaveCount(0);
 });
 
@@ -277,24 +282,28 @@ test('a delayed failure after navigation does not show an error or clear the ses
   );
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
   await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
+  await refuseChanges(page);
   await page.route('**/api/v1/auth/confirm', async (route) => {
     requested = true;
     await pending;
     await route.fulfill({ status: 401, json: { error: 'authentication_required' } });
   });
   await page.setViewportSize({ width: 1194, height: 834 });
-  await page.goto('/settings/security');
-  await page.getByLabel('Current password').fill('synthetic password');
-  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+  await page.goto('/projects');
+  await openProfile(page);
+  await confirmChange(page);
   await expect.poll(() => requested).toBe(true);
-  await visit(page, 'Account profile');
-  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/projects$/);
   const response = page.waitForResponse((response) => response.url().endsWith('/auth/confirm'));
   release();
   await response;
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.locator('[data-control-id="app.nav.account-menu"]')).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
-  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  await expect(page.locator('[data-control-id="app.nav.account-menu"]')).toHaveAttribute(
+    'title',
+    account.email,
+  );
 });
 
 test('a delayed response cannot replace the CSRF token of a refreshed session', async ({
@@ -311,6 +320,7 @@ test('a delayed response cannot replace the CSRF token of a refreshed session', 
   );
   await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
   await page.route('**/api/v1/auth/passkeys', (route) => route.fulfill({ json: noPasskeys }));
+  await refuseChanges(page);
   await page.route('**/api/v1/auth/confirm', async (route) => {
     if (!requested) {
       requested = true;
@@ -322,23 +332,21 @@ test('a delayed response cannot replace the CSRF token of a refreshed session', 
     }
   });
   await page.setViewportSize({ width: 1194, height: 834 });
-  await page.goto('/settings/security');
-  await page.getByLabel('Current password').fill('synthetic password');
-  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+  await page.goto('/projects');
+  await openProfile(page);
+  await confirmChange(page);
   await expect.poll(() => requested).toBe(true);
-  await visit(page, 'Preferences');
-  await expect(page.getByLabel('Theme')).toBeVisible();
-  await visit(page, 'Account security');
-  await expect(page.getByLabel('Current password')).toBeVisible();
+  await page.goBack();
+  await openProfile(page);
+  await expect(page.locator('[data-control-id="account.security.password"]')).toBeVisible();
   const response = page.waitForResponse((response) => response.url().endsWith('/auth/confirm'));
   release();
   await response;
-  await page.getByLabel('Current password').fill('synthetic password');
-  await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+  await confirmChange(page);
   await expect.poll(() => token).toBe('current');
 });
 
-test('a session recheck that finishes after navigation leaves the opened drawer open', async ({
+test('a session recheck that finishes after navigation leaves the account menu open', async ({
   page,
 }) => {
   let hold = false;
@@ -356,18 +364,18 @@ test('a session recheck that finishes after navigation leaves the opened drawer 
   });
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.goto('/settings/account');
-  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  await expect(profileEmail(page, account.email)).toBeVisible();
   hold = true;
-  await visit(page, 'Preferences');
+  await visit(page, 'Pattern library');
   await expect.poll(() => held).toBe(true);
-  await showAppNavigation(page);
+  await openAccountMenu(page);
   const response = page.waitForResponse((response) => response.url().endsWith('/auth/me'));
   release();
   await response;
-  await expect(page.getByLabel('Theme')).toBeVisible();
-  await expect(page.locator('#app-drawer')).toBeVisible();
-  await page.locator('#app-navigation').getByRole('link', { name: 'Account profile' }).click();
-  await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pattern library');
+  await expect(page.locator('#account-menu')).toBeVisible();
+  await page.locator('[data-control-id="app.menu.profile"]').click();
+  await expect(profileEmail(page, account.email)).toBeVisible();
 });
 
 test('a sign-in link from an email fills in the address and leaves no trace in the URL', async ({

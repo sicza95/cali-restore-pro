@@ -18,6 +18,10 @@ type Account struct {
 	State            string `json:"state"`
 	Role             string `json:"role"`
 	AdminPermissions int    `json:"-"`
+	// Name is the full name; empty for accounts created before names existed.
+	Name string `json:"name"`
+	// Photo is the versioned URL of the person's own photo, nil without one.
+	Photo *string `json:"photo,omitempty"`
 }
 
 func (a Account) Allows(capability Capability) bool {

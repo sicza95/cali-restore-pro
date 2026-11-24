@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { chooseLanguage } from './app-navigation';
 
 const owner = '00000000-0000-4000-8000-000000000001';
 const recipient = '00000000-0000-4000-8000-000000000002';
@@ -115,7 +116,7 @@ test('an estimate too large to share shows its own error and sends nothing', asy
     'The estimate is too large to share. Choose the estimate summary or no estimate access.',
   );
   await expect(page.locator('[data-control-id="sharing.activate"]')).toBeEnabled();
-  await page.getByLabel('App language').selectOption('hu');
+  await chooseLanguage(page, 'hu');
   await expect(alert).toHaveText(
     'A becslés túl nagy a megosztáshoz. Válaszd a becslési összesítőt, vagy ne adj hozzáférést a becsléshez.',
   );
