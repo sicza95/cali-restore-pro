@@ -152,7 +152,6 @@ export type ConfirmAction = {
 
 export type RegisterRequest = {
   email: string;
-  password: string;
   language?: 'en' | 'hu';
 };
 
@@ -168,11 +167,6 @@ export type ForgotPasswordRequest = {
 
 export type VerifyEmailRequest = {
   token: string;
-};
-
-export type ResetPasswordRequest = {
-  token: string;
-  password: string;
 };
 
 export type ConfirmEmailRequest = {
@@ -236,7 +230,7 @@ export type AdminOperations = {
     /**
      * Mail purpose retained after payload erasure. Empty for jobs created before kind metadata was recorded.
      */
-    kind: '' | 'verify' | 'reset' | 'email' | 'security' | 'project-invitation';
+    kind: '' | 'verify' | 'reset' | 'email' | 'security' | 'project-invitation' | 'welcome';
   }>;
 };
 
@@ -305,6 +299,19 @@ export type DeletionStatus = {
   id: string;
   recoverUntil: string;
   backupExpiresAt: string;
+};
+
+export type CodeCheckRequest = unknown & {
+  email?: string;
+  code?: string;
+  token?: string;
+};
+
+export type CodeCompleteRequest = unknown & {
+  email?: string;
+  code?: string;
+  token?: string;
+  password?: string;
 };
 
 export type PlatformStatusData = {
@@ -1359,63 +1366,6 @@ export type IdentityVerifyEmailResponses = {
 
 export type IdentityVerifyEmailResponse =
   IdentityVerifyEmailResponses[keyof IdentityVerifyEmailResponses];
-
-export type IdentityResetPasswordData = {
-  body: ResetPasswordRequest;
-  headers: {
-    /**
-     * Must exactly match configured APP_ORIGIN.
-     */
-    Origin: string;
-  };
-  path?: never;
-  query?: never;
-  url: '/api/v1/auth/reset-password';
-};
-
-export type IdentityResetPasswordErrors = {
-  /**
-   * Invalid, expired or used link / invalid request
-   */
-  400: unknown;
-  /**
-   * Authentication or credentials rejected
-   */
-  401: IdentityError;
-  /**
-   * Policy, recent confirmation, Origin or CSRF rejected
-   */
-  403: IdentityError;
-  /**
-   * Account or session safeguard conflict
-   */
-  409: IdentityError;
-  /**
-   * JSON content type required
-   */
-  415: IdentityError;
-  /**
-   * Shared rate or hashing concurrency limit; Retry-After: 900
-   */
-  429: IdentityError;
-  /**
-   * Dependency unavailable
-   */
-  503: IdentityError;
-};
-
-export type IdentityResetPasswordError =
-  IdentityResetPasswordErrors[keyof IdentityResetPasswordErrors];
-
-export type IdentityResetPasswordResponses = {
-  /**
-   * Accepted; public account existence is not disclosed
-   */
-  200: OkResponse;
-};
-
-export type IdentityResetPasswordResponse =
-  IdentityResetPasswordResponses[keyof IdentityResetPasswordResponses];
 
 export type IdentityConfirmEmailData = {
   body: ConfirmEmailRequest;
@@ -3416,3 +3366,116 @@ export type RecoverDeletedAccountResponses = {
 
 export type RecoverDeletedAccountResponse =
   RecoverDeletedAccountResponses[keyof RecoverDeletedAccountResponses];
+
+export type IdentityCheckCodeData = {
+  body: CodeCheckRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/code/check';
+};
+
+export type IdentityCheckCodeErrors = {
+  /**
+   * Invalid, expired or used code or link, or invalid request
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityCheckCodeError = IdentityCheckCodeErrors[keyof IdentityCheckCodeErrors];
+
+export type IdentityCheckCodeResponses = {
+  /**
+   * The code or link is valid
+   */
+  200: OkResponse;
+};
+
+export type IdentityCheckCodeResponse =
+  IdentityCheckCodeResponses[keyof IdentityCheckCodeResponses];
+
+export type IdentityCompleteCodeData = {
+  body: CodeCompleteRequest;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/v1/auth/code/complete';
+};
+
+export type IdentityCompleteCodeErrors = {
+  /**
+   * Invalid, expired or used code or link, or invalid request
+   */
+  400: IdentityError;
+  /**
+   * Authentication or credentials rejected
+   */
+  401: IdentityError;
+  /**
+   * Policy, recent confirmation, Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Account or session safeguard conflict
+   */
+  409: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Shared rate or hashing concurrency limit; Retry-After: 900
+   */
+  429: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type IdentityCompleteCodeError =
+  IdentityCompleteCodeErrors[keyof IdentityCompleteCodeErrors];
+
+export type IdentityCompleteCodeResponses = {
+  /**
+   * Success
+   */
+  200: CsrfResponse;
+};
+
+export type IdentityCompleteCodeResponse =
+  IdentityCompleteCodeResponses[keyof IdentityCompleteCodeResponses];

@@ -17,6 +17,8 @@ const navigationCopy = defineCopy({
     languageHelp: 'Changes the interface language. Report language is set separately.',
     backToProjects: 'Back to projects',
     retryAccess: 'Retry account access',
+    themeToDark: 'Switch to dark mode',
+    themeToLight: 'Switch to light mode',
   },
   hu: {
     notFound: 'Az oldal nem található',
@@ -29,6 +31,8 @@ const navigationCopy = defineCopy({
     languageHelp: 'A kezelőfelület nyelve. A jelentések nyelve külön állítható be.',
     backToProjects: 'Vissza a projektekhez',
     retryAccess: 'Fiókhozzáférés újrapróbálása',
+    themeToDark: 'Váltás sötét módra',
+    themeToLight: 'Váltás világos módra',
   },
 });
 

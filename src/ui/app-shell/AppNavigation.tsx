@@ -9,6 +9,7 @@ import {
 import { languageNames, languages, parseLanguage } from '../../platform/i18n/language';
 import { useApp } from '../app-context/AppContext';
 import { Icon } from '../icon/Icon';
+import { ThemeToggle } from './ThemeToggle';
 import type { IconName } from '../icon/types';
 import { accountPaths } from '../router/constants';
 import { followLink } from '../router/routes';
@@ -37,6 +38,8 @@ export function AppNavigation(props: { mode: NavigationMode }) {
   const app = useApp();
   const c = () => navigationText(app.lang());
   const rail = () => props.mode === 'rail';
+  // Signed-out pages show only the language choice; the card carries the brand and links.
+  const publicMode = () => props.mode === 'public';
   const [open, setOpen] = createSignal(false);
   const [drawer, setDrawer] = createSignal<HTMLDialogElement>();
   const [menuButton, setMenuButton] = createSignal<HTMLButtonElement>();
@@ -111,18 +114,27 @@ export function AppNavigation(props: { mode: NavigationMode }) {
           {c().menu}
         </button>
       </Show>
-      <a
-        class="product-name"
-        href={app.account() ? accountPaths.projects : '/'}
-        onClick={(event) => followLink(event, app.router.navigate)}
-        title={rail() ? 'CaliRestore Pro' : undefined}
+      <Show when={!publicMode()}>
+        <a
+          class="product-name"
+          href={app.account() ? accountPaths.projects : '/'}
+          onClick={(event) => followLink(event, app.router.navigate)}
+          title={rail() ? 'CaliRestore Pro' : undefined}
+        >
+          <Icon name="brand" size={26} />
+          <span class="app-nav-label">
+            CaliRestore <strong>Pro</strong>
+          </span>
+        </a>
+      </Show>
+      <Show
+        when={props.mode === 'compact'}
+        fallback={
+          <Show when={!publicMode()}>
+            <Destinations />
+          </Show>
+        }
       >
-        <Icon name="brand" size={26} />
-        <span class="app-nav-label">
-          CaliRestore <strong>Pro</strong>
-        </span>
-      </a>
-      <Show when={props.mode === 'compact'} fallback={<Destinations />}>
         <dialog
           ref={setDrawer}
           id="app-drawer"
@@ -153,23 +165,28 @@ export function AppNavigation(props: { mode: NavigationMode }) {
           </div>
         </dialog>
       </Show>
-      <label class="language">
-        <span class={rail() ? 'account-visually-hidden' : undefined}>{c().language}</span>
-        <select
-          data-control-id={languageControl.id}
-          value={app.lang()}
-          aria-describedby="app-language-help"
-          onChange={(e) => app.selectLanguage(parseLanguage(e.currentTarget.value))}
-        >
-          <For each={languages}>
-            {(code) => (
-              <option value={code} selected={app.lang() === code}>
-                {rail() ? code.toUpperCase() : languageNames[code]}
-              </option>
-            )}
-          </For>
-        </select>
-      </label>
+      <div class="app-nav-prefs">
+        <label class="language">
+          <span class={rail() || publicMode() ? 'account-visually-hidden' : undefined}>
+            {c().language}
+          </span>
+          <select
+            data-control-id={languageControl.id}
+            value={app.lang()}
+            aria-describedby="app-language-help"
+            onChange={(e) => app.selectLanguage(parseLanguage(e.currentTarget.value))}
+          >
+            <For each={languages}>
+              {(code) => (
+                <option value={code} selected={app.lang() === code}>
+                  {rail() ? code.toUpperCase() : languageNames[code]}
+                </option>
+              )}
+            </For>
+          </select>
+        </label>
+        <ThemeToggle />
+      </div>
       <span class="account-visually-hidden" id="app-language-help">
         {c().languageHelp}
       </span>

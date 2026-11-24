@@ -55,7 +55,7 @@ func TestOperationsReadableMetadata(t *testing.T) {
 	tx, err := app.Begin(ctx)
 	must(err)
 	defer tx.Rollback(ctx)
-	kinds := []string{"verify", "reset", "email", "security", "project-invitation"}
+	kinds := []string{"verify", "reset", "email", "security", "project-invitation", "welcome"}
 	for _, kind := range kinds {
 		must(s.Enqueue(ctx, tx, member.id, "recipient@example.test", "hu", kind, "secret-token", time.Now().Add(time.Hour)))
 	}
@@ -101,7 +101,7 @@ func TestOperationsReadableMetadata(t *testing.T) {
 	}
 	var result AdminOperations
 	must(json.Unmarshal([]byte(body), &result))
-	if len(result.Audit) != 3 || len(result.Jobs) != 6 {
+	if len(result.Audit) != 3 || len(result.Jobs) != 7 {
 		t.Fatalf("lost operations rows: %+v", result)
 	}
 	for _, event := range result.Audit {

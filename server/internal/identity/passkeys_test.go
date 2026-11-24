@@ -381,7 +381,7 @@ func TestPostgresPasskeys(t *testing.T) {
 			sessiontoken.Digest(raw), ids["other"]); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.ConsumeLink(ctx, raw, "reset", testdb.Password); err != nil {
+		if _, err := s.CompleteCode(ctx, CodeProof{Token: raw}, testdb.Password); err != nil {
 			t.Fatal(err)
 		}
 		if n := count(`SELECT count(*) FROM passkeys WHERE account_id=$1`, ids["other"]); n != 0 {

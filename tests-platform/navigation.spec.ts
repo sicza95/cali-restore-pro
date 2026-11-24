@@ -133,6 +133,7 @@ test('protected direct entries return through sign-in using only allowlisted des
   }
   const submit = async () => {
     await page.getByLabel('Email address').fill(account.email);
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByLabel('Password', { exact: true }).fill('synthetic browser password');
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   };

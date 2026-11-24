@@ -119,6 +119,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.app-nav[data-mode='compact'] .app-nav-prefs {
   margin-inline-start: auto;
 }
 .app-nav[data-mode='compact'] .language select {
@@ -178,7 +180,7 @@
   }
 }
 
-/* Signed-out pages: product name, sign-in links and language in one top bar. */
+/* Signed-out pages: only the language choice, top right. The card carries brand and links. */
 .app-nav[data-mode='public'] {
   flex-direction: row;
   flex-wrap: wrap;
@@ -191,10 +193,8 @@
   flex-wrap: wrap;
   margin-inline-start: auto;
 }
-.app-nav[data-mode='public'] .language {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.app-nav[data-mode='public'] .app-nav-prefs {
+  margin-inline-start: auto;
 }
 
 /* Breadcrumbs and the page title. */
@@ -260,4 +260,28 @@
 }
 .account-shell[data-surface] .app-page-heading h1 {
   font-size: 24px;
+}
+
+/* Language and theme side by side; stacked on the narrow surface rail. */
+.app-nav-prefs {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.app-nav[data-mode='rail'] .app-nav-prefs {
+  flex-direction: column;
+  align-items: center;
+}
+.theme-toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--cr-touch);
+  height: var(--cr-touch);
+  padding: 0;
+  color: var(--cr-ink);
+  background: var(--cr-raised);
+}
+.theme-toggle:hover {
+  background: var(--cr-hover);
 }

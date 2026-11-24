@@ -1,7 +1,7 @@
 import {
   applyPreferences,
   loadPreferences,
-  preferenceDefaults,
+  signedOutPreferences,
 } from '../settings/preferences/utils';
 import { offlineAccountKey, rememberOfflineAccount } from '../../platform/vault/offline-account';
 import { createEffect, createMemo, createSignal, on, onCleanup, onMount } from 'solid-js';
@@ -10,7 +10,9 @@ import { passkeyAssertion, passkeyRegistration } from './passkeys';
 import { sessionEndingActions } from './constants';
 import { accountCopy as copy } from './copy';
 import { authErrorMessage, authFormBody } from './utils';
-import { signInDestination } from '../router/routes';
+import { isAccountDestination, signInDestination, signInLink } from '../router/routes';
+import { accountPaths } from '../router/constants';
+import { settleSignIn } from '../account/sign-in/remembered-accounts';
 import type { Router } from '../router/createRouter';
 import type { RouteName } from '../router/types';
 import { applyLanguage, storedLanguage } from './presentation';
@@ -107,13 +109,19 @@ export function createAccountAccess(router: Router) {
     try {
       const result = await api(action, body);
       if (!active || generation !== sessionGeneration) return false;
-      if (action === 'login' || action === 'passkey-login') {
+      // Setting a password with a sign-up or reset code signs the person in, like a password sign-in.
+      if (action === 'login' || action === 'passkey-login' || action === 'code/complete') {
         clearSession(false);
         rememberOfflineAccount();
         sessionChanges?.postMessage(null);
         await refreshAccount();
+        settleSignIn(account()?.email);
         if (requestPage === navigationGeneration)
-          router.navigate(signInDestination(new URLSearchParams(location.search).get('next')));
+          router.navigate(
+            action === 'code/complete'
+              ? accountPaths.projects
+              : signInDestination(new URLSearchParams(location.search).get('next')),
+          );
         return;
       }
       if (
@@ -213,7 +221,10 @@ export function createAccountAccess(router: Router) {
   };
   const applyAccountPreferences = () => {
     const id = account()?.id;
-    applyPreferences(id ? loadPreferences(id) : preferenceDefaults);
+    // An account left on "System" keeps the theme picked on this device (for example at sign-in).
+    const device = signedOutPreferences();
+    const own = id ? loadPreferences(id) : device;
+    applyPreferences(own.theme === 'system' ? { ...own, theme: device.theme } : own);
   };
   createEffect(applyAccountPreferences);
   const deviceTheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -301,6 +312,7 @@ export function createAccountAccess(router: Router) {
     lang,
     linkToken,
     message,
+    dismissMessage: () => setMessage(undefined),
     refreshConnection,
     refreshSessions,
     revokeAll,
@@ -310,10 +322,14 @@ export function createAccountAccess(router: Router) {
     sessionError,
     sessions,
     setRevokeConfirmed,
-    signOut: () => {
+    signOut: async () => {
       rememberOfflineAccount();
       lockVault();
-      void run('logout', {}, 'success');
+      const from = view();
+      if ((await run('logout', {}, 'success')) === false) return;
+      // Straight to the sign-in page (the remembered accounts), keeping the way back here.
+      setMessage(undefined);
+      router.navigate(isAccountDestination(from) ? signInLink(from, location.pathname) : '/login');
     },
     submit,
     signInWithPasskey: () => void runPrepared(passkeyAssertion, 'passkey-login', 'success'),

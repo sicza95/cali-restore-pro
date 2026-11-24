@@ -3,6 +3,7 @@ import { AppProvider, useApp } from '../app-context/AppContext';
 import { AppNavigation } from '../app-shell/AppNavigation';
 import type { NavigationMode } from '../app-shell/AppNavigation';
 import { PageHeading } from '../app-shell/PageHeading';
+import { Toast } from '../app-shell/Toast';
 import { useCompactLayout } from '../app-shell/useCompactLayout';
 import { accountPaths } from '../router/constants';
 import { routeGuard } from '../router/guard';
@@ -72,13 +73,19 @@ function AccountShell() {
         <Show when={!publicView()}>
           <PageHeading />
         </Show>
-        <Show when={message()}>
-          {(key) => (
-            <p class="account-message" role={failed() ? 'alert' : 'status'} data-error={failed()}>
-              {t(key())}
-            </p>
-          )}
-        </Show>
+        {/* Messages float above the page, so they never push the content (or the sign-in card). */}
+        <div class="toast-region">
+          <Show when={message()} keyed>
+            {(key) => (
+              <Toast
+                text={t(key)}
+                error={failed()}
+                closeLabel={t('closeMessage')}
+                dismiss={app.dismissMessage}
+              />
+            )}
+          </Show>
+        </div>
         <Show when={app.deletionReceipt()}>
           {(receipt) => {
             const date = (iso: string) =>
@@ -144,20 +151,30 @@ function AccountShell() {
             )}
           </Match>
         </Switch>
-        <footer class="account-footer">
-          <section aria-label={t('platform')}>
-            <span class="account-connection" data-state={connection()} role="status">
+        {/* Signed-out pages stay quiet: the bar appears only when the server cannot be reached. */}
+        <Show
+          when={!publicView() || connection() === 'unavailable'}
+          fallback={
+            <span class="account-visually-hidden" role="status">
               {t(connection())}
             </span>
-            <button
-              data-control-id="app.service.retry"
-              disabled={connection() === 'checking'}
-              onClick={() => void app.refreshConnection()}
-            >
-              {t('check')}
-            </button>
-          </section>
-        </footer>
+          }
+        >
+          <footer class="account-footer">
+            <section aria-label={t('platform')}>
+              <span class="account-connection" data-state={connection()} role="status">
+                {t(connection())}
+              </span>
+              <button
+                data-control-id="app.service.retry"
+                disabled={connection() === 'checking'}
+                onClick={() => void app.refreshConnection()}
+              >
+                {t('check')}
+              </button>
+            </section>
+          </footer>
+        </Show>
       </main>
     </div>
   );

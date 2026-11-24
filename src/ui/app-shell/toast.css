@@ -1,0 +1,87 @@
+/* Floating, opaque and above the page: a message never moves the content under it. */
+.toast-region {
+  position: fixed;
+  z-index: 1000;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
+  width: min(460px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.toast {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 6px 6px 16px;
+  overflow: hidden;
+  color: var(--cr-ink);
+  background: var(--cr-surface);
+  border: 1px solid var(--cr-rule);
+  border-radius: 14px;
+  box-shadow: var(--cr-shadow-floating);
+  pointer-events: auto;
+}
+.toast > svg {
+  color: var(--cr-positive);
+}
+.toast[data-error] > svg {
+  color: var(--cr-negative);
+}
+.toast-text {
+  margin: 10px 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.toast-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--cr-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+}
+.toast-close:hover {
+  color: var(--cr-ink);
+  background: var(--cr-ground);
+}
+/* The time left. Its animation is the timer: the toast closes when it ends. */
+.toast-time {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--cr-positive);
+  transform-origin: left center;
+  animation: toast-time var(--toast-duration) linear forwards;
+}
+.toast[data-error] .toast-time {
+  background: var(--cr-negative);
+}
+.toast[data-paused] .toast-time {
+  animation-play-state: paused;
+}
+@keyframes toast-time {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    animation: toast-in 180ms ease-out;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}

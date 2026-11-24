@@ -61,6 +61,7 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   const passwordSignIn = async () => {
     await page.goto('/login');
     await page.getByLabel('Email address', { exact: true }).fill(email);
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByLabel('Password', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/security$/);
@@ -73,16 +74,17 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   const passkeys = (p: Page) =>
     p.locator('section').filter({ has: p.getByRole('heading', { name: 'Passkeys', exact: true }) });
 
+  // The mailed link goes straight to the password step; the first password signs in.
   await page.goto('/register');
   await page.getByLabel('Email address', { exact: true }).fill(email);
-  await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'email is queued' })).toBeVisible();
+  await expect(page.getByLabel('Digit 1 / 6', { exact: true })).toBeVisible();
   await page.goto(await mailLink('/verify-email'));
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
-
-  await passwordSignIn();
+  await page.getByLabel('New password', { exact: true }).fill(password);
+  await page.getByLabel('Repeat password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  await page.goto('/settings/security');
   const section = passkeys(page);
   await expect(section.getByText('No passkeys yet.')).toBeVisible();
   const add = section.getByRole('button', { name: 'Add passkey', exact: true });

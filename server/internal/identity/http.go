@@ -112,6 +112,7 @@ func (h *HTTP) Guard(mux *http.ServeMux) func(pattern string, authenticated bool
 func (h *HTTP) Register(mux *http.ServeMux) {
 	route := h.Guard(mux)
 	h.lifecycleRoutes(route)
+	h.codeRoutes(route)
 	h.adminRoutes(route)
 	h.passkeyRoutes(route)
 	route("POST /api/v1/auth/login", false, func(w http.ResponseWriter, r *http.Request) {

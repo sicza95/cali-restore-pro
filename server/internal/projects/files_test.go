@@ -128,10 +128,10 @@ func TestPostgresEncryptedFiles(t *testing.T) {
 	accept := func(invite string) string { return "/api/v1/invitations/" + invite + "/accept" }
 	first := issue()
 	delivered := false
-	err = ids.DeliverMail(ctx, func(_ context.Context, to, subject, body string) error {
+	err = ids.DeliverMail(ctx, func(_ context.Context, to, subject, body, html string) error {
 		delivered = true
-		if to != "bob@example.test" || subject != "CaliRestore Pro projektmeghívó" ||
-			!strings.HasSuffix(body, origin+"/invitations") || strings.Contains(body, first) || strings.Contains(body, "c0ffee00") {
+		if to != "bob@example.test" || subject != "CaliRestore Pro: Meghívtak egy projektbe" ||
+			!strings.Contains(body, origin+"/invitations") || !strings.Contains(html, origin+"/invitations") || strings.Contains(body, first) || strings.Contains(body, "c0ffee00") {
 			t.Error("invitation notification did not match recipient, language or privacy requirements")
 		}
 		return nil

@@ -82,6 +82,7 @@ test('sign-in keeps next and returns to a project deep link without loading anot
   await page.getByRole('main').getByRole('link', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(new RegExp('/login\\?next=' + encodeURIComponent(deep)));
   await page.getByLabel('Email address', { exact: true }).fill(account.email);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByLabel('Password', { exact: true }).fill('synthetic password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(deep + '$'));
@@ -125,24 +126,28 @@ test('public inline links reset forms and never reuse an email token on history 
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
   );
-  await page.route('**/api/v1/auth/verify-email', (route) => {
+  await page.route('**/api/v1/auth/code/check', (route) => {
     expect(route.request().postDataJSON()).toEqual({ token });
     return route.fulfill({ json: { ok: true } });
   });
   await page.goto('/verify-email#token=' + token);
   await expect(page).toHaveURL(/\/verify-email$/);
   await mark(page);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
-  await page.getByRole('link', { name: 'Sign in', exact: true }).click();
+  // The link is checked as it opens and leads straight to the password step.
+  await expect(page.getByLabel('New password', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Back to sign in', exact: true }).click();
+  await page.getByLabel('Email address', { exact: true }).fill('discard@example.test');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByLabel('Password', { exact: true }).fill('secret to discard');
   await page.getByRole('link', { name: 'Forgot your password?' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Reset access');
   await page.goBack();
-  await expect(page.getByLabel('Password', { exact: true })).toHaveValue('');
+  // Leaving the page drops the typed password: the form starts again at the email step.
+  await expect(page.getByLabel('Password', { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('Email address', { exact: true })).toHaveValue('');
   await page.goBack();
   await expect(page.getByText('Open the link from your email to continue.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Continue', exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('New password', { exact: true })).toHaveCount(0);
   await sameDocument(page);
 });
 
@@ -186,7 +191,7 @@ test('an email fragment opened on the same page is consumed once across history 
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
   );
-  await page.route('**/api/v1/auth/verify-email', (route) => {
+  await page.route('**/api/v1/auth/code/check', (route) => {
     expect(route.request().postDataJSON()).toEqual({ token });
     return route.fulfill({ json: { ok: true } });
   });
@@ -195,8 +200,7 @@ test('an email fragment opened on the same page is consumed once across history 
   await mark(page);
   await page.goto('/verify-email#token=' + token);
   await expect(page).toHaveURL(/\/verify-email$/);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
+  await expect(page.getByLabel('New password', { exact: true })).toBeVisible();
   await sameDocument(page);
 });
 
@@ -242,9 +246,10 @@ test('a delayed admin authentication failure cannot sign out a different account
   await page.goto('/admin');
   await expect.poll(() => requested).toBe(true);
   await page.locator('[data-control-id="app.nav.sign-out"]').click();
-  await expect(page.getByText('Sign in to open this page.')).toBeVisible();
-  await page.getByRole('main').getByRole('link', { name: 'Sign in' }).click();
+  // Signing out goes straight to the sign-in page and keeps the way back.
+  await expect(page).toHaveURL(/\/login\?next=admin$/);
   await page.getByLabel('Email address', { exact: true }).fill(other.email);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByLabel('Password', { exact: true }).fill('synthetic password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);
@@ -363,4 +368,18 @@ test('a session recheck that finishes after navigation leaves the opened drawer 
   await expect(page.locator('#app-drawer')).toBeVisible();
   await page.locator('#app-navigation').getByRole('link', { name: 'Account profile' }).click();
   await expect(page.getByText(account.email, { exact: true })).toBeVisible();
+});
+
+test('a sign-in link from an email fills in the address and leaves no trace in the URL', async ({
+  page,
+}) => {
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({ status: 401, json: { error: 'authentication_required' } }),
+  );
+  await page.goto('/login#email=a%2Bb%40example.test');
+  await expect(page.getByLabel('Email address', { exact: true })).toHaveValue('a+b@example.test');
+  await expect(page).toHaveURL(/\/login$/);
+  // Can’t sign in starts with the same address.
+  await page.getByRole('link', { name: 'Can’t sign in?', exact: true }).click();
+  await expect(page.getByLabel('Email address', { exact: true })).toHaveValue('a+b@example.test');
 });

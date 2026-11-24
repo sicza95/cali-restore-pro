@@ -1,9 +1,9 @@
-import { createSignal, For, Show, untrack } from 'solid-js';
+import { createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
 import { checkpointCopy } from '../../editor/checkpoint-review/copy';
 import { accountPaths } from '../../router/constants';
 import { settingsCopy } from '../settings-copy';
-import { loadPreferences, savePreferences } from './utils';
+import { loadPreferences, savePreferences, themeChangeEvent } from './utils';
 
 export function Preferences() {
   const app = useApp();
@@ -78,7 +78,12 @@ export function Preferences() {
           <div class="account-panel">
             <label>
               {c().theme}
-              <select data-control-id="preferences.theme" name="theme" value={p.theme}>
+              <select
+                data-control-id="preferences.theme"
+                name="theme"
+                value={p.theme}
+                ref={(select) => followThemeToggle(select)}
+              >
                 <option value="system">{c().system}</option>
                 <option value="light">{c().light}</option>
                 <option value="dark">{c().dark}</option>
@@ -219,4 +224,14 @@ export function Preferences() {
       </form>
     </>
   );
+}
+
+/** The top-bar theme toggle saves at once; keep this unsaved form in step so Save cannot undo it. */
+function followThemeToggle(select: HTMLSelectElement) {
+  const follow = (event: Event) => {
+    const theme = (event as CustomEvent<string>).detail;
+    if (theme === 'light' || theme === 'dark') select.value = theme;
+  };
+  window.addEventListener(themeChangeEvent, follow);
+  onCleanup(() => window.removeEventListener(themeChangeEvent, follow));
 }

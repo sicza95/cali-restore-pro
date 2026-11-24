@@ -16,9 +16,9 @@ test('auth routes, localization, missing and invalid links remain accessible', a
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   }
+  // A sign-up link is checked as soon as it opens; a bad one says so without a button.
   await page.goto('/verify-email#token=' + 'a'.repeat(43));
   await expect(page).toHaveURL(/\/verify-email$/);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('invalid, expired or already used');
   await page.goto('/register');
   await page.getByRole('combobox').selectOption('hu');
@@ -83,13 +83,36 @@ test('real registration, mail, verification, sessions and credential recovery', 
       .toBe(true);
     return link;
   };
+  // The newest email to recipient that links to route (sign-up and reset mail both carry a code).
+  const mailCode = async (recipient: string, route = '/verify-email') => {
+    let code = '';
+    await expect
+      .poll(
+        async () => {
+          const response = await request.get(`${mailOrigin}/api/v1/messages`);
+          const data = (await response.json()) as {
+            messages: { ID: string; To: { Address: string }[] }[];
+          };
+          for (const message of data.messages.filter((item) =>
+            item.To.some((to) => to.Address === recipient),
+          )) {
+            const detail = await request.get(`${mailOrigin}/api/v1/message/${message.ID}`);
+            const text = ((await detail.json()) as { Text: string }).Text;
+            if (!text.includes(route + '#token=')) continue;
+            code = text.match(/code: (\d{6})/)?.[1] ?? '';
+            return !!code;
+          }
+          return false;
+        },
+        { timeout: 45000, intervals: [1000] },
+      )
+      .toBe(true);
+    return code;
+  };
   const signIn = async (value: string, address = email) => {
     await page.goto('/login');
-    await page
-      .locator('form')
-      .filter({ has: page.getByRole('button', { name: 'Sign in', exact: true }) })
-      .getByLabel('Email address', { exact: true })
-      .fill(address);
+    await page.getByLabel('Email address', { exact: true }).fill(address);
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.getByLabel('Password', { exact: true }).fill(value);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/security$/);
@@ -100,14 +123,27 @@ test('real registration, mail, verification, sessions and credential recovery', 
     await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Password confirmed.' })).toBeVisible();
   };
+  // Create account by email alone: a wrong code is refused, the mailed code opens the
+  // password step without a button, and the first password signs the person in.
   await page.goto('/register');
   await page.getByLabel('Email address', { exact: true }).fill(email);
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  const code = await mailCode(email);
+  const first = page.getByLabel('Digit 1 / 6', { exact: true });
+  await expect(first).toBeFocused();
+  await page.keyboard.type(code === '000000' ? '111111' : '000000');
+  await expect(page.getByRole('alert')).toContainText('wrong or has expired');
+  await expect(first).toBeFocused();
+  await page.keyboard.type(code);
+  await expect(page.getByLabel('New password', { exact: true })).toBeFocused();
   await page.getByLabel('New password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'email is queued' })).toBeVisible();
-  await page.goto(await mailLink(email, '/verify-email'));
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
+  await page.getByLabel('Repeat password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Create account', exact: true }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  // Sign out for real so the later session counts start from the password sign-in.
+  await showAppNavigation(page);
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?next=/);
   await signIn(password);
   await page.goto('/admin');
   await expect(page.getByText('This account has no administration permissions.')).toBeVisible();
@@ -143,14 +179,23 @@ test('real registration, mail, verification, sessions and credential recovery', 
   } finally {
     await other.close();
   }
-  await page.goto('/forgot-password');
+  // Can’t sign in: the address carries over from the sign-in page, the code step opens at
+  // once, and the mailed code leads to a new password that signs the person in.
+  await page.goto('/login');
   await page.getByLabel('Email address', { exact: true }).fill(email);
+  await page.getByRole('link', { name: 'Can’t sign in?', exact: true }).click();
+  await expect(page.getByLabel('Email address', { exact: true })).toHaveValue(email);
   await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'email is queued' })).toBeVisible();
-  await page.goto(await mailLink(email, '/reset-password'));
+  await expect(page.getByText(email, { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Digit 1 / 6', { exact: true })).toBeFocused();
+  await page.keyboard.type(await mailCode(email, '/reset-password'));
   await page.getByLabel('New password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Done.' })).toBeVisible();
+  await page.getByLabel('Repeat password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Save password', exact: true }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  await showAppNavigation(page);
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await expect(page).toHaveURL(/\/login/);
   await signIn(password);
   await confirmPassword(password);
   const newEmail = `changed-${crypto.randomUUID()}@example.test`;
@@ -176,7 +221,7 @@ test('real registration, mail, verification, sessions and credential recovery', 
   await signIn(password, newEmail);
   await showAppNavigation(page);
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
-  await expect(page.getByText('Sign in to open this page.')).toBeVisible();
+  await expect(page).toHaveURL(/\/login\?next=security$/);
   // Public error assertions never log bearer tokens or mail body content.
   const checkUnauthorized = async (client: APIRequestContext) =>
     expect((await client.get('/api/v1/auth/me')).status()).toBe(401);

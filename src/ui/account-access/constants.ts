@@ -15,6 +15,5 @@ export const sessionEndingActions = [
   '/account/deletion',
   'logout',
   'change-password',
-  'reset-password',
   'confirm-email',
 ];

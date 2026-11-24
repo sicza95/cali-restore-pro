@@ -5,6 +5,7 @@ export function PasswordField(props: PasswordFieldProps) {
     <label>
       {props.t(props.kind)}
       <input
+        ref={props.ref}
         name="password"
         type="password"
         autocomplete={props.kind === 'newPassword' ? 'new-password' : 'current-password'}

@@ -81,6 +81,24 @@ export const languageControl = {
   },
 } as const satisfies ControlContract;
 
+export const themeControl = {
+  id: 'app.nav.theme',
+  labelKey: 'theme',
+  helpKey: 'languageHelp',
+  command: 'Switch between light and dark and store the choice',
+  permission: 'public',
+  prerequisite: 'Account preferences when signed in, cr-theme when signed out',
+  valueSource: 'Current data-theme on the page',
+  behavior: 'functional',
+  owner: 'M-08',
+  composition: 'Application navigation',
+  unavailable: {
+    failure: 'Apply the theme for the current page when storage is blocked.',
+    empty: 'Follow the device theme.',
+    locked: 'Available while the vault is locked.',
+  },
+} as const satisfies ControlContract;
+
 export const signOutControl = {
   id: 'app.nav.sign-out',
   labelKey: 'logout',

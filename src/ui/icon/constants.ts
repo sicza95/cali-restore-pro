@@ -31,6 +31,8 @@ export const paths = {
   settings: 'M4 7h16M4 17h16M8 4v6m8 4v6',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   lock: 'M5 10h14v11H5V10Zm3 0V6a4 4 0 0 1 8 0v4m-4 5v2',
+  sun: 'M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z',
+  moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z',
   focus: 'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5',
   folder: 'M3 6h7l2 3h9v12H3V6Z',
 } as const;

@@ -45,9 +45,13 @@ Task language for every screen, in English and Hungarian. Written for the [copy 
 
 - **Final report** (_végleges jelentés_): explicitly issued from a complete, issued estimate. **Source issued estimate version** (_A forrásként használt kiadott becslés verziója_) identifies the saved version behind the final report. Partial totals remain drafts.
 
-- **Admin mail kinds**: Email verification (_E-mail-cím megerősítése_), Password reset (_Jelszó visszaállítása_), New email confirmation (_Új e-mail-cím megerősítése_), Account security notice (_Fiókbiztonsági értesítés_), Project invitation (_Projektmeghívó_). Unknown older jobs use Mail job (_Levélküldés_). Security event references show the current account email, falling back to Actor (_Végrehajtó_) or Account (_Fiók_) when the account is gone. Short references remain beside these labels.
+- **Admin mail kinds**: Email verification (_E-mail-cím megerősítése_), Password reset (_Jelszó visszaállítása_), New email confirmation (_Új e-mail-cím megerősítése_), Account security notice (_Fiókbiztonsági értesítés_), Project invitation (_Projektmeghívó_), Welcome (_Üdvözlő levél_). Unknown older jobs use Mail job (_Levélküldés_). Security event references show the current account email, falling back to Actor (_Végrehajtó_) or Account (_Fiók_) when the account is gone. Short references remain beside these labels.
 
 - **Passkey** (_azonosítókulcs_, plural _azonosítókulcsok_): the optional sign-in credential on the security page and the login form. Say what it does (signs you in); it never unlocks projects.
+
+- **Remember me** (_Emlékezz rám_): keeps only the email address on this device after a successful sign-in, so the sign-in page offers it under Choose an account (_Válassz fiókot_). Removing it there says Remove from this device (_Eltávolítás erről az eszközről_); it never signs anyone out or deletes the account.
+
+- **Verification code** (_Ellenőrző kód_): the six-digit code in the Create account and Can’t sign in emails, valid for 15 minutes together with the link in the same email. Say "code", never "one-time password" or "PIN". The first password is chosen with New password and Repeat password (_Új jelszó_, _Jelszó újra_); a reset ends with Save password (_Jelszó mentése_). An address with no account that asks for a reset gets a "You don’t have an account yet" (_Még nincs fiókod_) email with a sign-up code, so the page always asks for a code.
 
 - **Raw mask** (_nyers maszk_): one saved layer as an opaque black mask with transparent surroundings, in the reference photo's original pixel coordinates and dimensions. It excludes the photo, crop, grid, legend and layer styling.
 

@@ -27,7 +27,5 @@ export function authFormBody(
             ? { email, password, language }
             : action === 'forgot-password' || action === 'resend-verification'
               ? { email, language }
-              : action === 'reset-password'
-                ? { token: linkToken, password }
-                : { token: linkToken };
+              : { token: linkToken };
 }

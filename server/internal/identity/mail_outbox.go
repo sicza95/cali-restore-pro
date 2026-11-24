@@ -53,8 +53,8 @@ func (s *Service) DeliverMail(ctx context.Context, send mailer.Transport) error 
 		}
 	}
 	if err == nil {
-		subject, body := mailer.Text(p, s.origin)
-		err = send(ctx, p.To, subject, body)
+		subject, text := mailer.Text(p, s.origin)
+		err = send(ctx, p.To, subject, text, mailer.HTML(p, s.origin))
 	}
 	attempts++
 	status := "sent"

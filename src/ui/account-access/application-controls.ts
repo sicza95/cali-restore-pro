@@ -6,6 +6,7 @@ import { recipientReportControls } from '../recipient-reports/recipient-report-c
 import {
   accountNavigationControls,
   languageControl,
+  themeControl,
   menuControl,
   signOutControl,
 } from './navigation-controls';
@@ -19,6 +20,7 @@ import { settingsControls } from '../settings/settings-controls';
 export const applicationControls = [
   ...accountNavigationControls,
   languageControl,
+  themeControl,
   menuControl,
   signOutControl,
   ...accountControls,

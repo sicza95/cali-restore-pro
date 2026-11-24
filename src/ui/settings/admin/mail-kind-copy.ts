@@ -7,6 +7,7 @@ export const mailKindCopy = defineCopy({
     email: 'New email confirmation',
     security: 'Account security notice',
     'project-invitation': 'Project invitation',
+    welcome: 'Welcome',
   },
   hu: {
     verify: 'E-mail-cím megerősítése',
@@ -14,5 +15,6 @@ export const mailKindCopy = defineCopy({
     email: 'Új e-mail-cím megerősítése',
     security: 'Fiókbiztonsági értesítés',
     'project-invitation': 'Projektmeghívó',
+    welcome: 'Üdvözlő levél',
   },
 });

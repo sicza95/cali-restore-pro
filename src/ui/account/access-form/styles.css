@@ -1,86 +1,270 @@
-.access-layout {
+/* Signed-out pages: one centered card, brand on top (Atlassian / Google account pattern). */
+.access-card {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-  align-items: stretch;
+  gap: 20px;
+  width: min(100%, 440px);
+  margin: clamp(8px, 6vh, 72px) auto 0;
+  padding: 36px 36px 24px;
   background: var(--cr-surface);
   border: 1px solid var(--cr-rule);
   border-radius: 16px;
-  overflow: hidden;
 }
-.access-form {
+.access-card > header {
   display: grid;
-  align-content: center;
-  gap: 24px;
-  width: 100%;
-  max-width: 36rem;
-  margin-inline: auto;
-  padding: clamp(24px, 5vw, 76px);
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
 }
-.access-form header h1 {
-  margin-bottom: 8px;
-  font-size: clamp(24px, 4vw, 32px);
-  letter-spacing: -0.055em;
-  line-height: 1.06;
-}
-.access-form header p {
-  color: var(--cr-muted);
-  margin: 0;
-}
-.access-form form {
-  gap: 14px;
-}
-.access-form form > a {
-  justify-self: start;
-}
-.access-form a,
-.access-recovery a {
+.access-brand {
   display: inline-flex;
   align-items: center;
-  min-height: var(--cr-touch);
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+.access-brand svg {
+  color: var(--cr-accent);
+}
+.access-brand strong {
+  font-size: 0.72em;
+  color: var(--cr-muted);
+  letter-spacing: 0;
+}
+.access-card h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+}
+.access-card form {
+  gap: 14px;
+}
+.access-card :is(form, .sign-in-accounts) .primary,
+.sign-in-passkey {
+  width: 100%;
+}
+.access-card a {
   color: var(--cr-accent);
   font-size: 14px;
   font-weight: 560;
 }
-.access-recovery {
+.access-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 20px;
+  justify-content: center;
+  gap: 0 24px;
+  padding-top: 12px;
   border-top: 1px solid var(--cr-rule);
-  padding-top: 8px;
 }
-.access-specimen {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  margin: 0;
-  min-height: 560px;
-  background: var(--cr-specimen);
-  color: var(--cr-specimen-ink);
+.access-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cr-touch);
+  padding-inline: 8px;
 }
-.access-specimen img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  object-fit: cover;
-  object-position: 52% center;
-}
-.access-specimen figcaption {
+
+/* Sign-in steps */
+.sign-in-remember {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 20px;
+  min-height: var(--cr-touch);
+  font-size: 14px;
+}
+.sign-in-remember input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+.sign-in-forgot {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cr-touch);
+}
+.sign-in-passkey {
+  margin-top: -4px;
+}
+
+/* Remembered accounts and the chosen-account chip */
+.sign-in-accounts ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--cr-rule);
+}
+.sign-in-accounts li {
+  border-bottom: 1px solid var(--cr-rule);
+}
+.sign-in-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 4px;
+  color: var(--cr-ink);
+  text-align: start;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+button.sign-in-row:hover:enabled {
+  background: var(--cr-hover);
+}
+.sign-in-row-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+.sign-in-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+}
+.sign-in-muted {
+  color: var(--cr-muted);
   font-size: 13px;
 }
-@media (max-width: 720px) {
-  .access-layout {
-    grid-template-columns: minmax(0, 1fr);
+.sign-in-badge,
+.sign-in-row-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+.sign-in-badge {
+  background: var(--cr-selected);
+  color: var(--cr-accent);
+  font-weight: 700;
+}
+.sign-in-row-icon {
+  color: var(--cr-muted);
+}
+.sign-in-forget {
+  display: grid;
+  place-items: center;
+  width: var(--cr-touch);
+  height: var(--cr-touch);
+  padding: 0;
+  color: var(--cr-negative);
+  background: transparent;
+  border-radius: 50%;
+}
+.sign-in-done {
+  margin-top: 16px;
+}
+.sign-in-chosen {
+  min-height: 56px;
+  padding: 6px 6px 6px 10px;
+  border: 1px solid var(--cr-rule);
+  border-radius: 999px;
+}
+.sign-in-chosen .sign-in-email {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.sign-in-switch {
+  flex: none;
+  min-height: var(--cr-touch);
+  padding-inline: 12px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+@media (max-width: 480px) {
+  .access-card {
+    padding: 24px 18px 16px;
   }
-  .access-form {
-    max-width: none;
-    gap: 16px;
-  }
-  .access-specimen {
-    min-height: 0;
-    grid-template-rows: 150px auto;
-  }
+}
+.sign-in-forget svg {
+  box-sizing: content-box;
+  padding: 3px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+/* While removing accounts only the list and Done stay, as on Google's chooser. */
+.sign-in-accounts:has(.sign-in-done) ~ .sign-in-passkey {
+  display: none;
+}
+.sign-in-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--cr-touch);
+  padding-inline: 8px 12px;
+  font-size: 14px;
+  color: var(--cr-muted);
+  background: transparent;
+}
+.sign-in-back:hover {
+  color: var(--cr-ink);
+  background: var(--cr-hover);
+}
+
+/* Create account: code boxes, one digit each */
+.sign-up-step {
+  display: grid;
+  gap: 16px;
+}
+.sign-up-step > p {
+  margin: 0;
+}
+.sign-up-email {
+  overflow-wrap: anywhere;
+}
+.sign-up-code {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.sign-up-code legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 560;
+}
+.sign-up-code-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.sign-up-code input {
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  padding: 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.sign-up-code[aria-invalid='true'] input {
+  border-color: var(--cr-negative);
+}
+.sign-up-error {
+  margin: 0;
+  color: var(--cr-negative);
+  font-size: 14px;
+}
+.sign-up-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sign-up-actions button {
+  min-height: var(--cr-touch);
+  font-size: 14px;
+}
+.sign-up-step strong.sign-up-email {
+  display: block;
 }
