@@ -67,8 +67,11 @@ test('passkey registration, discoverable sign-in and removal beside password sig
     await expect(page).toHaveURL(/\/settings\/security$/);
   };
   const confirmPassword = async () => {
-    await page.getByLabel('Current password', { exact: true }).fill(password);
-    await page.getByRole('button', { name: 'Confirm password', exact: true }).click();
+    const form = page
+      .locator('form')
+      .filter({ has: page.getByRole('button', { name: 'Confirm password', exact: true }) });
+    await form.getByLabel('Current password', { exact: true }).fill(password);
+    await form.getByRole('button', { name: 'Confirm password', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Password confirmed.' })).toBeVisible();
   };
   const passkeys = (p: Page) =>
@@ -88,8 +91,10 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   const section = passkeys(page);
   await expect(section.getByText('No passkeys yet.')).toBeVisible();
   const add = section.getByRole('button', { name: 'Add passkey', exact: true });
-  await expect(add).toBeDisabled();
-  await confirmPassword();
+  // Setting the first password just now counts as a confirmation, and the name
+  // starts as the platform, so one click adds the passkey.
+  await expect(section.getByLabel('Password', { exact: true })).toHaveCount(0);
+  await expect(section.getByLabel('Passkey name', { exact: true })).not.toHaveValue('');
   await section.getByLabel('Passkey name', { exact: true }).fill('Studio iPad');
   await add.click();
   await expect(page.getByRole('status').filter({ hasText: 'Passkey added.' })).toBeVisible();
@@ -126,6 +131,17 @@ test('passkey registration, discoverable sign-in and removal beside password sig
   expect(begin.status()).toBe(403);
   expect(await begin.json()).toEqual({ error: 'credential_confirmation_required' });
   await expect(page.getByRole('button', { name: 'Change password', exact: true })).toBeDisabled();
+  // Adding a passkey asks for the password in the same form. This authenticator
+  // already holds one, so the ceremony runs after the confirmation and is refused.
+  const section2 = passkeys(page);
+  await expect(section2.getByLabel('Password', { exact: true })).toBeVisible();
+  await section2.getByLabel('Password', { exact: true }).fill(password);
+  await section2.getByRole('button', { name: 'Add passkey', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText(
+    'This passkey is already added to your account.',
+  );
+  await expect(section2.getByLabel('Password', { exact: true })).toHaveCount(0);
+  await page.reload();
 
   await confirmPassword();
   await passkeys(page).getByRole('checkbox').check();

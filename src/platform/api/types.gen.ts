@@ -59,6 +59,10 @@ export type CurrentIdentity = {
     | 'operations.view'
   >;
   csrfToken: string;
+  /**
+   * When the last password confirmation stops allowing security changes; null when it already has.
+   */
+  confirmedUntil: string | null;
 };
 
 export type SessionInfo = {

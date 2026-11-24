@@ -4,6 +4,15 @@ import { passkeysSupported, type PasskeyInfo } from '../../account-access/passke
 
 type PasskeyList = { available: boolean; passkeys: PasskeyInfo[] };
 
+/** A starting name the person can keep or change: the platform, never the browser build. */
+function deviceName() {
+  const agent = navigator.userAgent;
+  if (/iPad|Macintosh/.test(agent) && navigator.maxTouchPoints > 1) return 'iPad';
+  return ['iPhone', 'Android', 'Windows', 'Mac', 'Linux'].find((name) =>
+    agent.includes(name === 'Mac' ? 'Macintosh' : name),
+  );
+}
+
 /** Optional passkeys: a sign-in factor only, managed after a recent password confirmation. */
 export function PasskeySection() {
   const app = useApp();
@@ -30,10 +39,16 @@ export function PasskeySection() {
       : item.backupEligible
         ? app.t('passkeySyncable')
         : app.t('passkeyDevice');
+  // One step: when the last confirmation has lapsed, the password goes in this form too.
   const add = async (event: SubmitEvent) => {
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
-    const name = String(new FormData(form).get('passkey-name') ?? '');
+    const data = new FormData(form);
+    const name = String(data.get('passkey-name') ?? '');
+    if (!app.confirmed()) {
+      const password = String(data.get('password') ?? '');
+      if (!(await app.run('confirm', { password }, 'confirmed'))) return;
+    }
     if (await app.addPasskey(name)) form.reset();
     await refresh();
   };
@@ -101,12 +116,27 @@ export function PasskeySection() {
           <form class="passkey-add" onSubmit={(e) => void add(e)}>
             <label>
               {app.t('passkeyName')}
-              <input name="passkey-name" required maxlength={64} autocomplete="off" />
+              <input
+                name="passkey-name"
+                required
+                maxlength={64}
+                autocomplete="off"
+                value={deviceName() ?? app.t('passkeyDefaultName')}
+              />
             </label>
-            <button
-              data-control-id="account.passkeys.add"
-              disabled={app.busy() || !app.confirmed()}
-            >
+            <Show when={!app.confirmed()}>
+              <label>
+                {app.t('password')}
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  autocomplete="current-password"
+                  data-control-id="account.passkeys.password"
+                />
+              </label>
+            </Show>
+            <button data-control-id="account.passkeys.add" disabled={app.busy()}>
               {app.t('addPasskey')}
             </button>
           </form>

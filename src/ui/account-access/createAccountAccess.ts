@@ -38,7 +38,17 @@ export function createAccountAccess(router: Router) {
   const [busy, setBusy] = createSignal(false);
   const [message, setMessage] = createSignal<Message>();
   const [failed, setFailed] = createSignal(false);
-  const [confirmed, setConfirmed] = createSignal(false);
+  const [confirmedState, setConfirmedState] = createSignal(false);
+  const confirmed = confirmedState;
+  // A fresh sign-in or password confirmation allows security changes until the
+  // server's window lapses; the server still checks every change.
+  let confirmationTimer: ReturnType<typeof setTimeout> | undefined;
+  const setConfirmed = (value: boolean, until?: string | null) => {
+    clearTimeout(confirmationTimer);
+    const left = value ? (until ? Date.parse(until) - Date.now() : 5 * 60_000) : 0;
+    setConfirmedState(left > 0);
+    if (left > 0) confirmationTimer = setTimeout(() => setConfirmedState(false), left);
+  };
   const [revokeConfirmed, setRevokeConfirmed] = createSignal(false);
   const [connection, setConnection] = createSignal<'checking' | 'ready' | 'unavailable'>(
     'checking',
@@ -216,6 +226,7 @@ export function createAccountAccess(router: Router) {
     setCsrf(result.csrfToken ?? '');
     setCapabilities(result.capabilities ?? []);
     setAccount(result.account);
+    setConfirmed(!!result.confirmedUntil, result.confirmedUntil);
     if (view() === 'invitations' || localStorage.getItem(offlineAccountKey) !== result.account?.id)
       rememberOfflineAccount(view() === 'invitations' ? result.account?.id : undefined);
   };
@@ -277,6 +288,7 @@ export function createAccountAccess(router: Router) {
     }),
   );
   onCleanup(() => {
+    clearTimeout(confirmationTimer);
     active = false;
     navigationGeneration++;
     sessionGeneration++;

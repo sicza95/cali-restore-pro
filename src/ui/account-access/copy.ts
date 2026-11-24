@@ -61,7 +61,8 @@ export const accountCopy = defineCopy({
     passkeys: 'Passkeys',
     passkeySignIn: 'Sign in with a passkey',
     passkeyHelp:
-      'A passkey signs you in without your password. Adding or removing a passkey needs a recent password confirmation, and so does every other security change.',
+      'A passkey signs you in without your password. Adding or removing one needs your password, unless you signed in with it or confirmed it in the last five minutes.',
+    passkeyDefaultName: 'This device',
     passkeyName: 'Passkey name',
     addPasskey: 'Add passkey',
     removePasskey: 'Remove passkey',
@@ -171,7 +172,8 @@ export const accountCopy = defineCopy({
     passkeys: 'Azonosítókulcsok',
     passkeySignIn: 'Bejelentkezés azonosítókulccsal',
     passkeyHelp:
-      'Az azonosítókulccsal jelszó nélkül jelentkezhetsz be. Azonosítókulcs hozzáadásához vagy eltávolításához friss jelszó-megerősítés kell, ahogy minden más biztonsági módosításhoz is.',
+      'Az azonosítókulccsal jelszó nélkül jelentkezhetsz be. Hozzáadásához vagy eltávolításához meg kell adnod a jelszavadat, hacsak nem az elmúlt öt percben jelentkeztél be vele vagy erősítetted meg.',
+    passkeyDefaultName: 'Ez az eszköz',
     passkeyName: 'Azonosítókulcs neve',
     addPasskey: 'Azonosítókulcs hozzáadása',
     removePasskey: 'Azonosítókulcs eltávolítása',

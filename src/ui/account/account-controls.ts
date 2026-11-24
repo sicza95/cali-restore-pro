@@ -236,7 +236,13 @@ export const accountControls = [
         'account.passkeys.add',
         'addPasskey',
         'Register a passkey for this account',
-        'Recent password confirmation and passkey name',
+        'Passkey name; the password when no confirmation is recent',
+      ],
+      [
+        'account.passkeys.password',
+        'password',
+        'Password that confirms adding a passkey',
+        'Shown only when the last confirmation has lapsed',
       ],
       [
         'account.passkeys.remove',

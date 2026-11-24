@@ -236,8 +236,11 @@ func (s *Service) Sessions(ctx context.Context, raw string) ([]SessionInfo, erro
 	return result, nil
 }
 
+// recentWindow is how long a password confirmation allows security changes.
+const recentWindow = 5 * time.Minute
+
 func RequireRecent(s Session) error {
-	if time.Since(s.VerifiedAt) > 5*time.Minute {
+	if time.Since(s.VerifiedAt) > recentWindow {
 		return ErrRecent
 	}
 	return nil

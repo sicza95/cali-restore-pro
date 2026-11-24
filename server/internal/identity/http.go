@@ -137,11 +137,19 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 			Failure(w, err)
 			return
 		}
+		// The page enables security changes until the confirmation lapses; the
+		// server still checks RequireRecent on every change.
+		var confirmedUntil *time.Time
+		if RequireRecent(current) == nil {
+			until := current.VerifiedAt.Add(recentWindow).UTC()
+			confirmedUntil = &until
+		}
 		httpjson.Respond(w, 200, struct {
-			Account      Account      `json:"account"`
-			Capabilities []Capability `json:"capabilities"`
-			CSRFToken    string       `json:"csrfToken"`
-		}{current.Account, current.Account.Capabilities(), sessiontoken.CSRF(h.Token(r))})
+			Account        Account      `json:"account"`
+			Capabilities   []Capability `json:"capabilities"`
+			CSRFToken      string       `json:"csrfToken"`
+			ConfirmedUntil *time.Time   `json:"confirmedUntil"`
+		}{current.Account, current.Account.Capabilities(), sessiontoken.CSRF(h.Token(r)), confirmedUntil})
 	})
 	route("POST /api/v1/auth/confirm", true, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {

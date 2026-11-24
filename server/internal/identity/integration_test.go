@@ -265,7 +265,8 @@ func TestPostgresIdentity(t *testing.T) {
 				t.Fatalf("%s: %d %s", test.path, w.Code, w.Body)
 			}
 		}
-		if w := request("GET", "/api/v1/auth/me", "", raw, "", "", ""); w.Code != 200 || strings.Contains(w.Body.String(), "password") {
+		if w := request("GET", "/api/v1/auth/me", "", raw, "", "", ""); w.Code != 200 || strings.Contains(w.Body.String(), "password") ||
+			!strings.Contains(w.Body.String(), `"confirmedUntil":"`) {
 			t.Fatal(w)
 		}
 		memberID := ids["member"]

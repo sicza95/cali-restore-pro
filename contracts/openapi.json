@@ -6612,7 +6612,7 @@
       "CurrentIdentity": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["account", "capabilities", "csrfToken"],
+        "required": ["account", "capabilities", "csrfToken", "confirmedUntil"],
         "properties": {
           "account": {
             "$ref": "#/components/schemas/IdentityAccount"
@@ -6634,6 +6634,11 @@
           },
           "csrfToken": {
             "type": "string"
+          },
+          "confirmedUntil": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the last password confirmation stops allowing security changes; null when it already has."
           }
         }
       },

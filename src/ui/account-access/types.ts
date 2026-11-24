@@ -13,6 +13,7 @@ export type AuthResponse = Partial<DeletionStatus> & {
   account?: Account;
   sessions?: Session[];
   capabilities?: string[];
+  confirmedUntil?: string | null;
 };
 
 export type TranslatedFieldProps = { t: Translate };
