@@ -4,6 +4,7 @@ import { languageNames, languages } from '../../../platform/i18n/language';
 import { settingsCopy } from '../settings-copy';
 import { navigationText } from '../../account-access/navigation-copy';
 import { SettingsItem, SettingsSection } from '../SettingsItem';
+import { restorationPreferenceCopy } from './copy';
 import {
   chooseTheme,
   loadPreferences,
@@ -164,17 +165,49 @@ export function PreferenceSections() {
       </SettingsSection>
 
       <SettingsSection id="defaults" title={c().defaults} help={app.t('defaultsSectionHelp')}>
-        <SettingsItem id="units" group="defaults" title={c().units} value={prefs().units}>
+        <SettingsItem
+          id="measurement-units"
+          group="defaults"
+          title={restorationPreferenceCopy[app.lang()].measurementUnits}
+          value={
+            restorationPreferenceCopy[app.lang()][
+              prefs().measurementUnits === 'imperial' ? 'imperial' : 'metric'
+            ]
+          }
+        >
+          <label>
+            <span class="account-visually-hidden">
+              {restorationPreferenceCopy[app.lang()].measurementUnits}
+            </span>
+            <select
+              data-control-id="preferences.measurement-units"
+              value={prefs().measurementUnits}
+              onChange={(event) => save({ measurementUnits: event.currentTarget.value })}
+            >
+              <option value="metric">{restorationPreferenceCopy[app.lang()].metric}</option>
+              <option value="imperial">{restorationPreferenceCopy[app.lang()].imperial}</option>
+            </select>
+          </label>
+        </SettingsItem>
+        <SettingsItem
+          id="units"
+          group="defaults"
+          title={c().units}
+          value={prefs().areaUnit || restorationPreferenceCopy[app.lang()].followSystem}
+        >
           <label>
             <span class="account-visually-hidden">{c().units}</span>
             <select
               data-control-id="preferences.units"
               name="units"
-              value={prefs().units}
-              onChange={(event) => save({ units: event.currentTarget.value })}
+              value={prefs().areaUnit}
+              onChange={(event) => save({ areaUnit: event.currentTarget.value })}
             >
+              <option value="">{restorationPreferenceCopy[app.lang()].followSystem}</option>
               <option>cm²</option>
               <option>m²</option>
+              <option>in²</option>
+              <option>ft²</option>
             </select>
           </label>
         </SettingsItem>

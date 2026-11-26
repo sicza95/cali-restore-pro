@@ -7,11 +7,11 @@
   color: var(--cr-muted);
 }
 
-.cr-save > svg {
+.cr-save > :is(svg, .cr-icon) {
   color: var(--cr-positive);
 }
 
-.cr-save[data-state='offline'] > svg {
+.cr-save[data-state='offline'] > :is(svg, .cr-icon) {
   color: var(--cr-muted);
 }
 
@@ -19,7 +19,7 @@
   color: var(--cr-negative);
 }
 
-.cr-save[data-state='error'] > svg {
+.cr-save[data-state='error'] > :is(svg, .cr-icon) {
   color: inherit;
 }
 

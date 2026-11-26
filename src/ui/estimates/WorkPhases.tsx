@@ -15,6 +15,7 @@ function PhaseDetails(props: {
   model: PhaseModel;
   phase: Phase;
   project: SavedProject;
+  currency: string;
   measuring: boolean;
   navigate: (href: string) => void;
 }) {
@@ -209,7 +210,7 @@ function PhaseDetails(props: {
         language={props.language}
         phase={p()}
         measuring={props.measuring}
-        currency={props.project.settings.currency}
+        currency={props.currency}
         update={update}
       />
     </>
@@ -220,6 +221,8 @@ export function WorkPhases(props: {
   copy: EstimateCopy;
   language: Language;
   project: SavedProject;
+  /** The estimate's currency, resolved by the draft; never read from project.settings. */
+  currency: string;
   measuring: boolean;
   model: PhaseModel;
   navigate: (href: string) => void;
@@ -275,6 +278,7 @@ export function WorkPhases(props: {
               copy={c()}
               language={props.language}
               project={props.project}
+              currency={props.currency}
               measuring={props.measuring}
               navigate={props.navigate}
             />

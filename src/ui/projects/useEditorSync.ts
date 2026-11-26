@@ -1,6 +1,7 @@
 import { createSignal, onCleanup, onMount } from 'solid-js';
 import { cloudProjects } from '../../platform/projects/cloud-projects';
 import { editorSync } from '../../platform/projects/editor-sync';
+import { itemStatus as browserStatus } from '../../platform/projects/browser/status';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
 
@@ -54,5 +55,15 @@ export function useEditorSync(vault: LocalVault, csrf: () => string) {
     if (errors().includes(project.id)) return 'staging';
     return draft || project.revision > base.localRevision ? 'pending' : 'saved';
   }
-  return { sync, cloud, refresh, state, statusKey, unavailable };
+  /** The browser's storage state of a local project; children show the same document status. */
+  function itemStatus(project: SavedProject) {
+    return browserStatus({
+      projectId: project.id,
+      localRevision: project.revision,
+      sync: state(),
+      stagingErrors: errors(),
+      unavailable: unavailable(),
+    });
+  }
+  return { sync, cloud, refresh, state, statusKey, itemStatus, unavailable };
 }

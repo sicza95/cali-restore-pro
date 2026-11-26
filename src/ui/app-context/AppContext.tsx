@@ -24,11 +24,11 @@ function createRecords() {
 function createNames() {
   const [names, provideNames] = createRecords();
   /**
-   * The name of the object a surface belongs to, keyed by surface ID. Objects have no page, so the
-   * shell shows it as plain text in the trail. Same lifetime as `names`.
+   * The ID of the object a surface belongs to, keyed by surface ID: a surface URL does not name
+   * its object, so the shell's trail links the object step from this. Same lifetime as `names`.
    */
-  const [objectNames, provideObjectNames] = createRecords();
-  return { names, provideNames, objectNames, provideObjectNames };
+  const [surfaceObjects, provideSurfaceObjects] = createRecords();
+  return { names, provideNames, surfaceObjects, provideSurfaceObjects };
 }
 
 /** Account session, language, requests, the router and record names, shared by every screen. */

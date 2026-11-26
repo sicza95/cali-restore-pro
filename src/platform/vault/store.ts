@@ -8,6 +8,7 @@ export type VaultRow = {
 };
 export const vaultTable = 'accounts';
 export const fileTable = 'encrypted-files';
+export const thumbnailTable = 'browser-thumbnails';
 export const projectTable = 'encrypted-projects';
 export const estimateTable = 'encrypted-estimates';
 export const journalTable = 'encrypted-surface-journals';
@@ -22,7 +23,7 @@ export const accountRange = (account: string) => IDBKeyRange.bound([account], [a
 
 export async function connect() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('calirestore-vault', 9);
+    const request = indexedDB.open('calirestore-vault', 10);
     request.onupgradeneeded = (event) => {
       if (event.oldVersion < 1) request.result.createObjectStore(vaultTable);
       if (event.oldVersion < 2) request.result.createObjectStore(fileTable);
@@ -39,6 +40,7 @@ export async function connect() {
         request.result.createObjectStore(patternTable);
       }
       if (event.oldVersion < 9) request.result.createObjectStore(recipientReportTable);
+      if (event.oldVersion < 10) request.result.createObjectStore(thumbnailTable);
     };
     request.onblocked = () => reject(new Error('Close older vault tabs and retry'));
     request.onerror = () => reject(request.error);
@@ -74,6 +76,7 @@ export async function commitVault(
         [
           vaultTable,
           fileTable,
+          thumbnailTable,
           projectTable,
           revisionQueueTable,
           revisionSyncTable,
@@ -101,6 +104,7 @@ export async function commitVault(
         } else {
           store.delete(account);
           tx.objectStore(fileTable).delete(accountRange(account));
+          tx.objectStore(thumbnailTable).delete(accountRange(account));
           tx.objectStore(projectTable).delete(accountRange(account));
           tx.objectStore(revisionQueueTable).delete(accountRange(account));
           tx.objectStore(revisionSyncTable).delete(accountRange(account));

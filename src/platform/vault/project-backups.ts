@@ -1,5 +1,6 @@
 import { remapSurfaceImages } from '../projects/surface-attachments';
 import { validateProject } from '../projects/projects';
+import { projectAssetIds, remapEntityAssets } from '../projects/browser/assets';
 import type { Project } from '../projects/types';
 import { newCode } from './crypto';
 import { localFiles } from './file-store';
@@ -51,7 +52,7 @@ function attachmentIds(project: Project) {
   )
     throw new Error('Invalid project settings');
 
-  const ids = new Set<string>();
+  const ids = projectAssetIds(project);
   for (const object of project.objects) {
     assertID(object.id);
     if (!name(object.name) || (object.units !== null && !unit(object.units)))
@@ -231,11 +232,16 @@ export function projectBackups(
       }
       const next = validateProject(
         {
-          ...project,
+          ...remapEntityAssets(project, fileIds),
           id,
+          ...(project.assets
+            ? { assets: project.assets.map((asset) => ({ ...asset, id: fileIds.get(asset.id)! })) }
+            : {}),
           objects: project.objects.map((object) => ({
-            ...object,
-            surfaces: object.surfaces.map((surface) => remapSurfaceImages(surface, fileIds)),
+            ...remapEntityAssets(object, fileIds),
+            surfaces: object.surfaces.map((surface) =>
+              remapEntityAssets(remapSurfaceImages(surface, fileIds), fileIds),
+            ),
           })),
         },
         id,

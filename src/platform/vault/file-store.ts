@@ -1,4 +1,4 @@
-import { connect, fileTable, vaultTable } from './store';
+import { connect, fileTable, vaultTable, thumbnailTable } from './store';
 import type { VaultRow } from './store';
 import { abortOnSignal, abortTransaction } from './transaction-abort';
 import type { FileShape } from './file-format';
@@ -20,7 +20,9 @@ export function localFiles(account: string, stamp: string) {
     const db = await connect();
     try {
       return await new Promise<T>((resolve, reject) => {
-        const tx = db.transaction([fileTable, vaultTable], mode, { durability: 'strict' });
+        const tx = db.transaction([fileTable, vaultTable, thumbnailTable], mode, {
+          durability: 'strict',
+        });
         let result: T;
         tx.oncomplete = () => resolve(result);
         tx.onabort = () => reject(tx.error ?? new Error('Vault or staging state changed'));
@@ -110,6 +112,16 @@ export function localFiles(account: string, stamp: string) {
       }),
     remove: (id: string) =>
       run<void>('readwrite', (s) => {
+        const header = s.get([account, id]);
+        header.onsuccess = () => {
+          const file = header.result as LocalFile | undefined;
+          if (file)
+            s.transaction
+              .objectStore(thumbnailTable)
+              .delete(
+                IDBKeyRange.bound([account, file.project, id], [account, file.project, id, []]),
+              );
+        };
         s.delete(IDBKeyRange.bound([account, id], [account, id, Infinity]));
       }),
     cleanup: () =>

@@ -11,6 +11,9 @@ import type { Adjustment, Extra, Phase } from './estimate-model';
 import { validDecimal } from '../project-review/fields';
 import { saveFailure } from './save-failure';
 import { usePhaseMeasurements } from './usePhaseMeasurements';
+import { resolveSettings } from '../../platform/projects/settings';
+import { loadAccountSettings } from '../settings/preferences/utils';
+import { useApp } from '../app-context/AppContext';
 
 /** The estimate being edited: inputs, live result, validity and saved versions. */
 export function useEstimateDraft(
@@ -18,7 +21,10 @@ export function useEstimateDraft(
   vault: () => LocalVault,
   copy: () => EstimateCopy,
 ) {
-  const model = createPhases(() => (project().settings.units === 'imperial' ? 'ft²' : 'm²'));
+  const app = useApp();
+  const defaults = () =>
+    resolveSettings(loadAccountSettings(app.account()?.id), project()).restoration;
+  const model = createPhases(() => defaults().areaUnit.value);
   const measuring = usePhaseMeasurements(project, vault, model);
   const [selection, setSelection] = createSignal<'whole' | 'selected'>('whole');
   const [objects, setObjects] = createSignal<string[]>([]);
@@ -32,7 +38,9 @@ export function useEstimateDraft(
   const [ready, setReady] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [status, setStatus] = createSignal('');
-  const [priceCurrency, setPriceCurrency] = createSignal(project().settings.currency);
+  const [priceCurrency, setPriceCurrency] = createSignal(defaults().currency.value);
+  // Saved prices retain their currency; changing defaults never converts existing work.
+  const [currency, setCurrency] = createSignal(defaults().currency.value);
   const [version, setVersion] = createSignal('');
   const scoped = () =>
     project().objects.filter((object) => selection() === 'whole' || objects().includes(object.id));
@@ -55,7 +63,7 @@ export function useEstimateDraft(
     schema: 1,
     project: project().id,
     revision: project().revision,
-    currency: project().settings.currency,
+    currency: currency(),
     priceCurrency: priceCurrency(),
     objects: project().objects.map((o) => ({
       id: o.id,
@@ -96,6 +104,7 @@ export function useEstimateDraft(
         setTax(draft.tax.rate);
         setAssumptions(draft.assumptions);
         setPriceCurrency(draft.priceCurrency);
+        setCurrency(draft.currency);
         setVersions(saved.document.snapshots);
         setStoredRevision(saved.revision);
         setVersion(String(saved.document.snapshots.length));
@@ -154,7 +163,8 @@ export function useEstimateDraft(
   function reprice() {
     for (const phase of model.rows) model.update(phase.id, { rate: {}, material: '' });
     setExtras((rows) => rows.map((row) => ({ ...row, rate: {} })));
-    setPriceCurrency(project().settings.currency);
+    setCurrency(defaults().currency.value);
+    setPriceCurrency(defaults().currency.value);
   }
   return {
     model,
@@ -178,6 +188,8 @@ export function useEstimateDraft(
     setVersion,
     status,
     priceCurrency,
+    currency,
+    defaultCurrency: () => defaults().currency.value,
     scoped,
     result,
     complete,

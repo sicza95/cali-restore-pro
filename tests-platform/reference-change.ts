@@ -5,9 +5,10 @@ import {
   attach,
   control,
   hiddenReason,
+  newSurface,
   original,
+  originalsPage,
   plasterPng,
-  projectPage,
   reason,
 } from './originals';
 import { expectNoReason, expectReasons, reasonShots } from './original-reasons';
@@ -29,9 +30,8 @@ const twoReasonRows: Record<string, Expected> = {
 const damage = (page: Page) =>
   drawingControl(page, 'layer.select').filter({ hasText: 'Damage layer' });
 
-/** On the surface page showing the main photo (listed second), drawing with Details open. */
+/** From the surface page in photo mode: the main photo (listed second), drawing, Details open. */
 async function surfacePage(page: Page, layer = true) {
-  await control(page, 'project.surface').click();
   await control(page, 'surface.view.photo').selectOption({ index: 1 });
   await drawingControl(page, 'mode.drawing').click();
   await openDetails(page);
@@ -100,8 +100,7 @@ async function verifyTwoReasons(page: Page, info: TestInfo, png: Buffer) {
     .getByRole('combobox', { name: 'Image role', exact: true })
     .selectOption('mapping');
   await attach(page, late, png);
-  await expectHidden(page, 'project page, later reference attached');
-  await control(page, 'project.surface').click();
+  await expectHidden(page, 'reopened surface page, later reference attached');
   await control(page, 'surface.view.photo').selectOption({ index: 2 });
   await drawingControl(page, 'mode.drawing').click();
   await openDetails(page);
@@ -111,20 +110,20 @@ async function verifyTwoReasons(page: Page, info: TestInfo, png: Buffer) {
   await pendingMark(page);
   await reasonShots(page, info, 'two-reasons-surface', twoReasonRows, true);
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Side plaster');
+  await originalsPage(page, 'Side plaster');
   await reasonShots(page, info, 'two-reasons', twoReasonRows, true);
   await surfacePage(page);
   await drawingControl(page, 'history.discard').click();
   await expect(damage(page)).not.toContainText('Pending marks');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Side plaster');
+  await originalsPage(page, 'Side plaster');
   // Enabled only once the journals are read.
   await expect(original(page, late).remove).toBeEnabled();
   await expect(original(page, late).role).toBeEnabled();
-  await expectNoReason(page, late, 'project page, later reference discarded');
+  await expectNoReason(page, late, 'reopened surface page, later reference discarded');
   await original(page, late).remove.click();
   await expect(page.locator('.project-originals').getByText(late)).toHaveCount(0);
-  await expectHidden(page, 'project page, later reference removed');
+  await expectHidden(page, 'reopened surface page, later reference removed');
 }
 
 /**
@@ -180,12 +179,7 @@ async function landReferenceOnlyMain(page: Page) {
  */
 export async function verifyReferenceChange(page: Page, info: TestInfo) {
   const png = await plasterPng(page);
-  await projectPage(page, 'Upper plaster');
-  await page.getByRole('textbox', { name: 'Add surface' }).fill('Side plaster');
-  await page.getByRole('button', { name: 'Add surface' }).click();
-  await expect(
-    page.getByRole('combobox', { name: 'Surface', exact: true }).locator('option:checked'),
-  ).toHaveText('Side plaster');
+  await newSurface(page, 'Side plaster');
   const newRole = page
     .locator('.project-originals form')
     .getByRole('combobox', { name: 'Image role', exact: true });
@@ -203,8 +197,8 @@ export async function verifyReferenceChange(page: Page, info: TestInfo) {
   await expectEarlierBlocked(page, 'surface page, pending mark');
   await reasonShots(page, info, 'reference-change-earlier-surface', earlierRows);
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Side plaster');
-  await expectEarlierBlocked(page, 'project page, pending mark');
+  await originalsPage(page, 'Side plaster');
+  await expectEarlierBlocked(page, 'reopened surface page, pending mark');
   await reasonShots(page, info, 'reference-change-earlier', earlierRows);
 
   await surfacePage(page);
@@ -212,8 +206,8 @@ export async function verifyReferenceChange(page: Page, info: TestInfo) {
   await expect(damage(page)).not.toContainText('Pending marks');
   await expectFree(page, 'surface page, draft saved');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Side plaster');
-  await expectFree(page, 'project page, draft saved');
+  await originalsPage(page, 'Side plaster');
+  await expectFree(page, 'reopened surface page, draft saved');
 
   await surfacePage(page);
   await pendingMark(page);
@@ -222,8 +216,8 @@ export async function verifyReferenceChange(page: Page, info: TestInfo) {
   await expect(damage(page)).not.toContainText('Pending marks');
   await expectFree(page, 'surface page, draft discarded');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Side plaster');
-  await expectFree(page, 'project page, draft discarded');
+  await originalsPage(page, 'Side plaster');
+  await expectFree(page, 'reopened surface page, draft discarded');
 
   // Hidden drafts: the main photo holds a pending mark but is no longer the reference.
   await surfacePage(page);
@@ -232,22 +226,21 @@ export async function verifyReferenceChange(page: Page, info: TestInfo) {
   await landReferenceOnlyMain(page);
   await expectHidden(page, 'surface page, hidden drafts');
   await reasonShots(page, info, 'reference-change-hidden-surface', hiddenRows);
-  await projectPage(page, 'Side plaster');
-  await expectHidden(page, 'project page, hidden drafts');
+  await originalsPage(page, 'Side plaster');
+  await expectHidden(page, 'reopened surface page, hidden drafts');
   await reasonShots(page, info, 'reference-change-hidden', hiddenRows);
   await verifyTwoReasons(page, info, png);
 
   // The way out: the mapping role makes it the reference again, and its drafts are back.
   await original(page, main).role.selectOption('mapping');
-  await expectEarlierBlocked(page, 'project page, drafts back');
+  await expectEarlierBlocked(page, 'reopened surface page, drafts back');
   await surfacePage(page);
   await expect(damage(page)).toContainText('Pending marks 1');
   await drawingControl(page, 'history.discard').click();
   await expect(damage(page)).not.toContainText('Pending marks');
   await expectFree(page, 'surface page, hidden drafts discarded');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Side plaster');
-  await expectFree(page, 'project page, hidden drafts discarded');
-  await control(page, 'project.surface').click();
+  await originalsPage(page, 'Side plaster');
+  await expectFree(page, 'reopened surface page, hidden drafts discarded');
   await expect(drawingControl(page, 'mode.photo')).toBeVisible();
 }

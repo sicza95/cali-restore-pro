@@ -27,7 +27,10 @@ export async function verifyRecoveryWarning(page: Page, info: TestInfo) {
         { width: 834, height: 1194 },
       ]) {
         await page.setViewportSize(viewport);
-        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.evaluate(() => {
+          document.querySelector('.account-content')?.scrollTo(0, 0);
+          window.scrollTo(0, 0);
+        });
         // A polite status: the conflict is not time-sensitive and often follows the user's own
         // action, whose status an assertive alert would cut off.
         await expect(message).toHaveRole('status');

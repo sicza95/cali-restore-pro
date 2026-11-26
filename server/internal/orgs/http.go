@@ -52,6 +52,7 @@ var ok = map[string]bool{"ok": true}
 // Register adds the organisation routes behind the identity Guard.
 func (h *HTTP) Register(mux *http.ServeMux) {
 	route := h.auth.Guard(mux)
+	h.projectDirectoryRoutes(route)
 	token := h.auth.Token
 	// ids checks the path's ids; a malformed one is an unknown organisation.
 	ids := func(w http.ResponseWriter, r *http.Request, names ...string) ([]string, bool) {

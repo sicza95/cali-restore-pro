@@ -1,4 +1,4 @@
-import type { paths } from './constants';
+import type { icons } from './constants';
 
-export type IconName = keyof typeof paths;
+export type IconName = keyof typeof icons;
 export type IconProps = { name: IconName; size?: number; class?: string };

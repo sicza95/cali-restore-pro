@@ -485,12 +485,69 @@ export type CreatedId = {
   id: string;
 };
 
+/**
+ * Listed publishes a name-and-owner card to organisation members only; it grants no project content access.
+ */
+export type ProjectVisibility = 'private' | 'listed';
+
+export type HostedProjectVisibility = {
+  visibility: ProjectVisibility;
+  version: number;
+  /**
+   * Published directory name; empty on pre-existing private projects until first update. Listing requires a non-empty name.
+   */
+  name: string;
+};
+
+export type ProjectVisibilityWrite = {
+  visibility: ProjectVisibility;
+  /**
+   * The last read visibility version; compare-and-increment in one transaction.
+   */
+  version: number;
+  /**
+   * Trimmed project name approved for the directory; supplied even when making the project private. Does not rename the project document.
+   */
+  name: string;
+};
+
+export type ProjectDirectoryOwner = {
+  id: string;
+  /**
+   * Current owner's profile name, possibly empty for an older account. No email address or profile photo is published.
+   */
+  name: string;
+};
+
+export type ProjectDirectoryCard = {
+  id: string;
+  name: string;
+  /**
+   * Current project owners ordered by account UUID. Hosting responsibility is not ownership.
+   */
+  owners: Array<ProjectDirectoryOwner>;
+};
+
+export type OrganisationProjectDirectory = {
+  projects: Array<ProjectDirectoryCard>;
+  /**
+   * Last returned project UUID when more rows exist; null on the final page.
+   */
+  next: string | null;
+};
+
 export type ProjectHostingRequest = {
   /**
    * Organisation the project belongs to; the host must be a member. Omitted: the host personal organisation.
    */
   organisation?: string;
 };
+
+export type ProjectBrowserError =
+  | IdentityError
+  | {
+      error: 'not_found' | 'visibility_conflict';
+    };
 
 export type PlatformStatusData = {
   body?: never;
@@ -1999,6 +2056,143 @@ export type EnableProjectHostingResponses = {
 
 export type EnableProjectHostingResponse =
   EnableProjectHostingResponses[keyof EnableProjectHostingResponses];
+
+export type GetProjectVisibilityData = {
+  body?: never;
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/visibility';
+};
+
+export type GetProjectVisibilityErrors = {
+  /**
+   * Authentication required
+   */
+  401: ProjectBrowserError;
+  /**
+   * Project missing, deleted, or not owned by this account
+   */
+  404: ProjectBrowserError;
+  /**
+   * Invalid request or service unavailable
+   */
+  default: ProjectBrowserError;
+};
+
+export type GetProjectVisibilityError =
+  GetProjectVisibilityErrors[keyof GetProjectVisibilityErrors];
+
+export type GetProjectVisibilityResponses = {
+  /**
+   * Current visibility and concurrency version
+   */
+  200: HostedProjectVisibility;
+};
+
+export type GetProjectVisibilityResponse =
+  GetProjectVisibilityResponses[keyof GetProjectVisibilityResponses];
+
+export type UpdateProjectVisibilityData = {
+  body: ProjectVisibilityWrite;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/visibility';
+};
+
+export type UpdateProjectVisibilityErrors = {
+  /**
+   * Invalid visibility, name, version or JSON
+   */
+  400: ProjectBrowserError;
+  /**
+   * Authentication required
+   */
+  401: ProjectBrowserError;
+  /**
+   * Origin or CSRF rejected
+   */
+  403: ProjectBrowserError;
+  /**
+   * Project missing, deleted, or not owned by this account
+   */
+  404: ProjectBrowserError;
+  /**
+   * visibility_conflict: reload visibility before retrying
+   */
+  409: ProjectBrowserError;
+  /**
+   * Service unavailable
+   */
+  default: ProjectBrowserError;
+};
+
+export type UpdateProjectVisibilityError =
+  UpdateProjectVisibilityErrors[keyof UpdateProjectVisibilityErrors];
+
+export type UpdateProjectVisibilityResponses = {
+  /**
+   * Updated visibility with the incremented version
+   */
+  200: HostedProjectVisibility;
+};
+
+export type UpdateProjectVisibilityResponse =
+  UpdateProjectVisibilityResponses[keyof UpdateProjectVisibilityResponses];
+
+export type ListOrganisationProjectsData = {
+  body?: never;
+  path: {
+    org: string;
+  };
+  query?: {
+    /**
+     * Exclusive project UUID cursor returned as next; omitted for the first page.
+     */
+    after?: string;
+    limit?: number;
+  };
+  url: '/api/v1/organisations/{org}/projects';
+};
+
+export type ListOrganisationProjectsErrors = {
+  /**
+   * Invalid organisation, cursor or limit
+   */
+  400: ProjectBrowserError;
+  /**
+   * Authentication required
+   */
+  401: ProjectBrowserError;
+  /**
+   * Organisation missing or account is not a current member
+   */
+  404: ProjectBrowserError;
+  /**
+   * Service unavailable
+   */
+  default: ProjectBrowserError;
+};
+
+export type ListOrganisationProjectsError =
+  ListOrganisationProjectsErrors[keyof ListOrganisationProjectsErrors];
+
+export type ListOrganisationProjectsResponses = {
+  /**
+   * A bounded directory page
+   */
+  200: OrganisationProjectDirectory;
+};
+
+export type ListOrganisationProjectsResponse =
+  ListOrganisationProjectsResponses[keyof ListOrganisationProjectsResponses];
 
 export type CancelEncryptedFileData = {
   body?: never;

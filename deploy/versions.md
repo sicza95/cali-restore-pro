@@ -20,6 +20,9 @@ Resolved 4 November 2026. Exact image index digests are checked into `Dockerfile
 | go-webauthn/webauthn                 | 0.18.2 (2026-09-19)                               | BSD-3-Clause; server-side WebAuthn verification for optional passkey sign-in (PRIV-03, ADR 0009)                     |
 | go-webauthn transitive modules       | Checksummed in `server/go.mod` / `go.sum`         | cbor/v2, mapstructure/v2, jwt/v5, msgp, fwd, float16 MIT; go-webauthn/x, google/uuid BSD-3-Clause; go-tpm Apache-2.0 |
 
+Font Awesome Free 7.3.1 supplies the shared UI icons as locally bundled webfonts.
+Its package preserves the notices: fonts SIL OFL 1.1, icons CC BY 4.0, code MIT.
+
 All pre-existing frontend versions remain pinned; the API generator is the only added frontend development dependency. Lockfiles and Go checksums record transitive versions. This is a license/maintenance review of direct additions and driver dependencies, not a claim that arbitrary future packages or deployment distributions are already cleared. Preserve bundled image/package notices when redistributing.
 
 M-01a pins the official fixed crypto revision identified by [GO-2026-5932](https://pkg.go.dev/vuln/GO-2026-5932). The earlier tag's advisory concerned legacy OpenPGP packages that this app never imported; the selected revision removes those packages. Password hashing uses only Argon2id, not OpenPGP. The final scan is recorded with the identity evidence.

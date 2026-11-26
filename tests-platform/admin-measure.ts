@@ -22,7 +22,7 @@ export type AdminGeometry = {
  */
 export function measureAdmin(page: Page, headings: string[]) {
   return page.evaluate((names): AdminGeometry => {
-    const sheet = document.querySelector<HTMLElement>('.account-content')!;
+    const sheet = document.querySelector<HTMLElement>('.account-page')!;
     const style = getComputedStyle(sheet);
     const s = sheet.getBoundingClientRect();
     const y = window.scrollY;

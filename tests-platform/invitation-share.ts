@@ -2,12 +2,21 @@ import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { orientedJpeg } from './fixtures/images';
 import { enableHostingAndSync } from './invitation-hosting';
+import {
+  createHierarchyViaBrowser,
+  createItem,
+  followTrail,
+  inspect,
+  openItem,
+  openProjectReview,
+  openProjectSettings,
+} from './project-browser';
 
 /** Estimate scopes are shared only from an issued estimate: 20 h at HUF 62.50 per hour. */
 async function issueEstimate(project: Page) {
   const control = (id: string) => project.locator(`[data-control-id="${id}"]`);
   const phase = (key: string) => control('estimate.phase.' + key);
-  await control('project.review.estimates').click();
+  await openProjectReview(project, 'estimates');
   await control('estimate.step.phases').click();
   await phase('newName').fill('Surface cleaning');
   await phase('add').click();
@@ -19,15 +28,11 @@ async function issueEstimate(project: Page) {
   await control('estimate.finance.issue').click();
   await expect(project.getByText('Version saved on this device. Not synced yet.')).toBeVisible();
   await control('project.review.parent').click();
-  // Coming back selects the first object and surface again; the original is on North wall's
-  // second surface.
-  await project
-    .getByRole('combobox', { name: 'Object', exact: true })
-    .selectOption({ label: 'North wall' });
-  await project
-    .getByRole('combobox', { name: 'Surface', exact: true })
-    .selectOption({ label: 'Upper plaster' });
-  await expect(project.getByText('shared-plaster.jpg')).toBeVisible();
+  // Back in the project's objects; the original is still on North wall's second surface.
+  await openItem(project, 'North wall');
+  await openItem(project, 'Upper plaster');
+  await expect(project.locator('.project-originals').getByText('shared-plaster.jpg')).toBeVisible();
+  await project.locator('[data-control-id="surface.project"]').click();
 }
 
 /**
@@ -40,26 +45,30 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   const owner = project.request;
   const recipient = inbox.request;
   await project.goto('/projects');
-  await project.getByLabel('Project name').fill('Synthetic chapel');
-  await project.getByRole('button', { name: 'New project' }).click();
   // Two objects: the full estimate scope (about 1.8 KB sealed) went over the old 1536-byte
-  // scope grant limit (#88).
-  await project.getByRole('textbox', { name: 'Add object' }).fill('North wall');
-  await project.getByRole('button', { name: 'Add object' }).click();
-  await project.getByRole('textbox', { name: 'Add surface' }).fill('Upper plaster');
-  await project.getByRole('button', { name: 'Add surface' }).click();
+  // scope grant limit (#88). The browser makes every object and surface explicitly.
+  const created = await createHierarchyViaBrowser(project, { project: 'Synthetic chapel' });
+  await followTrail(project, created.projectPath);
+  await createItem(project, 'North wall');
+  await openItem(project, 'North wall');
+  await createItem(project, 'Surface 1');
+  await createItem(project, 'Upper plaster');
+  await inspect(project, 'Upper plaster');
   await expect(
-    project.getByRole('combobox', { name: 'Object', exact: true }).locator('option:checked'),
-  ).toHaveText('North wall');
-  await expect(project.getByText('Upper plaster · Metric')).toBeVisible();
+    project.locator('.browser-inspector [data-control-id$=".restoration.units"]'),
+  ).toHaveValue('metric');
+  await openItem(project, 'Upper plaster');
   await project.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'shared-plaster.jpg',
     mimeType: 'image/jpeg',
     buffer: orientedJpeg,
   });
   await project.getByRole('button', { name: 'Attach original', exact: true }).click();
-  await expect(project.getByText('shared-plaster.jpg')).toBeVisible();
+  await expect(project.locator('.project-originals').getByText('shared-plaster.jpg')).toBeVisible();
+  await project.locator('[data-control-id="surface.project"]').click();
   await issueEstimate(project);
+  // Invitations, hosting and sync are in the project settings dialog; it stays open from here.
+  await openProjectSettings(project);
   await project.getByText('Project invitations', { exact: true }).click();
   await enableHostingAndSync(project);
   await project.getByLabel('Recipient email').fill('recipient@example.test');

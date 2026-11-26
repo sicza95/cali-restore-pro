@@ -7,6 +7,15 @@ import { reportControls } from '../src/ui/reports/report-controls';
 import { projectTable, reportTable, revisionQueueTable } from '../src/platform/vault/store';
 import { expectTaskLanguage } from './copy-guard';
 import { touchTarget } from './touch-target';
+import {
+  createHierarchyViaBrowser,
+  createItem,
+  followTrail,
+  inspect,
+  openItem,
+  openProjectSettings,
+  overrideRestoration,
+} from './project-browser';
 import { chooseLanguage } from './app-navigation';
 
 const owner = '00000000-0000-4000-8000-000000000001';
@@ -87,11 +96,10 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   );
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
   await page.goto('/projects');
-  await page.getByLabel('Project name').fill('East Chapel');
-  await page.getByRole('button', { name: 'New project' }).click();
-  await expect(page.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
-  const path = new URL(page.url()).pathname;
+  const created = await createHierarchyViaBrowser(page, { project: 'East Chapel' });
+  const path = created.projectPath;
   expect(path).toMatch(/^\/projects\/[a-f0-9-]{36}$/);
+  // Originals attach on the surface page.
   await page.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'private-source.jpg',
     mimeType: 'image/jpeg',
@@ -102,16 +110,19 @@ test('owner reviews work phases, scoped inputs and independent report output thr
     .getByRole('combobox', { name: 'Image role' })
     .selectOption('reference');
   await page.getByRole('button', { name: 'Attach original' }).click();
-  await expect(page.getByText('private-source.jpg')).toBeVisible();
-  await page.getByLabel('Add object').fill('North wall');
-  await page.getByRole('button', { name: 'Add object' }).click();
-  await page
-    .getByRole('combobox', { name: 'North wall · Units', exact: true })
-    .selectOption('imperial');
-  await page.getByRole('button', { name: 'Save settings' }).click();
-  await expect(page.getByText('Surface 1 · Imperial')).toBeVisible();
+  await expect(page.locator('.project-originals').getByText('private-source.jpg')).toBeVisible();
+  await followTrail(page, path);
+  await createItem(page, 'North wall');
+  await openItem(page, 'North wall');
+  await createItem(page, 'Surface 1');
+  await followTrail(page, path);
+  // North wall measures in imperial units: an object override in the inspector.
+  await inspect(page, 'North wall');
+  await overrideRestoration(page, 'units', 'imperial');
+  await expect(page.locator('.browser-inspector')).toContainText('Imperial');
   const before = await revisions(page);
-  await nav('estimates').focus();
+  const settings = await openProjectSettings(page);
+  await settings.locator('[data-control-id="project.review.estimates"]').focus();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(path + '/estimates');
   await expect(nav('estimates')).toHaveAttribute('aria-current', 'page');
@@ -330,8 +341,15 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   const breadcrumbs = page.getByRole('navigation', { name: 'Breadcrumbs' });
   await expect(breadcrumbs).toContainText('East Chapel');
   await page.locator('[data-control-id="project.review.parent"]').click();
-  await page.getByRole('button', { name: 'Archive', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Restore project' })).toBeVisible();
+  // Archive is in the project settings dialog.
+  const archive = (await openProjectSettings(page)).getByRole('button', {
+    name: 'Archive',
+    exact: true,
+  });
+  await archive.click();
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Restore project' }),
+  ).toBeVisible();
   await page.goto(path + '/outputs');
   await expect(page.locator('.project-workspace')).toBeVisible();
   await expect(page.getByText('Opening projects…')).toHaveCount(0);

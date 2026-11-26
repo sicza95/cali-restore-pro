@@ -3,6 +3,7 @@ import type { Page, TestInfo } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { drawingControl, openDetails } from './drawing-review';
 import { verifyRecoveryWarning } from './recovery-warning';
+import { originalsPage } from './originals';
 
 export { verifyDraftSourceBlocked } from './draft-source';
 
@@ -122,19 +123,13 @@ export async function verifyRemovalKeepsDrafts(page: Page, surfacePath: string) 
   await drawingControl(page, 'mode.photo').click();
   await reopen(page);
   await expectDraftKept(page, 'surface page removal, reopened');
-  await control(page, 'surface.project').click();
-  await page
-    .getByRole('combobox', { name: 'Object', exact: true })
-    .selectOption({ label: 'North wall' });
-  await page
-    .getByRole('combobox', { name: 'Surface', exact: true })
-    .selectOption({ label: 'Upper plaster' });
-  await removeOriginal(page, 'wall-detail.png');
-  await control(page, 'project.surface').click();
+  // Removing another detail after reopening the surface from the browser keeps the drafts too.
+  await originalsPage(page, 'Upper plaster');
   await expect(page).toHaveURL(surfacePath);
-  await expectDraftKept(page, 'after removing a detail on the project page');
+  await removeOriginal(page, 'wall-detail.png');
+  await expectDraftKept(page, 'after removing a detail on the reopened surface page');
   await reopen(page);
-  await expectDraftKept(page, 'project page removal, reopened');
+  await expectDraftKept(page, 'reopened surface page removal, reopened');
   await drawingControl(page, 'mode.drawing').click();
   await damage.click();
   await drawingControl(page, 'history.discard').click();

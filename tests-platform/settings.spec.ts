@@ -49,7 +49,10 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   await expect(page.locator('body')).toHaveAttribute('data-transparency', 'opaque');
   await expect(page.getByLabel('Report language')).toHaveValue('hu');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => {
+    document.querySelector('.account-content')?.scrollTo(0, 0);
+    window.scrollTo(0, 0);
+  });
   await page.screenshot({ path: info.outputPath('preferences-portrait-dark.png'), fullPage: true });
   await (
     await openSetting(page, 'delete-account')

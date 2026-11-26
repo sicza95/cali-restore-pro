@@ -8,7 +8,7 @@ import {
   partBytes,
 } from '../vault/file-format';
 import type { FileShape } from '../vault/file-format';
-import { readBounded } from '../vault/files';
+import { readBounded } from '../vault/file-transfer';
 
 export const maxSharedOriginals = 64;
 export type SharedOriginal = { id: string; name: string; key: string };

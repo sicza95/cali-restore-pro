@@ -12,6 +12,7 @@ import {
   reportTable,
   journalTable,
   patternTable,
+  thumbnailTable,
 } from './store';
 import type { VaultRow } from './store';
 import { abortOnSignal, abortTransaction } from './transaction-abort';
@@ -56,6 +57,7 @@ export function projectDocuments(
     operation = signal,
     withJournal = false,
     withDocuments = false,
+    withThumbnails = false,
   ) {
     operation.throwIfAborted();
     const db = await connect();
@@ -66,6 +68,7 @@ export function projectDocuments(
         if (withFiles) tables.push(fileTable);
         if (withJournal) tables.push(journalTable);
         if (withDocuments) tables.push(estimateTable, reportTable);
+        if (withThumbnails) tables.push(thumbnailTable);
         const tx = db.transaction(tables, mode, { durability: 'strict' });
         let result: T;
         const abort = () => abortTransaction(tx);
@@ -202,6 +205,46 @@ export function projectDocuments(
         true,
         signal,
         false,
+        true,
+      );
+    },
+    /**
+     * Removes a project from this device for good, in one transaction: its document (at the
+     * expected revision), estimate, report, drawing journals, files and cached thumbnails.
+     * Callers check first that it was never hosted and that no drafts would be lost.
+     */
+    async remove(id: string, expected: number) {
+      assertID(id);
+      if (table !== projectTable) throw new Error('Invalid remove store');
+      await transact<void>(
+        'readwrite',
+        (store, finish, abort) => {
+          const request = store.get([account, id]);
+          request.onsuccess = () => {
+            if ((request.result as ProjectRow | undefined)?.revision !== expected) return abort();
+            const tx = store.transaction;
+            const own = IDBKeyRange.bound([account, id], [account, id, []]);
+            store.delete([account, id]);
+            tx.objectStore(estimateTable).delete([account, id]);
+            tx.objectStore(reportTable).delete([account, id]);
+            tx.objectStore(journalTable).delete(own);
+            tx.objectStore(thumbnailTable).delete(own);
+            const files = tx.objectStore(fileTable);
+            const cursor = files.openCursor(accountRange(account));
+            cursor.onsuccess = () => {
+              const row = cursor.result;
+              if (!row) return finish(undefined);
+              const [, file, part] = row.key as [string, string, number?];
+              if (part === undefined && (row.value as LocalFile | undefined)?.project === id)
+                files.delete(IDBKeyRange.bound([account, file], [account, file, Infinity]));
+              row.continue([account, file, []]);
+            };
+          };
+        },
+        true,
+        signal,
+        true,
+        true,
         true,
       );
     },

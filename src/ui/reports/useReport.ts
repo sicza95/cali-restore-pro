@@ -9,19 +9,47 @@ import { workbookEstimate } from '../../platform/reports/workbook-estimate';
 import type { Branding, Draft, ReportIssuance, ReportSettings } from '../../platform/reports/types';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
-import { parseLanguage } from '../../platform/i18n/language';
-import { loadPreferences } from '../settings/preferences/utils';
+import { loadAccountSettings } from '../settings/preferences/utils';
+import { reportDefaults, resolveReportBranding } from '../../platform/reports/settings';
+import { reportLogo } from '../../platform/reports/logo';
+import { resolveReportSurfaceUnits } from '../../platform/reports/surface-settings';
+import type { SettingsTarget } from '../../platform/projects/settings';
 import { prepareSurfaces, selectedSurfaces } from './report-model';
 
-export function useReport(props: { project: SavedProject; vault: LocalVault; account: string }) {
-  const defaults = untrack(() => loadPreferences(props.account));
+export function useReport(props: {
+  project: SavedProject;
+  vault: LocalVault;
+  account: string;
+  target?: SettingsTarget;
+}) {
+  const accountDefaults = () => loadAccountSettings(props.account);
+  const inherited = () => reportDefaults(accountDefaults(), props.project, props.target);
+  // Keep the report-specific editor's existing flat branding interface.
+  const defaults = {
+    get studio() {
+      return inherited().branding.studio.value;
+    },
+    get contact() {
+      return inherited().branding.contact.value;
+    },
+    get footer() {
+      return inherited().branding.footer.value;
+    },
+    get accent() {
+      return inherited().branding.accent.value;
+    },
+    get logo() {
+      const logo = inherited().branding.logo.value;
+      return logo && 'accountDataUrl' in logo ? logo.accountDataUrl : '';
+    },
+  };
   const projectId = untrack(() => props.project.id);
   const { reports, estimates } = untrack(() => ({
     reports: reportRepository(props.vault),
     estimates: estimateRepository(props.vault),
   }));
   const [settings, set] = createStore<ReportSettings>({
-    language: parseLanguage(defaults.reportLanguage),
+    language: untrack(() => inherited().restoration.reportLanguage.value),
     unit: 'inherited',
     excluded: [],
     surfaces: {},
@@ -84,20 +112,18 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
   }
   onMount(() => void open());
 
-  function effectiveBranding() {
-    if (settings.brandingSource === 'omit') return;
-    const source = brand() ?? defaults;
-    return {
-      studio: source.studio,
-      contact: source.contact,
-      footer: source.footer,
-      accent: /^#[a-f0-9]{6}$/i.test(source.accent) ? source.accent : '#000000',
-      logo: /^data:image\/png;base64,[a-z0-9+/=]+$/i.test(source.logo) ? source.logo : '',
-    };
-  }
-
-  function readSettings() {
-    return { ...structuredClone(unwrap(settings)), branding: effectiveBranding() };
+  async function readSettings(signal: AbortSignal, preserveIssued = false) {
+    const value = structuredClone(unwrap(settings));
+    if (!preserveIssued) value.branding = brand();
+    value.branding = await resolveReportBranding(
+      accountDefaults(),
+      props.project,
+      value,
+      props.target,
+      (id) => reportLogo(props.vault, props.project.id, id, signal),
+      preserveIssued,
+    );
+    return value;
   }
 
   async function save() {
@@ -111,7 +137,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
         project: projectId,
         projectRevision,
         savedAt: new Date().toISOString(),
-        settings: readSettings(),
+        settings: await readSettings(props.vault.accessSignal()),
       });
       if (mounted) {
         setSavedRevision(projectRevision);
@@ -135,11 +161,8 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
 
   async function preview(show: (draft: Draft) => void, final = false) {
     if (!ready() || busy()) return;
-    const selection = readSettings();
     const project = structuredClone(unwrap(props.project));
     const { name, revision: projectRevision, updatedAt } = project;
-    const surfaces = selectedSurfaces(project, selection);
-    if (!surfaces.length) return;
     const token = ++attempt;
     const job = new AbortController();
     controller = job;
@@ -147,19 +170,29 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
     setPreparing(true);
     setBusy(true);
     setStatus(undefined);
-    const draft: Draft = {
-      project: { name, revision: projectRevision, updatedAt },
-      surfaces,
-      language: selection.language,
-      content: selection.content,
-      notes: selection.notes,
-      branding: selection.branding,
-      format: selection.format,
-      resolution:
-        selection.format === 'PDF' || selection.format === 'PNG' ? selection.resolution : undefined,
-      workbook: selection.format === 'XLSX' ? 'snapshot' : undefined,
-    };
     try {
+      const selection = await readSettings(signal, !!savedIssuance() && !final);
+      const surfaces = resolveReportSurfaceUnits(
+        accountDefaults(),
+        project,
+        selection,
+        selectedSurfaces(project, selection),
+      );
+      if (!surfaces.length) return;
+      const draft: Draft = {
+        project: { name, revision: projectRevision, updatedAt },
+        surfaces,
+        language: selection.language,
+        content: selection.content,
+        notes: selection.notes,
+        branding: selection.branding,
+        format: selection.format,
+        resolution:
+          selection.format === 'PDF' || selection.format === 'PNG'
+            ? selection.resolution
+            : undefined,
+        workbook: selection.format === 'XLSX' ? 'snapshot' : undefined,
+      };
       await prepareSurfaces(project, selection, surfaces, props.vault, signal);
       if (selection.finances !== 'none') {
         const saved = await estimates.load(projectId);
@@ -206,6 +239,7 @@ export function useReport(props: { project: SavedProject; vault: LocalVault; acc
           if (props.project.revision !== project.revision) throw new Error('Project changed');
           setSavedRevision(project.revision);
           setSavedIssuance(draft.issuance);
+          set('branding', selection.branding);
         }
         show(draft);
       }

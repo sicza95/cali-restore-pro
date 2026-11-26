@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { accountPaths, publicRouteNames, reviewSteps } from './constants';
 import {
   followLink,
+  objectHref,
   parseRoute,
   projectHref,
   projectReviewHref,
@@ -54,6 +55,16 @@ describe('parseRoute', () => {
     });
     for (const step of reviewSteps)
       expect(parseRoute(`/projects/${project}/${step}`)).toMatchObject({ project, review: step });
+    expect(parseRoute(`/projects/${project}/objects/${surface}`)).toEqual({
+      name: 'projects',
+      project,
+      object: surface,
+      surface: undefined,
+      review: undefined,
+    });
+    expect(objectHref(project, surface)).toBe(`/projects/${project}/objects/${surface}`);
+    expect(parseRoute(`/projects/${project}/objects/north-wall`).name).toBe('notFound');
+    expect(parseRoute(`/projects/${project}/objects`).name).toBe('notFound');
   });
 
   it('ignores trailing slashes', () => {
@@ -97,6 +108,7 @@ describe('hrefs', () => {
       ...Object.keys(accountPaths).map((name) => ({ name }) as AppRoute & { name: 'admin' }),
       { name: 'projects', project },
       { name: 'projects', project, surface },
+      { name: 'projects', project, object: surface },
       ...reviewSteps.map((review) => ({ name: 'projects' as const, project, review })),
     ];
     for (const route of routes) {

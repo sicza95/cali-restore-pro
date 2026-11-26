@@ -1,0 +1,175 @@
+.browser-toolbar-wrap {
+  /* Labels follow the toolbar's own width: the inspector and sidebar narrow it, not the viewport. */
+  container: browser-toolbar / inline-size;
+  /* Containment makes a stacking context; keep menus above the collection. */
+  position: relative;
+  z-index: 5;
+  border-bottom: 1px solid var(--cr-rule);
+}
+.browser-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 24px;
+}
+.browser-toolbar-spacer {
+  flex: 1;
+  min-width: 8px;
+}
+.browser-action,
+.browser-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--cr-radius);
+  color: var(--cr-ink);
+  background: transparent;
+  font: inherit;
+  text-decoration: none;
+}
+.browser-action-label {
+  white-space: nowrap;
+}
+.browser-action.browser-action-primary {
+  flex-shrink: 0;
+  background: var(--cr-primary);
+  color: var(--cr-primary-ink);
+}
+.browser-action:hover:not([aria-disabled='true']),
+.browser-open:hover {
+  background: var(--cr-hover);
+}
+.browser-action-primary:hover:not([aria-disabled='true']) {
+  background: var(--cr-primary);
+  opacity: 0.85;
+}
+.browser-action[aria-pressed='true'] {
+  background: var(--cr-raised);
+}
+.browser-action[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.browser-action:active:not([aria-disabled='true']),
+.browser-open:active {
+  transform: translateY(1px);
+}
+.browser-view-toggle {
+  display: flex;
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-radius);
+}
+.browser-view-toggle .browser-action-label,
+.browser-action[data-control-id='browser.settings'] .browser-action-label,
+.browser-action[data-control-id='browser.import'] .browser-action-label {
+  display: none;
+}
+.browser-popup {
+  position: relative;
+}
+.browser-popup-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: max-content;
+  min-width: 200px;
+  max-width: min(440px, calc(100vw - 48px));
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  box-shadow: var(--cr-shadow-floating);
+}
+.browser-popup:has([data-control-id='browser.new.options']) .browser-popup-panel {
+  left: 0;
+  right: auto;
+}
+.browser-popup-panel[role='region'] {
+  width: 420px;
+  padding: 16px;
+}
+.browser-popup-panel p + p {
+  margin-top: 12px;
+}
+.browser-popup-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--cr-radius);
+  color: var(--cr-ink);
+  background: var(--cr-surface);
+  text-align: left;
+}
+.browser-popup-panel button:hover,
+.browser-popup-panel button:focus-visible {
+  background: var(--cr-raised);
+}
+.browser-popup-panel hr {
+  border: 0;
+  border-top: 1px solid var(--cr-rule);
+  margin: 4px 0;
+}
+.browser-query-examples {
+  overflow-wrap: anywhere;
+}
+.browser-find {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 24px 12px;
+}
+.browser-find input {
+  flex: 1;
+  min-width: 160px;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: var(--cr-ink);
+  background: var(--cr-surface);
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+}
+.browser-find input::placeholder {
+  color: var(--cr-muted);
+}
+.browser-find input[aria-invalid='true'] {
+  border-color: var(--cr-negative);
+}
+.browser-find .browser-diagnostics {
+  flex-basis: 100%;
+}
+/* Secondary actions go icon-only first (names stay in aria-label/title); New keeps its label. */
+@container browser-toolbar (max-width: 920px) {
+  .browser-toolbar {
+    padding-inline: 16px;
+  }
+  .browser-toolbar .browser-action-label {
+    display: none;
+  }
+  .browser-toolbar .browser-action-primary .browser-action-label {
+    display: inline;
+  }
+  .browser-find {
+    padding-inline: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .browser-action:active:not([aria-disabled='true']),
+  .browser-open:active {
+    transform: none;
+  }
+}

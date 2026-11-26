@@ -61,7 +61,7 @@ export async function draftAndAttachReference(flow: ProjectsFlow, info: TestInfo
 }
 
 /**
- * Goes back to the project page, reopens the locked surface page and checks that the drafts,
+ * Goes back to the object's surfaces in the project browser, reopens the locked surface page and checks that the drafts,
  * history mode, checkpoints and preparation came back; then redoes, discards and changes the crop.
  * Ends on the surface page in photo mode with no drafts pending.
  */
@@ -71,9 +71,11 @@ export async function reopenSurface(flow: ProjectsFlow, info: TestInfo) {
   const surfacePath = required(flow.surfacePath, 'surfacePath');
   const drawing = (key: string) => drawingControl(page, key);
   const { damage, phase } = layers(page);
+  // Back goes to the object's surfaces in the project browser, where the surface was opened.
   await page.goBack();
-  await expect(page).toHaveURL(projectPath);
-  await expect(page.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp('^[^?#]*' + projectPath + '/objects/[a-f0-9-]{36}$'));
+  await expect(page.getByRole('heading', { level: 1, name: 'North wall' })).toBeVisible();
+  await expect(page.locator('[data-browser-item]')).toHaveCount(1);
   await page.goto(surfacePath);
   await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
   await drawing('mode.drawing').click();

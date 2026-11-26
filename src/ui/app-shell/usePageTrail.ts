@@ -6,11 +6,11 @@ import type { Crumb } from '../router/breadcrumbs';
 
 /**
  * The current route's breadcrumb trail and the label of each step, in the app language. On a
- * surface page, `object` names the object the surface belongs to: a step without a page of its own.
+ * surface page the open project supplies the surface's object, a linked step of its own.
  */
 export function usePageTrail() {
   const app = useApp();
-  const trail = () => routeTrail(app.router.route());
+  const trail = () => routeTrail(app.router.route(), (surface) => app.surfaceObjects()[surface]);
   const label = (crumb: Crumb) => {
     const c = navigationText(app.lang());
     switch (crumb.kind) {
@@ -18,6 +18,8 @@ export function usePageTrail() {
         return c[crumb.name];
       case 'project':
         return app.names()[crumb.id] ?? c.project;
+      case 'object':
+        return app.names()[crumb.id] ?? c.object;
       case 'surface':
         return app.names()[crumb.id] ?? c.surface;
       case 'organisation':
@@ -27,9 +29,5 @@ export function usePageTrail() {
     }
   };
   const title = () => label(trail().at(-1)!);
-  const object = () => {
-    const current = trail().at(-1)!;
-    return current.kind === 'surface' ? app.objectNames()[current.id] : undefined;
-  };
-  return { trail, label, title, object };
+  return { trail, label, title };
 }

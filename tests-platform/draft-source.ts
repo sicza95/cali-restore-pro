@@ -1,10 +1,11 @@
 import { expect } from '@playwright/test';
 import type { Page, TestInfo } from '@playwright/test';
 import { drawingControl, openDetails } from './drawing-review';
-import { attach, control, original, plasterPng, projectPage, reason } from './originals';
+import { attach, newSurface, original, originalsPage, plasterPng, reason } from './originals';
 import { expectNoReason, expectReasons, reasonShots } from './original-reasons';
 import type { Expected } from './original-reasons';
 import { verifyReferenceChange } from './reference-change';
+import { browserItem, browserControl as control, openItem } from './project-browser';
 
 const blockedRows: Record<string, Expected> = {
   'lower-main.png': { role: 'draft', remove: 'draft' },
@@ -15,9 +16,8 @@ const checkpointRows: Record<string, Expected> = {
   'plaster-detail.dng': {},
 };
 
-/** On the surface page in drawing mode, on "Damage layer", with Details open. */
+/** From the surface page in photo mode to drawing mode, on "Damage layer", with Details open. */
 async function surfacePage(page: Page) {
-  await control(page, 'project.surface').click();
   await drawingControl(page, 'mode.drawing').click();
   await openDetails(page);
   await drawingControl(page, 'layer.select').filter({ hasText: 'Damage layer' }).click();
@@ -54,8 +54,8 @@ async function expectFree(page: Page, step: string) {
 }
 
 /**
- * The project page blocks removing or re-roling the photo the drawing drafts belong to while
- * they are pending, as the surface page does (#72), on a new surface "Lower plaster" without
+ * The surface page blocks removing or re-roling the photo the drawing drafts belong to while
+ * they are pending (#72), also once reopened from the project browser, on a new surface "Lower plaster" without
  * checkpoints: with a pending mark, with an undone one only, after switching surfaces, and no
  * longer once the draft is committed or discarded. Called on the surface page in photo mode with
  * no drafts pending; ends on the new surface's page in photo mode the same way, and then runs the
@@ -65,13 +65,9 @@ export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
   const png = await plasterPng(page);
   // The main surface's first photo is used by saved checkpoints: "Remove" says so (#79).
   await reasonShots(page, info, 'checkpoint-surface', checkpointRows);
-  await projectPage(page, 'Upper plaster');
+  await originalsPage(page, 'Upper plaster');
   await reasonShots(page, info, 'checkpoint', checkpointRows);
-  await page.getByRole('textbox', { name: 'Add surface' }).fill('Lower plaster');
-  await page.getByRole('button', { name: 'Add surface' }).click();
-  await expect(
-    page.getByRole('combobox', { name: 'Surface', exact: true }).locator('option:checked'),
-  ).toHaveText('Lower plaster');
+  await newSurface(page, 'Lower plaster');
   await attach(page, 'lower-main.png', png);
   await page
     .locator('.project-originals form')
@@ -80,7 +76,6 @@ export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
   await attach(page, 'lower-reference.png', png);
   await expectFree(page, 'no drafts yet');
 
-  await control(page, 'project.surface').click();
   await drawingControl(page, 'mode.drawing').click();
   await drawingControl(page, 'layer.add').click();
   await expect(damage(page)).toHaveAttribute('aria-pressed', 'true');
@@ -97,29 +92,35 @@ export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
   await reasonShots(page, info, 'draft-source-surface', blockedRows);
   await drawingControl(page, 'mode.photo').click();
 
-  await projectPage(page, 'Lower plaster');
+  await originalsPage(page, 'Lower plaster');
   await expectBlocked(page, 'pending mark');
   await reasonShots(page, info, 'draft-source', blockedRows);
-  // Another surface's photos are not blocked, and the selection is read again on the way back.
-  await page
-    .getByRole('combobox', { name: 'Surface', exact: true })
-    .selectOption({ label: 'Upper plaster' });
+  // Deleting the surface in the browser is refused while its drafts are pending (ADR 0011).
+  await control(page, 'surface.object').click();
+  await browserItem(page, 'Lower plaster').click();
+  await control(page, 'browser.delete').click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText(
+    'Resolve the drawing drafts on these surfaces before deleting.',
+  );
+  await expect(control(dialog, 'browser.dialog.confirm')).toHaveAttribute('aria-disabled', 'true');
+  await control(dialog, 'browser.dialog.cancel').click();
+  await openItem(page, 'Upper plaster');
+  // Another surface's photos are not blocked, and the drafts are read again on the way back.
   await expect(
     page
       .getByRole('listitem')
       .filter({ hasText: 'wall.png' })
       .getByRole('combobox', { name: 'Image role' }),
   ).toBeEnabled();
-  await page
-    .getByRole('combobox', { name: 'Surface', exact: true })
-    .selectOption({ label: 'Lower plaster' });
-  await expectBlocked(page, 'surface selected again');
+  await originalsPage(page, 'Lower plaster');
+  await expectBlocked(page, 'surface opened again');
 
   await surfacePage(page);
   await drawingControl(page, 'history.undo').click();
   await expect(damage(page)).toContainText('Undone draft marks 1');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Lower plaster');
+  await originalsPage(page, 'Lower plaster');
   await expectBlocked(page, 'undone mark only');
 
   await surfacePage(page);
@@ -128,7 +129,7 @@ export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
   await drawingControl(page, 'history.commit').click();
   await expect(damage(page)).not.toContainText('Pending marks');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Lower plaster');
+  await originalsPage(page, 'Lower plaster');
   await expectFree(page, 'draft committed');
 
   await surfacePage(page);
@@ -136,16 +137,15 @@ export async function verifyDraftSourceBlocked(page: Page, info: TestInfo) {
   await drawingControl(page, 'brush.dot').click();
   await expect(damage(page)).toContainText('Pending marks 1');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Lower plaster');
+  await originalsPage(page, 'Lower plaster');
   await expectBlocked(page, 'second pending mark');
 
   await surfacePage(page);
   await drawingControl(page, 'history.discard').click();
   await expect(damage(page)).not.toContainText('Pending marks');
   await drawingControl(page, 'mode.photo').click();
-  await projectPage(page, 'Lower plaster');
+  await originalsPage(page, 'Lower plaster');
   await expectFree(page, 'draft discarded');
-  await control(page, 'project.surface').click();
   await expect(drawingControl(page, 'mode.photo')).toBeVisible();
   await verifyReferenceChange(page, info);
 }

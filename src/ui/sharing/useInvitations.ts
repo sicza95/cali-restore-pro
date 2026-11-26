@@ -5,6 +5,7 @@ import { ScopeTooLargeError } from '../../platform/projects/sharing-scopes';
 export function useInvitations<T>(path: string) {
   const model = useApp();
   const [busy, setBusy] = createSignal(false);
+  const [failureCode, setFailureCode] = createSignal<string>();
   // Why the last action failed: a scope too large to share, or anything else.
   const [failed, setFailed] = createSignal<false | 'error' | 'too-large'>(false);
   const [result, { refetch }] = createResource<{
@@ -24,11 +25,13 @@ export function useInvitations<T>(path: string) {
     if (busy()) return false;
     setBusy(true);
     setFailed(false);
+    setFailureCode(undefined);
     try {
       await action();
       if (refresh) await refetch();
       return true;
     } catch (error) {
+      setFailureCode(error instanceof Error ? error.message : undefined);
       setFailed(error instanceof ScopeTooLargeError ? 'too-large' : 'error');
       return false;
     } finally {
@@ -38,6 +41,7 @@ export function useInvitations<T>(path: string) {
   return {
     busy,
     failed,
+    failureCode,
     rows,
     error,
     originalEpoch: () => result()?.originalEpoch ?? '',

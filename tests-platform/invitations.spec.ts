@@ -132,7 +132,8 @@ test('project sharing, revocation and accepted hosting transfer preserve ownersh
     const checkpoints = await verifyCheckpointGrants(
       project
         .locator('li')
-        .filter({ has: project.getByText('recipient@example.test', { exact: true }) })
+        // The row names the email and the role ("recipient@example.test · Recipient").
+        .filter({ has: project.locator('strong').getByText(/^recipient@example\.test · /) })
         .filter({ has: project.locator('details.scope-editor') })
         .last(),
       remainingRow,

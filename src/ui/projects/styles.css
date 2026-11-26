@@ -1,19 +1,6 @@
 .project-workspace {
   min-width: 0;
 }
-.project-create {
-  padding: 18px;
-  background: var(--cr-ground);
-  border: 1px solid var(--cr-rule);
-  border-radius: var(--cr-panel-radius);
-  margin: 12px 0 20px;
-}
-.project-filters {
-  margin-bottom: 16px;
-}
-.project-filters label:has(input[type='search']) {
-  flex-grow: 2;
-}
 .project-fields,
 .project-heading,
 .project-register li {
@@ -95,26 +82,10 @@
 .project-register a:hover strong {
   text-decoration: underline;
 }
-.project-open-surface {
-  width: fit-content;
-  padding: 8px 14px;
-  border-radius: var(--cr-radius);
-  background: var(--cr-primary);
-  color: var(--cr-primary-ink);
-  font-weight: 650;
-  text-decoration: none;
-}
-.project-open-surface:hover {
-  background: var(--cr-hover);
-  color: var(--cr-ink);
-}
-.project-register a > svg,
-.project-empty > svg {
+.project-register a > :is(svg, .cr-icon),
+.project-empty > :is(svg, .cr-icon) {
   flex: none;
   color: var(--cr-accent);
-}
-.project-open-arrow {
-  margin-inline-start: auto;
 }
 .project-counts,
 .project-empty p {
@@ -132,7 +103,7 @@
   border-radius: var(--cr-panel-radius);
   background: var(--cr-ground);
 }
-.project-register li.project-empty > svg {
+.project-register li.project-empty > :is(svg, .cr-icon) {
   flex: none;
 }
 .project-register time,
@@ -195,25 +166,6 @@
   overflow-wrap: anywhere;
   border-block-start: 1px solid var(--cr-rule);
 }
-.project-cloud-list {
-  display: grid;
-  gap: 8px;
-  max-width: 32rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.project-cloud-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-}
-.project-cloud-list span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
 
 .project-backup summary,
 .project-backup-result a {
@@ -227,4 +179,68 @@
 }
 .project-backup-result a {
   justify-self: start;
+}
+
+/* The shell breadcrumb names every browser level without a second visible title. */
+.project-browser .browser-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  padding: 0;
+}
+.project-browser .browser-layout {
+  border-radius: var(--cr-panel-radius);
+  overflow: hidden;
+}
+.project-browser-notice {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-radius);
+  background: var(--cr-ground);
+}
+.project-browser-details {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 0;
+}
+.project-browser-details dt {
+  color: var(--cr-muted);
+}
+.project-browser-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.project-cover {
+  display: grid;
+  gap: 12px;
+}
+.project-cover > label,
+.project-cover > button {
+  justify-self: stretch;
+}
+.browser-dialog:has(.project-settings) {
+  width: min(44rem, calc(100vw - 32px));
+}
+.project-settings {
+  display: grid;
+  gap: 16px;
+  max-height: calc(100dvh - 160px);
+  overflow: auto;
+}
+.project-settings > p {
+  margin: 0;
+}
+.project-settings-links {
+  display: grid;
+  gap: 4px;
+}
+.project-settings-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cr-touch);
 }

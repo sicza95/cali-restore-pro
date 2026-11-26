@@ -14,6 +14,7 @@ import {
 import { estimateControls } from '../estimates/estimate-controls';
 import { reportControls } from '../reports/report-controls';
 import { projectControls } from '../projects/project-controls';
+import { browserControls } from '../projects/browser/browser-controls';
 import { projectOperationControls } from '../projects/project-operation-controls';
 import { surfaceControls } from '../projects/surface-review-controls';
 import { settingsControls } from '../settings/settings-controls';
@@ -28,6 +29,7 @@ export const applicationControls = [
   ...accountControls,
   ...settingsControls,
   ...projectControls,
+  ...browserControls,
   ...projectOperationControls,
   ...sharingControls,
   ...recipientReportControls,

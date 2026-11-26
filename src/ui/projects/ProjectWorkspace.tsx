@@ -1,8 +1,8 @@
 import type { JournalWrite, PendingAttachment } from '../../platform/vault/project-store';
 import { useApp } from '../app-context/AppContext';
 import {
-  createResource,
   createMemo,
+  createResource,
   createSignal,
   Match,
   onMount,
@@ -10,27 +10,20 @@ import {
   Switch,
   untrack,
 } from 'solid-js';
-import { localProjects, newProject } from '../../platform/projects/projects';
+import { localProjects } from '../../platform/projects/projects';
+import { preserveLegacyProjectSettings } from '../../platform/projects/settings';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
 import type { Language } from '../account-access/types';
-import { ProjectRegister } from './ProjectRegister';
-import { ProjectInvitations } from '../sharing/ProjectInvitations';
-import { projectSnapshot } from '../../platform/projects/shared-project';
-import { ProjectDetail } from './ProjectDetail';
-import { ProjectLifecycle } from './ProjectLifecycle';
-import { ProjectBackup } from './ProjectBackup';
 import { projectCopy } from './project-copy';
-import { loadPreferences } from '../settings/preferences/utils';
-import { NameForm } from './forms';
-import { CloudProjects } from './CloudProjects';
-import { ProjectSync } from './ProjectSync';
 import { useEditorSync } from './useEditorSync';
-import { ProjectReviewLinks } from '../project-review/ProjectReviewLinks';
 import { lazyView } from '../shared/lazyView';
 import { projectHref } from '../router/routes';
-import { syncCopy } from './sync-copy';
-import { projectOrganisation, useOrganisations } from '../organisations/organisation-state';
+import { ProjectAccessProvider } from './access';
+import { ProjectsLevel } from './browser-pages/ProjectsLevel';
+import { ChildLevel } from './browser-pages/ChildLevel';
+import { ProjectSettingsDialog } from './browser-pages/SettingsDialogs';
+import type { Workspace } from './browser-pages/types';
 import './styles.css';
 
 // The editor and the review pages load on demand; the offline worker precaches the chunks.
@@ -42,6 +35,10 @@ const ProjectReview = lazyView(() =>
   import('../project-review/ProjectReview').then((m) => m.ProjectReview),
 ).View;
 
+/**
+ * The project area: the shared browser at the root, in a project (objects) and in an object
+ * (surfaces), plus the surface editor and the review pages. Every save goes through here.
+ */
 export function ProjectWorkspace(props: { vault: LocalVault; language: Language }) {
   // Fetch the editor while the project list is read, so opening a surface shows no loading state.
   onMount(() => surfaceWorkspace.preload().catch(() => undefined));
@@ -65,11 +62,9 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
     const current = app.router.route();
     return current.name === 'projects' ? current : undefined;
   };
-  const [sort, setSort] = createSignal('recent');
-  const [query, setQuery] = createSignal('');
-  const [archived, setArchived] = createSignal(false);
   const [busy, setBusy] = createSignal(false);
   const [failure, setFailure] = createSignal(false);
+  const [settingsFor, setSettingsFor] = createSignal<string>();
   const current = () => projects()?.rows.find((project) => project.id === route()?.project);
   const activeReview = () => current() && !current()?.archived && current()?.id;
   const activeSurface = () => {
@@ -80,45 +75,24 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
       if (surface) return { object, surface };
     }
   };
+  const activeObject = () => current()?.objects.find((object) => object.id === route()?.object);
   // The shell names only what this page shows: not an archived project's review, which says the
   // project is unavailable. The names leave the shell when this screen unmounts (vault locked).
   app.provideNames(() => {
     const project = current();
     if (!project || (route()?.review && project.archived)) return {};
-    const shown = activeSurface()?.surface;
-    return shown
-      ? { [project.id]: project.name, [shown.id]: shown.name }
-      : { [project.id]: project.name };
-  });
-  app.provideObjectNames(() => {
     const shown = activeSurface();
-    return shown ? { [shown.surface.id]: shown.object.name } : {};
+    const object = shown?.object ?? activeObject();
+    return {
+      [project.id]: project.name,
+      ...(object ? { [object.id]: object.name } : {}),
+      ...(shown ? { [shown.surface.id]: shown.surface.name } : {}),
+    };
   });
-  const orgs = useOrganisations();
-  // Projects of the organisation chosen in the top bar; all of them until the list is known.
-  const inOrganisation = (organisation?: string) =>
-    !orgs.selected() || projectOrganisation(organisation, orgs.list()) === orgs.selected()!.id;
-  const visible = () => {
-    const language = props.language;
-    const showArchived = archived();
-    const search = query().trim().toLocaleLowerCase(language);
-    const recent = sort() === 'recent';
-    return (projects()?.rows ?? [])
-      .filter(
-        (p) =>
-          p.archived === showArchived &&
-          inOrganisation(p.organisation) &&
-          p.name.toLocaleLowerCase(language).includes(search),
-      )
-      .sort(
-        (a, b) =>
-          (recent ? b.updatedAt - a.updatedAt : 0) || a.name.localeCompare(b.name, language),
-      );
-  };
-  function rowSync(project: SavedProject) {
-    const status = sync.statusKey(project);
-    return status === 'disabled' ? c().local : syncCopy[props.language][status];
-  }
+  app.provideSurfaceObjects(() => {
+    const shown = activeSurface();
+    return shown ? { [shown.surface.id]: shown.object.id } : {};
+  });
   const navigate = app.router.navigate;
   async function run(task: () => Promise<void>) {
     if (busy()) return false;
@@ -142,138 +116,67 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
     attachment?: PendingAttachment,
     journal?: JournalWrite | JournalWrite[],
   ) {
-    update(await local.save(project, attachment, journal));
+    // A v1 document keeps the meaning of its saved units and currency when it is upgraded.
+    update(await local.save(preserveLegacyProjectSettings(project), attachment, journal));
     void sync.refresh();
   }
+  async function remove(project: SavedProject) {
+    await local.remove(project);
+    mutate((data) => ({ rows: (data?.rows ?? []).filter((p) => p.id !== project.id) }));
+    void sync.refresh();
+  }
+  const workspace: Workspace = {
+    get vault() {
+      return props.vault;
+    },
+    get language() {
+      return props.language;
+    },
+    busy,
+    run,
+    save,
+    update,
+    remove,
+    sync,
+    navigate,
+    projects: () => projects()?.rows ?? [],
+    openSettings(project) {
+      if (route()?.project !== project || route()?.surface || route()?.review)
+        navigate(projectHref(project));
+      setSettingsFor(project);
+    },
+  };
+  const settingsProject = () => projects()?.rows.find(({ id }) => id === settingsFor());
+  const browsing = () => !route()?.surface && !route()?.review;
   return (
-    <section class="project-workspace" aria-label={c().hierarchy}>
-      <Show when={!route()?.review && !route()?.surface}>
-        <a class="project-back" data-control-id="projects.offline" href="/offline-originals">
-          {c().offlineShelf}
-        </a>
-      </Show>
-      <Show when={!route()?.review || busy() || projects.loading}>
-        <p role="status">
-          {busy()
-            ? c().saving
-            : projects.loading
-              ? c().loading
-              : current() &&
-                  (!route()?.surface || activeSurface()) &&
-                  (!route()?.review || !current()?.archived)
-                ? route()?.surface
-                  ? c().surfaceLocal
-                  : c().local
-                : ''}
-        </p>
-      </Show>
-      <Show when={failure() || projects()?.failed}>
-        <p role="alert">{c().error}</p>
-        <button
-          disabled={busy()}
-          onClick={() => {
-            setFailure(false);
-            void refetch();
-          }}
-        >
-          {c().refresh}
-        </button>
-      </Show>
-      <Show when={!projects.loading && !projects()?.failed}>
-        <Show
-          when={route()?.project}
-          fallback={
-            <>
-              <div class="project-create">
-                <NameForm
-                  controlId="projects.create"
-                  primary
-                  label={c().name}
-                  action={c().add}
-                  disabled={busy()}
-                  onSubmit={(name) =>
-                    run(async () => {
-                      const project = newProject(
-                        name,
-                        c().firstObject,
-                        c().firstSurface,
-                        loadPreferences(app.account()!.id).currency,
-                        orgs.selected()?.id,
-                      );
-                      await save(project);
-                      navigate(projectHref(project.id));
-                    })
-                  }
-                />
-              </div>
-              <div class="project-fields project-filters">
-                <label>
-                  {c().search}
-                  <input
-                    type="search"
-                    data-control-id="projects.search"
-                    value={query()}
-                    onInput={(e) => setQuery(e.currentTarget.value)}
-                  />
-                </label>
-                <label>
-                  {c().sort}
-                  <select
-                    data-control-id="projects.sort"
-                    value={sort()}
-                    onChange={(event) => setSort(event.currentTarget.value)}
-                  >
-                    <option value="recent">{c().recent}</option>
-                    <option value="name">{c().byName}</option>
-                  </select>
-                </label>
-                <label class="confirmation">
-                  <input
-                    type="checkbox"
-                    data-control-id="projects.archived"
-                    checked={archived()}
-                    onChange={(e) => setArchived(e.currentTarget.checked)}
-                  />
-                  {c().archived}
-                </label>
-              </div>
-              <ProjectRegister
-                projects={visible()}
-                language={props.language}
-                showStart={!archived() && !query().trim()}
-                status={rowSync}
-                navigate={navigate}
-              />
-              <CloudProjects
-                language={props.language}
-                busy={busy()}
-                model={sync.cloud}
-                local={() => new Set(projects()?.rows.map(({ id }) => id))}
-                inOrganisation={inOrganisation}
-                run={run}
-                onOpened={(received) => {
-                  if (received.created) update(received.document);
-                  navigate(projectHref(received.project));
-                  void sync.refresh();
-                }}
-              />
-              <ProjectBackup
-                vault={props.vault}
-                language={props.language}
-                busy={busy()}
-                run={run}
-                onRestored={(project) => {
-                  update(project);
-                  navigate(projectHref(project.id));
-                }}
-              />
-              <ProjectLifecycle
-                localName={(id) => projects()?.rows.find((project) => project.id === id)?.name}
-              />
-            </>
-          }
-        >
+    <ProjectAccessProvider vault={props.vault}>
+      <section
+        class="project-workspace"
+        classList={{ 'project-browser': browsing() }}
+        aria-label={c().hierarchy}
+      >
+        <Show when={busy() || projects.loading || (route()?.surface && activeSurface())}>
+          <p role="status" class="project-workspace-status">
+            {busy() ? c().saving : projects.loading ? c().loading : c().surfaceLocal}
+          </p>
+        </Show>
+        <Show when={failure() || projects()?.failed}>
+          <p role="alert">{c().error}</p>
+          <button
+            disabled={busy()}
+            onClick={() => {
+              setFailure(false);
+              void refetch();
+            }}
+          >
+            {c().refresh}
+          </button>
+        </Show>
+        <Show when={!projects.loading && !projects()?.failed}>
           <Switch>
+            <Match when={!route()?.project}>
+              <ProjectsLevel ws={workspace} />
+            </Match>
             <Match when={route()?.surface}>
               <Show
                 when={activeSurface()?.surface.id}
@@ -316,80 +219,26 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
                 />
               </Show>
             </Match>
+            <Match when={route()?.object}>
+              <Show when={activeObject()?.id} keyed fallback={<p role="status">{c().missing}</p>}>
+                {(object) => <ChildLevel ws={workspace} project={current()!} object={object} />}
+              </Show>
+            </Match>
             <Match when={true}>
               <Show when={current()?.id} keyed fallback={<p role="status">{c().missing}</p>}>
-                {(id) => (
-                  <>
-                    <Show when={!current()!.archived}>
-                      <ProjectReviewLinks
-                        project={id}
-                        language={props.language}
-                        navigate={navigate}
-                      />
-                    </Show>
-                    <ProjectDetail
-                      project={current()!}
-                      language={props.language}
-                      vault={props.vault}
-                      busy={busy()}
-                      onRun={run}
-                      onSave={save}
-                      onNavigate={navigate}
-                      sharing={
-                        <Show when={!current()!.archived && current()!.id} keyed>
-                          {(id) => (
-                            <ProjectInvitations
-                              projectId={id}
-                              project={projectSnapshot(current()!)}
-                              originalIds={[
-                                ...new Set(
-                                  current()!.objects.flatMap((object) =>
-                                    object.surfaces.flatMap((surface) =>
-                                      surface.images.map((image) => image.id),
-                                    ),
-                                  ),
-                                ),
-                              ]}
-                              canHost
-                              organisation={current()!.organisation}
-                              vault={props.vault}
-                            />
-                          )}
-                        </Show>
-                      }
-                    />
-                    <ProjectLifecycle project={id} />
-                    <Show when={current()!.id} keyed>
-                      {(id) => (
-                        <ProjectBackup
-                          project={id}
-                          vault={props.vault}
-                          language={props.language}
-                          busy={busy()}
-                          run={run}
-                        />
-                      )}
-                    </Show>
-                    <Show when={current()!.id} keyed>
-                      {(id: string) => (
-                        <ProjectSync
-                          projectId={id}
-                          project={current()!}
-                          language={props.language}
-                          model={sync}
-                          busy={busy()}
-                          run={run}
-                          onResolved={update}
-                        />
-                      )}
-                    </Show>
-                  </>
-                )}
+                <ChildLevel ws={workspace} project={current()!} />
               </Show>
             </Match>
           </Switch>
         </Show>
-      </Show>
-    </section>
+        <Show when={settingsProject()?.id} keyed>
+          <ProjectSettingsDialog
+            ws={workspace}
+            project={settingsProject()!}
+            onClose={() => setSettingsFor(undefined)}
+          />
+        </Show>
+      </section>
+    </ProjectAccessProvider>
   );
 }

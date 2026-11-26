@@ -23,10 +23,10 @@
   box-shadow: var(--cr-shadow-floating);
   pointer-events: auto;
 }
-.toast > svg {
+.toast > :is(svg, .cr-icon) {
   color: var(--cr-positive);
 }
-.toast[data-error] > svg {
+.toast[data-error] > :is(svg, .cr-icon) {
   color: var(--cr-negative);
 }
 .toast-text {

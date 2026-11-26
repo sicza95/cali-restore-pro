@@ -2,6 +2,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 import { expectTaskLanguage } from './copy-guard';
 import { touchTarget } from './touch-target';
 import { chooseLanguage } from './app-navigation';
+import { createHierarchyViaBrowser, followTrail, openProjectReview } from './project-browser';
 
 const objectName = 'North elevation sandstone balustrade';
 const surfaceName = 'Lower cornice and frieze, west bay';
@@ -83,18 +84,13 @@ test('estimate rows show whole values at tablet sizes in EN and HU', async ({ pa
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/projects');
-  await page.getByLabel('Project name').fill('Long row fixture');
-  await page.getByRole('button', { name: 'New project' }).click();
-  for (const [control, name, select] of [
-    ['project.object.rename', objectName, 'project.object.select'],
-    ['project.surface.rename', surfaceName, 'project.surface.select'],
-  ]) {
-    const form = page.locator(`form:has([data-control-id="${control}"])`);
-    await form.locator('input').fill(name);
-    await form.locator(`[data-control-id="${control}"]`).click();
-    await expect(page.locator(`[data-control-id="${select}"]`)).toContainText(name);
-  }
-  await page.locator('[data-control-id="project.review.estimates"]').click();
+  const created = await createHierarchyViaBrowser(page, {
+    project: 'Long row fixture',
+    object: objectName,
+    surface: surfaceName,
+  });
+  await followTrail(page, created.projectPath);
+  await openProjectReview(page, 'estimates');
   const phase = (id: string) => page.locator(`[data-control-id="estimate.phase.${id}"]`);
   const finance = (id: string) => page.locator(`[data-control-id="estimate.finance.${id}"]`);
   await page.locator('[data-control-id="estimate.step.phases"]').click();

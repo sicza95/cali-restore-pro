@@ -1,0 +1,58 @@
+@import './browser-toolbar/styles.css';
+@import './item-tile/styles.css';
+@import './browser-layout/styles.css';
+@import '../../editor/calibration-dialog/styles.css';
+@import '../../editor/calibration-dialog/actions.css';
+
+.browser-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.browser-results {
+  margin-bottom: 16px !important;
+  color: var(--cr-muted);
+}
+.browser-diagnostics {
+  color: var(--cr-negative);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.browser-empty {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 24px 0;
+}
+.browser-empty p {
+  color: var(--cr-muted);
+}
+.browser-empty .browser-action-label {
+  display: inline;
+}
+.browser-name-label {
+  display: block;
+  margin-bottom: 8px;
+}
+.browser-name-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+}
+.browser-dialog form > p {
+  margin-bottom: 12px;
+}
+.browser-dialog [aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

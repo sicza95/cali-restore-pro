@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { chooseLanguage } from './app-navigation';
+import { browserControl, createItem, openRootSettings } from './project-browser';
 
 const unknown = '00000000-0000-4000-8000-0000000000aa';
 
@@ -22,11 +23,7 @@ test('the hosted trash names projects this device holds and numbers the rest', a
   );
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
   await page.goto('/projects');
-  await page.getByLabel('Project name').fill('East Chapel');
-  await page.getByRole('button', { name: 'New project' }).click();
-  await expect(page).toHaveURL(/\/projects\/[0-9a-f-]{36}$/);
-  const known = new URL(page.url()).pathname.split('/').pop()!;
-  await page.locator('[data-control-id="project.library"]').click();
+  const known = await createItem(page, 'East Chapel');
 
   const trash = (entries: string[]) =>
     page.route('**/api/v1/hosted-project-trash', (route) =>
@@ -39,9 +36,15 @@ test('the hosted trash names projects this device holds and numbers the rest', a
       }),
     );
   await trash([unknown, known]);
-  await page.locator('[data-control-id="project.trash.open"]').click();
-  await page.locator('[data-control-id="project.trash.refresh"]').click();
-  const list = page.locator('.project-pane .project-register');
+  // The hosted trash lives in the root gear's dialog.
+  const openTrash = async () => {
+    const dialog = await openRootSettings(page);
+    await dialog.locator('[data-control-id="project.trash.open"]').click();
+    await dialog.locator('[data-control-id="project.trash.refresh"]').click();
+    return dialog;
+  };
+  const dialog = await openTrash();
+  const list = dialog.locator('.project-pane .project-register');
   await expect(list.getByRole('link')).toHaveText(['Deleted project 1', 'East Chapel']);
   await expect(list.getByRole('link', { name: 'East Chapel' })).toHaveAttribute(
     'href',
@@ -50,11 +53,14 @@ test('the hosted trash names projects this device holds and numbers the rest', a
   await expect(page.getByText('Projects that aren’t on this device are numbered.')).toBeVisible();
   await expect(page.locator('[data-control-id="project.trash.restore"]')).toHaveCount(2);
   await expect(page.locator('[data-control-id="project.trash.purge"]')).toHaveCount(2);
-  await expect(page.locator('.project-pane')).not.toContainText(unknown);
+  await expect(dialog.locator('.project-pane')).not.toContainText(unknown);
   await page.screenshot({ path: info.outputPath('project-trash-1194.png'), fullPage: true });
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
+  // The modal dialog makes the page inert; close it to switch language, then open it again.
+  await browserControl(dialog, 'browser.dialog.close').click();
   await chooseLanguage(page, 'hu');
+  await openTrash();
   await expect(list.getByRole('link')).toHaveText(['Törölt projekt 1', 'East Chapel']);
   await expect(
     page.getByText('Az ezen az eszközön nem tárolt projektek sorszámot kapnak.'),

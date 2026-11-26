@@ -59,7 +59,7 @@ export function EstimateReview(props: {
   const incomplete = (key: EstimateStep) => key !== 'issue' && !d.complete[key]();
   return (
     <div class="review-flow estimate-review">
-      <Show when={d.priceCurrency() !== project().settings.currency}>
+      <Show when={d.priceCurrency() !== d.defaultCurrency()}>
         <p role="alert">{c().reprice}</p>
         <button type="button" onClick={d.reprice}>
           {c().newPrices}
@@ -68,7 +68,7 @@ export function EstimateReview(props: {
       <EstimateSummary
         copy={c()}
         language={props.language}
-        currency={project().settings.currency}
+        currency={d.currency()}
         result={d.result()}
         latest={latest()}
         status={d.status()}
@@ -78,7 +78,7 @@ export function EstimateReview(props: {
         <section class="project-pane">
           <h2>{c().selection}</h2>
           <p>
-            {c().currency} · <strong>{project().settings.currency}</strong>
+            {c().currency} · <strong>{d.currency()}</strong>
           </p>
           <ReviewSelect
             id={id('selection')}
@@ -115,6 +115,7 @@ export function EstimateReview(props: {
             copy={c()}
             language={props.language}
             project={project()}
+            currency={d.currency()}
             model={model}
             navigate={props.navigate}
             measuring={d.measuring()}
@@ -125,7 +126,7 @@ export function EstimateReview(props: {
                 vault={props.vault}
                 language={props.language}
                 phase={phase()}
-                currency={project().settings.currency}
+                currency={d.currency()}
                 update={(next) => model.update(phase().id, next)}
               />
             )}
@@ -137,7 +138,7 @@ export function EstimateReview(props: {
           copy={c()}
           rows={d.extras()}
           objects={project().objects}
-          currency={project().settings.currency}
+          currency={d.currency()}
           add={() =>
             d.setExtras((rows) => [
               ...rows,

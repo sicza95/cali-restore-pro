@@ -4,6 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { input } from '../tests-estimates/fixtures';
 import { expectTaskLanguage } from './copy-guard';
 import { chooseLanguage } from './app-navigation';
+import {
+  createHierarchyViaBrowser,
+  followTrail,
+  openProjectReview,
+  openProjectSettings,
+} from './project-browser';
 
 test('encrypted estimate and preset persistence, immutable versions, isolation and lock', async ({
   page,
@@ -215,12 +221,11 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
     }),
   );
   await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
-  await page.goto(
-    process.env.ESTIMATE_APP_ORIGIN ? process.env.ESTIMATE_APP_ORIGIN + '/projects' : '/projects',
-  );
-  await page.getByLabel('Project name').fill('Fixture estimate');
-  await page.getByRole('button', { name: 'New project' }).click();
-  await page.locator('[data-control-id="project.review.estimates"]').click();
+  const origin = process.env.ESTIMATE_APP_ORIGIN ?? '';
+  await page.goto(origin + '/projects');
+  const created = await createHierarchyViaBrowser(page, { project: 'Fixture estimate' }, origin);
+  await followTrail(page, created.projectPath);
+  await openProjectReview(page, 'estimates');
   const phase = (id: string) => page.locator(`[data-control-id="estimate.phase.${id}"]`);
   const finance = (id: string) => page.locator(`[data-control-id="estimate.finance.${id}"]`);
   const step = (id: string) => page.locator(`[data-control-id="estimate.step.${id}"]`).click();
@@ -325,13 +330,15 @@ test('estimate route saves and reopens manual pricing with tablet layouts', asyn
   expect(editableBytes).toContain('<f>');
   await report('cancel').click();
   await page.locator('[data-control-id="project.review.parent"]').click();
-  await page.locator('[data-control-id="project.backup"]').click();
+  // Backup and the review links now sit in the project settings dialog (the gear).
+  const settings = await openProjectSettings(page);
+  await settings.locator('[data-control-id="project.backup"]').click();
   await expect(page.locator('[data-control-id="backup.export"]')).toBeEnabled();
   await page.locator('[data-control-id="backup.export"]').click();
   await expect(page.getByRole('link', { name: 'Download backup' })).toBeVisible();
   await expectTaskLanguage(page, 'project backup');
   await page.screenshot({ path: info.outputPath('project-backup.png'), fullPage: true });
-  await page.locator('[data-control-id="project.review.estimates"]').click();
+  await settings.locator('[data-control-id="project.review.estimates"]').click();
   await chooseLanguage(page, 'hu');
   await step('issue');
   await expect(page.getByRole('button', { name: 'Becslési verzió mentése' })).toBeVisible();

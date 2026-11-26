@@ -1,7 +1,15 @@
+import type { AccountSettings } from '../../../platform/projects/settings';
+import type { AreaUnit } from '../../../platform/estimates/types';
+import { parseLanguage } from '../../../platform/i18n/language';
+
 export const preferenceDefaults = {
   theme: 'system',
   opaque: false,
+  /** Legacy display choice; it never drove estimates or reports and is no longer read. */
   units: 'cm²',
+  /** Explicit account area unit; empty follows the measurement system (m² or ft²). */
+  areaUnit: '',
+  measurementUnits: 'metric',
   currency: 'HUF',
   reportLanguage: 'en',
   snap: false,
@@ -12,6 +20,33 @@ export const preferenceDefaults = {
   logo: '',
   diagnostics: false,
 };
+
+/** Adapt the existing browser-local format; data URLs stay at the account boundary. */
+export function loadAccountSettings(accountId?: string): AccountSettings {
+  const value = accountId ? loadPreferences(accountId) : preferenceDefaults;
+  const areaUnits: AreaUnit[] = ['cm²', 'm²', 'in²', 'ft²'];
+  const areaUnit = areaUnits.includes(value.areaUnit as AreaUnit)
+    ? (value.areaUnit as AreaUnit)
+    : null;
+  return {
+    restoration: {
+      units: value.measurementUnits === 'imperial' ? 'imperial' : 'metric',
+      areaUnit,
+      currency: /^[A-Z]{3}$/.test(value.currency) ? value.currency : 'HUF',
+      reportLanguage: parseLanguage(value.reportLanguage),
+      snap: value.snap === true,
+    },
+    branding: {
+      studio: typeof value.studio === 'string' ? value.studio : '',
+      contact: typeof value.contact === 'string' ? value.contact : '',
+      footer: typeof value.footer === 'string' ? value.footer : '',
+      accent: /^#[a-f0-9]{6}$/i.test(value.accent) ? value.accent : '#000000',
+      logo: /^data:image\/png;base64,[a-z0-9+/=]+$/i.test(value.logo)
+        ? { accountDataUrl: value.logo }
+        : null,
+    },
+  };
+}
 
 export function loadPreferences(accountId: string) {
   try {

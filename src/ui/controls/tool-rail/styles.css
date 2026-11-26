@@ -36,7 +36,7 @@
   background: transparent;
 }
 
-.cr-tool[aria-disabled='true'] > svg {
+.cr-tool[aria-disabled='true'] > :is(svg, .cr-icon) {
   opacity: 0.45;
 }
 

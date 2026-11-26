@@ -25,7 +25,7 @@ a {
   text-underline-offset: 4px;
 }
 .account-content {
-  padding: 40px 32px;
+  padding: 0;
   max-width: 1200px;
   width: 100%;
 }
@@ -231,7 +231,7 @@ footer section {
     align-content: start;
   }
   .account-content {
-    padding: 32px 24px;
+    padding: 0;
   }
 }
 @media (max-width: 700px) {
@@ -239,7 +239,7 @@ footer section {
     grid-template-columns: minmax(0, 1fr);
   }
   .account-content {
-    padding: 24px 16px;
+    padding: 0;
   }
   .account-panel {
     padding: 20px;

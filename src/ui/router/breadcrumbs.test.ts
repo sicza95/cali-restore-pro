@@ -35,6 +35,19 @@ describe('routeTrail', () => {
       ]);
   });
 
+  it('links the object step of object and surface pages', () => {
+    const object = '00000000-0000-4000-8000-000000000003';
+    const library = { kind: 'route', name: 'projects', href: '/projects' };
+    const parent = { kind: 'project', id: project, href: '/projects/' + project };
+    const step = { kind: 'object', id: object, href: `/projects/${project}/objects/${object}` };
+    expect(routeTrail(parseRoute(step.href))).toEqual([library, parent, step]);
+    const path = `/projects/${project}/surfaces/${surface}`;
+    const trail = routeTrail(parseRoute(path), (id) => (id === surface ? object : undefined));
+    expect(trail).toEqual([library, parent, step, { kind: 'surface', id: surface, href: path }]);
+    for (const crumb of trail)
+      expect(routeTrail(parseRoute(crumb.href), () => object).at(-1)).toEqual(crumb);
+  });
+
   it('links every step but the last to a page that parses back to it', () => {
     const trail = routeTrail(parseRoute(`/projects/${project}/surfaces/${surface}`));
     for (const crumb of trail) expect(routeTrail(parseRoute(crumb.href)).at(-1)).toEqual(crumb);

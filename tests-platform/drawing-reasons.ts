@@ -56,9 +56,11 @@ async function expectToolReason(page: Page, step: string, lang: Language) {
   await expect(nodes, step).not.toHaveAttribute('title', copy.noPaths);
   await expect(shown, step).toHaveCount(0);
   // An aria-disabled button still receives the tap; Playwright would wait for it to be enabled.
+  await nodes.scrollIntoViewIfNeeded();
   await nodes.click({ force: true });
   await expect(shown, step).toHaveText(`${copy.nodes}: ${copy.noPaths}`);
   await expect(shown, step).toBeVisible();
+  await shown.scrollIntoViewIfNeeded();
   await expectUnclipped(shown, chip, `${step}: tool reason in chip`, true);
   await expectUnclipped(chip, page.locator('.drawing-workspace .cr-canvas-region'), step);
 }

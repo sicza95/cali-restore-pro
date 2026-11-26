@@ -1,4 +1,4 @@
-import { organisationHref, projectHref, projectReviewHref, routeHref } from './routes';
+import { objectHref, organisationHref, projectHref, projectReviewHref, routeHref } from './routes';
 import type { AppRoute, ReviewStep, RouteName } from './types';
 
 /**
@@ -9,15 +9,21 @@ export type Crumb = { href: string } & (
   | { kind: 'route'; name: RouteName }
   | { kind: 'project'; id: string }
   | { kind: 'organisation'; id: string }
+  | { kind: 'object'; id: string }
   | { kind: 'surface'; id: string }
   | { kind: 'review'; step: ReviewStep }
 );
 
 /**
  * The path from the top of the app to `route`, built from the route table. The last step is the
- * current page and the page title; a one-step trail needs no breadcrumbs.
+ * current page and the page title; a one-step trail needs no breadcrumbs. A surface URL does not
+ * name its object, so `objectOf` supplies it from the open project when known; without it the
+ * trail skips the object step rather than guessing.
  */
-export function routeTrail(route: AppRoute): Crumb[] {
+export function routeTrail(
+  route: AppRoute,
+  objectOf?: (surface: string) => string | undefined,
+): Crumb[] {
   if (route.name === 'notFound') return [{ kind: 'route', name: 'notFound', href: '' }];
   if (route.name === 'organisations' && route.organisation)
     return [
@@ -28,12 +34,23 @@ export function routeTrail(route: AppRoute): Crumb[] {
   if (route.name !== 'projects' || !route.project) return [top];
   const library: Crumb = { kind: 'route', name: 'projects', href: projectHref() };
   const project: Crumb = { kind: 'project', id: route.project, href: projectHref(route.project) };
-  if (route.surface)
+  if (route.object)
     return [
       library,
       project,
+      { kind: 'object', id: route.object, href: objectHref(route.project, route.object) },
+    ];
+  if (route.surface) {
+    const object = objectOf?.(route.surface);
+    return [
+      library,
+      project,
+      ...(object
+        ? [{ kind: 'object', id: object, href: objectHref(route.project, object) } as const]
+        : []),
       { kind: 'surface', id: route.surface, href: projectHref(route.project, route.surface) },
     ];
+  }
   if (route.review)
     return [
       library,

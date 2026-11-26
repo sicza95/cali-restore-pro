@@ -34,6 +34,8 @@ export const invitationCopy = defineCopy({
     claimHosting: 'Take over hosting',
     acceptHosting: 'Accept hosting transfer',
     acceptHostingConfirm: 'Take responsibility for this project’s hosted storage and quota usage?',
+    hostingRequired:
+      'Project hosting requires hosting access and a storage quota. Ask an administrator to enable them for your account.',
     hostingQuota: 'Your remaining storage quota is too small for this project.',
     hostingIneligible: 'Your account needs hosting enabled and a storage quota to accept.',
     activate: 'Share project snapshot',
@@ -105,6 +107,8 @@ export const invitationCopy = defineCopy({
     acceptHosting: 'Szerveres tárolás átvétele',
     acceptHostingConfirm:
       'Átveszed a projekt szerveres tárolását és a kvóta felhasználásával járó felelősséget?',
+    hostingRequired:
+      'A projekt szerveres tárolásához engedélyezett szerveres tárolás és tárhelykvóta szükséges. Kérd meg a rendszergazdát, hogy engedélyezze ezeket a fiókodhoz.',
     hostingQuota: 'A fennmaradó tárhelykvótád nem elegendő ehhez a projekthez.',
     hostingIneligible: 'Az átvételhez engedélyezett szerveres tárolás és tárhelykvóta szükséges.',
     activate: 'Projektmásolat megosztása',

@@ -1,0 +1,98 @@
+/* The browser owns the available viewport; only its collection and inspector scroll. */
+.account-shell[data-nav='app'] .account-page {
+  padding: 24px;
+}
+.account-shell[data-browser] > .account-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.account-shell[data-browser] .account-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+}
+.account-shell[data-browser] .app-page-heading {
+  flex: none;
+  margin: 0;
+  padding: 8px 16px;
+  min-height: 44px;
+}
+.account-shell[data-browser] .app-breadcrumbs ol {
+  flex-wrap: nowrap;
+  min-height: 44px;
+}
+.account-shell[data-browser] .app-breadcrumbs li {
+  overflow: hidden;
+}
+.account-shell[data-browser] .app-breadcrumbs a {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.account-shell[data-browser] .app-breadcrumbs [aria-current='page'] {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.account-shell[data-browser] .project-vault-open {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.account-shell[data-browser] .project-workspace {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+}
+.account-shell[data-browser] .browser-layout {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+.app-connection {
+  min-height: var(--cr-touch);
+  padding: 0 8px;
+  background: transparent;
+  color: var(--cr-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+.app-connection:hover:enabled {
+  color: var(--cr-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.app-connection[data-state='unavailable'] {
+  color: var(--cr-negative);
+}
+@media (max-width: 1100px) {
+  .account-shell[data-nav='app']:not([data-browser]) .account-page {
+    padding: 20px 16px;
+  }
+}
+@media (max-width: 600px) {
+  .app-bar .product-name {
+    font-size: 15px;
+    gap: 4px;
+  }
+  .app-bar .product-name .cr-icon {
+    display: none;
+  }
+  .app-bar-end .account-menu-name {
+    display: none;
+  }
+  .org-switcher-name {
+    max-width: 100px;
+  }
+}

@@ -23,7 +23,7 @@
   font-weight: 700;
   letter-spacing: -0.045em;
 }
-.access-brand svg {
+.access-brand :is(svg, .cr-icon) {
   color: var(--cr-accent);
 }
 .access-brand strong {
@@ -182,7 +182,7 @@ button.sign-in-row:hover:enabled {
     padding: 24px 18px 16px;
   }
 }
-.sign-in-forget svg {
+.sign-in-forget :is(svg, .cr-icon) {
   box-sizing: content-box;
   padding: 3px;
   border: 1.5px solid currentColor;

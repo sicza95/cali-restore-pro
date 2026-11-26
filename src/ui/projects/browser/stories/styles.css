@@ -1,0 +1,63 @@
+.browser-example {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  height: 100dvh;
+  min-height: 500px;
+}
+.browser-example-rail {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 12px;
+  background: var(--cr-ground);
+}
+.browser-example-rail span {
+  font-weight: 600;
+}
+.browser-example-main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.browser-example-context {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+  padding: 6px 24px;
+  background: var(--cr-ground);
+  font-size: 13px;
+}
+.browser-example-context button {
+  background: var(--cr-surface);
+  border: 0;
+  border-radius: var(--cr-radius);
+  min-height: 44px;
+  padding: 8px;
+}
+.browser-example-details {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.browser-example-details dt {
+  color: var(--cr-muted);
+  font-size: 12px;
+}
+.browser-example-details dd {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1050px) {
+  .browser-example {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  .browser-example-rail span {
+    display: none;
+  }
+  .browser-example-context {
+    padding-inline: 16px;
+  }
+}

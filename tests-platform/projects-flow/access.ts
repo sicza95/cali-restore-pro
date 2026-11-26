@@ -1,45 +1,66 @@
 import { expect } from '@playwright/test';
 import type { TestInfo } from '@playwright/test';
+import {
+  browserControl,
+  browserItem,
+  browserReady,
+  inspect,
+  openItem,
+  openProjectSettings,
+} from '../project-browser';
+import { originalsPage } from '../originals';
 import { controls, otherAccount, required } from './flow';
 import type { ProjectsFlow } from './flow';
 
 /**
- * Back on "Upper plaster" from the project page, checks the saved settings and roles, then
- * archives, finds and restores the project. Starts on a surface page of "East Chapel".
+ * Back on "Upper plaster" (from another surface page of "North wall"), checks the saved originals, roles and settings, then archives the
+ * project in its settings dialog, finds it with the browser's archived filter and restores it.
+ * Starts on a surface page of "East Chapel"; ends in the restored project's objects.
  */
 export async function archiveAndRestore(flow: ProjectsFlow, info: TestInfo) {
   const { page } = flow;
   const control = (id: string) => controls(page, id);
-  await control('surface.project').click();
-  await page
-    .getByRole('combobox', { name: 'Object', exact: true })
-    .selectOption({ label: 'North wall' });
-  await page
-    .getByRole('combobox', { name: 'Surface', exact: true })
-    .selectOption({ label: 'Upper plaster' });
+  // Originals are listed on their surface's page.
+  await originalsPage(page, 'Upper plaster');
   await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
-  await expect(page.getByLabel('Currency code')).toHaveValue('USD');
   await expect(
     page
       .getByRole('listitem')
       .filter({ hasText: 'plaster-detail.dng' })
       .getByRole('combobox', { name: 'Image role' }),
   ).toHaveValue('reference');
+  await control('surface.project').click();
+  // The project's currency is set on the project; children show it read-only.
+  await inspect(page, 'North wall');
+  await expect(page.locator('.browser-inspector')).toContainText('USD');
+  await expect(
+    page.locator('.browser-inspector [data-control-id$=".restoration.units"]'),
+  ).toHaveValue('imperial');
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
   await page.screenshot({ path: info.outputPath('projects-portrait.png'), fullPage: true });
-  await page.getByRole('button', { name: 'Archive', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Restore project' })).toBeVisible();
+  const settings = await openProjectSettings(page);
+  await settings.getByRole('button', { name: 'Archive', exact: true }).click();
+  await expect(settings.getByRole('button', { name: 'Restore project' })).toBeVisible();
+  await settings.locator('[data-control-id="browser.dialog.close"]').click();
+  await expect(page.locator('.project-browser-notice')).toContainText('archived');
+  await expect(browserControl(page, 'browser.new')).toHaveAttribute('aria-disabled', 'true');
   await control('project.library').click();
-  await expect(page.getByRole('link', { name: 'East Chapel' })).toHaveCount(0);
-  await page.getByLabel('Show archived').check();
-  await expect(control('projects.open')).toHaveText('East Chapel');
-  await page.getByRole('searchbox', { name: 'Search projects' }).fill('missing');
-  await expect(control('projects.open')).toHaveCount(0);
-  await page.getByRole('searchbox', { name: 'Search projects' }).clear();
-
-  await control('projects.open').click();
-  await page.getByRole('button', { name: 'Restore project' }).click();
+  await browserReady(page);
+  await expect(browserItem(page, 'East Chapel')).toHaveCount(0);
+  await browserControl(page, 'browser.find').click();
+  const query = browserControl(page, 'browser.query');
+  await query.fill('archived:true');
+  await expect(browserItem(page, 'East Chapel')).toHaveCount(1);
+  await query.fill('archived:true missing');
+  await expect(browserItem(page, 'East Chapel')).toHaveCount(0);
+  await query.fill('archived:true');
+  await openItem(page, 'East Chapel');
+  const restore = await openProjectSettings(page);
+  await restore.getByRole('button', { name: 'Restore project' }).click();
+  await expect(restore.getByRole('button', { name: 'Archive', exact: true })).toBeVisible();
+  await restore.locator('[data-control-id="browser.dialog.close"]').click();
+  await page.setViewportSize({ width: 1194, height: 834 });
 }
 
 /**

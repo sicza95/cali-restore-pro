@@ -58,6 +58,10 @@ function AccountShell() {
     const route = router.route();
     return route.name === 'projects' && !!route.surface;
   };
+  const browsing = () => {
+    const route = router.route();
+    return route.name === 'projects' && !route.surface && !route.review;
+  };
   const mode = (): NavigationMode => (publicView() ? 'public' : 'app');
   // A pinned sidebar shows icons only on a surface (the canvas keeps its width) or a narrow screen.
   const rail = () => compact() || surface();
@@ -69,117 +73,101 @@ function AccountShell() {
       data-nav={mode()}
       data-sidebar={mode() === 'app' ? sidebar() : undefined}
       data-surface={surface() || undefined}
+      data-browser={mode() === 'app' && browsing() ? '' : undefined}
     >
       <AppNavigation mode={mode()} rail={rail()} />
       <Show when={mode() === 'app'}>
         <ConfirmIdentity />
       </Show>
       <main class="account-content">
-        <Show when={!publicView()}>
-          <PageHeading />
-        </Show>
-        {/* Messages float above the page, so they never push the content (or the sign-in card). */}
-        <div class="toast-region">
-          <Show when={message()} keyed>
-            {(key) => (
-              <Toast
-                text={typeof key === 'string' ? t(key) : key.text}
-                error={failed()}
-                closeLabel={t('closeMessage')}
-                dismiss={app.dismissMessage}
-              />
-            )}
+        <div class="account-page">
+          <Show when={!publicView()}>
+            <PageHeading />
           </Show>
-        </div>
-        <Show when={app.deletionReceipt()}>
-          {(receipt) => {
-            const date = (iso: string) =>
-              new Intl.DateTimeFormat(lang(), { dateStyle: 'long', timeStyle: 'short' }).format(
-                new Date(iso),
-              );
-            return (
-              <p role="status">
-                {deletionCopy[lang()].recoverUntil} {date(receipt().recoverUntil)}.{' '}
-                {deletionCopy[lang()].backupsExpire} {date(receipt().backupExpiresAt)}.{' '}
-                <Show when={view() !== 'admin'}>
-                  <a href="/recover-deleted-account">{t('recover-deleted-account')}</a>
-                </Show>
-              </p>
-            );
-          }}
-        </Show>
-        <Switch>
-          <Match when={publicView()}>
-            {(form) => (
-              <Show when={router.href()} keyed>
-                <AccessForm
-                  view={form()}
-                  language={lang()}
-                  linkToken={router.linkToken()}
-                  submit={submit}
-                  t={t}
-                  busy={busy}
-                  passkeySignIn={app.signInWithPasskey}
+          {/* Messages float above the page, so they never push the content (or the sign-in card). */}
+          <div class="toast-region">
+            <Show when={message()} keyed>
+              {(key) => (
+                <Toast
+                  text={typeof key === 'string' ? t(key) : key.text}
+                  error={failed()}
+                  closeLabel={t('closeMessage')}
+                  dismiss={app.dismissMessage}
                 />
-              </Show>
-            )}
-          </Match>
-          <Match when={view() === 'notFound'}>
-            <a href={account() ? accountPaths.projects : '/login'}>
-              {account() ? c().backToProjects : t('login')}
-            </a>
-          </Match>
-          <Match when={protectedView()}>
-            {(destination) => (
-              <Switch>
-                <Match when={guard() === 'loading'}>
-                  <p role="status">{t('working')}</p>
-                </Match>
-                <Match when={guard() === 'retry'}>
-                  <button data-control-id="app.session.retry" onClick={() => location.reload()}>
-                    {c().retryAccess}
-                  </button>
-                </Match>
-                <Match when={guard() === 'signIn'}>
-                  <p>
-                    {t('signedOut')}{' '}
-                    <a href={signInLink(destination(), location.pathname)}>{t('login')}</a>
-                  </p>
-                </Match>
-                <Match when={guard() === 'forbidden'}>
-                  <p>{settingsCopy[lang()].noAccess}</p>
-                </Match>
-                <Match when={account()?.id} keyed>
-                  {(id) => <AccountScreen destination={destination()} account={id} />}
-                </Match>
-              </Switch>
-            )}
-          </Match>
-        </Switch>
-        {/* Signed-out pages stay quiet: the bar appears only when the server cannot be reached. */}
-        <Show
-          when={!publicView() || connection() === 'unavailable'}
-          fallback={
+              )}
+            </Show>
+          </div>
+          <Show when={app.deletionReceipt()}>
+            {(receipt) => {
+              const date = (iso: string) =>
+                new Intl.DateTimeFormat(lang(), { dateStyle: 'long', timeStyle: 'short' }).format(
+                  new Date(iso),
+                );
+              return (
+                <p role="status">
+                  {deletionCopy[lang()].recoverUntil} {date(receipt().recoverUntil)}.{' '}
+                  {deletionCopy[lang()].backupsExpire} {date(receipt().backupExpiresAt)}.{' '}
+                  <Show when={view() !== 'admin'}>
+                    <a href="/recover-deleted-account">{t('recover-deleted-account')}</a>
+                  </Show>
+                </p>
+              );
+            }}
+          </Show>
+          <Switch>
+            <Match when={publicView()}>
+              {(form) => (
+                <Show when={router.href()} keyed>
+                  <AccessForm
+                    view={form()}
+                    language={lang()}
+                    linkToken={router.linkToken()}
+                    submit={submit}
+                    t={t}
+                    busy={busy}
+                    passkeySignIn={app.signInWithPasskey}
+                  />
+                </Show>
+              )}
+            </Match>
+            <Match when={view() === 'notFound'}>
+              <a href={account() ? accountPaths.projects : '/login'}>
+                {account() ? c().backToProjects : t('login')}
+              </a>
+            </Match>
+            <Match when={protectedView()}>
+              {(destination) => (
+                <Switch>
+                  <Match when={guard() === 'loading'}>
+                    <p role="status">{t('working')}</p>
+                  </Match>
+                  <Match when={guard() === 'retry'}>
+                    <button data-control-id="app.session.retry" onClick={() => location.reload()}>
+                      {c().retryAccess}
+                    </button>
+                  </Match>
+                  <Match when={guard() === 'signIn'}>
+                    <p>
+                      {t('signedOut')}{' '}
+                      <a href={signInLink(destination(), location.pathname)}>{t('login')}</a>
+                    </p>
+                  </Match>
+                  <Match when={guard() === 'forbidden'}>
+                    <p>{settingsCopy[lang()].noAccess}</p>
+                  </Match>
+                  <Match when={account()?.id} keyed>
+                    {(id) => <AccountScreen destination={destination()} account={id} />}
+                  </Match>
+                </Switch>
+              )}
+            </Match>
+          </Switch>
+          <Show when={publicView()}>
             <span class="account-visually-hidden" role="status">
               {t(connection())}
             </span>
-          }
-        >
-          <footer class="account-footer">
-            <section aria-label={t('platform')}>
-              <span class="account-connection" data-state={connection()} role="status">
-                {t(connection())}
-              </span>
-              <button
-                data-control-id="app.service.retry"
-                disabled={connection() === 'checking'}
-                onClick={() => void app.refreshConnection()}
-              >
-                {t('check')}
-              </button>
-            </section>
-          </footer>
-        </Show>
+          </Show>
+        </div>
       </main>
     </div>
   );

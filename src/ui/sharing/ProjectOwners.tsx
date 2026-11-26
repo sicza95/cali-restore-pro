@@ -1,24 +1,32 @@
-import { createResource, createSignal, For, Show } from 'solid-js';
+import { createEffect, createResource, createSignal, For, Show } from 'solid-js';
+import type { JSX } from 'solid-js';
 import { useApp } from '../app-context/AppContext';
 import { invitationCopy } from './copy';
 
-type Owner = { id: string; email: string; host: boolean };
+import { managementCopy } from './management-copy';
+import { ownerRemovalReason } from './owner-guards';
+import type { ProjectOwner } from './types';
 type HostingTransfer = { id: string; fromId: string; toId: string };
 
 export function ProjectOwners(props: {
   projectPath: string;
   onRemoved: (ownerId: string) => void;
+  onOwners?: (owners: ProjectOwner[]) => void;
+  renderAccess?: (ownerId: string) => JSX.Element;
 }) {
   const app = useApp();
   const c = () => invitationCopy[app.lang()];
+  const m = () => managementCopy[app.lang()];
   const [busy, setBusy] = createSignal(false);
-  const [failed, setFailed] = createSignal<'error' | 'hostingQuota' | 'hostingIneligible'>();
+  const [failed, setFailed] = createSignal<
+    'error' | 'hostingQuota' | 'hostingIneligible' | 'lastOwner' | 'hostOwner'
+  >();
   const [data, { refetch }] = createResource(
     () => props.projectPath,
     async (path) => {
       try {
         return await app.request<{
-          owners: Owner[];
+          owners: ProjectOwner[];
           hostingTransfer: HostingTransfer | null;
         }>(path + '/owners');
       } catch {
@@ -26,6 +34,7 @@ export function ProjectOwners(props: {
       }
     },
   );
+  createEffect(() => props.onOwners?.(data()?.owners ?? []));
   const currentId = () => app.account()?.id;
   const currentHost = () => data()?.owners.some((owner) => owner.host && owner.id === currentId());
   const pendingRecipient = () =>
@@ -36,16 +45,20 @@ export function ProjectOwners(props: {
     setFailed(undefined);
     try {
       await app.request(props.projectPath + path, body);
-      if (done) done();
-      else await refetch();
+      await refetch();
+      done?.();
     } catch (error) {
       const code = error instanceof Error ? error.message : '';
       setFailed(
-        code === 'storage_quota_exceeded'
-          ? 'hostingQuota'
-          : code === 'not_permitted'
-            ? 'hostingIneligible'
-            : 'error',
+        code === 'last_project_owner'
+          ? 'lastOwner'
+          : code === 'owner_is_project_host'
+            ? 'hostOwner'
+            : code === 'storage_quota_exceeded'
+              ? 'hostingQuota'
+              : code === 'not_permitted'
+                ? 'hostingIneligible'
+                : 'error',
       );
     } finally {
       setBusy(false);
@@ -58,7 +71,13 @@ export function ProjectOwners(props: {
         <p role="status">{c().loadingOwners}</p>
       </Show>
       <Show when={failed() || (!data.loading && !data())}>
-        <p role="alert">{c()[failed() ?? 'error']}</p>
+        <p role="alert">
+          {failed() === 'lastOwner'
+            ? m().lastOwner
+            : failed() === 'hostOwner'
+              ? m().hostOwner
+              : c()[(failed() as 'error' | 'hostingQuota' | 'hostingIneligible') ?? 'error']}
+        </p>
       </Show>
       <Show when={pendingRecipient()}>
         {(recipient) => (
@@ -111,23 +130,37 @@ export function ProjectOwners(props: {
                         {c().offerHosting}
                       </button>
                     </Show>
-                    <button
-                      data-control-id="owners.remove"
-                      disabled={busy()}
-                      onClick={() => {
-                        if (window.confirm(c().removeOwnerConfirm))
-                          void change('/owners/' + owner.id + '/remove', {}, () =>
-                            props.onRemoved(owner.id),
-                          );
-                      }}
-                    >
-                      {c().removeOwner}
-                    </button>
                   </div>
                 }
               >
                 <span>{c().hostOwner}</span>
               </Show>
+              <button
+                data-control-id="owners.remove"
+                disabled={busy() || !!ownerRemovalReason(owner, data()?.owners.length ?? 0)}
+                aria-describedby={
+                  ownerRemovalReason(owner, data()?.owners.length ?? 0)
+                    ? `owner-guard-${owner.id}`
+                    : undefined
+                }
+                onClick={() => {
+                  if (ownerRemovalReason(owner, data()?.owners.length ?? 0)) return;
+                  if (window.confirm(c().removeOwnerConfirm))
+                    void change('/owners/' + owner.id + '/remove', {}, () =>
+                      props.onRemoved(owner.id),
+                    );
+                }}
+              >
+                {c().removeOwner}
+              </button>
+              <Show when={ownerRemovalReason(owner, data()?.owners.length ?? 0)}>
+                {(reason) => (
+                  <p class="field-help" id={`owner-guard-${owner.id}`}>
+                    {m()[reason()]}
+                  </p>
+                )}
+              </Show>
+              {props.renderAccess?.(owner.id)}
             </li>
           )}
         </For>

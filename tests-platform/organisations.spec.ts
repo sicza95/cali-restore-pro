@@ -5,6 +5,7 @@ import type {
   OrganisationGroup,
   OrganisationOverview,
 } from '../src/platform/api';
+import { browserItem, browserReady, createProjectViaBrowser } from './project-browser';
 import { showAppNavigation } from './app-navigation';
 
 const account = { id: '00000000-0000-4000-8000-0000000000a1', email: 'anna@example.test' };
@@ -154,8 +155,7 @@ test('organisation switcher, organisations page, groups, invitations and project
   expect(await switcher.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
 
   // A project made now belongs to the personal organisation.
-  await page.getByLabel('Project name').fill('Smith house');
-  await page.locator(byId('projects.create')).click();
+  await createProjectViaBrowser(page, 'Smith house');
   await expect(page).toHaveURL(/\/projects\/[0-9a-f-]{36}$/);
 
   // The sidebar has Organisations and Settings.
@@ -223,7 +223,10 @@ test('organisation switcher, organisations page, groups, invitations and project
 
   // The project list follows the organisation chosen in the top bar.
   await page.locator(byId('app.nav.projects')).click();
-  await expect(page.getByText('Smith house')).toHaveCount(0);
+  // Wait for the browser to list the organisation's projects before checking an absence.
+  await browserReady(page);
+  await expect(page.locator('.browser-content')).toBeVisible();
+  await expect(browserItem(page, 'Smith house')).toHaveCount(0);
   await switcher.click();
   await expect(page.locator('#organisation-menu')).toBeVisible();
   await expect(
@@ -231,7 +234,7 @@ test('organisation switcher, organisations page, groups, invitations and project
   ).toHaveAttribute('aria-checked', 'true');
   await page.locator(byId('app.nav.organisation.choice')).filter({ hasText: 'Personal' }).click();
   await expect(switcher).toHaveText('Personal');
-  await expect(page.getByText('Smith house')).toBeVisible();
+  await expect(browserItem(page, 'Smith house')).toBeVisible();
   await expect(switcher).toBeFocused();
 
   await page.setViewportSize({ width: 834, height: 1194 });

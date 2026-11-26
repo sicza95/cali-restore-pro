@@ -6,6 +6,14 @@ import { validateProject } from './projects';
 import { openRevision } from './revisions';
 import type { Project } from './types';
 
+export type CloudBrowserEntry = {
+  id: string;
+  name: string;
+  organisation: string;
+  /** A failed read remains visible and retryable; do not expose exception contents. */
+  unreadable?: true;
+};
+
 /**
  * Synced projects this account can open on this device without a transfer code. This works only
  * while encryption is off (aead.ts): any device of an owner can read the cloud copy.
@@ -36,13 +44,14 @@ export function cloudProjects(vault: LocalVault) {
       });
       if (!response.ok) throw new Error('Cloud projects unavailable');
       const rows = (await response.json()) as CloudProject[];
-      const found: { id: string; name: string; organisation: string }[] = [];
+      const found: CloudBrowserEntry[] = [];
       for (const { id, organisation } of rows) {
         if (local.has(id)) continue;
         try {
           found.push({ id, organisation, name: (await read(id)).document.name });
         } catch {
           queue.signal.throwIfAborted();
+          found.push({ id, organisation, name: id, unreadable: true });
         }
       }
       return found;

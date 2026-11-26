@@ -56,10 +56,10 @@
     z-index: 1;
     color: var(--cr-ink);
   }
-  .cr-inspector-grip svg {
+  .cr-inspector-grip :is(svg, .cr-icon) {
     transform: rotate(-90deg);
   }
-  .cr-inspector-grip[aria-expanded='true'] svg {
+  .cr-inspector-grip[aria-expanded='true'] :is(svg, .cr-icon) {
     transform: rotate(90deg);
   }
   .cr-inspector:has(> .cr-inspector-grip) .cr-inspector-tabs {

@@ -2948,6 +2948,277 @@
         }
       }
     },
+    "/api/v1/hosted-projects/{project}/visibility": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getProjectVisibility",
+        "summary": "Read visibility and published directory name as a project owner",
+        "description": "Current project ownership is required. Organisation membership or a listed card never authorises this endpoint. Deleted projects are unavailable.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current visibility and concurrency version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostedProjectVisibility"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project missing, deleted, or not owned by this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Invalid request or service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateProjectVisibility",
+        "summary": "Set project visibility and published name with an optimistic version",
+        "description": "Project owners only. Atomically compare the submitted version, set visibility and name, and increment the version, including name-only changes. A stale version returns 409 with error visibility_conflict and changes nothing. Listing exposes name and current owners only to organisation members; it grants no content access. Local-only projects cannot use this endpoint. The published name is explicit metadata and must be refreshed after a project rename.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectVisibilityWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated visibility with the incremented version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostedProjectVisibility"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid visibility, name, version or JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project missing, deleted, or not owned by this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "visibility_conflict: reload visibility before retrying",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/organisations/{org}/projects": {
+      "get": {
+        "operationId": "listOrganisationProjects",
+        "summary": "List name-and-owner directory cards for an organisation member",
+        "description": "Requires current membership of the named organisation, including for admins. Returns listed, non-deleted hosted projects only, ordered by project UUID ascending. Cards contain no images, document content, member roster or access grant; non-owners must ask an owner for access outside this API. Private projects remain available through existing owner-only APIs. Membership is checked on every page; never infer it from the client organisation filter.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Exclusive project UUID cursor returned as next; omitted for the first page."
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A bounded directory page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganisationProjectDirectory"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid organisation, cursor or limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organisation missing or account is not a current member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/hosted-projects/{project}/files/{file}": {
       "parameters": [
         {
@@ -9910,6 +10181,111 @@
           }
         }
       },
+      "ProjectVisibility": {
+        "type": "string",
+        "enum": ["private", "listed"],
+        "description": "Listed publishes a name-and-owner card to organisation members only; it grants no project content access."
+      },
+      "HostedProjectVisibility": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["visibility", "version", "name"],
+        "properties": {
+          "visibility": {
+            "$ref": "#/components/schemas/ProjectVisibility"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "description": "Published directory name; empty on pre-existing private projects until first update. Listing requires a non-empty name."
+          }
+        }
+      },
+      "ProjectVisibilityWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["visibility", "version", "name"],
+        "properties": {
+          "visibility": {
+            "$ref": "#/components/schemas/ProjectVisibility"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483646,
+            "description": "The last read visibility version; compare-and-increment in one transaction."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Trimmed project name approved for the directory; supplied even when making the project private. Does not rename the project document."
+          }
+        }
+      },
+      "ProjectDirectoryOwner": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Current owner's profile name, possibly empty for an older account. No email address or profile photo is published."
+          }
+        }
+      },
+      "ProjectDirectoryCard": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "owners"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "owners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectDirectoryOwner"
+            },
+            "description": "Current project owners ordered by account UUID. Hosting responsibility is not ownership."
+          }
+        }
+      },
+      "OrganisationProjectDirectory": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["projects", "next"],
+        "properties": {
+          "projects": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ProjectDirectoryCard"
+            }
+          },
+          "next": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Last returned project UUID when more rows exist; null on the final page."
+          }
+        }
+      },
       "ProjectHostingRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -9921,6 +10297,24 @@
             "description": "Organisation the project belongs to; the host must be a member. Omitted: the host personal organisation."
           }
         }
+      },
+      "ProjectBrowserError": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IdentityError"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["error"],
+            "properties": {
+              "error": {
+                "type": "string",
+                "enum": ["not_found", "visibility_conflict"]
+              }
+            }
+          }
+        ]
       }
     },
     "securitySchemes": {

@@ -12,7 +12,7 @@
   white-space: nowrap;
   text-decoration: none;
 }
-.product-name svg {
+.product-name :is(svg, .cr-icon) {
   flex: none;
   color: var(--cr-accent);
 }
@@ -49,7 +49,7 @@
   background: transparent;
   border-radius: var(--cr-radius);
 }
-.app-nav-links svg {
+.app-nav-links :is(svg, .cr-icon) {
   flex: none;
 }
 .app-nav-links .app-sign-out {
@@ -62,7 +62,7 @@
 .app-nav-links a[aria-current='page'] {
   font-weight: 700;
 }
-.app-nav-links a[aria-current='page'] svg {
+.app-nav-links a[aria-current='page'] :is(svg, .cr-icon) {
   color: var(--cr-accent);
 }
 
@@ -125,13 +125,9 @@
   color: var(--cr-ink);
   text-decoration: underline;
 }
-.app-breadcrumbs svg {
+.app-breadcrumbs :is(svg, .cr-icon) {
   flex: none;
   opacity: 0.7;
-}
-/* A step with no page of its own (a surface's object): text, not a link. */
-.app-breadcrumbs-plain > span {
-  padding: 0 6px;
 }
 .app-breadcrumbs [aria-current='page'] {
   padding: 0 6px;
@@ -139,7 +135,7 @@
   font-weight: 600;
 }
 .account-shell[data-surface] .account-content {
-  padding: 16px clamp(12px, 2vw, 28px);
+  padding: 0;
 }
 .account-shell[data-surface] .app-page-heading {
   margin-bottom: 8px;

@@ -20,7 +20,10 @@ export async function verifyDrawingLayout(page: Page, info: TestInfo) {
   ]) {
     await page.setViewportSize(viewport);
     await closeDetails(page);
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.evaluate(() => {
+      document.querySelector('.account-content')?.scrollTo(0, 0);
+      window.scrollTo(0, 0);
+    });
     // The canvas gets half the first screen or more (#39): it was 44.5 % at 1194 and 56.9 % at 834.
     expect(await canvasShare(page, '.drawing-workspace .cr-canvas-region')).toBeGreaterThanOrEqual(
       viewport.width === 834 ? 60 : 50,
@@ -71,7 +74,10 @@ export async function verifyDrawingLayout(page: Page, info: TestInfo) {
       if (state === 'open') {
         await openDetails(page);
         await touchTargets(['point.x']);
-        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.evaluate(() => {
+          document.querySelector('.account-content')?.scrollTo(0, 0);
+          window.scrollTo(0, 0);
+        });
       }
       await expectTaskLanguage(page, `drawing ${viewport.width} ${state}`);
       await page.screenshot({

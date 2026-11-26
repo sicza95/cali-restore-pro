@@ -2,6 +2,18 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import type { RevisionHead, RevisionWrite } from '../src/platform/projects/revisions';
 import { aead } from '../src/platform/vault/aead';
+import {
+  browserItem,
+  browserReady,
+  createProjectViaBrowser,
+  inspect,
+  openItem,
+  openProjectSettings,
+  overrideRestoration,
+} from '../tests-platform/project-browser';
+
+const closeDialog = (device: import('@playwright/test').Page) =>
+  device.getByRole('dialog').locator('[data-control-id="browser.dialog.close"]').click();
 
 const account = '00000000-0000-4000-8000-000000000011';
 const other = '00000000-0000-4000-8000-000000000014';
@@ -52,39 +64,56 @@ test('the editor recovers offline edits and rotates the project key', async ({
 
   await page.setViewportSize({ width: 1194, height: 834 });
   await setupVault(page);
-  await page.getByLabel('Project name').fill('East Chapel');
-  await page.getByRole('button', { name: 'New project' }).click();
+  const projectPath = await createProjectViaBrowser(page, 'East Chapel');
+  const project = projectPath.split('/').at(-1)!;
 
+  // Sync is in the project settings dialog; the currency is a project override in the inspector.
   const sync = page.getByRole('region', { name: 'Cloud sync' });
+  await openProjectSettings(page);
   await sync.getByRole('button', { name: 'Enable editor sync' }).click();
   await expect(sync.getByRole('status')).toHaveText('Cloud copy saved');
   expect(head).toMatchObject({ epoch: initialEpoch, revision: 1 });
-  const project = new URL(page.url()).pathname.split('/').at(-1)!;
+  await closeDialog(page);
+  /** At the root, overrides the project's currency in the inspector. */
+  const setCurrency = async (device: typeof page, currency: string) => {
+    if (new URL(device.url()).pathname !== '/projects')
+      await device.locator('[data-control-id="project.library"]').click();
+    await inspect(device, 'East Chapel');
+    await overrideRestoration(device, 'currency', currency);
+  };
+  const shownCurrency = (device: typeof page) =>
+    device.locator('.browser-inspector [data-control-id$=".restoration.currency"]');
+  /** From the root, the project's settings dialog with its sync panel. */
+  const syncPanel = async (device: typeof page) => {
+    await openItem(device, 'East Chapel');
+    await openProjectSettings(device);
+  };
 
   const secondContext = await browser.newContext({ baseURL: info.project.use.baseURL });
   const second = await secondContext.newPage();
   await routes(second, other);
-  await setupVault(second);
   cloudProject = project;
-  await second.getByText('Open a synced project on this device', { exact: true }).click();
-  await second.getByRole('button', { name: 'Open on this device: East Chapel' }).click();
+  await setupVault(second);
+  // The online-only project is listed at the root; opening it downloads it to this device.
+  await expect(browserItem(second, 'East Chapel')).toContainText('Online only');
+  await openItem(second, 'East Chapel');
   const secondSync = second.getByRole('region', { name: 'Cloud sync' });
+  await openProjectSettings(second);
   await expect(secondSync.getByRole('status')).toHaveText('Cloud copy saved');
-  await second.getByLabel('Currency code').fill('CAD');
-  await second.getByRole('button', { name: 'Save settings' }).click();
-  await expect(secondSync.getByRole('status')).toHaveText('Cloud copy saved');
+  await closeDialog(second);
+  await setCurrency(second, 'EUR');
   await expect.poll(() => head).toMatchObject({ epoch: initialEpoch, revision: 2 });
 
   const editCurrency = async (currency: string) => {
-    await page.getByLabel('Currency code').fill(currency);
-    const save = page.getByRole('button', { name: 'Save settings' });
-    await save.click();
-    await expect(save).toBeEnabled();
-    await expect(sync.getByRole('status')).toContainText('waiting to sync');
+    await setCurrency(page, currency);
+    await expect(browserItem(page, 'East Chapel').locator('.browser-status')).toContainText(
+      'Waiting to sync',
+    );
   };
   const reconnect = async () => {
     disconnected = false;
     await page.evaluate(() => window.dispatchEvent(new Event('online')));
+    await syncPanel(page);
     await sync.getByRole('button', { name: 'Review sync conflict' }).click();
   };
 
@@ -92,13 +121,16 @@ test('the editor recovers offline edits and rotates the project key', async ({
   await editCurrency('USD');
   await editCurrency('GBP');
   await page.reload();
-  await expect(page.getByLabel('Currency code')).toHaveValue('GBP');
-  await expect(sync.getByRole('status')).toContainText('waiting to sync');
+  await inspect(page, 'East Chapel');
+  await expect(shownCurrency(page)).toHaveValue('GBP');
+  await expect(browserItem(page, 'East Chapel').locator('.browser-status')).toContainText(
+    'Waiting to sync',
+  );
   await reconnect();
   await expect(sync.getByRole('region', { name: 'This device' })).toContainText(
     'East Chapel · GBP',
   );
-  await expect(sync.getByRole('region', { name: 'Cloud copy' })).toContainText('East Chapel · CAD');
+  await expect(sync.getByRole('region', { name: 'Cloud copy' })).toContainText('East Chapel · EUR');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath('editor-conflict-landscape.png'), fullPage: true });
   await page.setViewportSize({ width: 834, height: 1194 });
@@ -107,25 +139,32 @@ test('the editor recovers offline edits and rotates the project key', async ({
   await expect(sync.getByRole('status')).toHaveText('Cloud copy saved');
   expect(head).toMatchObject({ epoch: initialEpoch, revision: 3 });
   const oldHead = head!;
+  await closeDialog(page);
 
   disconnected = true;
   await editCurrency('HUF');
   revoked = true;
   epoch = rotatedEpoch;
-  await second.getByLabel('Currency code').fill('CHF');
-  await second.getByRole('button', { name: 'Save settings' }).click();
+  await setCurrency(second, 'CHF');
+  await syncPanel(second);
   await expect(secondSync.getByRole('button', { name: 'Review sync conflict' })).toBeVisible();
+  await closeDialog(second);
+  // The project is on this device: the root lists it once, not again as online only.
   await second.locator('[data-control-id="project.library"]').click();
-  await second.getByText('Open a synced project on this device', { exact: true }).click();
-  await expect(second.getByText('Every synced project is already on this device.')).toBeVisible();
+  await browserReady(second);
+  await expect(browserItem(second, 'East Chapel')).toHaveCount(1);
+  await expect(browserItem(second, 'East Chapel')).not.toContainText('Online only');
   await reconnect();
   await expect(sync.getByRole('region', { name: 'This device' })).toContainText(
     'East Chapel · HUF',
   );
   await expect(sync.getByRole('region', { name: 'Cloud copy' })).toContainText('East Chapel · GBP');
   await sync.getByRole('button', { name: 'Use the cloud copy' }).click();
-  await expect(page.getByLabel('Currency code')).toHaveValue('GBP');
   await expect(sync.getByRole('status')).toHaveText('Cloud copy saved');
+  await closeDialog(page);
+  await page.locator('[data-control-id="project.library"]').click();
+  await inspect(page, 'East Chapel');
+  await expect(shownCurrency(page)).toHaveValue('GBP');
   expect(head).toMatchObject({ epoch: rotatedEpoch, revision: 4 });
 
   const keys = await page.evaluate(

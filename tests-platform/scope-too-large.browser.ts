@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openProjectSettings } from './project-browser';
 import { chooseLanguage } from './app-navigation';
 
 const owner = '00000000-0000-4000-8000-000000000001';
@@ -109,14 +110,24 @@ test('an estimate too large to share shows its own error and sends nothing', asy
   );
 
   await page.goto('/projects/' + fixture.id);
-  await page.locator('[data-control-id="project.collaboration"]').click();
+  // Sharing is in the project settings dialog (the gear) since the project browser.
+  const settings = await openProjectSettings(page);
+  await settings.locator('[data-control-id="project.collaboration"]').click();
   await page.locator('[data-control-id="sharing.activate"]').click();
   const alert = page.locator('.invitation-panel [role=alert]');
   await expect(alert).toHaveText(
     'The estimate is too large to share. Choose the estimate summary or no estimate access.',
   );
   await expect(page.locator('[data-control-id="sharing.activate"]')).toBeEnabled();
+  // The modal dialog makes the page inert: close it, switch language, share again.
+  await settings.locator('[data-control-id="browser.dialog.close"]').click();
   await chooseLanguage(page, 'hu');
+  await (
+    await openProjectSettings(page)
+  )
+    .locator('[data-control-id="project.collaboration"]')
+    .click();
+  await page.locator('[data-control-id="sharing.activate"]').click();
   await expect(alert).toHaveText(
     'A becslés túl nagy a megosztáshoz. Válaszd a becslési összesítőt, vagy ne adj hozzáférést a becsléshez.',
   );

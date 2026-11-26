@@ -1,5 +1,7 @@
 import type { ScopeSelection } from '../../platform/projects/sharing-scopes';
 
+export type ProjectOwner = { id: string; email: string; host: boolean };
+
 export type Invitation = ScopeSelection & {
   id: string;
   state: 'pending' | 'accepted' | 'active';

@@ -10,6 +10,7 @@ import { optionalScopes } from '../../platform/projects/sharing-scopes';
 import type { EstimateScope } from '../../platform/projects/sharing-scopes';
 import type { LocalVault } from '../../platform/vault/vault';
 import { invitationCopy } from './copy';
+import { managementCopy } from './management-copy';
 import type { SentInvitation } from './types';
 
 export function EditScopes(props: {
@@ -105,6 +106,11 @@ export function EditScopes(props: {
           </label>
           <button
             data-control-id="sharing.scopes.apply"
+            aria-describedby={
+              additions().length && !props.item.recipientKey
+                ? `scope-help-${props.item.id}`
+                : undefined
+            }
             disabled={
               props.busy ||
               (estimateScope() === previous.estimateScope &&
@@ -114,6 +120,11 @@ export function EditScopes(props: {
           >
             {c().saveScopes}
           </button>
+          <Show when={additions().length && !props.item.recipientKey}>
+            <p class="field-help" id={`scope-help-${props.item.id}`}>
+              {managementCopy[app.lang()].recipientUnavailable}
+            </p>
+          </Show>
         </form>
       </Show>
     </details>

@@ -19,6 +19,7 @@ import type { IconName } from '../icon/types';
 import { accountPaths } from '../router/constants';
 import { followLink } from '../router/routes';
 import './shell.css';
+import './browser-shell.css';
 
 const destinationIcons: Record<(typeof accountNavigationControls)[number]['labelKey'], IconName> = {
   projects: 'folder',
@@ -110,6 +111,18 @@ function AppBar() {
         </span>
       </a>
       <div class="app-bar-end">
+        <button
+          type="button"
+          class="app-connection"
+          data-control-id="app.service.retry"
+          data-state={app.connection()}
+          disabled={app.connection() === 'checking'}
+          aria-label={app.t(app.connection())}
+          title={app.t('check')}
+          onClick={() => void app.refreshConnection()}
+        >
+          <span role="status">{app.t(app.connection())}</span>
+        </button>
         <OrganisationSwitcher />
         <AccountMenu />
       </div>

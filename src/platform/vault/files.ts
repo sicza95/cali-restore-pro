@@ -17,6 +17,8 @@ import type { FileShape } from './file-format';
 import { localFiles } from './file-store';
 import { readBounded, transferRequest as request } from './file-transfer';
 import { imageFromOriginal } from './original-image';
+import { createThumbnailService } from '../projects/browser/thumbnails';
+import { vaultThumbnailCache } from '../projects/browser/thumbnail-store';
 
 export { readBounded, TransferError } from './file-transfer';
 
@@ -200,7 +202,14 @@ export function encryptedFiles(
     return new Uint8Array(await crypto.subtle.exportKey('raw', key));
   }
 
+  const thumbnails = createThumbnailService({
+    cache: vaultThumbnailCache(root, account, stamp, locked),
+    workingProxy: async (ref, signal) => (await workingImage(ref, { signal })).proxy,
+  });
+
   return {
+    thumbnail: (ref: Ref, version: string, options: Options = {}) =>
+      thumbnails.get({ ...ref, version }, signalFor(options)),
     async publishOriginal(ref: Ref, versionId: string, options: RemoteOptions) {
       const { sourceBytes, manifestBytes } = await ready(ref);
       const shape = { sourceBytes, manifestBytes };

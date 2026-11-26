@@ -10,7 +10,7 @@ import type {
 
 const uuid = '[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}';
 const projectPattern = new RegExp(
-  `^/projects(?:/(${uuid})(?:/surfaces/(${uuid})|/(${reviewSteps.join('|')}))?)?/*$`,
+  `^/projects(?:/(${uuid})(?:/surfaces/(${uuid})|/objects/(${uuid})|/(${reviewSteps.join('|')}))?)?/*$`,
 );
 
 const organisationPattern = new RegExp(`^/organisations(?:/(${uuid}))?/*$`);
@@ -22,9 +22,15 @@ export function normalizePath(path: string) {
 /** The project part of a path, or `undefined` when the path is not a project route. */
 export function projectLocation(path: string): ProjectLocation | undefined {
   const match = projectPattern.exec(path);
-  return match
-    ? { project: match[1], surface: match[2], review: match[3] as ReviewStep | undefined }
-    : undefined;
+  if (!match) return undefined;
+  const location: ProjectLocation = {
+    project: match[1],
+    surface: match[2],
+    review: match[4] as ReviewStep | undefined,
+  };
+  // Only object pages carry the key, so earlier routes keep their exact shape.
+  if (match[3]) location.object = match[3];
+  return location;
 }
 
 export function isAccountDestination(name: RouteName): name is AccountDestination {
@@ -57,6 +63,11 @@ export function projectHref(project?: string, surface?: string) {
   return accountPaths.projects + '/' + project + (surface ? '/surfaces/' + surface : '');
 }
 
+/** The surfaces of one object: the browser's third level. */
+export function objectHref(project: string, object: string) {
+  return projectHref(project) + '/objects/' + object;
+}
+
 export function organisationHref(organisation?: string) {
   return accountPaths.organisations + (organisation ? '/' + organisation : '');
 }
@@ -70,7 +81,9 @@ export function routeHref(route: Exclude<AppRoute, { name: 'notFound' }>): strin
   if (route.name === 'projects')
     return route.project && route.review
       ? projectReviewHref(route.project, route.review)
-      : projectHref(route.project, route.surface);
+      : route.project && route.object
+        ? objectHref(route.project, route.object)
+        : projectHref(route.project, route.surface);
   if (route.name === 'organisations') return organisationHref(route.organisation);
   if (route.name === 'login') return loginPath;
   if (route.name === 'offline') return offlinePath;

@@ -39,8 +39,7 @@ export function parseSharedProject(text: string): SharedProject {
     typeof revision !== 'number' ||
     !Number.isSafeInteger(revision) ||
     revision < 1 ||
-    !Array.isArray(objects) ||
-    !objects.length
+    !Array.isArray(objects)
   )
     throw new Error('Invalid project snapshot');
   return {
@@ -48,8 +47,7 @@ export function parseSharedProject(text: string): SharedProject {
     revision,
     objects: objects.map((value: unknown) => {
       const object = record(value);
-      if (!Array.isArray(object.surfaces) || !object.surfaces.length)
-        throw new Error('Invalid object');
+      if (!Array.isArray(object.surfaces)) throw new Error('Invalid object');
       return {
         name: name(object.name),
         surfaces: object.surfaces.map((value: unknown) => {

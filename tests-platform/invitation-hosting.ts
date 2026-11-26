@@ -53,7 +53,12 @@ export async function verifyHostingTransfer(
   expect(await excess.json()).toEqual({ error: 'storage_quota_exceeded' });
 
   inbox.once('dialog', (dialog) => dialog.accept());
-  await recipientOwners.getByRole('button', { name: 'Remove co-owner' }).click();
+  // The host's own row shows a disabled Remove with its reason; remove the former host's row.
+  await recipientOwners
+    .getByRole('listitem')
+    .filter({ hasText: 'owner@example.test' })
+    .getByRole('button', { name: 'Remove co-owner' })
+    .click();
   await expect(recipientOwners.getByText('owner@example.test')).toHaveCount(0);
   expect((await owner.get(owners)).status()).toBe(404);
   const finalOwners = await (await recipient.get(owners)).json();

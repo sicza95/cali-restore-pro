@@ -33,6 +33,9 @@ const notes = (page: Page, name: string) => row(page, name).locator('.field-help
  * and file names load above and inside the list).
  */
 export async function expectUnclipped(inner: Locator, outer: Locator, step: string, text = false) {
+  // Visibility is checked inside the current page's scroller as well as local panels.
+  // Offscreen content must be brought into view before testing ancestor clipping.
+  await inner.scrollIntoViewIfNeeded();
   const container = await outer.elementHandle();
   const measure = () =>
     inner.evaluate(

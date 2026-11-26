@@ -28,6 +28,7 @@ func (h *HTTP) setCookie(w http.ResponseWriter, raw string) { h.auth.SetCookie(w
 func (h *HTTP) Register(mux *http.ServeMux) {
 	route := h.auth.Guard(mux)
 	h.deletionRoutes(route)
+	h.visibilityRoutes(route)
 	if h.objects != nil {
 		h.fileRoutes(route, *h.objects)
 		h.invitationRoutes(route)

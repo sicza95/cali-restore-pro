@@ -5,6 +5,14 @@ import { aead } from '../src/platform/vault/aead';
 import { previewOrigin } from './files-origins';
 import { dng } from './fixtures/images';
 import { offlineSwitch } from './go-offline';
+import {
+  browserControl,
+  browserItem,
+  browserReady,
+  createHierarchyViaBrowser,
+  openItem,
+  openProjectSettings,
+} from './project-browser';
 
 async function openFreshVault(page: Page, origin = '') {
   await page.route('**/api/v1/auth/me', (route) =>
@@ -30,17 +38,16 @@ test('download and restore an encrypted project through the controls in a fresh 
 }, info) => {
   await page.setViewportSize({ width: 1194, height: 834 });
   await openFreshVault(page);
-  await page.getByLabel('Project name').fill('East Chapel');
-  await page.getByRole('button', { name: 'New project' }).click();
+  // Originals attach on the surface page since the project browser replaced the long form.
+  const created = await createHierarchyViaBrowser(page, { project: 'East Chapel' });
   await page.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'plaster-detail.dng',
     mimeType: 'image/x-adobe-dng',
     buffer: dng,
   });
   await page.getByRole('button', { name: 'Attach original', exact: true }).click();
-  await expect(page.getByText('plaster-detail.dng')).toBeVisible();
-  const originalPath = new URL(page.url()).pathname;
-  await page.getByRole('link', { name: 'Open surface', exact: true }).click();
+  await expect(page.locator('.project-originals').getByText('plaster-detail.dng')).toBeVisible();
+  const originalPath = created.surfacePath;
   const control = (key: string) => page.locator('[data-control-id="surface.review.' + key + '"]');
   await expect(control('calibrate')).toHaveAttribute('aria-disabled', 'false');
   await control('calibrate').click();
@@ -58,6 +65,7 @@ test('download and restore an encrypted project through the controls in a fresh 
     checkpoint(page, 'version').locator('option').filter({ hasText: 'Baseline assessment' }),
   ).toHaveCount(1);
   await page.locator('[data-control-id="surface.project"]').click();
+  await openProjectSettings(page);
   await page.getByText('Export backup', { exact: true }).click();
   await page.getByRole('button', { name: 'Prepare backup' }).click();
   const downloaded = page.waitForEvent('download');
@@ -72,21 +80,28 @@ test('download and restore an encrypted project through the controls in a fresh 
     const target = await fresh.newPage();
     await openFreshVault(target, previewOrigin);
     await expect.poll(() => target.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
-    await expect(target.getByRole('link', { name: 'East Chapel' })).toHaveCount(0);
+    await browserReady(target);
+    await expect(browserItem(target, 'East Chapel')).toHaveCount(0);
     await (
       await offlineSwitch(fresh, browserName)
     )(true);
-    await target.getByText('Import backup', { exact: true }).click();
+    // Import backup is the New button's second option at the root.
+    await browserControl(target, 'browser.import').click();
+    await browserControl(target.getByRole('dialog'), 'projects.restore').click();
     await target.getByLabel('Backup file').setInputFiles(archive);
     await target.screenshot({ path: info.outputPath('backup-portrait.png'), fullPage: true });
     expect((await new AxeBuilder({ page: target }).analyze()).violations).toEqual([]);
     await target.getByRole('button', { name: 'Restore as a local copy' }).click();
-    await expect(target.getByRole('heading', { name: 'East Chapel' })).toBeVisible();
-    await expect(target.getByText('plaster-detail.dng')).toBeVisible();
+    // The restored copy opens at its objects; walk down to the surface and its original.
+    await expect(target.getByRole('heading', { level: 1, name: 'East Chapel' })).toBeVisible();
+    await openItem(target, 'Object 1');
+    await openItem(target, 'Surface 1');
+    await expect(
+      target.locator('.project-originals').getByText('plaster-detail.dng'),
+    ).toBeVisible();
     await expect(
       target.getByRole('listitem').getByRole('combobox', { name: 'Image role' }),
     ).toHaveValue('mapping');
-    await target.getByRole('link', { name: 'Open surface', exact: true }).click();
     await expect(target.locator('.surface-canvas img')).toHaveJSProperty('naturalWidth', 48);
     await expect(target.getByRole('region', { name: 'Surface measurements' })).toContainText(
       '6 m²',

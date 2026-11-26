@@ -59,7 +59,7 @@
   font-size: 18px;
 }
 
-.cr-editor-identity h1 svg {
+.cr-editor-identity h1 :is(svg, .cr-icon) {
   transform: rotate(90deg);
   color: var(--cr-muted);
 }

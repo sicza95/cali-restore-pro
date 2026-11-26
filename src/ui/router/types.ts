@@ -4,8 +4,13 @@ export type ReviewStep = (typeof reviewSteps)[number];
 export type AccountDestination = keyof typeof accountPaths;
 export type PublicRouteName = (typeof publicRouteNames)[number];
 
-/** Where inside the project area a URL points: library, project, surface or review step. */
-export type ProjectLocation = { project?: string; surface?: string; review?: ReviewStep };
+/** Where inside the project area a URL points: library, project, object, surface or review step. */
+export type ProjectLocation = {
+  project?: string;
+  object?: string;
+  surface?: string;
+  review?: ReviewStep;
+};
 
 export type AppRoute =
   | { name: 'login' }

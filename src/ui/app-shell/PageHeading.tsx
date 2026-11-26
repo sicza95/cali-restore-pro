@@ -15,28 +15,35 @@ const settingsPages: string[] = ['profile', 'security', 'preferences'];
  */
 function crumbControl(crumb: Crumb, current: Crumb) {
   if (crumb.kind === 'route' && crumb.name === 'projects') return 'project.library';
+  if (crumb.kind === 'object') return 'surface.object';
   if (crumb.kind !== 'project') return undefined;
-  return current.kind === 'surface' ? 'surface.project' : 'project.review.parent';
+  return current.kind === 'surface'
+    ? 'surface.project'
+    : current.kind === 'object'
+      ? 'object.project'
+      : 'project.review.parent';
 }
 
-/**
- * Breadcrumbs from the route table, then the page title: the last step of the trail. A surface's
- * object sits before it as plain text.
- */
+/** Breadcrumbs from the route table, then the page title: the last step of the trail. */
 export function PageHeading() {
   const app = useApp();
   const page = usePageTrail();
   const parents = () => page.trail().slice(0, -1);
+  const browsing = () => {
+    const route = app.router.route();
+    return route.name === 'projects' && !route.surface && !route.review;
+  };
   return (
     <header
       class="app-page-heading"
       classList={{
+        'app-page-heading--browser': browsing(),
         'app-page-heading--settings': [...settingsPages, 'organisations'].includes(
           app.router.route().name,
         ),
       }}
     >
-      <Show when={parents().length}>
+      <Show when={browsing() || parents().length}>
         <nav class="app-breadcrumbs" aria-label={navigationText(app.lang()).breadcrumbs}>
           <ol>
             <For each={parents()}>
@@ -53,19 +60,11 @@ export function PageHeading() {
                 </li>
               )}
             </For>
-            <Show when={page.object()}>
-              {(name) => (
-                <li class="app-breadcrumbs-plain">
-                  <span>{name()}</span>
-                  <Icon name="chevron" size={14} />
-                </li>
-              )}
-            </Show>
             <li aria-current="page">{page.title()}</li>
           </ol>
         </nav>
       </Show>
-      <h1 class="app-page-title">
+      <h1 class="app-page-title" classList={{ 'account-visually-hidden': browsing() }}>
         {settingsPages.includes(app.router.route().name) ? app.t('settings') : page.title()}
       </h1>
     </header>

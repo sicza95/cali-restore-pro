@@ -1,0 +1,124 @@
+.browser-layout {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--cr-surface);
+  color: var(--cr-ink);
+}
+.browser-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.browser-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+.browser-panes-with-inspector {
+  grid-template-columns: minmax(0, 1fr) 304px;
+}
+.browser-content {
+  min-width: 0;
+  min-height: 0;
+  overscroll-behavior: contain;
+  padding: 24px;
+  overflow: auto;
+  container-type: inline-size;
+  container-name: browser-content;
+}
+.browser-inspector {
+  min-width: 0;
+  min-height: 0;
+  overscroll-behavior: contain;
+  overflow: auto;
+  background: var(--cr-raised);
+  border-left: 1px solid var(--cr-rule);
+}
+.browser-inspector-panel {
+  padding: 16px;
+}
+.browser-inspector-panel header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.browser-inspector-panel header h2 {
+  overflow-wrap: anywhere;
+  padding-top: 10px;
+}
+.browser-inspector-section {
+  margin-top: 0;
+  border-top: 1px solid var(--cr-rule);
+}
+.browser-inspector-section h3 {
+  margin-bottom: 12px;
+}
+.browser-inspector-section p {
+  color: var(--cr-muted);
+  overflow-wrap: anywhere;
+}
+.browser-inspector-section .browser-preview {
+  margin-top: 16px;
+}
+@media (max-width: 1050px) {
+  .browser-title {
+    padding-inline: 16px;
+  }
+  .browser-panes-with-inspector {
+    grid-template-columns: minmax(0, 1fr) 288px;
+  }
+  .browser-content {
+    padding: 24px 16px;
+  }
+}
+
+.browser-inspector-preview {
+  width: 96px;
+  margin: 12px auto 16px;
+}
+.browser-inspector-preview .browser-preview {
+  margin: 0;
+}
+.browser-inspector-preview .browser-preview-placeholder span:not(.cr-icon) {
+  display: none;
+}
+.browser-inspector-storage {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 16px;
+}
+.browser-inspector-storage p {
+  margin: 0;
+  color: var(--cr-muted);
+  font-size: 13px;
+}
+.browser-inspector-section > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.browser-inspector-section > summary::after {
+  content: '+';
+  margin-inline-start: auto;
+  color: var(--cr-muted);
+}
+.browser-inspector-section[open] > summary::after {
+  content: '−';
+}
+.browser-inspector-section-body {
+  padding: 0 0 16px;
+}
