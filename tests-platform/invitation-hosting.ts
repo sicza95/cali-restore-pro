@@ -68,13 +68,8 @@ export async function verifyHostingTransfer(
 }
 
 export async function enableHostingAndSync(project: Page) {
-  const hosting = project.waitForResponse(
-    (response) =>
-      response.request().method() === 'PUT' &&
-      /\/hosted-projects\/[a-f0-9-]+$/.test(response.url()),
-  );
-  await project.getByRole('button', { name: 'Enable hosting' }).click();
-  expect((await hosting).ok()).toBe(true);
+  // Hosting starts the initial sync, including originals. Interrupt that first publication
+  // to verify the queued document is retried when the connection returns.
   await project.route('**/hosted-projects/*/revision', async (route) => {
     if (route.request().method() === 'PUT') await route.abort('internetdisconnected');
     else await route.fallback();
@@ -83,7 +78,13 @@ export async function enableHostingAndSync(project: Page) {
     'requestfailed',
     (request) => request.method() === 'PUT' && request.url().endsWith('/revision'),
   );
-  await project.getByRole('button', { name: 'Enable editor sync' }).click();
+  const hosting = project.waitForResponse(
+    (response) =>
+      response.request().method() === 'PUT' &&
+      /\/hosted-projects\/[a-f0-9-]+$/.test(response.url()),
+  );
+  await project.getByRole('button', { name: 'Enable hosting' }).click();
+  expect((await hosting).ok()).toBe(true);
   await failed;
   const status = project.getByRole('region', { name: 'Cloud sync' }).getByRole('status');
   await expect(status).toContainText('waiting to sync');
