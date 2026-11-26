@@ -173,3 +173,17 @@ The Estimates and reports modal reuses the existing Estimates, Reports and Outpu
 pages without changing browser navigation. Scope defaults retain account → project →
 object → surface inheritance. Group invitations reuse existing invitation permissions;
 they do not introduce section-level project ACLs.
+
+Scoped browser dialogs use action-only headings and a fixed browser-style entity
+thumbnail/name column. Scope notes sit beneath that card; only the right content
+pane scrolls. Hosting removal has an explicitly labeled danger button. Hosting,
+sync and listing appear in dependency order with switches in menus and Info;
+active toolbar glyphs use the accent without a persistent button fill. Info is
+the sole rightmost inspector toggle. Separate pastel hosting and document-sync
+glyphs identify local, paused, syncing and synced states. Enabling hosting starts
+an initial file upload followed by document synchronization; sync may then pause
+without removing hosting. Info sizes use decimal byte/kB/MB/GB display to two
+fraction digits with exact-byte tooltips. Its combined access strip places owners
+first and labels each avatar with its recorded invitation group, or Member when
+older shares have no group provenance. Migration 0033 records source group names
+at invitation time; it does not turn those invitations into live group ACLs.

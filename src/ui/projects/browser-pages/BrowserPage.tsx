@@ -176,7 +176,13 @@ export function BrowserPage(props: BrowserPageProps) {
       { id: 'rename', label: c.rename, icon: 'pen', reason: reason('change'), run: beginRename },
       { id: 'delete', label: c.delete, icon: 'trash', reason: reason('delete'), run: openDelete },
       ...inherited.slice(4),
-      { id: 'info', label: c.info, icon: 'info', run: () => prefs.setInspectorOpen(true) },
+      {
+        id: 'info',
+        label: c.info,
+        icon: 'info',
+        checked: prefs.inspectorOpen(),
+        run: () => prefs.setInspectorOpen(!prefs.inspectorOpen()),
+      },
     ];
   };
   const open = (id: string) => {
@@ -348,6 +354,7 @@ export function BrowserPage(props: BrowserPageProps) {
           <DeleteDialog
             language={props.language}
             item={item}
+            preview={props.previews[item.id]}
             descendants={props.deletion(item).descendants}
             permanent={props.deletion(item).permanent}
             blockedReason={blocked()}

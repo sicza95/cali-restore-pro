@@ -1,3 +1,4 @@
+import { useDialogEntity } from './DialogEntity';
 import { ProjectGroupInvites } from './ProjectGroupInvites';
 import { organisationCopy } from '../../organisations/organisation-copy';
 import { createSignal, lazy, Show } from 'solid-js';
@@ -29,14 +30,21 @@ export function ItemOperationDialogs(props: {
   const [route, setRoute] = createSignal<ReviewRoute>('estimates');
   const [failed, setFailed] = createSignal(false);
   const project = () => props.ws.projects().find((p) => p.id === props.value.item.projectId);
-  const title = () => c()[props.value.kind === 'unhost' ? 'hosting' : props.value.kind];
+  const summary = useDialogEntity(
+    () => props.ws,
+    () => props.value.item,
+    () => props.value.kind !== 'manage',
+  );
+  const title = () => (props.value.kind === 'unhost' ? c().removeHosting : c()[props.value.kind]);
   return (
     <DialogShell
-      title={
-        title() +
-        ' · ' +
-        (props.value.kind === 'manage' ? props.value.item.name : (project()?.name ?? ''))
-      }
+      title={title()}
+      sidebar={summary(
+        props.value.kind === 'share' ||
+          (props.value.item.kind !== 'project' && props.value.kind !== 'manage') ? (
+          <p>{c().projectScope}</p>
+        ) : undefined,
+      )}
       closeLabel={browserCopy[props.ws.language].close}
       onClose={props.onClose}
     >
@@ -44,7 +52,6 @@ export function ItemOperationDialogs(props: {
         {(p) => (
           <>
             <Show when={props.value.kind === 'share'}>
-              <p>{c().projectScope}</p>
               <div class="project-review-nav" role="tablist" aria-label={c().share}>
                 <button
                   type="button"
@@ -98,6 +105,7 @@ export function ItemOperationDialogs(props: {
               <p>{c().hostingConfirm}</p>
               <button
                 type="button"
+                class="cr-button cr-button--danger"
                 disabled={props.ws.busy()}
                 data-control-id="browser.hosting.remove"
                 onClick={() => {
@@ -121,7 +129,7 @@ export function ItemOperationDialogs(props: {
                     });
                 }}
               >
-                {c().hosting}
+                {c().removeHosting}
               </button>
               <Show when={failed()}>
                 <p role="alert">{c().failed}</p>

@@ -1,3 +1,4 @@
+import { formatFileSize } from '../../../platform/format/number';
 import { useItemSize } from './useItemSize';
 import { itemActionCopy } from '../browser/item-actions/copy';
 import { createResource, Show } from 'solid-js';
@@ -74,14 +75,20 @@ export function ItemDetails(props: {
       <dt>{c().organisation}</dt>
       <dd>{organisation()}</dd>
       <dt>{itemActionCopy[props.ws.language].size}</dt>
-      <dd>
+      <dd
+        title={
+          size() === undefined
+            ? undefined
+            : new Intl.NumberFormat(props.ws.language, {
+                style: 'unit',
+                unit: 'byte',
+                maximumFractionDigits: 0,
+              }).format(size()!)
+        }
+      >
         {size() === undefined
           ? copy().unknown
-          : new Intl.NumberFormat(props.ws.language, {
-              style: 'unit',
-              unit: 'byte',
-              unitDisplay: 'short',
-            }).format(size()!)}
+          : formatFileSize(size()!, props.ws.language, { precision: 2, decimal: true })}
       </dd>
       <Show when={props.item.access !== 'directory'}>
         <dt>{c().creator}</dt>

@@ -51,7 +51,9 @@ export function ChildLevel(props: { ws: Workspace; project: SavedProject; object
       : objectItems(props.project, context);
   });
   const described = createMemo(() =>
-    items().map((item) => ({ ...item, originals: originals(props.project.id, photosOf(item)) })),
+    items().map((item) =>
+      operations.describe({ ...item, originals: originals(props.project.id, photosOf(item)) }),
+    ),
   );
   const previews = usePreviews(
     () => ws.vault,

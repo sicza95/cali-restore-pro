@@ -24,6 +24,7 @@ export function itemStatus(input: StatusInput): BrowserItemStatus {
   if (input.unavailable) return 'unknown';
   if (localRevision === undefined) return input.remote ? 'remote' : 'unknown';
   if (!sync) return 'unknown';
+  if (base?.paused) return 'paused';
   if (draft) return 'pending';
   if (!base) return input.remote ? 'unknown' : 'local';
   if (localRevision > base.localRevision || base.revision === 0) return 'pending';

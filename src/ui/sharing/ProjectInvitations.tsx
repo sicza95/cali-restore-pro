@@ -14,6 +14,7 @@ export function ProjectInvitations(props: {
   /** The organisation the project is hosted in; none means the personal one. */
   organisation?: string;
   onLeave?: () => void;
+  onHosted?: () => Promise<void>;
   vault: LocalVault;
 }) {
   const app = useApp();
@@ -36,6 +37,7 @@ export function ProjectInvitations(props: {
           canHost={props.canHost}
           organisation={props.organisation}
           onLeave={props.onLeave}
+          onHosted={props.onHosted}
         />
       </Show>
     </details>

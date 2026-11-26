@@ -3660,6 +3660,11 @@
                   },
                   "shareHistory": {
                     "type": "boolean"
+                  },
+                  "groupId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Optional source organization group. Recipient must currently belong to the group in this project organization. Its name is recorded for access labels."
                   }
                 },
                 "additionalProperties": false
@@ -3771,6 +3776,11 @@
                           },
                           "shareHistory": {
                             "type": "boolean"
+                          },
+                          "groupName": {
+                            "type": "string",
+                            "maxLength": 60,
+                            "description": "Organization group name recorded at invitation time. Omitted for older or unclassified grants."
                           }
                         }
                       }

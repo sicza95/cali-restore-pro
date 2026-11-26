@@ -65,6 +65,7 @@
   border-radius: var(--cr-radius);
 }
 .browser-view-toggle .browser-action-label,
+.browser-action[data-control-id='browser.inspector'] .browser-action-label,
 .browser-action[data-control-id='browser.settings'] .browser-action-label,
 .browser-action[data-control-id='browser.import'] .browser-action-label {
   display: none;

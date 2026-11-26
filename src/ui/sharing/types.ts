@@ -12,6 +12,7 @@ export type SentInvitation = Omit<Invitation, 'state'> & {
   state: Invitation['state'] | 'revoked';
   email: string;
   recipientId: string;
+  groupName?: string;
   recipientKey?: string;
   sourceIds?: string[];
 };

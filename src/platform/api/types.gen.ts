@@ -2427,6 +2427,10 @@ export type ListOwnedProjectInvitationsResponses = {
       sourceIds?: Array<string>;
       estimateScope: 'none' | 'estimate-summary' | 'estimate-full';
       shareHistory: boolean;
+      /**
+       * Organization group name recorded at invitation time. Omitted for older or unclassified grants.
+       */
+      groupName?: string;
     }>;
     originalEpoch: string | '';
   };
@@ -2441,6 +2445,10 @@ export type CreateProjectInvitationData = {
     coOwner?: boolean;
     estimateScope?: 'none' | 'estimate-summary' | 'estimate-full';
     shareHistory?: boolean;
+    /**
+     * Optional source organization group. Recipient must currently belong to the group in this project organization. Its name is recorded for access labels.
+     */
+    groupId?: string;
   };
   headers: {
     Origin: string;

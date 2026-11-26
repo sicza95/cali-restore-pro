@@ -1,3 +1,4 @@
+import { DialogItem } from './DialogItem';
 import { createUniqueId, Show } from 'solid-js';
 import { browserCopy } from '../browser-copy';
 import type { DeleteDialogProps } from '../types';
@@ -10,7 +11,23 @@ export function DeleteDialog(props: DeleteDialogProps) {
   const permanent = () => props.item.kind !== 'project' || !!props.permanent;
   return (
     <DialogShell
-      title={copy().deleteTitle(props.item.name)}
+      title={copy().delete}
+      sidebar={
+        <DialogItem
+          language={props.language}
+          kind={props.item.kind}
+          name={props.item.name}
+          preview={props.preview}
+        >
+          <p>
+            {props.item.kind !== 'project'
+              ? copy().childDeleteHelp
+              : props.permanent
+                ? copy().localProjectDeleteHelp
+                : copy().projectDeleteHelp}
+          </p>
+        </DialogItem>
+      }
       closeLabel={copy().close}
       onClose={props.onClose}
     >
@@ -20,13 +37,6 @@ export function DeleteDialog(props: DeleteDialogProps) {
           if (!props.busy && !props.blockedReason) props.onConfirm();
         }}
       >
-        <p>
-          {props.item.kind !== 'project'
-            ? copy().childDeleteHelp
-            : props.permanent
-              ? copy().localProjectDeleteHelp
-              : copy().projectDeleteHelp}
-        </p>
         <p>
           {copy().descendantCounts(
             count(props.descendants.objects),

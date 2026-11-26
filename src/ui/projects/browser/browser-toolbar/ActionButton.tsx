@@ -9,6 +9,7 @@ export function ActionButton(props: {
   reason?: string;
   pressed?: boolean;
   primary?: boolean;
+  toggle?: boolean;
   onClick: () => void;
 }) {
   const id = createUniqueId();
@@ -17,7 +18,10 @@ export function ActionButton(props: {
       <button
         type="button"
         class="browser-action"
-        classList={{ 'browser-action-primary': props.primary }}
+        classList={{
+          'browser-action-primary': props.primary,
+          'browser-action-toggle': props.toggle,
+        }}
         data-control-id={props.controlId}
         aria-label={props.label}
         title={props.reason ? `${props.label}: ${props.reason}` : props.label}
@@ -28,7 +32,11 @@ export function ActionButton(props: {
           if (!props.reason) props.onClick();
         }}
       >
-        <Icon name={props.icon} size={18} />
+        <Icon
+          name={props.icon}
+          size={18}
+          class={props.toggle && props.pressed ? 'browser-active-icon' : undefined}
+        />
         <span class="browser-action-label">{props.label}</span>
       </button>
       <Show when={props.reason}>

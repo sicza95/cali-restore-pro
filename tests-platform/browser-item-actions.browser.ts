@@ -57,7 +57,7 @@ test('item menus, inline rename, copy, archive filters and scoped modals', async
   await input.fill('Renamed chapel');
   await input.press('Tab');
   await expect(browserItem(page, 'Renamed chapel')).toBeVisible();
-  await control(page, 'browser.more').click();
+  await browserItem(page, 'Renamed chapel').getByRole('button', { name: 'More actions' }).click();
   await control(page.getByRole('menu'), 'browser.menu.copy').click();
   await expect(browserItem(page, 'Renamed chapel (copy)')).toBeVisible();
   await browserItem(page, 'Renamed chapel').click();
@@ -94,7 +94,8 @@ test('item menus, inline rename, copy, archive filters and scoped modals', async
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.screenshot({ path: info.outputPath('reports-834.png') });
   await control(page.getByRole('dialog'), 'browser.dialog.close').click();
-  await control(page, 'browser.action.info').click();
+  if ((await control(page, 'browser.inspector').getAttribute('aria-pressed')) !== 'true')
+    await control(page, 'browser.inspector').click();
   await expect(page.locator('.browser-inspector')).toContainText('Server storage size');
   for (const size of [
     { width: 1194, height: 834 },
@@ -110,4 +111,137 @@ test('item menus, inline rename, copy, archive filters and scoped modals', async
   }
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   expect(errors).toEqual([]);
+});
+
+test('hosting starts synced, scoped dialogs retain context, and Info shows access roles', async ({
+  page,
+}, info) => {
+  const account = '00000000-0000-4000-8000-000000000001';
+  const epoch = '00000000-0000-4000-8000-000000000033';
+  let hosted = false;
+  let head: Record<string, unknown> | null = null;
+  let writes = 0;
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({
+      json: {
+        account: { id: account, email: 'owner@example.test', state: 'active', role: 'member' },
+        csrfToken: 'synthetic-csrf',
+      },
+    }),
+  );
+  await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
+  await page.route('**/api/v1/hosted-projects', (route) => route.fulfill({ json: [] }));
+  await page.route(/\/api\/v1\/hosted-projects\/[^/]+$/, (route) => {
+    hosted = true;
+    return route.fulfill({ status: 204 });
+  });
+  await page.route('**/api/v1/hosted-projects/*/visibility', (route) =>
+    route.fulfill(
+      hosted
+        ? { json: { visibility: 'private', version: 1, name: 'Chapel' } }
+        : { status: 404, json: { error: 'not_found' } },
+    ),
+  );
+  await page.route('**/api/v1/hosted-projects/*/revision', (route) => {
+    if (route.request().method() === 'PUT') {
+      const body = route.request().postDataJSON();
+      head = { ...body, revision: body.expected + 1 };
+      writes++;
+    }
+    return route.fulfill({ json: { epoch, head } });
+  });
+  await page.route('**/api/v1/hosted-projects/*/storage', (route) =>
+    route.fulfill({ json: { bytes: 1234567 } }),
+  );
+  await page.route('**/api/v1/hosted-projects/*/owners', (route) =>
+    route.fulfill({ json: { owners: [{ id: account, email: 'owner@example.test', host: true }] } }),
+  );
+  await page.route('**/api/v1/hosted-projects/*/invitations', (route) =>
+    route.fulfill({
+      json: {
+        invitations: [
+          {
+            id: 'grant',
+            recipientId: 'estimator',
+            email: 'estimator@example.test',
+            state: 'active',
+            coOwner: false,
+            groupName: 'Estimator',
+          },
+        ],
+      },
+    }),
+  );
+  await page.route('**/api/v1/hosted-projects/*/hosting', (route) => {
+    hosted = false;
+    head = null;
+    return route.fulfill({ status: 204 });
+  });
+  await page.goto('/projects');
+  await createItem(page, 'Chapel');
+  await expect(control(page, 'browser.more')).toHaveCount(0);
+  await control(page, 'browser.action.hosting').click();
+  await expect(control(page, 'browser.action.hosting')).toHaveAttribute('aria-pressed', 'true');
+  await expect(control(page, 'browser.action.sync')).toHaveAttribute('aria-pressed', 'true');
+  await expect(browserItem(page, 'Chapel').locator('[data-status="synced"]')).toHaveCount(1);
+  expect(writes).toBeGreaterThan(0);
+  await expect(browserItem(page, 'Chapel').locator('.browser-hosted-indicator')).toHaveCount(1);
+  const active = control(page, 'browser.action.hosting');
+  expect(await active.locator('.cr-icon').evaluate((el) => getComputedStyle(el).color)).not.toBe(
+    await active.evaluate((el) => getComputedStyle(el).color),
+  );
+  await control(page, 'browser.action.sync').click();
+  await expect(browserItem(page, 'Chapel').locator('[data-status="paused"]')).toHaveCount(1);
+  await browserItem(page, 'Chapel').click({ button: 'right' });
+  await expect(page.getByRole('menuitemcheckbox')).toHaveText([
+    'Server hosting',
+    'Cloud sync',
+    'Listed in organization',
+  ]);
+  await expect(
+    page.locator('[data-control-id="browser.menu.hosting"] .browser-switch'),
+  ).toHaveAttribute('data-checked', 'true');
+  await page.keyboard.press('Escape');
+  if ((await control(page, 'browser.inspector').getAttribute('aria-pressed')) !== 'true')
+    await control(page, 'browser.inspector').click();
+  const panel = page.locator('.browser-inspector');
+  await expect(panel.locator('.project-access-role')).toHaveText(['Owner', 'Estimator']);
+  await expect(panel.getByRole('heading', { name: 'Owners', exact: true })).toHaveCount(0);
+  await expect(panel.getByText('1.23 MB', { exact: true })).toHaveAttribute('title', /1,234,567/);
+  await expect(panel.locator('.project-info-toggle')).toHaveText([
+    'Server hosting',
+    'Cloud sync',
+    'Listed in organization',
+  ]);
+  await control(page, 'browser.action.manage').click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('heading', { level: 2 })).toHaveText('Manage');
+  const before = await dialog.locator('.browser-dialog-context').boundingBox();
+  await dialog.locator('.browser-dialog-content').evaluate((el) => {
+    el.scrollTop = 500;
+  });
+  await expect
+    .poll(() => dialog.locator('.browser-dialog-content').evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(0);
+  expect(await dialog.locator('.browser-dialog-context').boundingBox()).toEqual(before);
+  await page.screenshot({ path: info.outputPath('scoped-manage-1194.png') });
+  await control(dialog, 'browser.dialog.close').click();
+  await control(page, 'browser.action.hosting').click();
+  await expect(dialog.getByRole('heading', { level: 2 })).toHaveText('Remove server hosting');
+  await expect(dialog.locator('.browser-dialog-context')).toContainText('Chapel');
+  await expect(control(dialog, 'browser.hosting.remove')).toHaveText('Remove server hosting');
+  await expect(control(dialog, 'browser.hosting.remove')).toHaveClass(/cr-button--danger/);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.screenshot({ path: info.outputPath('remove-hosting-1194.png') });
+  await page.setViewportSize({ width: 834, height: 1194 });
+  await page.screenshot({ path: info.outputPath('remove-hosting-834.png') });
+  await control(dialog, 'browser.hosting.remove').click();
+  await expect(dialog).toHaveCount(0);
+  await expect(browserItem(page, 'Chapel').locator('[data-status="local"]')).toHaveCount(1);
+  await control(page, 'browser.view.list').click();
+  const row = browserItem(page, 'Chapel');
+  const rowBox = (await row.boundingBox())!;
+  const moreBox = (await row.getByRole('button', { name: 'More actions' }).boundingBox())!;
+  expect(Math.abs(rowBox.y + rowBox.height / 2 - moreBox.y - moreBox.height / 2)).toBeLessThan(1);
+  expect(rowBox.x + rowBox.width - moreBox.x - moreBox.width).toBeGreaterThanOrEqual(8);
 });

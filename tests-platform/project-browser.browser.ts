@@ -191,7 +191,10 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
 
   // Project gear: sync, backup, sharing and the review links of the open project.
   const settings = await openProjectSettings(page);
-  await expect(settings.getByRole('heading', { name: /East Chapel/ })).toBeVisible();
+  await expect(
+    settings.getByRole('heading', { name: 'Project settings', exact: true }),
+  ).toBeVisible();
+  await expect(settings.locator('.browser-dialog-context')).toContainText('East Chapel');
   for (const id of [
     'project.sync.enable',
     'project.backup',

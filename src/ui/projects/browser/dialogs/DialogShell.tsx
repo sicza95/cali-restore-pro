@@ -1,4 +1,5 @@
-import { createUniqueId, onCleanup, onMount } from 'solid-js';
+import './scoped-dialog.css';
+import { createUniqueId, onCleanup, onMount, Show } from 'solid-js';
 import type { JSX } from 'solid-js';
 import { Icon } from '../../../icon/Icon';
 import '../styles.css';
@@ -8,6 +9,7 @@ export function DialogShell(props: {
   title: string;
   closeLabel: string;
   onClose: () => void;
+  sidebar?: JSX.Element;
   children: JSX.Element;
 }) {
   let dialog!: HTMLDialogElement;
@@ -33,6 +35,7 @@ export function DialogShell(props: {
     <dialog
       ref={(element) => (dialog = element)}
       class="cr-dialog browser-dialog"
+      classList={{ 'browser-dialog-scoped': !!props.sidebar }}
       aria-labelledby={id}
       onCancel={(event) => {
         event.preventDefault();
@@ -51,7 +54,12 @@ export function DialogShell(props: {
           <Icon name="close" size={18} />
         </button>
       </div>
-      {props.children}
+      <Show when={props.sidebar} fallback={props.children}>
+        <div class="browser-dialog-split">
+          <aside class="browser-dialog-context">{props.sidebar}</aside>
+          <div class="browser-dialog-content">{props.children}</div>
+        </div>
+      </Show>
     </dialog>
   );
 }

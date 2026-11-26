@@ -44,6 +44,7 @@ export function ItemTile(props: ItemProps) {
       <span class="browser-item-status">
         <StatusBadge
           language={props.language}
+          hosted={props.item.hosted}
           status={props.item.access === 'directory' ? 'remote' : props.item.status}
         />
       </span>

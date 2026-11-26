@@ -1,3 +1,5 @@
+import { useDialogEntity } from './DialogEntity';
+import { projectItems } from '../../../platform/projects/browser/browser-model';
 import { Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
 import { accountPaths } from '../../router/constants';
@@ -72,11 +74,21 @@ export function ProjectSettingsDialog(props: {
   project: SavedProject;
   onClose: () => void;
 }) {
+  const summary = useDialogEntity(
+    () => props.ws,
+    () =>
+      projectItems({
+        organisation: props.project.organisation ?? null,
+        local: [props.project],
+      })[0]!,
+    () => true,
+  );
   const c = () => pageCopy[props.ws.language];
   const p = () => projectCopy[props.ws.language];
   return (
     <DialogShell
-      title={browserCopy[props.ws.language].projectSettings + ' · ' + props.project.name}
+      title={browserCopy[props.ws.language].projectSettings}
+      sidebar={summary()}
       closeLabel={browserCopy[props.ws.language].close}
       onClose={props.onClose}
     >
@@ -101,6 +113,7 @@ export function ProjectSettingsDialog(props: {
               canHost
               organisation={props.project.organisation}
               vault={props.ws.vault}
+              onHosted={() => props.ws.sync.initialSync(props.project)}
             />
           </section>
         </Show>

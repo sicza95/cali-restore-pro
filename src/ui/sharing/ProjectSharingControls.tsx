@@ -22,6 +22,7 @@ export function ProjectSharingControls(props: {
   canHost?: boolean;
   organisation?: string;
   onLeave?: () => void;
+  onHosted?: () => Promise<void>;
   vault: LocalVault;
 }) {
   const app = useApp();
@@ -59,13 +60,14 @@ export function ProjectSharingControls(props: {
           disabled={sent.busy()}
           data-control-id="project.host"
           onClick={() =>
-            void sent.run(() =>
-              app.request(
+            void sent.run(async () => {
+              await app.request(
                 props.projectPath,
                 props.organisation ? { organisation: props.organisation } : {},
                 'PUT',
-              ),
-            )
+              );
+              await props.onHosted?.();
+            })
           }
         >
           {c().enable}

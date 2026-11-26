@@ -64,7 +64,7 @@ export function BrowserToolbar(props: BrowserToolbarProps) {
           }
         >
           <ItemActionButtons
-            actions={props.itemActions ?? []}
+            actions={props.itemActions?.filter((action) => action.id !== 'info') ?? []}
             label={itemActionCopy[props.language].more}
           />
         </Show>
@@ -152,8 +152,8 @@ export function BrowserToolbar(props: BrowserToolbarProps) {
           onClick={props.onSettings}
         />
         <ActionButton
-          label={copy().inspector}
-          icon="sidebar-right"
+          label={itemActionCopy[props.language].info}
+          icon="info"
           controlId="browser.inspector"
           pressed={props.inspectorOpen}
           onClick={props.onInspectorToggle}

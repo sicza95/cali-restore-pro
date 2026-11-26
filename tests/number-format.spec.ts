@@ -63,6 +63,8 @@ test('money and rates follow the currency', () => {
 });
 
 test('file sizes', () => {
+  expect(plain(formatFileSize(1234567, 'en', { precision: 2, decimal: true }))).toBe('1.23 MB');
+  expect(plain(formatFileSize(1234567, 'hu', { precision: 2, decimal: true }))).toBe('1,23 MB');
   expect(plain(formatFileSize(512, 'en'))).toBe('512 B');
   expect(plain(formatFileSize(13565, 'en'))).toBe('13.2 KB');
   expect(plain(formatFileSize(13565, 'hu'))).toBe('13,2 KB');

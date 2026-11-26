@@ -1,3 +1,4 @@
+import { useDialogEntity } from './DialogEntity';
 import { createMemo, createSignal, For, Show } from 'solid-js';
 import type { BrowserItemDescriptor } from '../../../platform/projects/browser-contracts';
 import { imageDeck } from '../../../platform/projects/browser/deck';
@@ -37,6 +38,11 @@ export function ItemInspector(props: {
           : { kind: 'surface' as const, objectId: props.item.objectId!, surfaceId: props.item.id };
     return project ? entityOf(project, target) : undefined;
   });
+  const summary = useDialogEntity(
+    () => props.ws,
+    () => props.item,
+    () => false,
+  );
   const share = () => props.actions.find((action) => action.id === 'share');
   return (
     <div class="browser-inspector-panel project-item-info">
@@ -71,10 +77,11 @@ export function ItemInspector(props: {
         </span>
       </button>
       <For
-        each={props.actions.filter((action) => ['sync', 'hosting', 'listed'].includes(action.id))}
+        each={props.actions.filter((action) => ['hosting', 'sync', 'listed'].includes(action.id))}
       >
         {(action) => (
           <label class="project-info-toggle">
+            <span>{action.label}</span>
             <input
               type="checkbox"
               role="switch"
@@ -83,11 +90,10 @@ export function ItemInspector(props: {
               title={action.reason}
               onChange={() => action.run()}
             />
-            <span>{action.label}</span>
           </label>
         )}
       </For>
-      <StatusBadge language={props.ws.language} status={props.item.status} />
+      <StatusBadge hosted={props.hosted} language={props.ws.language} status={props.item.status} />
       <Show
         when={props.ws.sync
           .state()
@@ -111,6 +117,7 @@ export function ItemInspector(props: {
         {(found) => (
           <DialogShell
             title={copy().preview}
+            sidebar={summary()}
             closeLabel={copy().close}
             onClose={() => setGallery(false)}
           >

@@ -134,14 +134,21 @@ export function formatRate(
 }
 
 /** A file size in bytes, KB, MB or GB (1024-based) to a tenth: `13.2 KB`, HU `13,2 KB`. */
-export function formatFileSize(bytes: number, language: NumberLanguage) {
-  const units = ['B', 'KB', 'MB', 'GB'];
+export function formatFileSize(
+  bytes: number,
+  language: NumberLanguage,
+  options: { precision?: number; decimal?: boolean } = {},
+) {
+  const units = options.decimal ? ['byte', 'kB', 'MB', 'GB'] : ['B', 'KB', 'MB', 'GB'];
+  const base = options.decimal ? 1000 : 1024;
   let size = bytes;
   let index = 0;
-  while (size >= 1024 && index < units.length - 1) {
-    size /= 1024;
+  while (size >= base && index < units.length - 1) {
+    size /= base;
     index++;
   }
-  const text = formatter(language, { maximumFractionDigits: index ? 1 : 0 }).format(size);
+  const text = formatter(language, {
+    maximumFractionDigits: index ? (options.precision ?? 1) : 0,
+  }).format(size);
   return text + nbsp + units[index];
 }

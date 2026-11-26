@@ -9,6 +9,7 @@ it.each<[Partial<StatusInput>, string]>([
   [{ sync: { checkpoints: [], drafts: [] } }, 'local'],
   [{ localRevision: undefined, remote: true }, 'remote'],
   [{}, 'synced'],
+  [{ sync: { checkpoints: [{ ...base, paused: true }], drafts: [draft] } }, 'paused'],
   [{ localRevision: 7 }, 'pending'],
   [{ sync: { checkpoints: [{ ...base, revision: 0 }], drafts: [] } }, 'pending'],
   [{ sync: { checkpoints: [base], drafts: [draft] } }, 'pending'],

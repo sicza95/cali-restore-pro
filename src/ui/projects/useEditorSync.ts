@@ -1,3 +1,4 @@
+import { projectAssetIds } from '../../platform/projects/browser/assets';
 import { createSignal, onCleanup, onMount } from 'solid-js';
 import { cloudProjects } from '../../platform/projects/cloud-projects';
 import { editorSync } from '../../platform/projects/editor-sync';
@@ -65,5 +66,17 @@ export function useEditorSync(vault: LocalVault, csrf: () => string) {
       unavailable: unavailable(),
     });
   }
-  return { sync, cloud, refresh, state, statusKey, itemStatus, unavailable };
+  async function initialSync(project: SavedProject) {
+    const token = csrf();
+    if (!token) throw new Error('Session token unavailable');
+    for (const id of projectAssetIds(project))
+      await vault.files().upload({ project: project.id, id }, { csrf: token });
+    const base = (await sync.status()).checkpoints.find((base) => base.project === project.id);
+    if (!base) await sync.enable(project.id);
+    else if (base.paused) await sync.setPaused(project.id, false);
+    await sync.stagePending();
+    await vault.revisions().retry(token);
+    await refresh();
+  }
+  return { sync, cloud, refresh, initialSync, state, statusKey, itemStatus, unavailable };
 }

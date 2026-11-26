@@ -31,6 +31,7 @@ type ownerInvitation struct {
 	SourceIDs     []string `json:"sourceIds,omitempty"`
 	EstimateScope string   `json:"estimateScope"`
 	ShareHistory  bool     `json:"shareHistory"`
+	GroupName     string   `json:"groupName,omitempty"`
 }
 
 func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]ownerInvitation, error) {
@@ -40,7 +41,7 @@ func (a fileAccess) ownerInvitations(ctx context.Context, project string) ([]own
 	rows, err := a.tx.Query(ctx, `SELECT i.id,i.recipient_email,i.state,i.recipient_id,
  CASE WHEN i.state IN ('accepted','active')
  AND r.email=i.recipient_email AND r.state='active' THEN coalesce(k.public_key,'') ELSE '' END,
- i.co_owner,rotation.ids,i.estimate_scope,i.share_history
+ i.co_owner,rotation.ids,i.estimate_scope,i.share_history,i.group_name
  FROM project_invitations i JOIN accounts r ON r.id=i.recipient_id
  LEFT JOIN sharing_identities k ON k.account_id=i.recipient_id
  LEFT JOIN LATERAL (
@@ -91,32 +92,45 @@ func (a fileAccess) requireProjectOwner(ctx context.Context, project string) err
 }
 
 type invitationScope struct {
+	GroupID       string `json:"groupId,omitempty"`
 	EstimateScope string `json:"estimateScope"`
 	ShareHistory  bool   `json:"shareHistory"`
 }
 
 func (scope invitationScope) valid() bool {
-	return scope.EstimateScope == "none" || scope.EstimateScope == "estimate-summary" || scope.EstimateScope == "estimate-full"
+	return (scope.GroupID == "" || httpjson.UUID(scope.GroupID)) && (scope.EstimateScope == "none" || scope.EstimateScope == "estimate-summary" || scope.EstimateScope == "estimate-full")
 }
 
 func (s *Service) invite(ctx context.Context, a fileAccess, project, email string, coOwner bool, scope invitationScope) (string, error) {
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return "", err
 	}
+	var groupName string
+	if scope.GroupID != "" {
+		err := a.tx.QueryRow(ctx, `SELECT g.name FROM organisation_groups g JOIN hosted_projects p ON p.organisation_id=g.organisation_id
+   JOIN organisation_member_groups m ON m.group_id=g.id AND m.organisation_id=g.organisation_id
+   JOIN accounts r ON r.id=m.account_id WHERE p.id=$1 AND g.id=$2 AND r.email=$3`, project, scope.GroupID, email).Scan(&groupName)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", identity.ErrInvalid
+		}
+		if err != nil {
+			return "", err
+		}
+	}
 	var id, recipient, lang string
 	var expires time.Time
-	err := a.tx.QueryRow(ctx, `INSERT INTO project_invitations (project_id,recipient_id,recipient_email,co_owner,estimate_scope,share_history)
- SELECT $1,r.id,r.email,$3,$4,$5 FROM accounts r
+	err := a.tx.QueryRow(ctx, `INSERT INTO project_invitations (project_id,recipient_id,recipient_email,co_owner,estimate_scope,share_history,group_name)
+ SELECT $1,r.id,r.email,$3,$4,$5,$6 FROM accounts r
  WHERE r.email=$2 AND r.state='active' AND NOT EXISTS (
    SELECT 1 FROM project_owners o WHERE o.project_id=$1 AND o.account_id=r.id
  )
  ON CONFLICT (project_id,recipient_id) DO UPDATE
  SET id=excluded.id, recipient_email=excluded.recipient_email, expires_at=excluded.expires_at,
- co_owner=excluded.co_owner, estimate_scope=excluded.estimate_scope,share_history=excluded.share_history,state='pending'
+ co_owner=excluded.co_owner, estimate_scope=excluded.estimate_scope,share_history=excluded.share_history,group_name=excluded.group_name,state='pending'
  WHERE project_invitations.state IN ('cancelled','revoked') OR (
    project_invitations.state='pending' AND project_invitations.expires_at<=clock_timestamp()
  )
- RETURNING id, recipient_id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email, coOwner, scope.EstimateScope, scope.ShareHistory).Scan(&id, &recipient, &expires, &lang)
+ RETURNING id, recipient_id, expires_at, (SELECT language FROM accounts WHERE email=$2)`, project, email, coOwner, scope.EstimateScope, scope.ShareHistory, groupName).Scan(&id, &recipient, &expires, &lang)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", identity.ErrConflict
 	}

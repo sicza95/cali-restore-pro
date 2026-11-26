@@ -47,6 +47,7 @@ export function ProjectGroupInvites(props: { project: SavedProject; hosted: bool
           continue;
         await app.request(path + '/invitations', {
           email: member.email,
+          groupId: groupId(),
           coOwner: fields.has('coOwner'),
           estimateScope: fields.get('estimateScope'),
           shareHistory: fields.has('shareHistory'),

@@ -8,6 +8,7 @@ export const browserItemKinds = ['project', 'object', 'surface'] as const;
 export type BrowserItemKind = (typeof browserItemKinds)[number];
 export const browserItemStatuses = [
   'local',
+  'paused',
   'remote',
   'synced',
   'pending',
@@ -76,6 +77,7 @@ export type BrowserItemDescriptor = EntityMetadata & {
   cover?: CoverReference;
   childCount: number | null;
   /** Children inherit the project's document status, not an independent checkpoint. */
+  hosted?: boolean;
   status: BrowserItemStatus;
   originals: BrowserOriginalAvailability;
   visibility: ProjectVisibility;

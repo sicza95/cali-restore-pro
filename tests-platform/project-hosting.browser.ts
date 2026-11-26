@@ -37,6 +37,13 @@ for (const language of ['en', 'hu'] as const)
         allowed ? { status: 204 } : { status: 403, json: { error: 'not_permitted' } },
       );
     });
+    const epoch = '00000000-0000-4000-8000-000000000033';
+    await page.route('**/api/v1/hosted-projects/*/revision', (route) => {
+      const body = route.request().method() === 'PUT' ? route.request().postDataJSON() : undefined;
+      return route.fulfill({
+        json: { epoch, head: body ? { ...body, revision: body.expected + 1 } : null },
+      });
+    });
     await page.route('**/api/v1/hosted-projects/*/owners', (route) =>
       route.fulfill({ json: { owners: [], hostingTransfer: null } }),
     );

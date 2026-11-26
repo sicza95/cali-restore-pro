@@ -106,18 +106,6 @@ export function useItemOperations(ws: Workspace) {
           }),
       },
       {
-        id: 'sync',
-        label: c().sync,
-        icon: 'sync',
-        reason: reason ?? (!hosted(item.projectId) ? c().hosting : undefined),
-        checked: !!base && !base.paused,
-        run: () =>
-          run(async () => {
-            if (base) await ws.sync.sync.setPaused(item.projectId, !base.paused);
-            else await ws.sync.sync.enable(item.projectId);
-          }),
-      },
-      {
         id: 'hosting',
         label: c().hosting,
         icon: 'cloud',
@@ -133,8 +121,21 @@ export function useItemOperations(ws: Workspace) {
                 'PUT',
               );
               await ws.sync.sync.hosting(item.projectId, true);
+              await ws.sync.initialSync(project!);
             });
         },
+      },
+      {
+        id: 'sync',
+        label: c().sync,
+        icon: 'sync',
+        reason: reason ?? (!hosted(item.projectId) ? c().hosting : undefined),
+        checked: !!base && !base.paused,
+        run: () =>
+          run(async () => {
+            if (base && !base.paused) await ws.sync.sync.setPaused(item.projectId, true);
+            else await ws.sync.initialSync(project!);
+          }),
       },
       {
         id: 'listed',
@@ -219,5 +220,10 @@ export function useItemOperations(ws: Workspace) {
       </Show>
     </>
   );
-  return { actions, online, hosted, localOnly, dialogs };
+  const describe = (item: BrowserItemDescriptor): BrowserItemDescriptor => ({
+    ...item,
+    hosted: hosted(item.projectId),
+    status: hosted(item.projectId) && item.status === 'local' ? 'paused' : item.status,
+  });
+  return { actions, online, hosted, localOnly, dialogs, describe };
 }

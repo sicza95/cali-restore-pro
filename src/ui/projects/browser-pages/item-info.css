@@ -124,3 +124,27 @@
 .project-cover-preview .browser-preview-placeholder span:not(.cr-icon) {
   display: none;
 }
+
+.project-info-toggle {
+  justify-content: space-between;
+}
+.project-info-toggle > span {
+  flex: 1;
+}
+
+.project-access-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 80px;
+}
+.project-access-role {
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.project-access-avatars {
+  padding-bottom: 4px;
+}

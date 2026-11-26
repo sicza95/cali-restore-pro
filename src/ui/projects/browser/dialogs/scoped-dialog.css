@@ -1,0 +1,81 @@
+.browser-dialog.browser-dialog-scoped {
+  width: min(1000px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  overflow: hidden;
+}
+.browser-dialog-scoped[open] {
+  display: flex;
+  flex-direction: column;
+}
+.browser-dialog-scoped > .cr-dialog-heading {
+  flex: none;
+  margin: 0;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--cr-rule);
+}
+.browser-dialog-split {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+.browser-dialog-context {
+  padding: 24px;
+  background: var(--cr-raised);
+  border-right: 1px solid var(--cr-rule);
+  overflow-wrap: anywhere;
+}
+.browser-dialog-content {
+  padding: 24px;
+  overflow: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+.browser-dialog-item {
+  display: grid;
+  gap: 24px;
+}
+.browser-dialog-item-card {
+  width: 176px;
+  max-width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 8px;
+}
+.browser-dialog-item-card .browser-preview {
+  width: 128px;
+  height: 128px;
+  margin: 0;
+}
+.browser-dialog-item-card .browser-item-name {
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  display: block;
+}
+.browser-dialog-item-card .browser-preview-placeholder span:not(.cr-icon) {
+  display: none;
+}
+.browser-dialog-context p {
+  color: var(--cr-muted);
+  font-size: 14px;
+}
+@media (max-width: 580px) {
+  .browser-dialog-split {
+    grid-template-columns: 144px minmax(0, 1fr);
+  }
+  .browser-dialog-context,
+  .browser-dialog-content {
+    padding: 12px;
+  }
+  .browser-dialog-item-card {
+    padding: 0;
+  }
+  .browser-dialog-item-card .browser-preview {
+    width: 100px;
+    height: 100px;
+  }
+}

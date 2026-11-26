@@ -111,7 +111,7 @@ export function ProjectsLevel(props: { ws: Workspace }) {
           },
         ]),
       ),
-    }),
+    }).map(operations.describe),
   );
   const previews = usePreviews(
     () => ws.vault,

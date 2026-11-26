@@ -78,6 +78,7 @@ export type ItemProps = {
   onOpen: () => void;
 };
 export type StatusBadgeProps = {
+  hosted?: boolean;
   language: Language;
   status: BrowserItemStatus;
   originals?: BrowserOriginalAvailability;
@@ -127,6 +128,7 @@ export type NameDialogProps = {
   onClose: () => void;
 };
 export type DeleteDialogProps = {
+  preview?: BrowserPreview;
   language: Language;
   item: BrowserItemDescriptor;
   /** All descendants, not just the immediate-child count. Null means unknown. */

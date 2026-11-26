@@ -70,3 +70,78 @@
 .browser-row .browser-item-status {
   right: 52px;
 }
+
+.browser-action-toggle .browser-active-icon {
+  color: var(--cr-accent);
+}
+.browser-action.browser-action-toggle[aria-pressed='true'] {
+  background: transparent;
+}
+.browser-action.browser-action-toggle:hover:not([aria-disabled='true']) {
+  background: var(--cr-hover);
+}
+.browser-switch {
+  width: 36px;
+  height: 22px;
+  border-radius: 20px;
+  background: var(--cr-muted);
+  padding: 2px;
+  flex: none !important;
+}
+.browser-switch::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--cr-surface);
+}
+.browser-switch[data-checked='true'] {
+  background: var(--cr-accent);
+}
+.browser-switch[data-checked='true']::after {
+  transform: translateX(14px);
+}
+.browser-row .browser-item-more {
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+}
+.browser-toolbar [data-control-id='browser.inspector'] {
+  margin-inline-start: auto;
+}
+
+.browser-item-status {
+  width: auto;
+  min-width: 24px;
+  background: transparent;
+}
+.browser-hosted-indicator {
+  display: inline-flex;
+  color: var(--cr-status-syncing);
+}
+.browser-status[data-status='local'] {
+  color: var(--cr-status-local);
+}
+.browser-status[data-status='paused'],
+.browser-status[data-status='error'],
+.browser-status[data-status='conflict'] {
+  color: var(--cr-status-off);
+}
+.browser-status[data-status='pending'],
+.browser-status[data-status='remote'] {
+  color: var(--cr-status-syncing);
+}
+.browser-status[data-status='synced'] {
+  color: var(--cr-status-synced);
+}
+
+.browser-tile .browser-item-status,
+.browser-row .browser-item-status {
+  width: auto;
+  background: transparent;
+}
+
+.browser-status-text {
+  color: var(--cr-muted);
+}

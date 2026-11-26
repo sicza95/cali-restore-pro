@@ -271,6 +271,7 @@ it('keeps public browser status vocabulary separate from visibility and API-comp
   expect(projectVisibilities).toEqual(['private', 'listed']);
   expect(browserItemStatuses).toEqual([
     'local',
+    'paused',
     'remote',
     'synced',
     'pending',

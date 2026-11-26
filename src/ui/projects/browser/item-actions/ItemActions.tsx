@@ -2,7 +2,6 @@ import { createEffect, For, onCleanup, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { Icon } from '../../../icon/Icon';
 import { ActionButton } from '../browser-toolbar/ActionButton';
-import { Popup } from '../browser-toolbar/Popup';
 import type { ItemAction } from './types';
 import './styles.css';
 
@@ -21,14 +20,12 @@ export function ItemActionButtons(props: { actions: readonly ItemAction[]; label
               }
               reason={action().reason}
               pressed={action().checked}
+              toggle={action().checked !== undefined}
               onClick={() => action().run()}
             />
           );
         }}
       </For>
-      <Popup label={props.label} icon="more-vertical" controlId="browser.more" menu>
-        <ActionMenuItems actions={props.actions} />
-      </Popup>
     </div>
   );
 }
@@ -41,8 +38,8 @@ export function ActionMenuItems(props: { actions: readonly ItemAction[] }) {
         return (
           <button
             type="button"
-            role={action().checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
-            aria-checked={action().checked}
+            role={action().checked === undefined || id === 'info' ? 'menuitem' : 'menuitemcheckbox'}
+            aria-checked={id === 'info' ? undefined : action().checked}
             aria-disabled={!!action().reason}
             title={action().reason}
             data-control-id={'browser.menu.' + id}
@@ -52,8 +49,8 @@ export function ActionMenuItems(props: { actions: readonly ItemAction[] }) {
           >
             <Icon name={action().icon} size={18} />
             <span>{action().label}</span>
-            <Show when={action().checked}>
-              <Icon name="check" size={16} />
+            <Show when={action().checked !== undefined && id !== 'info'}>
+              <span class="browser-switch" data-checked={action().checked} aria-hidden="true" />
             </Show>
           </button>
         );
