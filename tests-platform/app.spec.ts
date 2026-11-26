@@ -24,13 +24,31 @@ test('production shell connects through the real same-origin API in both themes 
   expect(errors).toEqual([]);
 });
 
-test('unavailable API is explicit and a user can retry', async ({ page }) => {
+test('unavailable API is explicit and a user can retry', async ({ page }, info) => {
   await page.route('**/api/v1/status', (route) =>
     route.fulfill({ status: 503, json: { status: 'unavailable', milestone: 'M-00' } }),
   );
   await page.goto('/');
   await expect(page.getByRole('status')).toHaveText('Connection unavailable. Please try again.');
   await page.unroute('**/api/v1/status');
-  await page.getByRole('button', { name: 'Check again' }).click();
+  const retry = page.locator('[data-control-id="app.service.retry"]');
+  await expect(retry).toBeVisible();
+  await expect(retry).toHaveAccessibleName('Connection unavailable. Please try again.');
+  await expect(page.locator('.account-footer')).toHaveCount(0);
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme });
+    for (const viewport of [
+      { width: 1194, height: 834 },
+      { width: 834, height: 1194 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await expect(retry).toBeVisible();
+      expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+      await page.screenshot({
+        path: info.outputPath(`connection-unavailable-${viewport.width}-${colorScheme}.png`),
+      });
+    }
+  }
+  await retry.click();
   await expect(page.getByRole('status')).toHaveText('Online');
 });

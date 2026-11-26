@@ -162,7 +162,7 @@ function AccountShell() {
               )}
             </Match>
           </Switch>
-          <Show when={publicView()}>
+          <Show when={publicView() && connection() === 'ready'}>
             <span class="account-visually-hidden" role="status">
               {t(connection())}
             </span>

@@ -48,13 +48,16 @@ export function AppNavigation(props: { mode: NavigationMode; rail: boolean }) {
   );
 }
 
-/** Signed-out pages: only the language choice and theme, top right. The card carries the brand. */
+/** Signed-out pages: preferences and a connection retry when unavailable; the card carries the brand. */
 function PublicBar() {
   const app = useApp();
   const c = () => navigationText(app.lang());
   return (
     <aside class="account-nav app-nav" data-mode="public">
       <div class="app-nav-prefs">
+        <Show when={app.connection() !== 'ready'}>
+          <ConnectionStatus />
+        </Show>
         <label class="language">
           <span class="account-visually-hidden">{c().language}</span>
           <select
@@ -111,18 +114,7 @@ function AppBar() {
         </span>
       </a>
       <div class="app-bar-end">
-        <button
-          type="button"
-          class="app-connection"
-          data-control-id="app.service.retry"
-          data-state={app.connection()}
-          disabled={app.connection() === 'checking'}
-          aria-label={app.t(app.connection())}
-          title={app.t('check')}
-          onClick={() => void app.refreshConnection()}
-        >
-          <span role="status">{app.t(app.connection())}</span>
-        </button>
+        <ConnectionStatus />
         <OrganisationSwitcher />
         <AccountMenu />
       </div>
@@ -216,5 +208,24 @@ function Sidebar(props: { rail: boolean }) {
         <Links rail={props.rail} />
       </aside>
     </Show>
+  );
+}
+
+/** The status itself retries connectivity; sign-in shows it only while unavailable/checking. */
+function ConnectionStatus() {
+  const app = useApp();
+  return (
+    <button
+      type="button"
+      class="app-connection"
+      data-control-id="app.service.retry"
+      data-state={app.connection()}
+      disabled={app.connection() === 'checking'}
+      aria-label={app.t(app.connection())}
+      title={app.t('check')}
+      onClick={() => void app.refreshConnection()}
+    >
+      <span role="status">{app.t(app.connection())}</span>
+    </button>
   );
 }
