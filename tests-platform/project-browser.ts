@@ -134,12 +134,8 @@ export async function inspect(page: Page, name: string) {
  * reportLanguage) and waits until the override is saved.
  */
 export async function overrideRestoration(page: Page, key: string, value: string) {
-  const inspector = page.locator('.browser-inspector');
-  const section = inspector
-    .locator('details.browser-inspector-section')
-    .filter({ hasText: 'Restoration defaults' });
-  if (!(await section.evaluate((el) => (el as HTMLDetailsElement).open)))
-    await section.locator('summary').click();
+  await browserControl(page, 'browser.action.manage').click();
+  const inspector = page.getByRole('dialog');
   const toggle = inspector.locator(`[data-control-id$=".restoration.${key}.override"]`);
   if (!(await toggle.isChecked())) await toggle.check();
   const field = inspector.locator(`[data-control-id$=".restoration.${key}"]`);
@@ -148,4 +144,5 @@ export async function overrideRestoration(page: Page, key: string, value: string
   await expect(field).toHaveValue(value);
   await expect(toggle).toBeChecked();
   await expect(page.locator('.project-workspace-status')).toHaveCount(0);
+  await browserControl(inspector, 'browser.dialog.close').click();
 }

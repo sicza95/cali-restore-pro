@@ -15,6 +15,7 @@ export type Surface = Partial<EntityMetadata> & {
   id: string;
   name: string;
   units: Units | null;
+  archived?: boolean;
   images: Attachment[];
   assessments?: PlanarSurface[];
   checkpoints?: AssessmentCheckpoint[];
@@ -25,6 +26,7 @@ export type RestorationObject = Partial<EntityMetadata> & {
   id: string;
   name: string;
   units: Units | null;
+  archived?: boolean;
   surfaces: Surface[];
   cover?: CoverReference;
   overrides?: EntityOverrides;

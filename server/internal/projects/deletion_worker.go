@@ -23,6 +23,9 @@ func (s *Service) PurgeDeleted(ctx context.Context, root string) error {
 	if _, err := tx.Exec(ctx, lifecycleWriteLock); err != nil {
 		return err
 	}
+	if err := purgeUnhostedFile(ctx, tx, root); err != nil {
+		return err
+	}
 	if err := purgeProject(ctx, tx, root); err != nil {
 		return err
 	}
@@ -44,6 +47,29 @@ func (s *Service) PurgeDeleted(ctx context.Context, root string) error {
 		return err
 	}
 	return tx.Commit(ctx)
+}
+
+// Cleanup after hosting removal never runs before the metadata commit.
+func purgeUnhostedFile(ctx context.Context, tx pgx.Tx, root string) error {
+	var id string
+	err := tx.QueryRow(ctx, `SELECT id::text FROM hosting_removed_files ORDER BY removed_at,id LIMIT 1 FOR UPDATE SKIP LOCKED`).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if !httpjson.UUID(id) {
+		return identity.ErrInvalid
+	}
+	if err := os.RemoveAll(filepath.Join(root, id)); err != nil {
+		return err
+	}
+	if err := objectstore.SyncDir(root); err != nil {
+		return err
+	}
+	_, err = tx.Exec(ctx, `DELETE FROM hosting_removed_files WHERE id=$1`, id)
+	return err
 }
 
 func purgeProject(ctx context.Context, tx pgx.Tx, root string) error {

@@ -54,7 +54,7 @@ test('browser frame stays put while fixed square tiles and list rows scroll', as
         )
         .toEqual([176, 176]);
       await expect(page.locator('.browser-tile .browser-preview .fa-folder').first()).toBeVisible();
-      await expect(page.locator('.browser-tile button')).toHaveCount(0);
+      await expect(page.locator('.browser-tile button')).toHaveCount(20);
       await expect(page.locator('.browser-tile .browser-item-meta')).toHaveCount(0);
       const frame = page.locator('.browser-content');
       await expect.poll(() => frame.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);

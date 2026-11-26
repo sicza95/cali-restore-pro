@@ -57,9 +57,11 @@ export async function createProjectHierarchy(flow: ProjectsFlow, info: TestInfo)
   await createItem(page, 'Upper plaster');
   // The surface inherits the object's imperial units.
   await inspect(page, 'Upper plaster');
+  await browserControl(page, 'browser.action.manage').click();
   await expect(
-    page.locator('.browser-inspector [data-control-id$=".restoration.units"]'),
+    page.getByRole('dialog').locator('[data-control-id$=".restoration.units"]'),
   ).toHaveValue('imperial');
+  await browserControl(page.getByRole('dialog'), 'browser.dialog.close').click();
   await openItem(page, 'Upper plaster');
   flow.surfacePath = new URL(page.url()).pathname;
   expect(flow.surfacePath).toMatch(/^\/projects\/[a-f0-9-]{36}\/surfaces\/[a-f0-9-]{36}$/);

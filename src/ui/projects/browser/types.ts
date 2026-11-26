@@ -1,3 +1,4 @@
+import type { ItemAction, ShowFilter } from './item-actions/types';
 import type { JSX } from 'solid-js';
 import type { Language } from '../../../platform/i18n/language';
 import type {
@@ -26,6 +27,9 @@ export type BrowserToolbarProps = {
   renameDisabledReason?: string;
   deleteDisabledReason?: string;
   settingsDisabledReason?: string;
+  itemActions?: readonly ItemAction[];
+  showFilter?: ShowFilter;
+  onShowFilter?: (filter: ShowFilter) => void;
   onNew: () => void;
   onRename: () => void;
   onDelete: () => void;
@@ -48,6 +52,10 @@ export type BrowserCollectionProps = {
   modifiedLabels?: Readonly<Record<string, string>>;
   renameDisabledReason?: string;
   deleteDisabledReason?: string;
+  editingId?: string;
+  onSaveName?: (name: string) => Promise<void>;
+  onCancelName?: () => void;
+  onContextMenu?: (id: string, x: number, y: number) => void;
   onSelect: (id: string | null) => void;
   onOpen: (id: string) => void;
   onRename: (id: string) => void;
@@ -62,6 +70,10 @@ export type ItemProps = {
   modifiedLabel?: string;
   selected: boolean;
   tabIndex: 0 | -1;
+  editing?: boolean;
+  onSaveName?: (name: string) => Promise<void>;
+  onCancelName?: () => void;
+  onContextMenu?: (x: number, y: number) => void;
   onSelect: () => void;
   onOpen: () => void;
 };

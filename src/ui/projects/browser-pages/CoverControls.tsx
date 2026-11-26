@@ -1,3 +1,4 @@
+import { usePreviews } from './usePreviews';
 import { createMemo, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { preserveLegacyProjectSettings } from '../../../platform/projects/settings';
 import { browserMutations } from '../../../platform/projects/browser/mutations';
@@ -31,6 +32,16 @@ export function CoverControls(props: { ws: Workspace; inspected: InspectedEntity
     app.account()?.id ?? null,
   );
   const choices = createMemo(() => photos(props.inspected.entity));
+  const previews = usePreviews(
+    () => props.ws.vault,
+    () =>
+      choices().map((photo) => ({
+        id: photo.id,
+        project: props.inspected.project.id,
+        cover: true,
+        assets: [{ assetId: photo.id }],
+      })),
+  );
   const [choice, setChoice] = createSignal('');
   const [failed, setFailed] = createSignal(false);
   const [upload, setUpload] = createSignal<AbortController>();
@@ -56,6 +67,23 @@ export function CoverControls(props: { ws: Workspace; inspected: InspectedEntity
   return (
     <div class="project-cover">
       <p>{c().coverHelp}</p>
+      <div class="project-cover-gallery">
+        <For each={choices()}>
+          {(photo) => (
+            <button
+              type="button"
+              aria-pressed={(choice() || current()) === photo.id}
+              aria-label={c().photoNumber(photo.surface, photo.index)}
+              onClick={() => setChoice(photo.id)}
+            >
+              <Show when={previews()[photo.id]?.cover}>
+                {(url) => <img src={url()} alt={c().photoNumber(photo.surface, photo.index)} />}
+              </Show>
+              <span>{c().photoNumber(photo.surface, photo.index)}</span>
+            </button>
+          )}
+        </For>
+      </div>
       <Show when={choices().length} fallback={<p>{c().coverNoPhotos}</p>}>
         <label>
           {c().coverPhoto}

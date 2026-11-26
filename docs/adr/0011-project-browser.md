@@ -15,16 +15,15 @@ organisation directory supplies a behavioural reference, not production code.
   and `/projects/:project/objects/:object` (surfaces). Preserve the editor route
   `/projects/:project/surfaces/:surface`. Initially select the first visible item;
   double-click or Enter opens it. Cards and rows show the preview, name and a corner status icon.
-- Toolbar order: New on the far left, then Rename, Delete, View, Sort, Find,
-  Settings and Inspector. Remember grid/list, sort and inspector state per level.
+- Toolbar: New on the far left, then shared icon-only item actions, Show, View, Sort, Find,
+  Settings and Inspector. Item actions also open from right click, keyboard context-menu, long press, and each item’s vertical ellipsis. Remember grid/list, sort and inspector state per level.
   Use the existing semantic CSS, tokens and typeface with locally bundled Font Awesome icons. Support iPad
   landscape/portrait and desktop (ADR 0003), 44px targets and keyboard navigation.
 - Root Settings opens the existing account restoration-defaults/report-branding
   sections. Inside either project browser level, Settings opens the project's
   sync/hosting, backup/export, archive, danger zone and estimate/report/output
   actions. There is no separate more-menu replacement for these settings.
-- The inspector shows selected metadata, cover, storage state and settings
-  overrides. Project inspectors additionally edit visibility and reuse existing
+- Info shows selected metadata, a thumbnail gallery, sync/hosting/visibility switches and compact access rosters. Manage holds restoration and branding overrides. Project inspectors additionally edit visibility and reuse existing
   invitations, co-owners and estimate/history scope controls. Child access is
   read-only project-wide information with a project link.
 - Default previews are decks of at most three immediate children's representative
@@ -140,7 +139,8 @@ qualification remain separate from the synthetic Chrome and disposable-database 
 - Join requests and a Request access workflow.
 - Project invitations for unregistered addresses; a general role-change endpoint.
   V1 uses existing remove/re-invite and scope-edit flows.
-- Organisation-owned defaults, org-group project access and automatic admin access.
+- Organisation-owned defaults, live org-group project grants and automatic admin access.
+  The project Share modal can invite current organization-group members individually; later membership changes do not alter those grants.
 - Publishing cover thumbnails or other images on directory cards.
 - Child-level ACLs, multi-select and child deletion undo.
 
@@ -151,3 +151,25 @@ qualification remain separate from the synthetic Chrome and disposable-database 
 - Organisation-owned defaults: coherent for collaboration, but deferred by the
   owner in favour of the existing account root for this release.
 - Full mock directory/join/membership parity: deferred to keep v1 bounded.
+
+## Browser item actions (2026-11-26)
+
+Download and Share apply to the entire project at every browser level; Make copy
+copies the selected subtree, with fresh entity IDs. Project copies receive fresh
+file IDs, no sharing or sync checkpoint, and no issued estimates/reports. Same-project
+child copies share immutable file references. Rename edits the item inline, saves on
+Enter/blur, and cancels on Escape. Existing journal-safe deletion remains authoritative.
+Archive is available for each entity; Show includes archived, online and offline
+checkboxes, with online/offline initially selected. Online means local sync is enabled
+and not paused, or the item is remote-only. A paused sync checkpoint retains queued
+edits and the cloud copy. Hosting removal is a separate, explicitly confirmed host-only
+operation; a complete local backup must be possible first. Remote access is removed
+transactionally, file deletion is queued, and the former host reserves the project ID
+for rehosting. Info reports actual charged project storage from the server when hosted;
+local/subtree sizes include their document and referenced original bytes, with unknown
+shown when originals are unavailable. Older modifier history remains unknown.
+
+The Estimates and reports modal reuses the existing Estimates, Reports and Outputs
+pages without changing browser navigation. Scope defaults retain account → project →
+object → surface inheritance. Group invitations reuse existing invitation permissions;
+they do not introduce section-level project ACLs.

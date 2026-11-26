@@ -21,6 +21,7 @@ export type SyncCheckpoint = {
   epoch: string;
   revision: number;
   localRevision: number;
+  paused?: boolean;
 };
 type EditorWrite = { checkpoint: SyncCheckpoint; localRevision: number };
 type ReviewLocal = { expected: number; next?: ProjectRow };
@@ -145,7 +146,7 @@ export function revisionQueue(
   async function drain(csrf: string) {
     let retry = false;
     for (const draft of await rows()) {
-      if (draft.blocked) continue;
+      if (draft.blocked || (await isPaused(draft.project))) continue;
       try {
         const ack = await remote.write(draft.project, draft.write, csrf);
         await replace(draft.project, draft.id, undefined, false, ack);
@@ -160,11 +161,20 @@ export function revisionQueue(
     return retry;
   }
 
+  const isPaused = (project: string) =>
+    transaction<boolean>('readonly', (_store, result, sync) => {
+      const request = sync.get([account, project]);
+      request.onsuccess = () => result(!!(request.result as SyncCheckpoint | undefined)?.paused);
+    });
   const retry = (csrf: string) => (running ??= drain(csrf).finally(() => (running = undefined)));
 
   const runner = retryRunner(
     signal,
-    async () => (await rows()).some((draft) => !draft.blocked),
+    async () => {
+      for (const draft of await rows())
+        if (!draft.blocked && !(await isPaused(draft.project))) return true;
+      return false;
+    },
     retry,
   );
 
@@ -192,6 +202,47 @@ export function revisionQueue(
 
   return {
     start: runner.start,
+    hosting: (project: string, value?: boolean) =>
+      transaction<boolean | undefined>(
+        value === undefined ? 'readonly' : 'readwrite',
+        (_store, result, sync) => {
+          const key = [account, project, 'hosting'];
+          if (value !== undefined) {
+            sync.put({ hosting: value }, key);
+            result(value);
+            return;
+          }
+          const request = sync.get(key);
+          request.onsuccess = () =>
+            result((request.result as { hosting: boolean } | undefined)?.hosting);
+        },
+      ),
+    async setPaused(project: string, paused: boolean) {
+      // Let an already submitted write finish before changing its checkpoint.
+      if (running) await running;
+      await transaction<void>('readwrite', (_store, result, sync) => {
+        const request = sync.get([account, project]);
+        request.onsuccess = () => {
+          const base = request.result as SyncCheckpoint | undefined;
+          if (!base) {
+            sync.transaction.abort();
+            return;
+          }
+          sync.put({ ...base, paused }, [account, project]);
+          result(undefined);
+        };
+      });
+      if (!paused) runner.wake();
+    },
+    async forgetEditor(project: string) {
+      if (running) await running;
+      await transaction<void>('readwrite', (store, result, sync) => {
+        store.delete([account, project]);
+        sync.delete([account, project]);
+        sync.put({ hosting: false }, [account, project, 'hosting']);
+        result(undefined);
+      });
+    },
     account,
     signal,
     projectCode,

@@ -8815,6 +8815,192 @@
           }
         }
       }
+    },
+    "/api/v1/hosted-projects/{project}/storage": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getProjectStorage",
+        "summary": "Read total charged server storage for a project",
+        "description": "Project owners only. Includes hosted originals and the current synced document; excludes local caches.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Total charged bytes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["bytes"],
+                  "properties": {
+                    "bytes": {
+                      "type": "integer",
+                      "format": "int64",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project missing, deleted, or not owned by this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Invalid request or service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/hosting": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "project",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "delete": {
+        "operationId": "removeProjectHosting",
+        "summary": "Remove server hosting while retaining the local project",
+        "description": "Current hosting owner only. Explicit confirmation required. Revokes all remote access immediately; server file cleanup is queued transactionally. This is separate from project deletion and creates no trash entry.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["confirm"],
+                "properties": {
+                  "confirm": {
+                    "type": "boolean",
+                    "enum": [true]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid visibility, name, version or JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project missing, deleted, or not owned by this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectBrowserError"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Hosting removed; local project retained"
+          }
+        }
+      }
     }
   },
   "components": {

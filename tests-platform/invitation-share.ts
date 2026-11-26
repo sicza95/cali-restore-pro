@@ -54,9 +54,11 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   await createItem(project, 'Surface 1');
   await createItem(project, 'Upper plaster');
   await inspect(project, 'Upper plaster');
+  await project.locator('[data-control-id="browser.action.manage"]').click();
   await expect(
-    project.locator('.browser-inspector [data-control-id$=".restoration.units"]'),
+    project.getByRole('dialog').locator('[data-control-id$=".restoration.units"]'),
   ).toHaveValue('metric');
+  await project.getByRole('dialog').locator('[data-control-id="browser.dialog.close"]').click();
   await openItem(project, 'Upper plaster');
   await project.getByLabel('Original file', { exact: true }).setInputFiles({
     name: 'shared-plaster.jpg',

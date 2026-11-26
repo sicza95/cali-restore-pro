@@ -26,7 +26,7 @@ export function editorSync(vault: LocalVault) {
   async function stagePending() {
     const { checkpoints, drafts } = await status();
     const available = checkpoints.filter(
-      (base) => !drafts.some((row) => row.project === base.project),
+      (base) => !base.paused && !drafts.some((row) => row.project === base.project),
     );
     const errors: string[] = [];
     for (const base of available) {
@@ -95,7 +95,17 @@ export function editorSync(vault: LocalVault) {
     return next;
   }
 
-  return { enable, status, stagePending, review, resolve, start: queue.start };
+  return {
+    enable,
+    status,
+    stagePending,
+    review,
+    resolve,
+    hosting: queue.hosting,
+    setPaused: queue.setPaused,
+    forget: queue.forgetEditor,
+    start: queue.start,
+  };
 }
 
 export type EditorSync = ReturnType<typeof editorSync>;

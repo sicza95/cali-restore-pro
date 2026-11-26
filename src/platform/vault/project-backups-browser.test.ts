@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, expect, it, vi } from 'vitest';
-import { connect, vaultTable } from './store';
+import { connect, vaultTable, estimateTable, reportTable } from './store';
 import { importCode } from './crypto';
 import { encryptedFiles } from './files';
 import { projectDocuments } from './project-store';
@@ -80,3 +80,35 @@ it.each([null, 'Empty object'])(
     expect(restored.objects).toEqual(project.objects);
   },
 );
+
+it('copies a project atomically with fresh hierarchy and file IDs, without issued documents', async () => {
+  const project = newProject('Original', 'Wall', 'Plaster', 'EUR');
+  const original = await files().stage(
+    project.id,
+    new File(['source bytes'], 'photo.png', { type: 'image/png' }),
+  );
+  project.objects[0]!.surfaces[0]!.images = [{ id: original.id, role: 'mapping' }];
+  project.archived = true;
+  await documents().save(project.id, 0, JSON.stringify(project));
+  const estimates = projectDocuments(root, account, 'stamp', signal, estimateTable);
+  const reports = projectDocuments(root, account, 'stamp', signal, reportTable);
+  await estimates.save(project.id, 0, 'issued estimate');
+  await reports.save(project.id, 0, 'issued report');
+  const archive = await backups().export(project.id);
+  const copied = await backups().import(archive.blob, archive.code, {
+    copy: { name: 'Copy', createdBy: null },
+  });
+  expect(copied.name).toBe('Copy');
+  expect(copied.archived).toBe(false);
+  expect(copied.objects[0]!.id).not.toBe(project.objects[0]!.id);
+  expect(copied.objects[0]!.surfaces[0]!.id).not.toBe(project.objects[0]!.surfaces[0]!.id);
+  const copiedFile = copied.objects[0]!.surfaces[0]!.images[0]!.id;
+  expect(copiedFile).not.toBe(original.id);
+  const chunks = [];
+  for await (const part of files().original({ project: copied.id, id: copiedFile }))
+    chunks.push(part);
+  expect(await new Blob(chunks).text()).toBe('source bytes');
+  expect(await estimates.changed(copied.id, 0)).toBeUndefined();
+  expect(await reports.changed(copied.id, 0)).toBeUndefined();
+  expect(await estimates.changed(project.id, 0)).toMatchObject({ text: 'issued estimate' });
+});

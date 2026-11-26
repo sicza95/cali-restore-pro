@@ -189,6 +189,11 @@ func (a fileAccess) reserve(ctx context.Context, project, id string, shape fileS
 	if err == nil && tag.RowsAffected() == 0 {
 		return f, errFileState
 	}
+	// Rehosting may reuse an immutable local file ID before deferred cleanup ran.
+	// Lifecycle locks serialize this cancellation with the cleanup worker.
+	if err == nil {
+		_, err = a.tx.Exec(ctx, `DELETE FROM hosting_removed_files WHERE id=$1`, id)
+	}
 	return fileRecord{fileShape: shape, State: "staged"}, err
 }
 

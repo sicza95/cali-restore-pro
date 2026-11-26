@@ -1,3 +1,4 @@
+import { useItemOperations } from './useItemOperations';
 import { createMemo, createResource, createSignal, Show, untrack } from 'solid-js';
 import type { OrganisationProjectDirectory } from '../../../platform/api';
 import type { BrowserItemDescriptor } from '../../../platform/projects/browser-contracts';
@@ -32,6 +33,7 @@ export function ProjectsLevel(props: { ws: Workspace }) {
   const app = useApp();
   const orgs = useOrganisations();
   const ws = untrack(() => props.ws);
+  const operations = useItemOperations(ws);
   const c = () => pageCopy[ws.language];
   const copy = () => browserCopy[ws.language];
   const mutations = browserMutations(ws.vault, app.account()?.id ?? null);
@@ -131,6 +133,7 @@ export function ProjectsLevel(props: { ws: Workspace }) {
       orgs.selected()?.id,
       account,
     );
+    await ws.sync.sync.hosting(project.id, false);
     await ws.save(project);
     return project.id;
   }
@@ -145,7 +148,7 @@ export function ProjectsLevel(props: { ws: Workspace }) {
   // Never hosted: no checkpoint once the local sync state has loaded. Unknown counts as hosted.
   const localOnly = (id: string) => {
     const project = find(id);
-    return !!project && !!ws.sync.state() && ws.sync.statusKey(project) === 'disabled';
+    return !!project && !!ws.sync.state() && operations.localOnly(id);
   };
   /** The same draft guard as object and surface deletion, over the whole project. */
   async function draftsBlock(id: string) {
@@ -194,6 +197,8 @@ export function ProjectsLevel(props: { ws: Workspace }) {
         title={copy().levels.project}
         items={items()}
         previews={previews()}
+        actions={operations.actions}
+        online={operations.online}
         archived={(item) => find(item.id)?.archived}
         creatorName={(id) => (id === app.account()?.id ? app.account()?.email : undefined)}
         remoteUnavailable={!!remote.latest?.failed || !!directory.latest?.failed}
@@ -227,9 +232,17 @@ export function ProjectsLevel(props: { ws: Workspace }) {
         onSettings={() => setDialog('settings')}
         onImport={() => setDialog('import')}
         inspector={(item, close) => (
-          <ItemInspector ws={ws} item={item()} preview={previews()[item().id]} onClose={close} />
+          <ItemInspector
+            ws={ws}
+            item={item()}
+            preview={previews()[item().id]}
+            onClose={close}
+            actions={operations.actions(item())}
+            hosted={operations.hosted(item().projectId)}
+          />
         )}
       />
+      {operations.dialogs()}
       <Show when={dialog() === 'settings'}>
         <RootSettingsDialog
           ws={ws}

@@ -1,3 +1,4 @@
+import { useItemOperations } from './useItemOperations';
 import { createMemo, Show, untrack } from 'solid-js';
 import type { BrowserItemDescriptor } from '../../../platform/projects/browser-contracts';
 import { objectItems, surfaceItems } from '../../../platform/projects/browser/browser-model';
@@ -22,6 +23,7 @@ import { subtreePhotos, useOriginals } from './useOriginals';
 export function ChildLevel(props: { ws: Workspace; project: SavedProject; object?: string }) {
   const app = useApp();
   const ws = untrack(() => props.ws);
+  const operations = useItemOperations(ws);
   const c = () => pageCopy[ws.language];
   const copy = () => browserCopy[ws.language];
   const mutations = browserMutations(ws.vault, app.account()?.id ?? null);
@@ -59,7 +61,11 @@ export function ChildLevel(props: { ws: Workspace; project: SavedProject; object
         return found ? [{ id: item.id, project: props.project.id, ...deckOf(found) }] : [];
       }),
   );
-  const archived = () => (props.project.archived ? c().archivedReason : undefined);
+  const archived = () =>
+    props.project.archived ||
+    props.project.objects.find((object) => object.id === props.object)?.archived
+      ? c().archivedReason
+      : undefined;
   const latest = () => preserveLegacyProjectSettings(props.project);
   const saved = (project: SavedProject) => {
     ws.update(project);
@@ -95,58 +101,73 @@ export function ChildLevel(props: { ws: Workspace; project: SavedProject; object
     return undefined;
   }
   return (
-    <BrowserPage
-      language={ws.language}
-      level={level()}
-      scope={props.object ?? props.project.id}
-      title={copy().levels[level()]}
-      items={described()}
-      previews={previews()}
-      notice={
-        <Show when={props.project.archived}>
-          <p class="project-browser-notice" role="status">
-            {c().archivedNotice}
-          </p>
-        </Show>
-      }
-      newDisabledReason={archived()}
-      changeReason={archived}
-      onParent={() => ws.navigate(props.object ? projectHref(props.project.id) : projectHref())}
-      onOpen={(item) =>
-        ws.navigate(
-          item.kind === 'object'
-            ? objectHref(props.project.id, item.id)
-            : projectHref(props.project.id, item.id),
-        )
-      }
-      onCreate={create}
-      onRename={renameItem}
-      deletion={(item) => {
-        const target = targetOf(item);
-        const counts = deletionCounts(props.project, target);
-        return {
-          descendants: { objects: 0, surfaces: target.kind === 'object' ? counts.surfaces : 0 },
-          // Same guard as the mutation: drafts and unreadable journals block the deletion.
-          check: async () => {
-            const found = entity(item);
-            if (!found) return undefined;
-            const surfaces = 'surfaces' in found ? found.surfaces : [found as never];
-            try {
-              await deletionJournals(props.project.id, surfaces, (ref) =>
-                ws.vault.projects().readJournal(ref),
-              );
-              return undefined;
-            } catch {
-              return c().blockedDelete;
-            }
-          },
-        };
-      }}
-      onDelete={remove}
-      onSettings={() => ws.openSettings(props.project.id)}
-      inspector={(item, close) => (
-        <ItemInspector ws={ws} item={item()} preview={previews()[item().id]} onClose={close} />
-      )}
-    />
+    <>
+      <BrowserPage
+        language={ws.language}
+        level={level()}
+        scope={props.object ?? props.project.id}
+        title={copy().levels[level()]}
+        actions={operations.actions}
+        online={operations.online}
+        items={described()}
+        previews={previews()}
+        archived={(item) => entity(item)?.archived}
+        notice={
+          <Show when={props.project.archived}>
+            <p class="project-browser-notice" role="status">
+              {c().archivedNotice}
+            </p>
+          </Show>
+        }
+        newDisabledReason={archived()}
+        changeReason={(item) =>
+          archived() ?? (entity(item)?.archived ? c().archivedReason : undefined)
+        }
+        onParent={() => ws.navigate(props.object ? projectHref(props.project.id) : projectHref())}
+        onOpen={(item) =>
+          ws.navigate(
+            item.kind === 'object'
+              ? objectHref(props.project.id, item.id)
+              : projectHref(props.project.id, item.id),
+          )
+        }
+        onCreate={create}
+        onRename={renameItem}
+        deletion={(item) => {
+          const target = targetOf(item);
+          const counts = deletionCounts(props.project, target);
+          return {
+            descendants: { objects: 0, surfaces: target.kind === 'object' ? counts.surfaces : 0 },
+            // Same guard as the mutation: drafts and unreadable journals block the deletion.
+            check: async () => {
+              const found = entity(item);
+              if (!found) return undefined;
+              const surfaces = 'surfaces' in found ? found.surfaces : [found as never];
+              try {
+                await deletionJournals(props.project.id, surfaces, (ref) =>
+                  ws.vault.projects().readJournal(ref),
+                );
+                return undefined;
+              } catch {
+                return c().blockedDelete;
+              }
+            },
+          };
+        }}
+        onDelete={remove}
+        onSettings={() => ws.openSettings(props.project.id)}
+        inspector={(item, close) => (
+          <ItemInspector
+            ws={ws}
+            item={item()}
+            preview={previews()[item().id]}
+            onClose={close}
+            actions={operations.actions(item())}
+            hosted={operations.hosted(item().projectId)}
+          />
+        )}
+      />
+      {operations.dialogs()}
+    </>
   );
 }

@@ -158,6 +158,14 @@ function BrowserCollection(props: BrowserCollectionProps & { grid: boolean }) {
                     get tabIndex(): 0 | -1 {
                       return selected() === id ? 0 : -1;
                     },
+                    get editing() {
+                      return props.editingId === id;
+                    },
+                    onSaveName: props.onSaveName,
+                    onCancelName: props.onCancelName,
+                    onContextMenu: props.onContextMenu
+                      ? (x: number, y: number) => props.onContextMenu?.(id, x, y)
+                      : undefined,
                     onSelect: () => props.onSelect(id),
                     onOpen: () => props.onOpen(id),
                   };

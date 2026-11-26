@@ -32,10 +32,12 @@ export async function archiveAndRestore(flow: ProjectsFlow, info: TestInfo) {
   await control('surface.project').click();
   // The project's currency is set on the project; children show it read-only.
   await inspect(page, 'North wall');
-  await expect(page.locator('.browser-inspector')).toContainText('USD');
+  await browserControl(page, 'browser.action.manage').click();
+  await expect(page.getByRole('dialog')).toContainText('USD');
   await expect(
-    page.locator('.browser-inspector [data-control-id$=".restoration.units"]'),
+    page.getByRole('dialog').locator('[data-control-id$=".restoration.units"]'),
   ).toHaveValue('imperial');
+  await browserControl(page.getByRole('dialog'), 'browser.dialog.close').click();
   await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
   await page.screenshot({ path: info.outputPath('projects-portrait.png'), fullPage: true });

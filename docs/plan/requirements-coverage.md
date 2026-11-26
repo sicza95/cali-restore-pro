@@ -218,3 +218,5 @@ IMG-05 evidence (#50): the [desktop Chromium profile](perf-budgets.md) imports a
 
 [raw-mask]: ../milestones/out01-raw-mask-export.md
 [out11]: ../milestones/m16-measured-integration.md#out-11--final-report-issuance-2026-11-17-part-of-54
+
+Browser item actions (2026-11-26) extend PROJ and UX evidence: shared context/menu/toolbar actions, inline rename, subtree copies, entity archive filters, thumbnail gallery, scoped defaults and the three review pages in a modal. Synthetic browser scenarios in `browser-item-actions.browser.ts` and `project-browser.browser.ts` exercise real IndexedDB saves, keyboard flows and iPad landscape/portrait layouts. Sync queue unit tests cover pause/reopen/resume without losing queued work. PostgreSQL HTTP tests cover storage accounting, host-only confirmed removal, CSRF, queued file cleanup and host-reserved rehosting. Group selection creates ordinary individual invitations; live group ACLs, unknown historical modifiers and physical Safari/Pencil qualification remain separate. Requirement acceptance statuses are unchanged.

@@ -1,3 +1,5 @@
+import { useItemSize } from './useItemSize';
+import { itemActionCopy } from '../browser/item-actions/copy';
 import { createResource, Show } from 'solid-js';
 import type { BrowserItemDescriptor } from '../../../platform/projects/browser-contracts';
 import { useApp } from '../../app-context/AppContext';
@@ -16,6 +18,7 @@ export function ItemDetails(props: {
   hosted: boolean;
 }) {
   const app = useApp();
+  const size = useItemSize(props, app.request);
   const orgs = useOrganisations();
   const copy = () => browserCopy[props.ws.language];
   const c = () => pageCopy[props.ws.language];
@@ -48,12 +51,6 @@ export function ItemDetails(props: {
     if (!found) return copy().unknown;
     return found.personal ? organisationCopy[props.ws.language].personal : found.name;
   };
-  const ownerNames = () => {
-    if (props.item.owners.length) return props.item.owners.map(({ name }) => name).join(', ');
-    const found = owners();
-    if (found?.length) return found.map(({ email }) => email).join(', ');
-    return props.hosted ? copy().unknown : (app.account()?.email ?? copy().unknown);
-  };
   const creator = () => {
     const id = props.item.createdBy;
     if (!id) return copy().unknown;
@@ -76,13 +73,23 @@ export function ItemDetails(props: {
       </Show>
       <dt>{c().organisation}</dt>
       <dd>{organisation()}</dd>
-      <dt>{c().owners}</dt>
-      <dd>{ownerNames()}</dd>
+      <dt>{itemActionCopy[props.ws.language].size}</dt>
+      <dd>
+        {size() === undefined
+          ? copy().unknown
+          : new Intl.NumberFormat(props.ws.language, {
+              style: 'unit',
+              unit: 'byte',
+              unitDisplay: 'short',
+            }).format(size()!)}
+      </dd>
       <Show when={props.item.access !== 'directory'}>
         <dt>{c().creator}</dt>
         <dd>{creator()}</dd>
         <dt>{copy().created}</dt>
         <dd>{date(props.item.createdAt)}</dd>
+        <dt>{itemActionCopy[props.ws.language].modifiedBy}</dt>
+        <dd>{copy().unknown}</dd>
         <dt>{copy().modified}</dt>
         <dd>{date(props.item.updatedAt)}</dd>
         <dt>{c().contents}</dt>

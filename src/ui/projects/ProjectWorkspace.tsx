@@ -72,7 +72,7 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
     if (!project || project.archived) return;
     for (const object of project.objects) {
       const surface = object.surfaces.find((entry) => entry.id === route()?.surface);
-      if (surface) return { object, surface };
+      if (surface && !object.archived && !surface.archived) return { object, surface };
     }
   };
   const activeObject = () => current()?.objects.find((object) => object.id === route()?.object);

@@ -259,6 +259,10 @@ export function encryptedFiles(
         throw error;
       }
     },
+    async storageBytes(ref: Ref) {
+      const shape = await ready(ref);
+      return shape.sourceBytes + shape.manifestBytes + chunkCount(shape) * 16;
+    },
     async metadata(ref: Ref) {
       const shape = await ready(ref);
       const key = await cipher(ref);

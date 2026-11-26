@@ -1,3 +1,6 @@
+import { ItemContextMenu } from '../browser/item-actions/ItemActions';
+import { itemActionCopy } from '../browser/item-actions/copy';
+import type { ItemAction, ShowFilter } from '../browser/item-actions/types';
 import { createMemo, createSignal, Show, untrack } from 'solid-js';
 import type { JSX } from 'solid-js';
 import type { Language } from '../../../platform/i18n/language';
@@ -16,7 +19,6 @@ import {
   BrowserToolbar,
   DeleteDialog,
   NewNameDialog,
-  RenameDialog,
   useBrowserPreferences,
 } from '../browser';
 import type { BrowserPreview, BrowserToolbarHandle } from '../browser';
@@ -63,6 +65,8 @@ export type BrowserPageProps = {
   onRename: (item: BrowserItemDescriptor, name: string) => Promise<void>;
   deletion: (item: BrowserItemDescriptor) => Deletion;
   onDelete: (item: BrowserItemDescriptor) => Promise<string | undefined>;
+  actions?: (item: BrowserItemDescriptor) => readonly ItemAction[];
+  online?: (item: BrowserItemDescriptor) => boolean;
   onSettings: () => void;
   onImport?: () => void;
   inspector: (item: () => BrowserItemDescriptor, close: () => void) => JSX.Element;
@@ -82,7 +86,14 @@ export function BrowserPage(props: BrowserPageProps) {
   };
   const [query, setQuery] = createSignal('');
   const [findOpen, setFindOpen] = createSignal(false);
-  const [dialog, setDialog] = createSignal<'new' | 'rename' | 'delete'>();
+  const [dialog, setDialog] = createSignal<'new' | 'delete'>();
+  const [editingId, setEditingId] = createSignal<string>();
+  const [menu, setMenu] = createSignal<{ id: string; x: number; y: number }>();
+  const [showFilter, setShowFilter] = createSignal<ShowFilter>({
+    archived: false,
+    online: true,
+    offline: true,
+  });
   const [busy, setBusy] = createSignal(false);
   const [error, setError] = createSignal<string>();
   const [blocked, setBlocked] = createSignal<string>();
@@ -102,7 +113,13 @@ export function BrowserPage(props: BrowserPageProps) {
     const shown = filterItems(props.items, terms, {
       archived: props.archived,
       creatorName: props.creatorName,
-    }).filter((item) => asksArchived || !props.archived?.(item));
+    }).filter(
+      (item) =>
+        (asksArchived || showFilter().archived || !props.archived?.(item)) &&
+        ((props.online?.(item) ?? item.status !== 'local')
+          ? showFilter().online
+          : showFilter().offline),
+    );
     return sortItems(shown, prefs.sort());
   });
   // A filtered-out item is not selected: no inspector or action applies to an unseen item.
@@ -148,6 +165,20 @@ export function BrowserPage(props: BrowserPageProps) {
       () => setBlocked(text().blockedDelete),
     );
   }
+  const beginRename = () => {
+    if (!reason('change')) setEditingId(selected()?.id);
+  };
+  const actions = (item: BrowserItemDescriptor): readonly ItemAction[] => {
+    const c = itemActionCopy[props.language];
+    const inherited = props.actions?.(item) ?? [];
+    return [
+      ...inherited.slice(0, 4),
+      { id: 'rename', label: c.rename, icon: 'pen', reason: reason('change'), run: beginRename },
+      { id: 'delete', label: c.delete, icon: 'trash', reason: reason('delete'), run: openDelete },
+      ...inherited.slice(4),
+      { id: 'info', label: c.info, icon: 'info', run: () => prefs.setInspectorOpen(true) },
+    ];
+  };
   const open = (id: string) => {
     const item = props.items.find((entry) => entry.id === id);
     if (item && item.access !== 'directory') props.onOpen(item);
@@ -182,7 +213,22 @@ export function BrowserPage(props: BrowserPageProps) {
     },
     onSelect: select,
     onOpen: open,
-    onRename: () => !reason('change') && setDialog('rename'),
+    get editingId() {
+      return editingId();
+    },
+    onCancelName: () => setEditingId(undefined),
+    onSaveName: async (name: string) => {
+      const item = props.items.find((item) => item.id === editingId());
+      if (!item) return;
+      await props.onRename(item, name);
+      setMessage(text().renamed(name));
+      setEditingId(undefined);
+    },
+    onContextMenu: (id: string, x: number, y: number) => {
+      select(id);
+      setMenu({ id, x, y });
+    },
+    onRename: beginRename,
     onDelete: openDelete,
     get onParent() {
       return props.onParent;
@@ -214,7 +260,10 @@ export function BrowserPage(props: BrowserPageProps) {
             settingsDisabledReason={props.settingsDisabledReason}
             ref={(handle) => (toolbar = handle)}
             onNew={() => setDialog('new')}
-            onRename={() => setDialog('rename')}
+            onRename={beginRename}
+            itemActions={selected() ? actions(selected()!) : []}
+            showFilter={showFilter()}
+            onShowFilter={setShowFilter}
             onDelete={openDelete}
             onViewChange={prefs.setView}
             onSortChange={prefs.setSort}
@@ -283,22 +332,14 @@ export function BrowserPage(props: BrowserPageProps) {
           onClose={close}
         />
       </Show>
-      <Show when={dialog() === 'rename' && selected()} keyed>
-        {(item) => (
-          <RenameDialog
-            language={props.language}
-            level={props.level}
-            initialName={item.name}
-            busy={busy()}
-            error={error()}
-            onConfirm={(name) =>
-              // eslint-disable-next-line solid/reactivity -- runs once, inside the confirm handler
-              void perform(async () => {
-                await props.onRename(item, name);
-                return text().renamed(name);
-              })
-            }
-            onClose={close}
+      <Show when={menu()} keyed>
+        {(position) => (
+          <ItemContextMenu
+            x={position.x}
+            y={position.y}
+            label={itemActionCopy[props.language].more}
+            actions={selected() && selected()!.id === position.id ? actions(selected()!) : []}
+            onClose={() => setMenu(undefined)}
           />
         )}
       </Show>

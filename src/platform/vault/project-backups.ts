@@ -34,7 +34,11 @@ type BackupIndex = {
   originals: Original[];
   documents?: DocumentShape[];
 };
-type Options = { signal?: AbortSignal; progress?: (fraction: number) => void };
+type Options = {
+  signal?: AbortSignal;
+  progress?: (fraction: number) => void;
+  copy?: { name: string; createdBy: string | null };
+};
 const encode = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
 const unit = (value: unknown) => value === 'metric' || value === 'imperial';
@@ -246,11 +250,37 @@ export function projectBackups(
         },
         id,
       );
+      if (options.copy) {
+        const fresh = () => ({
+          id: crypto.randomUUID(),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          createdBy: options.copy!.createdBy,
+        });
+        next.name = options.copy.name;
+        next.archived = false;
+        next.createdAt = Date.now();
+        next.updatedAt = Date.now();
+        next.createdBy = options.copy.createdBy;
+        next.objects = next.objects.map((object) => ({
+          ...object,
+          ...fresh(),
+          surfaces: object.surfaces.map((surface) => ({
+            ...surface,
+            ...fresh(),
+            checkpoints: surface.checkpoints?.map((checkpoint) => ({
+              ...checkpoint,
+              id: crypto.randomUUID(),
+            })),
+          })),
+        }));
+        validateProject(next, id);
+      }
       await projectDocuments(root, account, stamp, signal).restore(
         id,
         JSON.stringify(next),
         restored,
-        restoreDocuments(records, project.id, id, fileIds, projectRevision),
+        options.copy ? {} : restoreDocuments(records, project.id, id, fileIds, projectRevision),
       );
       return { ...next, revision: 1 };
     },

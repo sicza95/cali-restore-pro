@@ -99,6 +99,13 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
 		} else if !errors.Is(err, errFileMissing) {
 			return nil, err
 		}
+		var reserved bool
+		if err := a.tx.QueryRow(r.Context(), `SELECT EXISTS(SELECT 1 FROM hosting_removed_projects WHERE id=$1 AND host_id<>$2)`, project, a.account).Scan(&reserved); err != nil {
+			return nil, err
+		}
+		if reserved {
+			return nil, errFileMissing
+		}
 		if !a.hosting || a.quota == 0 {
 			return nil, identity.ErrForbidden
 		}
@@ -109,6 +116,9 @@ func (h *HTTP) fileRoutes(route func(string, bool, http.HandlerFunc), objects ob
  INSERT INTO project_owners(project_id,account_id) SELECT id,host_id FROM created`, project, a.account, b.Organisation)
 		if err == nil && tag.RowsAffected() == 0 {
 			err = errFileMissing
+		}
+		if err == nil {
+			_, err = a.tx.Exec(r.Context(), `DELETE FROM hosting_removed_projects WHERE id=$1 AND host_id=$2`, project, a.account)
 		}
 		return empty(w), err
 	})

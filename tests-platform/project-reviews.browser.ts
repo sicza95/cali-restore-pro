@@ -119,7 +119,9 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   // North wall measures in imperial units: an object override in the inspector.
   await inspect(page, 'North wall');
   await overrideRestoration(page, 'units', 'imperial');
-  await expect(page.locator('.browser-inspector')).toContainText('Imperial');
+  await page.locator('[data-control-id="browser.action.manage"]').click();
+  await expect(page.getByRole('dialog')).toContainText('Imperial');
+  await page.getByRole('dialog').locator('[data-control-id="browser.dialog.close"]').click();
   const before = await revisions(page);
   const settings = await openProjectSettings(page);
   await settings.locator('[data-control-id="project.review.estimates"]').focus();

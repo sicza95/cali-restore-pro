@@ -221,6 +221,22 @@ describe('revisionQueue', () => {
   });
 });
 
+it('retains queued edits and cloud checkpoints while paused, including after reopening', async () => {
+  const q = queue();
+  await q.enableEditor(projectA, epoch);
+  await q.stageEditor((await q.checkpoints())[0]!, 1, key, 'queued local work');
+  await q.setPaused(projectA, true);
+  const reopened = queue();
+  await reopened.retry('csrf');
+  expect(writes).toHaveLength(0);
+  expect(await reopened.drafts()).toHaveLength(1);
+  expect((await reopened.checkpoints())[0]?.paused).toBe(true);
+  await reopened.setPaused(projectA, false);
+  await reopened.retry('csrf');
+  expect(writes).toHaveLength(1);
+  expect(await reopened.drafts()).toEqual([]);
+});
+
 describe('revisionBlockFor', () => {
   it.each<[unknown, string | undefined]>([
     [new RevisionError(409, 'revision_conflict'), 'conflict'],
@@ -238,4 +254,16 @@ describe('revisionBlockFor', () => {
   ])('maps %o to %s', (error, expected) => {
     expect(revisionBlockFor(error)).toBe(expected);
   });
+});
+
+it('remembers hosting independently of sync, including local-only projects offline', async () => {
+  const q = queue();
+  expect(await q.hosting(projectA)).toBeUndefined();
+  await q.hosting(projectA, false);
+  expect(await queue().hosting(projectA)).toBe(false);
+  expect(await q.checkpoints()).toEqual([]);
+  await q.hosting(projectA, true);
+  expect(await queue().hosting(projectA)).toBe(true);
+  await q.forgetEditor(projectA);
+  expect(await queue().hosting(projectA)).toBe(false);
 });

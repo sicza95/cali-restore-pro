@@ -4824,3 +4824,92 @@ export type DeclineOrganisationInvitationResponses = {
 
 export type DeclineOrganisationInvitationResponse =
   DeclineOrganisationInvitationResponses[keyof DeclineOrganisationInvitationResponses];
+
+export type GetProjectStorageData = {
+  body?: never;
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/storage';
+};
+
+export type GetProjectStorageErrors = {
+  /**
+   * Authentication required
+   */
+  401: ProjectBrowserError;
+  /**
+   * Project missing, deleted, or not owned by this account
+   */
+  404: ProjectBrowserError;
+  /**
+   * Invalid request or service unavailable
+   */
+  default: ProjectBrowserError;
+};
+
+export type GetProjectStorageError = GetProjectStorageErrors[keyof GetProjectStorageErrors];
+
+export type GetProjectStorageResponses = {
+  /**
+   * Total charged bytes
+   */
+  200: {
+    bytes: number;
+  };
+};
+
+export type GetProjectStorageResponse =
+  GetProjectStorageResponses[keyof GetProjectStorageResponses];
+
+export type RemoveProjectHostingData = {
+  body: {
+    confirm: true;
+  };
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/hosting';
+};
+
+export type RemoveProjectHostingErrors = {
+  /**
+   * Invalid visibility, name, version or JSON
+   */
+  400: ProjectBrowserError;
+  /**
+   * Authentication required
+   */
+  401: ProjectBrowserError;
+  /**
+   * Origin or CSRF rejected
+   */
+  403: ProjectBrowserError;
+  /**
+   * Project missing, deleted, or not owned by this account
+   */
+  404: ProjectBrowserError;
+  /**
+   * Service unavailable
+   */
+  default: ProjectBrowserError;
+};
+
+export type RemoveProjectHostingError =
+  RemoveProjectHostingErrors[keyof RemoveProjectHostingErrors];
+
+export type RemoveProjectHostingResponses = {
+  /**
+   * Hosting removed; local project retained
+   */
+  204: void;
+};
+
+export type RemoveProjectHostingResponse =
+  RemoveProjectHostingResponses[keyof RemoveProjectHostingResponses];

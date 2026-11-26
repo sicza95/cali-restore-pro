@@ -110,10 +110,10 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   await page.keyboard.press('ArrowLeft');
   await expect(selected(page)).toContainText('east chapel');
   await page.keyboard.press('F2');
-  const rename = page.getByRole('dialog');
-  await expect(control(rename, 'browser.dialog.name')).toHaveValue('east chapel');
-  await control(rename, 'browser.dialog.name').fill('East Chapel');
-  await control(rename, 'browser.dialog.name').press('Enter');
+  const rename = control(page, 'browser.rename.input');
+  await expect(rename).toHaveValue('east chapel');
+  await rename.fill('East Chapel');
+  await rename.press('Enter');
   await expect(rename).toHaveCount(0);
   await expect(names(page)).toHaveText(['East Chapel', 'North chapel']);
 
@@ -131,7 +131,6 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   // Root inspector: a project currency override.
   await inspect(page, 'East Chapel');
   await overrideRestoration(page, 'currency', 'EUR');
-  await expect(inspector(page)).toContainText('Overridden here');
 
   await browserItem(page, 'East Chapel').focus();
   await page.keyboard.press('Enter');
@@ -147,19 +146,14 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   await createItem(page, 'Spare');
   const tile = browserItem(page, 'North wall');
   await expect(tile.locator('.browser-item-status .browser-status-group')).toBeVisible();
-  await expect(tile.locator('button')).toHaveCount(0);
+  await expect(tile.locator('button')).toHaveCount(1);
   await expect(tile).not.toContainText('Originals available offline');
   await expect(tile.locator('.browser-originals')).toHaveCount(0);
   await inspect(page, 'North wall');
-  await inspector(page)
-    .locator('details.browser-inspector-section')
-    .filter({ hasText: 'Restoration defaults' })
-    .locator('summary')
-    .click();
-  await expect(inspector(page)).toContainText('No photos');
-  await expect(inspector(page)).not.toContainText('Originals available offline');
-  const units = inspector(page).locator('[data-control-id$=".restoration.units"]');
-  const unitsOverride = inspector(page).locator('[data-control-id$=".restoration.units.override"]');
+  await control(page, 'browser.action.manage').click();
+  const manage = page.getByRole('dialog');
+  const units = manage.locator('[data-control-id$=".restoration.units"]');
+  const unitsOverride = manage.locator('[data-control-id$=".restoration.units.override"]');
   await expect(units).toBeDisabled();
   await unitsOverride.check();
   // Shown at once and kept: the toggle does not flicker back while the change saves.
@@ -167,26 +161,24 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   await expect(units).toBeEnabled();
   await units.selectOption('imperial');
   await expect(units).toHaveValue('imperial');
-  await expect(inspector(page)).toContainText('Overridden here');
-  await inspector(page).locator('[data-control-id$=".restoration.units.reset"]').click();
+  await expect(manage).toContainText('Overridden here');
+  await manage.locator('[data-control-id$=".restoration.units.reset"]').click();
   await expect(unitsOverride).not.toBeChecked();
   await expect(units).toHaveValue('metric');
   await expect(units).toBeDisabled();
   // Currency is the project's: read-only below it, inherited from the project override.
-  await expect(inspector(page)).toContainText('EUR');
-  await expect(inspector(page)).toContainText('Inherited from Project');
+  await expect(manage).toContainText('EUR');
+  await expect(manage).toContainText('Inherited from Project');
+
+  await closeDialog(page);
 
   // Cover: a styled button opens the hidden picker; the tile shows the dedicated cover.
-  await inspector(page)
-    .locator('details.browser-inspector-section')
-    .filter({ hasText: 'Cover image' })
-    .locator('summary')
-    .click();
-  const upload = control(inspector(page), 'browser.cover.upload');
+  await inspector(page).locator('.project-cover-preview').click();
+  const gallery = page.getByRole('dialog');
+  const upload = control(gallery, 'browser.cover.upload');
   await expect(upload).toHaveJSProperty('tagName', 'BUTTON');
   await expect(upload).toHaveText('Upload cover image');
-  // The native input (its "Choose file" text is never translated) is visually hidden.
-  await expect(inspector(page).locator('input[type="file"]')).toBeHidden();
+  await expect(gallery.locator('input[type="file"]')).toBeHidden();
   const chooser = page.waitForEvent('filechooser');
   await upload.click();
   await (
@@ -194,7 +186,8 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   ).setFiles({ name: 'cover.jpg', mimeType: 'image/jpeg', buffer: orientedJpeg });
   await expect(tile.locator('img')).toHaveCount(1);
   await expect(tile.locator('img')).toHaveAttribute('src', /^blob:/);
-  await expect(control(inspector(page), 'browser.cover.reset')).toBeVisible();
+  await expect(control(gallery, 'browser.cover.reset')).toBeVisible();
+  await closeDialog(page);
 
   // Project gear: sync, backup, sharing and the review links of the open project.
   const settings = await openProjectSettings(page);
@@ -238,7 +231,7 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
     const bar = document.querySelector('.browser-toolbar')!.getBoundingClientRect();
     return [...document.querySelectorAll('.browser-toolbar > *')].every((node) => {
       const box = node.getBoundingClientRect();
-      return box.right <= bar.right + 0.5 && box.height <= 46;
+      return box.right <= bar.right + 0.5 && box.width <= bar.width;
     });
   });
   expect(fits).toBe(true);

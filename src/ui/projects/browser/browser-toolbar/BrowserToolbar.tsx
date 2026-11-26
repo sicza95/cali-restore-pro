@@ -1,3 +1,6 @@
+import { ItemActionButtons } from '../item-actions/ItemActions';
+import { ShowFilterMenu } from '../item-actions/ShowFilterMenu';
+import { itemActionCopy } from '../item-actions/copy';
 import { createEffect, createUniqueId, For, onMount, Show } from 'solid-js';
 import { Icon } from '../../../icon/Icon';
 import { browserCopy } from '../browser-copy';
@@ -39,20 +42,39 @@ export function BrowserToolbar(props: BrowserToolbarProps) {
           />
         </Show>
         <span class="browser-toolbar-spacer" />
-        <ActionButton
-          label={copy().rename}
-          icon="pen"
-          controlId="browser.rename"
-          reason={props.renameDisabledReason}
-          onClick={props.onRename}
-        />
-        <ActionButton
-          label={copy().delete}
-          icon="trash"
-          controlId="browser.delete"
-          reason={props.deleteDisabledReason}
-          onClick={props.onDelete}
-        />
+        <Show
+          when={props.itemActions}
+          fallback={
+            <>
+              <ActionButton
+                label={copy().rename}
+                icon="pen"
+                controlId="browser.rename"
+                reason={props.renameDisabledReason}
+                onClick={props.onRename}
+              />
+              <ActionButton
+                label={copy().delete}
+                icon="trash"
+                controlId="browser.delete"
+                reason={props.deleteDisabledReason}
+                onClick={props.onDelete}
+              />
+            </>
+          }
+        >
+          <ItemActionButtons
+            actions={props.itemActions ?? []}
+            label={itemActionCopy[props.language].more}
+          />
+        </Show>
+        <Show when={props.showFilter}>
+          <ShowFilterMenu
+            language={props.language}
+            value={props.showFilter!}
+            onChange={(value) => props.onShowFilter?.(value)}
+          />
+        </Show>
         <div class="browser-view-toggle" role="group" aria-label={copy().view}>
           <ActionButton
             label={copy().grid}

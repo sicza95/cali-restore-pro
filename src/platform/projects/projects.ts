@@ -261,6 +261,7 @@ export function validateProject(value: unknown, id: string): Project {
 
 function assertNode(value: Record<string, unknown>, ids?: Set<string>) {
   if (
+    (value.archived !== undefined && typeof value.archived !== 'boolean') ||
     typeof value.id !== 'string' ||
     !uuid.test(value.id) ||
     ids?.has(value.id) ||
