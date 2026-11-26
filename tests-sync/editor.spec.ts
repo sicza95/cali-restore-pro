@@ -67,22 +67,27 @@ test('the editor recovers offline edits and rotates the project key', async ({
   const projectPath = await createProjectViaBrowser(page, 'East Chapel');
   const project = projectPath.split('/').at(-1)!;
 
-  // Sync is in the project settings dialog; the currency is a project override in the inspector.
+  // Sync is in project settings; currency is a project override in Manage.
   const sync = page.getByRole('region', { name: 'Cloud sync' });
   await openProjectSettings(page);
   await sync.getByRole('button', { name: 'Enable editor sync' }).click();
   await expect(sync.getByRole('status')).toHaveText('Cloud copy saved');
   expect(head).toMatchObject({ epoch: initialEpoch, revision: 1 });
   await closeDialog(page);
-  /** At the root, overrides the project's currency in the inspector. */
+  /** At the root, overrides the project's currency through Manage. */
   const setCurrency = async (device: typeof page, currency: string) => {
     if (new URL(device.url()).pathname !== '/projects')
       await device.locator('[data-control-id="project.library"]').click();
     await inspect(device, 'East Chapel');
     await overrideRestoration(device, 'currency', currency);
   };
-  const shownCurrency = (device: typeof page) =>
-    device.locator('.browser-inspector [data-control-id$=".restoration.currency"]');
+  const expectCurrency = async (device: typeof page, currency: string) => {
+    await device.locator('[data-control-id="browser.action.manage"]').click();
+    await expect(
+      device.getByRole('dialog').locator('[data-control-id$=".restoration.currency"]'),
+    ).toHaveValue(currency);
+    await closeDialog(device);
+  };
   /** From the root, the project's settings dialog with its sync panel. */
   const syncPanel = async (device: typeof page) => {
     await openItem(device, 'East Chapel');
@@ -107,7 +112,7 @@ test('the editor recovers offline edits and rotates the project key', async ({
   const editCurrency = async (currency: string) => {
     await setCurrency(page, currency);
     await expect(browserItem(page, 'East Chapel').locator('.browser-status')).toContainText(
-      'Waiting to sync',
+      'Syncing',
     );
   };
   const reconnect = async () => {
@@ -122,9 +127,9 @@ test('the editor recovers offline edits and rotates the project key', async ({
   await editCurrency('GBP');
   await page.reload();
   await inspect(page, 'East Chapel');
-  await expect(shownCurrency(page)).toHaveValue('GBP');
+  await expectCurrency(page, 'GBP');
   await expect(browserItem(page, 'East Chapel').locator('.browser-status')).toContainText(
-    'Waiting to sync',
+    'Syncing',
   );
   await reconnect();
   await expect(sync.getByRole('region', { name: 'This device' })).toContainText(
@@ -164,7 +169,7 @@ test('the editor recovers offline edits and rotates the project key', async ({
   await closeDialog(page);
   await page.locator('[data-control-id="project.library"]').click();
   await inspect(page, 'East Chapel');
-  await expect(shownCurrency(page)).toHaveValue('GBP');
+  await expectCurrency(page, 'GBP');
   expect(head).toMatchObject({ epoch: rotatedEpoch, revision: 4 });
 
   const keys = await page.evaluate(
