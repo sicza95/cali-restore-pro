@@ -5,6 +5,7 @@ import { settingsCopy } from '../settings-copy';
 import { navigationText } from '../../account-access/navigation-copy';
 import { SettingsItem, SettingsSection } from '../SettingsItem';
 import { restorationPreferenceCopy } from './copy';
+import type { IconName } from '../../icon/types';
 import {
   chooseTheme,
   loadPreferences,
@@ -98,8 +99,14 @@ export function PreferenceSections() {
       setLogoProblem(true);
     }
   };
-  const text = (key: 'studio' | 'contact' | 'footer', max: number) => (
-    <SettingsItem id={key} group="branding" title={c()[key]} value={shown(prefs()[key])}>
+  const text = (key: 'studio' | 'contact' | 'footer', max: number, icon: IconName) => (
+    <SettingsItem
+      id={key}
+      icon={icon}
+      group="branding"
+      title={c()[key]}
+      value={shown(prefs()[key])}
+    >
       <label>
         <span class="account-visually-hidden">{c()[key]}</span>
         <input
@@ -127,7 +134,13 @@ export function PreferenceSections() {
   return (
     <>
       <SettingsSection id="appearance" title={c().appearance} help={app.t('appearanceSectionHelp')}>
-        <SettingsItem id="theme" group="appearance" title={c().theme} value={themeLabel(theme())}>
+        <SettingsItem
+          id="theme"
+          icon="sun"
+          group="appearance"
+          title={c().theme}
+          value={themeLabel(theme())}
+        >
           <Choices
             name="theme"
             label={c().theme}
@@ -140,6 +153,7 @@ export function PreferenceSections() {
         </SettingsItem>
         <SettingsItem
           id="language"
+          icon="globe"
           group="appearance"
           title={navigationText(app.lang()).languageMenu}
           value={languageNames[app.lang()]}
@@ -156,6 +170,7 @@ export function PreferenceSections() {
         </SettingsItem>
         <SettingsItem
           id="transparency"
+          icon="layers"
           group="appearance"
           title={c().opaque}
           value={onOff(prefs().opaque)}
@@ -167,6 +182,7 @@ export function PreferenceSections() {
       <SettingsSection id="defaults" title={c().defaults} help={app.t('defaultsSectionHelp')}>
         <SettingsItem
           id="measurement-units"
+          icon="measure"
           group="defaults"
           title={restorationPreferenceCopy[app.lang()].measurementUnits}
           value={
@@ -191,6 +207,7 @@ export function PreferenceSections() {
         </SettingsItem>
         <SettingsItem
           id="units"
+          icon="shape"
           group="defaults"
           title={c().units}
           value={prefs().areaUnit || restorationPreferenceCopy[app.lang()].followSystem}
@@ -211,7 +228,13 @@ export function PreferenceSections() {
             </select>
           </label>
         </SettingsItem>
-        <SettingsItem id="currency" group="defaults" title={c().currency} value={prefs().currency}>
+        <SettingsItem
+          id="currency"
+          icon="currency"
+          group="defaults"
+          title={c().currency}
+          value={prefs().currency}
+        >
           <label>
             <span class="account-visually-hidden">{c().currency}</span>
             <select
@@ -226,6 +249,7 @@ export function PreferenceSections() {
         </SettingsItem>
         <SettingsItem
           id="report-language"
+          icon="globe"
           group="defaults"
           title={c().reportLanguage}
           value={reportLanguages[prefs().reportLanguage as keyof typeof reportLanguages]}
@@ -243,7 +267,13 @@ export function PreferenceSections() {
             </select>
           </label>
         </SettingsItem>
-        <SettingsItem id="snap" group="defaults" title={c().snap} value={onOff(prefs().snap)}>
+        <SettingsItem
+          id="snap"
+          icon="magnet"
+          group="defaults"
+          title={c().snap}
+          value={onOff(prefs().snap)}
+        >
           {toggle('snap', 'preferences.snap', c().snap)}
         </SettingsItem>
       </SettingsSection>
@@ -253,10 +283,16 @@ export function PreferenceSections() {
         title={c().branding}
         help={app.t('brandingSectionHelp')}
       >
-        {text('studio', 120)}
-        {text('contact', 254)}
-        {text('footer', 240)}
-        <SettingsItem id="accent" group="branding" title={c().accent} value={prefs().accent}>
+        {text('studio', 120, 'organisation')}
+        {text('contact', 254, 'envelope')}
+        {text('footer', 240, 'report')}
+        <SettingsItem
+          id="accent"
+          icon="palette"
+          group="branding"
+          title={c().accent}
+          value={prefs().accent}
+        >
           <label>
             <span class="account-visually-hidden">{c().accent}</span>
             <input
@@ -270,6 +306,7 @@ export function PreferenceSections() {
         </SettingsItem>
         <SettingsItem
           id="logo"
+          icon="photo"
           group="branding"
           title={c().logo}
           value={prefs().logo ? '' : app.t('notSet')}
@@ -311,6 +348,7 @@ export function PreferenceSections() {
       >
         <SettingsItem
           id="crash-reports"
+          icon="alert"
           group="diagnostics"
           title={c().optIn}
           help={c().diagnosticsHelp}

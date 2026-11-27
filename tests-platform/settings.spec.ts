@@ -17,6 +17,11 @@ const operator = {
 
 test('settings survive reload and stay isolated by account', async ({ page }, info) => {
   let account = member;
+  await page.route('**/api/v1/status', (route) => route.fulfill({ json: { status: 'ready' } }));
+  await page.route('**/api/v1/auth/sessions', (route) => route.fulfill({ json: { sessions: [] } }));
+  await page.route('**/api/v1/auth/passkeys', (route) =>
+    route.fulfill({ json: { available: true, passkeys: [] } }),
+  );
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ json: { account, capabilities: [], csrfToken: 'fixture' } }),
   );
@@ -25,6 +30,15 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   );
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.goto('/settings/preferences');
+  const settingsRows = page.locator('.settings-page .settings-option > summary');
+  await expect(settingsRows.first()).toBeVisible();
+  expect(await settingsRows.count()).toBeGreaterThan(10);
+  expect(
+    await settingsRows.evaluateAll((rows) =>
+      rows.every((row) => row.querySelector('.settings-option-icon .cr-icon')),
+    ),
+  ).toBe(true);
+  await expect(page.locator('.settings-static .settings-option-icon')).toHaveCount(1);
   // The theme is chosen in the account menu and applies at once.
   await openAccountMenu(page);
   await page.locator('[data-control-id="app.menu.theme"]').click();
@@ -54,6 +68,19 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
     window.scrollTo(0, 0);
   });
   await page.screenshot({ path: info.outputPath('preferences-portrait-dark.png'), fullPage: true });
+  await page.evaluate(() => document.fonts.ready);
+  for (const viewport of [
+    { width: 1194, height: 834 },
+    { width: 834, height: 1194 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const section of ['appearance', 'report-branding']) {
+      await page.locator('#' + section).scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: info.outputPath(`settings-icons-${section}-${viewport.width}.png`),
+      });
+    }
+  }
   await (
     await openSetting(page, 'delete-account')
   )
@@ -67,6 +94,16 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   await expect(page.locator('[data-control-id="app.menu.theme"]')).toContainText('Follow device');
   await page.keyboard.press('Escape');
   await expect(page.getByLabel('Report language')).toHaveValue('en');
+  for (const viewport of [
+    { width: 1194, height: 834 },
+    { width: 834, height: 1194 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.locator('#profile').scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: info.outputPath(`settings-icons-profile-${viewport.width}.png`),
+    });
+  }
 });
 
 test('administration submits a confirmed grant and reloads the server values', async ({

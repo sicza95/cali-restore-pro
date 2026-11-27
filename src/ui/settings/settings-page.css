@@ -67,6 +67,11 @@ button.danger:hover:enabled {
 .settings-static > span {
   font-weight: 600;
 }
+.settings-static-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
 .settings-static + .settings-option {
   border-top: 1px solid var(--cr-rule);
 }
