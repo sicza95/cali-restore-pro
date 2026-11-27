@@ -72,6 +72,8 @@ export type BrowserItemDescriptor = EntityMetadata & {
   /** Required by adapters for objects and surfaces; absent on project entries. */
   objectId?: string;
   name: string;
+  /** Known for readable documents; unavailable for directory-only cards. */
+  archived?: boolean;
   organisation: string | null;
   owners: BrowserOwner[];
   cover?: CoverReference;

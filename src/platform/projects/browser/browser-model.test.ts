@@ -12,6 +12,17 @@ import {
 import { parseQuery } from './query';
 
 describe('browser projections', () => {
+  it('exposes archived state at every level and supports filtering without an extra lookup', () => {
+    const project = newProject('Archived', 'Object', 'Surface', 'EUR');
+    project.archived = true;
+    project.objects[0]!.archived = true;
+    project.objects[0]!.surfaces[0]!.archived = true;
+    const projects = projectItems({ organisation: null, local: [project] });
+    expect(projects[0]!.archived).toBe(true);
+    expect(objectItems(project)[0]!.archived).toBe(true);
+    expect(surfaceItems(project, project.objects[0]!.id)[0]!.archived).toBe(true);
+    expect(filterItems(projects, parseQuery('archived:true').ast!)).toHaveLength(1);
+  });
   it('combines local, remote-only, unreadable and directory cards with authorised precedence', () => {
     const local = newProject('Local', null, null, 'EUR', 'org');
     const other = newProject('Other', null, null, 'EUR', 'elsewhere');

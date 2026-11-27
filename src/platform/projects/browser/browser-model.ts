@@ -47,6 +47,7 @@ function descriptor(
     projectId: project.id,
     ...(objectId === undefined ? {} : { objectId }),
     name: entity.name,
+    archived: entity.archived === true,
     organisation: project.organisation ?? null,
     createdAt: entity.createdAt ?? null,
     updatedAt: entity.updatedAt ?? null,
@@ -190,7 +191,7 @@ export function filterItems(
       ast,
       {
         ...item,
-        archived: options.archived?.(item),
+        archived: options.archived?.(item) ?? item.archived,
         creatorName: item.createdBy ? options.creatorName?.(item.createdBy) : undefined,
       },
       options.timeZone,

@@ -111,11 +111,11 @@ export function BrowserPage(props: BrowserPageProps) {
     const terms = ast();
     const asksArchived = terms.terms.some(({ field }) => field === 'archived');
     const shown = filterItems(props.items, terms, {
-      archived: props.archived,
+      archived: (item) => props.archived?.(item) ?? item.archived,
       creatorName: props.creatorName,
     }).filter(
       (item) =>
-        (asksArchived || showFilter().archived || !props.archived?.(item)) &&
+        (asksArchived || showFilter().archived || !(props.archived?.(item) ?? item.archived)) &&
         ((props.online?.(item) ?? item.status !== 'local')
           ? showFilter().online
           : showFilter().offline),

@@ -18,6 +18,8 @@
   white-space: nowrap;
 }
 .browser-panes {
+  /* Item chrome stays inside the content stack, beneath every toolbar dropdown. */
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   flex: 1;

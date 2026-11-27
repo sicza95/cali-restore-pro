@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { verifyArchiveChrome } from './browser-archive-chrome';
 import {
   runItemAction,
   browserControl as control,
@@ -67,6 +68,7 @@ test('item menus, inline rename, copy, archive filters and scoped modals', async
   await control(page, 'browser.show').click();
   await control(page, 'browser.show.archived').click();
   await expect(browserItem(page, 'Renamed chapel')).toBeVisible();
+  await verifyArchiveChrome(page, 'Renamed chapel', info);
   await control(page, 'browser.show.offline').click();
   await expect(page.locator('[data-browser-item]')).toHaveCount(0);
   await control(page, 'browser.show.offline').click();
