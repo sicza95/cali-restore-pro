@@ -18,7 +18,8 @@ type Purpose =
   | `surface-journal:${string}`
   | `project:${string}`
   | `sync:${string}`
-  | `pin:${string}`;
+  | `pin:${string}`
+  | `bin:${string}`;
 
 export const newCode = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
@@ -91,6 +92,7 @@ const documentLimit = (purpose: Purpose) =>
   purpose.startsWith('surface-journal:') ||
   purpose.startsWith('encrypted-pattern-presets:') ||
   purpose.startsWith('encrypted-estimates:') ||
+  purpose.startsWith('bin:') ||
   // A recipient draft may carry a whole shared full estimate (ADR 0008).
   purpose.startsWith('encrypted-recipient-reports:')
     ? maxLocalDocument

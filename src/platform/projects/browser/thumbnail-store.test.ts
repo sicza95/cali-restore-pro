@@ -9,6 +9,7 @@ import {
   vaultTable,
   commitVault,
   readVault,
+  binTables,
 } from '../../vault/store';
 import { localFiles } from '../../vault/file-store';
 import { vaultThumbnailCache } from './thumbnail-store';
@@ -49,8 +50,9 @@ it('upgrades a v9 database without losing data', async () => {
   });
   old.close();
   const db = await connect();
-  expect(db.version).toBe(10);
+  expect(db.version).toBe(11);
   expect(db.objectStoreNames.contains(thumbnailTable)).toBe(true);
+  for (const name of binTables) expect(db.objectStoreNames.contains(name)).toBe(true);
   db.close();
   expect((await readVault(account))!.stamp).toBe('old');
 });

@@ -1,13 +1,12 @@
 import { projectAssetIds } from '../browser/assets';
 import type { Project } from '../types';
-import type { BinManifest } from './types';
 
 /** Every root that keeps a stored file alive. */
 export type BinReachabilityRoots = {
   /** Live project graphs (includes dedicated cover/branding assets). */
   projects: readonly Project[];
   /** Recovery manifests of entries that are not yet purged. */
-  manifests: readonly Pick<BinManifest, 'assets'>[];
+  manifests: readonly { assets: readonly string[] }[];
   /** Assets referenced by issued documents, checkpoints, journals and history. */
   historical: Iterable<string>;
   /** Queued operations and in-flight uploads or restores. */

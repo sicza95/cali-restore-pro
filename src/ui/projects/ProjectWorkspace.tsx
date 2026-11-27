@@ -11,6 +11,7 @@ import {
   untrack,
 } from 'solid-js';
 import { localProjects } from '../../platform/projects/projects';
+import { localBin } from '../../platform/projects/bin/local-bin';
 import { preserveLegacyProjectSettings } from '../../platform/projects/settings';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
@@ -121,7 +122,8 @@ export function ProjectWorkspace(props: { vault: LocalVault; language: Language 
     void sync.refresh();
   }
   async function remove(project: SavedProject) {
-    await local.remove(project);
+    // Never-hosted projects go to the Bin; permanent removal is the Bin's purge.
+    await localBin(props.vault, app.account()!.id).trash(project, { kind: 'project' });
     mutate((data) => ({ rows: (data?.rows ?? []).filter((p) => p.id !== project.id) }));
     void sync.refresh();
   }

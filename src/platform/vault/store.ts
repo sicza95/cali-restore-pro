@@ -19,11 +19,24 @@ export const presetTable = 'encrypted-estimate-presets';
 export const recipientReportTable = 'encrypted-recipient-reports';
 export const revisionSyncTable = 'revision-sync';
 export const revisionQueueTable = 'revision-queue';
+// Bin (version 11): entries, sealed payload chunks, asset pins, lifecycle outbox, terminal fences.
+export const binEntryTable = 'bin-entries';
+export const binPayloadTable = 'bin-payloads';
+export const binPinTable = 'bin-pins';
+export const binOutboxTable = 'bin-outbox';
+export const binFenceTable = 'bin-fences';
+export const binTables = [
+  binEntryTable,
+  binPayloadTable,
+  binPinTable,
+  binOutboxTable,
+  binFenceTable,
+];
 export const accountRange = (account: string) => IDBKeyRange.bound([account], [account, []]);
 
 export async function connect() {
   return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open('calirestore-vault', 10);
+    const request = indexedDB.open('calirestore-vault', 11);
     request.onupgradeneeded = (event) => {
       if (event.oldVersion < 1) request.result.createObjectStore(vaultTable);
       if (event.oldVersion < 2) request.result.createObjectStore(fileTable);
@@ -41,6 +54,8 @@ export async function connect() {
       }
       if (event.oldVersion < 9) request.result.createObjectStore(recipientReportTable);
       if (event.oldVersion < 10) request.result.createObjectStore(thumbnailTable);
+      if (event.oldVersion < 11)
+        for (const name of binTables) request.result.createObjectStore(name);
     };
     request.onblocked = () => reject(new Error('Close older vault tabs and retry'));
     request.onerror = () => reject(request.error);
@@ -86,6 +101,7 @@ export async function commitVault(
           journalTable,
           patternTable,
           recipientReportTable,
+          ...binTables,
         ],
         'readwrite',
         {
@@ -114,6 +130,7 @@ export async function commitVault(
           tx.objectStore(journalTable).delete(accountRange(account));
           tx.objectStore(patternTable).delete(accountRange(account));
           tx.objectStore(recipientReportTable).delete(accountRange(account));
+          for (const name of binTables) tx.objectStore(name).delete(accountRange(account));
         }
       };
     });

@@ -16,7 +16,7 @@ import type {
 import type { EntityOverrides, ProjectOverrides } from '../browser-contracts';
 import type { LocalVault } from '../../vault/vault';
 import { coverAssetIds } from './assets';
-import { deletionJournals } from './deletion';
+import { localBin } from '../bin/local-bin';
 
 export type BrowserTarget =
   | { kind: 'project' }
@@ -188,46 +188,19 @@ export function deletionCounts(
 }
 
 /** Persistence adapter: child deletion must use these guarded methods after UI confirmation.
- * Files, checkpoints, journals and issued snapshots are retained; no physical garbage collection.
+ * Deleted children are retained in the Bin with their journals, documents and files.
  */
 export function browserMutations(vault: LocalVault, createdBy: string | null) {
   const store = localProjects(vault);
   const save = (next: SavedProjectV2) => store.save(next);
+  /** Child deletion moves the subtree into the Bin in one atomic vault commit. */
   async function remove(
     project: SavedProject,
     target: Exclude<BrowserTarget, { kind: 'project' }>,
   ) {
-    const entity = targetOf(upgradeProject(project), target);
-    const surfaces = 'surfaces' in entity ? entity.surfaces : [entity as SurfaceV2];
-    const journals = await deletionJournals(project.id, surfaces, (ref) =>
-      vault.projects().readJournal(ref),
-    );
-    const now = Date.now();
-    const next = change(
-      project,
-      { kind: 'project' },
-      (_, next) => {
-        if (target.kind === 'object')
-          next.objects = (next.objects as RestorationObjectV2[]).filter(
-            ({ id }) => id !== target.objectId,
-          );
-        else {
-          const object = objectOf(next, target.objectId);
-          object.surfaces = (object.surfaces as SurfaceV2[]).filter(
-            ({ id }) => id !== target.surfaceId,
-          );
-          object.updatedAt = now;
-        }
-        // An ancestor's cover may have pointed at a removed descendant photo.
-        const clear = (node: Entity) => {
-          if (node.cover && !coverAssetIds(next, node).has(node.cover.assetId)) delete node.cover;
-        };
-        clear(next);
-        for (const object of next.objects) clear(object);
-      },
-      now,
-    );
-    return store.save(next, undefined, journals);
+    if (!createdBy) throw new Error('Sign in to delete');
+    const { project: next } = await localBin(vault, createdBy).trash(project, target);
+    return next!;
   }
   return {
     createObject: (project: SavedProject, name: string) =>

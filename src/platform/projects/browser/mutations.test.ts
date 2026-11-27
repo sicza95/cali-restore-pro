@@ -5,7 +5,8 @@ import { newProject, validateProject } from '../projects';
 import type { SavedProjectV2 } from '../types';
 import type { LocalVault } from '../../vault/vault';
 import { importCode } from '../../vault/crypto';
-import { connect, vaultTable } from '../../vault/store';
+import { connect, estimateTable, reportTable, vaultTable } from '../../vault/store';
+import { binDocuments } from '../../vault/bin-store';
 import { projectDocuments } from '../../vault/project-store';
 import { emptyJournal, journalText } from '../surface-journal';
 import {
@@ -34,7 +35,13 @@ beforeEach(async () => {
   });
   db.close();
   documents = projectDocuments(root, actor, 'stamp', new AbortController().signal);
-  vault = { projects: () => documents } as unknown as LocalVault;
+  const signal = new AbortController().signal;
+  vault = {
+    projects: () => documents,
+    estimates: () => projectDocuments(root, actor, 'stamp', signal, estimateTable),
+    reports: () => projectDocuments(root, actor, 'stamp', signal, reportTable),
+    bin: () => binDocuments(root, actor, 'stamp', signal),
+  } as unknown as LocalVault;
 });
 
 function seeded(): SavedProjectV2 {

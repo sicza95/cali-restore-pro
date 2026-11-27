@@ -15,6 +15,7 @@ import { revisionQueue } from './revision-queue';
 import { projectDocuments } from './project-store';
 import { originalPins } from './original-pins';
 import { projectBackups } from './project-backups';
+import { binDocuments } from './bin-store';
 import { recipientReportDocuments } from './recipient-reports';
 
 export class LocalVault {
@@ -206,6 +207,12 @@ export class LocalVault {
   recipientReports() {
     const { root, row } = this.#unlocked();
     return recipientReportDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
+  }
+
+  /** Recoverable deletions of this vault account (Bin). */
+  bin() {
+    const { root, row } = this.#unlocked();
+    return binDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
   }
 
   projectBackups() {

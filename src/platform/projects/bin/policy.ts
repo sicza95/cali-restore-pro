@@ -41,8 +41,12 @@ export function binCapabilities(entry: BinEntry, actor: BinActor, now: number): 
 function restoreCapability(entry: BinEntry, actor: BinActor, expired: boolean): BinCapability {
   if (expired) return deny('expired');
   if (entry.pending) return deny('pending_sync');
-  // Legacy entries restore exactly what they declare; new entries must be complete.
-  if (entry.coverage.missing.length && !entry.coverage.legacy) return deny('incomplete_recovery');
+  // Legacy entries restore exactly what they declare; new entries must be complete. A local
+  // entry may lack originals that were never on this device: restoring loses nothing more.
+  const gaps = entry.coverage.missing.filter(
+    (name) => entry.scope === 'hosted' || name !== 'assets',
+  );
+  if (gaps.length && !entry.coverage.legacy) return deny('incomplete_recovery');
   if (entry.scope === 'local') return allow;
   if (!actor.online) return deny('offline');
   if (!actor.hostingEntitled) return deny('hosting_unavailable');
