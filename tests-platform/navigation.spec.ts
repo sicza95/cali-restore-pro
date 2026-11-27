@@ -56,10 +56,14 @@ test('navigation registry, capability changes, language, theme and Back', async 
   await expect(page.locator(byId('app.menu.theme'))).toContainText('Dark');
   await page.keyboard.press('Escape');
   await expect(page.locator('details#theme summary')).toContainText('Dark');
-  await (await openSetting(page, 'transparency')).getByLabel('Reduce transparency').check();
+  await page.getByRole('switch', { name: 'Reduce transparency' }).check();
   await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
   // Language from the Appearance section.
-  await (await openSetting(page, 'language')).getByText('Magyar', { exact: true }).click();
+  await (
+    await openSetting(page, 'language')
+  )
+    .getByRole('radio', { name: 'Magyar', exact: true })
+    .check();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Beállítások');
   await page.locator(byId('app.nav.libraries')).click();
   await expect(page.locator(byId('app.nav.libraries'))).toHaveAttribute('aria-current', 'page');

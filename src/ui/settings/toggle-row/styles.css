@@ -1,0 +1,22 @@
+.settings-option.settings-toggle-row {
+  min-height: 72px;
+  gap: 16px;
+  margin: 0;
+  font: inherit;
+  padding: 14px clamp(16px, 3vw, 24px);
+}
+.settings-toggle-row .settings-option-text {
+  flex: 1;
+}
+.settings-toggle-row .settings-option-text > strong {
+  font-size: inherit;
+  font-weight: 700;
+}
+.settings-toggle-row input {
+  top: 50%;
+  right: clamp(16px, 3vw, 24px);
+  transform: translateY(-50%);
+}
+.settings-toggle-row:hover {
+  background: var(--cr-hover);
+}

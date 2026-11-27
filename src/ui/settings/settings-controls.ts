@@ -22,14 +22,26 @@ export const settingsControls = [
         'preferences.transparency',
         'opaque',
         'Set reduced transparency preference',
-        'Settings row open; saved on change',
+        'Toggle row; saved on change',
       ],
-      [
-        'preferences.units',
-        'units',
-        'Select area display default',
-        'Settings row open; saved on change',
-      ],
+      ...(['metric', 'imperial'] as const).map(
+        (value) =>
+          [
+            `preferences.measurement-units.${value}`,
+            'units',
+            `Use the ${value} measurement system`,
+            'Measurement open; saved on change',
+          ] as const,
+      ),
+      ...(['default', 'cm2', 'm2', 'in2', 'ft2'] as const).map(
+        (value) =>
+          [
+            `preferences.units.${value}`,
+            'units',
+            `Use the ${value} area unit`,
+            'Measurement open; saved on change',
+          ] as const,
+      ),
       [
         'preferences.currency',
         'currency',
@@ -42,12 +54,7 @@ export const settingsControls = [
         'Select independent report language default',
         'Settings row open; saved on change',
       ],
-      [
-        'preferences.snap',
-        'snap',
-        'Record drawing snap preference',
-        'Settings row open; saved on change',
-      ],
+      ['preferences.snap', 'snap', 'Record drawing snap preference', 'Toggle row; saved on change'],
       [
         'preferences.branding.studio',
         'studio',
@@ -88,7 +95,7 @@ export const settingsControls = [
         'preferences.diagnostics',
         'optIn',
         'Record diagnostics consent',
-        'Settings row open; saved on change',
+        'Toggle row; saved on change',
       ],
     ],
   ),

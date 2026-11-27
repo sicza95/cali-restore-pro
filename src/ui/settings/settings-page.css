@@ -67,11 +67,6 @@ button.danger:hover:enabled {
 .settings-static > span {
   font-weight: 600;
 }
-.settings-static-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-}
 .settings-static + .settings-option {
   border-top: 1px solid var(--cr-rule);
 }
@@ -200,41 +195,68 @@ button.danger:hover:enabled {
   flex: 1 1 220px;
 }
 
-/* A few choices side by side: theme and language. */
+/* Exclusive choices form a single joined row. */
 .settings-choices {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 0;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-radius);
 }
 .settings-choices label {
+  position: relative;
   display: block;
+  flex: none;
 }
 .settings-choices input {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
-  pointer-events: none;
-}
-.settings-choices span {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--cr-touch);
-  padding: 0 16px;
-  font-weight: 600;
-  border-radius: var(--cr-radius);
-  box-shadow: inset 0 0 0 1px var(--cr-rule);
   cursor: pointer;
 }
-.settings-choices span:hover {
+.settings-choices span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cr-touch);
+  min-width: var(--cr-touch);
+  padding: 0 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-inline-end: 1px solid var(--cr-rule);
+  cursor: pointer;
+}
+.settings-choices label:first-child span {
+  border-radius: var(--cr-radius) 0 0 var(--cr-radius);
+}
+.settings-choices label:last-child span {
+  border-inline-end: 0;
+  border-radius: 0 var(--cr-radius) var(--cr-radius) 0;
+}
+.settings-choices label:hover span {
   background: var(--cr-hover);
 }
 .settings-choices input:checked + span {
   color: var(--cr-accent);
   background: var(--cr-selected);
-  box-shadow: inset 0 0 0 2px var(--cr-accent);
 }
 .settings-choices input:focus-visible + span {
   outline: var(--cr-focus-width) solid var(--cr-accent);
-  outline-offset: 3px;
+  outline-offset: -3px;
+}
+.settings-measurement-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.settings-measurement-field > span {
+  font-weight: 600;
 }
 .settings-option-body .report-logo {
   max-width: 200px;

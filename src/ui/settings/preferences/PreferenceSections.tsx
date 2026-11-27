@@ -4,7 +4,9 @@ import { languageNames, languages } from '../../../platform/i18n/language';
 import { settingsCopy } from '../settings-copy';
 import { navigationText } from '../../account-access/navigation-copy';
 import { SettingsItem, SettingsSection } from '../SettingsItem';
-import { restorationPreferenceCopy } from './copy';
+import { ChoiceButtons as Choices } from './choice-buttons/ChoiceButtons';
+import { MeasurementSetting } from './measurement-setting/MeasurementSetting';
+import { SettingsToggleRow } from '../toggle-row/SettingsToggleRow';
 import type { IconName } from '../../icon/types';
 import {
   chooseTheme,
@@ -20,36 +22,6 @@ type Preferences = typeof preferenceDefaults;
 const themes: ThemeChoice[] = ['light', 'dark', 'system'];
 const currencies = ['HUF', 'EUR', 'GBP', 'USD', 'CHF'];
 const reportLanguages = { en: 'English', hu: 'Magyar' } as const;
-
-/** A row of choices, one of which is selected. */
-function Choices<T extends string>(props: {
-  name: string;
-  label: string;
-  options: readonly T[];
-  value: T;
-  text: (value: T) => string;
-  control: (value: T) => string;
-  pick: (value: T) => void;
-}) {
-  return (
-    <div class="settings-choices" role="radiogroup" aria-label={props.label}>
-      <For each={props.options}>
-        {(option) => (
-          <label>
-            <input
-              type="radio"
-              name={props.name}
-              checked={props.value === option}
-              data-control-id={props.control(option)}
-              onChange={() => props.pick(option)}
-            />
-            <span>{props.text(option)}</span>
-          </label>
-        )}
-      </For>
-    </div>
-  );
-}
 
 /**
  * Appearance, restoration defaults, report branding and diagnostics. These are kept for this
@@ -75,7 +47,6 @@ export function PreferenceSections() {
       app.notify('settingFailed', true);
     }
   };
-  const onOff = (value: boolean) => app.t(value ? 'on' : 'off');
   const shown = (value: string) => value || app.t('notSet');
   const themeLabel = (value: ThemeChoice) => (value === 'system' ? c().system : c()[value]);
   const [logoProblem, setLogoProblem] = createSignal(false);
@@ -119,18 +90,6 @@ export function PreferenceSections() {
       </label>
     </SettingsItem>
   );
-  const toggle = (key: 'opaque' | 'snap' | 'diagnostics', control: string, label: string) => (
-    <label class="confirmation">
-      <input
-        data-control-id={control}
-        name={key}
-        type="checkbox"
-        checked={prefs()[key]}
-        onChange={(event) => save({ [key]: event.currentTarget.checked })}
-      />
-      {label}
-    </label>
-  );
   return (
     <>
       <SettingsSection id="appearance" title={c().appearance} help={app.t('appearanceSectionHelp')}>
@@ -168,66 +127,23 @@ export function PreferenceSections() {
             pick={(code) => app.selectLanguage(code)}
           />
         </SettingsItem>
-        <SettingsItem
+        <SettingsToggleRow
           id="transparency"
           icon="layers"
-          group="appearance"
           title={c().opaque}
-          value={onOff(prefs().opaque)}
-        >
-          {toggle('opaque', 'preferences.transparency', c().opaque)}
-        </SettingsItem>
+          control="preferences.transparency"
+          checked={prefs().opaque}
+          onChange={(value) => save({ opaque: value })}
+        />
       </SettingsSection>
 
       <SettingsSection id="defaults" title={c().defaults} help={app.t('defaultsSectionHelp')}>
-        <SettingsItem
-          id="measurement-units"
-          icon="measure"
-          group="defaults"
-          title={restorationPreferenceCopy[app.lang()].measurementUnits}
-          value={
-            restorationPreferenceCopy[app.lang()][
-              prefs().measurementUnits === 'imperial' ? 'imperial' : 'metric'
-            ]
-          }
-        >
-          <label>
-            <span class="account-visually-hidden">
-              {restorationPreferenceCopy[app.lang()].measurementUnits}
-            </span>
-            <select
-              data-control-id="preferences.measurement-units"
-              value={prefs().measurementUnits}
-              onChange={(event) => save({ measurementUnits: event.currentTarget.value })}
-            >
-              <option value="metric">{restorationPreferenceCopy[app.lang()].metric}</option>
-              <option value="imperial">{restorationPreferenceCopy[app.lang()].imperial}</option>
-            </select>
-          </label>
-        </SettingsItem>
-        <SettingsItem
-          id="units"
-          icon="shape"
-          group="defaults"
-          title={c().units}
-          value={prefs().areaUnit || restorationPreferenceCopy[app.lang()].followSystem}
-        >
-          <label>
-            <span class="account-visually-hidden">{c().units}</span>
-            <select
-              data-control-id="preferences.units"
-              name="units"
-              value={prefs().areaUnit}
-              onChange={(event) => save({ areaUnit: event.currentTarget.value })}
-            >
-              <option value="">{restorationPreferenceCopy[app.lang()].followSystem}</option>
-              <option>cm²</option>
-              <option>m²</option>
-              <option>in²</option>
-              <option>ft²</option>
-            </select>
-          </label>
-        </SettingsItem>
+        <MeasurementSetting
+          system={prefs().measurementUnits}
+          areaUnit={prefs().areaUnit}
+          onSystem={(measurementUnits) => save({ measurementUnits })}
+          onAreaUnit={(areaUnit) => save({ areaUnit })}
+        />
         <SettingsItem
           id="currency"
           icon="currency"
@@ -267,15 +183,14 @@ export function PreferenceSections() {
             </select>
           </label>
         </SettingsItem>
-        <SettingsItem
+        <SettingsToggleRow
           id="snap"
           icon="magnet"
-          group="defaults"
           title={c().snap}
-          value={onOff(prefs().snap)}
-        >
-          {toggle('snap', 'preferences.snap', c().snap)}
-        </SettingsItem>
+          control="preferences.snap"
+          checked={prefs().snap}
+          onChange={(value) => save({ snap: value })}
+        />
       </SettingsSection>
 
       <SettingsSection
@@ -346,16 +261,15 @@ export function PreferenceSections() {
         title={c().diagnostics}
         help={app.t('diagnosticsSectionHelp')}
       >
-        <SettingsItem
+        <SettingsToggleRow
           id="crash-reports"
           icon="alert"
-          group="diagnostics"
           title={c().optIn}
           help={c().diagnosticsHelp}
-          value={onOff(prefs().diagnostics)}
-        >
-          {toggle('diagnostics', 'preferences.diagnostics', c().optIn)}
-        </SettingsItem>
+          control="preferences.diagnostics"
+          checked={prefs().diagnostics}
+          onChange={(value) => save({ diagnostics: value })}
+        />
       </SettingsSection>
     </>
   );

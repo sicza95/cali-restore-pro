@@ -6,7 +6,6 @@ import { AccountDeletion } from './profile/AccountDeletion';
 import { PreferenceSections } from './preferences/PreferenceSections';
 import { SettingsItem, SettingsSection } from './SettingsItem';
 import { settingsCopy } from './settings-copy';
-import { Icon } from '../icon/Icon';
 import './settings-page.css';
 
 /** Where each settings address opens the page. */
@@ -68,12 +67,7 @@ function ProfileItems() {
         <>
           {/* Not a setting of its own: Security changes it. */}
           <div class="settings-static">
-            <span class="settings-static-label">
-              <span class="settings-option-icon" aria-hidden="true">
-                <Icon name="envelope" size={20} />
-              </span>
-              {app.t('signInEmail')}
-            </span>
+            <span>{app.t('signInEmail')}</span>
             <strong class="account-email">{account.email}</strong>
           </div>
           <SettingsItem

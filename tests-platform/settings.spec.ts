@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { openAccountMenu, openSetting } from './app-navigation';
+import { verifyMeasurementPreferences } from './settings-measurement';
 
 const member = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -30,7 +31,9 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   );
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.goto('/settings/preferences');
-  const settingsRows = page.locator('.settings-page .settings-option > summary');
+  const settingsRows = page.locator(
+    '.settings-page .settings-option > summary, .settings-page .settings-toggle-row',
+  );
   await expect(settingsRows.first()).toBeVisible();
   expect(await settingsRows.count()).toBeGreaterThan(10);
   expect(
@@ -38,14 +41,14 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
       rows.every((row) => row.querySelector('.settings-option-icon .cr-icon')),
     ),
   ).toBe(true);
-  await expect(page.locator('.settings-static .settings-option-icon')).toHaveCount(1);
+  await expect(page.locator('.settings-static .settings-option-icon')).toHaveCount(0);
   // The theme is chosen in the account menu and applies at once.
   await openAccountMenu(page);
   await page.locator('[data-control-id="app.menu.theme"]').click();
   await page.locator('[data-control-id="app.menu.theme.dark"]').click();
   await page.keyboard.press('Escape');
   // Each setting is its own row and is saved as soon as it changes.
-  await (await openSetting(page, 'transparency')).getByLabel('Reduce transparency').check();
+  await page.getByRole('switch', { name: 'Reduce transparency' }).check();
   await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
   await (
     await openSetting(page, 'report-language')
@@ -54,14 +57,22 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
     .selectOption('hu');
   await expect(page.locator('details#report-language summary')).toContainText('Magyar');
   await expect(
-    (await openSetting(page, 'crash-reports')).getByLabel(
-      'Allow optional crash and performance reports',
-    ),
+    page.getByRole('switch', { name: 'Allow optional crash and performance reports' }),
   ).not.toBeChecked();
   await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-transparency', 'opaque');
   await expect(page.getByLabel('Report language')).toHaveValue('hu');
+  await verifyMeasurementPreferences(page, info);
+  expect(
+    await page.locator('.settings-toggle-row').evaluateAll((rows) =>
+      rows.every((row) => {
+        const title = row.querySelector('.settings-option-text')!.getBoundingClientRect();
+        const toggle = row.querySelector('.cr-switch-track')!.getBoundingClientRect();
+        return title.right < toggle.left;
+      }),
+    ),
+  ).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await page.evaluate(() => {
     document.querySelector('.account-content')?.scrollTo(0, 0);
