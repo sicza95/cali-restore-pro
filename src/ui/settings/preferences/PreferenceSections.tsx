@@ -1,4 +1,4 @@
-import { createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import { createSignal, onCleanup, Show, untrack } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
 import { languageNames, languages } from '../../../platform/i18n/language';
 import { settingsCopy } from '../settings-copy';
@@ -8,6 +8,7 @@ import { SettingsItem, SettingsSection } from '../SettingsItem';
 import { ChoiceButtons as Choices } from './choice-buttons/ChoiceButtons';
 import { MeasurementSetting } from './measurement-setting/MeasurementSetting';
 import { SettingsToggleRow } from '../toggle-row/SettingsToggleRow';
+import { SettingsSelectRow } from '../select-row/SettingsSelectRow';
 import type { IconName } from '../../icon/types';
 import {
   chooseTheme,
@@ -114,24 +115,18 @@ export function PreferenceSections() {
             pick={(value) => chooseTheme(id, value)}
           />
         </SettingsItem>
-        <SettingsItem
+        <SettingsSelectRow
           id="language"
           icon="globe"
-          group="appearance"
           title={navigationText(app.lang()).languageMenu}
           help={help().language}
-          value={languageNames[app.lang()]}
-        >
-          <Choices
-            name="language"
-            label={navigationText(app.lang()).languageMenu}
-            options={languages}
-            value={app.lang()}
-            text={(code) => languageNames[code]}
-            control={(code) => `settings.language.${code}`}
-            pick={(code) => app.selectLanguage(code)}
-          />
-        </SettingsItem>
+          options={languages}
+          value={app.lang()}
+          text={(code) => languageNames[code]}
+          control="settings.item.language"
+          optionControl={(code) => `settings.language.${code}`}
+          pick={(code) => app.selectLanguage(code)}
+        />
         <SettingsToggleRow
           id="transparency"
           icon="layers"
@@ -150,47 +145,30 @@ export function PreferenceSections() {
           onSystem={(measurementUnits) => save({ measurementUnits })}
           onAreaUnit={(areaUnit) => save({ areaUnit })}
         />
-        <SettingsItem
+        <SettingsSelectRow
           id="currency"
           icon="currency"
-          group="defaults"
           title={c().currency}
           help={help().currency}
           value={prefs().currency}
-        >
-          <label>
-            <span class="account-visually-hidden">{c().currency}</span>
-            <select
-              data-control-id="preferences.currency"
-              name="currency"
-              value={prefs().currency}
-              onChange={(event) => save({ currency: event.currentTarget.value })}
-            >
-              <For each={currencies}>{(currency) => <option>{currency}</option>}</For>
-            </select>
-          </label>
-        </SettingsItem>
-        <SettingsItem
+          options={currencies}
+          text={(value) => value}
+          control="preferences.currency"
+          optionControl={(value) => `preferences.currency.${value}`}
+          pick={(currency) => save({ currency })}
+        />
+        <SettingsSelectRow
           id="report-language"
           icon="globe"
-          group="defaults"
           title={c().reportLanguage}
           help={help().reportLanguage}
-          value={reportLanguages[prefs().reportLanguage as keyof typeof reportLanguages]}
-        >
-          <label>
-            <span class="account-visually-hidden">{c().reportLanguage}</span>
-            <select
-              data-control-id="preferences.report-language"
-              name="reportLanguage"
-              value={prefs().reportLanguage}
-              onChange={(event) => save({ reportLanguage: event.currentTarget.value })}
-            >
-              <option value="en">English</option>
-              <option value="hu">Magyar</option>
-            </select>
-          </label>
-        </SettingsItem>
+          value={prefs().reportLanguage as keyof typeof reportLanguages}
+          options={languages}
+          text={(value) => reportLanguages[value]}
+          control="preferences.report-language"
+          optionControl={(value) => `preferences.report-language.${value}`}
+          pick={(reportLanguage) => save({ reportLanguage })}
+        />
         <SettingsToggleRow
           id="snap"
           icon="magnet"

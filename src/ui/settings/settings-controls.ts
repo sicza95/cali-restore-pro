@@ -46,14 +46,32 @@ export const settingsControls = [
         'preferences.currency',
         'currency',
         'Select new project currency',
-        'Settings row open; saved on change',
+        'Dropdown opens directly from row; saved on selection',
       ],
       [
         'preferences.report-language',
         'reportLanguage',
         'Select independent report language default',
-        'Settings row open; saved on change',
+        'Dropdown opens directly from row; saved on selection',
       ],
+      ...['HUF', 'EUR', 'GBP', 'USD', 'CHF'].map(
+        (value) =>
+          [
+            `preferences.currency.${value}`,
+            'currency',
+            `Use ${value} for new estimates`,
+            'Currency dropdown open; saved on selection',
+          ] as const,
+      ),
+      ...['en', 'hu'].map(
+        (value) =>
+          [
+            `preferences.report-language.${value}`,
+            'reportLanguage',
+            `Use ${value} for new reports`,
+            'Report language dropdown open; saved on selection',
+          ] as const,
+      ),
       ['preferences.snap', 'snap', 'Record drawing snap preference', 'Toggle row; saved on change'],
       [
         'preferences.branding.studio',

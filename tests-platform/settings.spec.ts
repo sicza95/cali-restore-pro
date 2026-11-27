@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { openAccountMenu, openSetting } from './app-navigation';
 import { verifyMeasurementPreferences } from './settings-measurement';
+import { verifySettingsDropdowns } from './settings-dropdowns';
 
 const member = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -32,7 +33,7 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   await page.setViewportSize({ width: 834, height: 1194 });
   await page.goto('/settings/preferences');
   const settingsRows = page.locator(
-    '.settings-page .settings-option > summary, .settings-page .settings-toggle-row',
+    '.settings-page .settings-option > summary, .settings-page .settings-toggle-row, .settings-page .settings-select-trigger',
   );
   await expect(settingsRows.first()).toBeVisible();
   expect(await settingsRows.count()).toBeGreaterThan(10);
@@ -50,20 +51,18 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   // Each setting is its own row and is saved as soon as it changes.
   await page.getByRole('switch', { name: 'Reduce transparency' }).check();
   await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
-  await (
-    await openSetting(page, 'report-language')
-  )
-    .getByLabel('Report language')
-    .selectOption('hu');
-  await expect(page.locator('details#report-language summary')).toContainText('Magyar');
+  await page.locator('[data-control-id="preferences.report-language"]').click();
+  await page.getByRole('option', { name: 'Magyar', exact: true }).click();
+  await expect(page.locator('#report-language .settings-select-trigger')).toContainText('Magyar');
   await expect(
     page.getByRole('switch', { name: 'Allow optional crash and performance reports' }),
   ).not.toBeChecked();
   await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-transparency', 'opaque');
-  await expect(page.getByLabel('Report language')).toHaveValue('hu');
+  await expect(page.locator('#report-language .settings-select-trigger')).toContainText('Magyar');
   await verifyMeasurementPreferences(page, info);
+  await verifySettingsDropdowns(page, info);
   expect(
     await page.locator('.settings-toggle-row').evaluateAll((rows) =>
       rows.every((row) => {
@@ -104,7 +103,7 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   await openAccountMenu(page);
   await expect(page.locator('[data-control-id="app.menu.theme"]')).toContainText('Follow device');
   await page.keyboard.press('Escape');
-  await expect(page.getByLabel('Report language')).toHaveValue('en');
+  await expect(page.locator('#report-language .settings-select-trigger')).toContainText('English');
   for (const viewport of [
     { width: 1194, height: 834 },
     { width: 834, height: 1194 },

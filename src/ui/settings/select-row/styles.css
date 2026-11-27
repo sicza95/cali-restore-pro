@@ -1,0 +1,83 @@
+.settings-select-row {
+  min-width: 0;
+}
+.settings-select-row > .settings-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  min-height: 72px;
+  padding: 14px clamp(16px, 3vw, 24px);
+  border: 0;
+  border-radius: 0;
+  color: var(--cr-ink);
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  text-align: start;
+}
+.settings-select-trigger > .settings-option-text {
+  flex: 1;
+}
+.settings-select-trigger:hover,
+.settings-select-trigger[aria-expanded='true'] {
+  background: var(--cr-hover);
+}
+.settings-select-trigger:focus-visible {
+  outline-offset: -3px;
+}
+.settings-select-trigger .settings-option-chevron {
+  margin: 0;
+  transform: rotate(90deg);
+}
+.settings-select-trigger[aria-expanded='true'] .settings-option-chevron {
+  transform: rotate(-90deg);
+}
+.settings-select-options {
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 4px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--cr-rule);
+  border-radius: var(--cr-radius);
+  color: var(--cr-ink);
+  background: var(--cr-surface);
+  box-shadow: var(--cr-shadow-floating);
+}
+.settings-select-options > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: var(--cr-touch);
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--cr-radius);
+  color: var(--cr-ink);
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  text-align: start;
+}
+.settings-select-options > button[aria-selected='true'] {
+  color: var(--cr-accent);
+  background: var(--cr-selected);
+}
+.settings-select-options > button:hover {
+  background: var(--cr-hover);
+}
+.settings-select-options > button:focus-visible {
+  outline-offset: -3px;
+}
+.settings-select-check {
+  display: flex;
+  flex: none;
+}
+.settings-select-check[data-selected='false'] {
+  visibility: hidden;
+}

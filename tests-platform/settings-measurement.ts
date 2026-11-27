@@ -30,8 +30,8 @@ export async function verifyMeasurementPreferences(page: Page, info: TestInfo) {
 
   for (const language of ['en', 'hu']) {
     if (language === 'hu') {
-      await openSetting(page, 'language');
-      await page.locator('[data-control-id="settings.language.hu"]').check();
+      await page.locator('[data-control-id="settings.item.language"]').click();
+      await page.locator('[data-control-id="settings.language.hu"]').click();
       await expect(page.locator('html')).toHaveAttribute('lang', 'hu');
       measurement = await openSetting(page, 'measurement');
       await page.locator('[data-control-id="preferences.measurement-units.imperial"]').check();
@@ -87,7 +87,7 @@ export async function verifyMeasurementPreferences(page: Page, info: TestInfo) {
       });
     }
   }
-  await openSetting(page, 'language');
-  await page.locator('[data-control-id="settings.language.en"]').check();
+  await page.locator('[data-control-id="settings.item.language"]').click();
+  await page.locator('[data-control-id="settings.language.en"]').click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 }

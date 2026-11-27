@@ -5,7 +5,7 @@ import {
   menuControl,
   signOutControl,
 } from '../src/ui/account-access/navigation-controls';
-import { openAccountMenu, openSetting } from './app-navigation';
+import { openAccountMenu } from './app-navigation';
 
 const account = { id: 'm08-navigation', email: 'member@example.test' };
 const byId = (id: string) => '[data-control-id="' + id + '"]';
@@ -59,11 +59,8 @@ test('navigation registry, capability changes, language, theme and Back', async 
   await page.getByRole('switch', { name: 'Reduce transparency' }).check();
   await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
   // Language from the Appearance section.
-  await (
-    await openSetting(page, 'language')
-  )
-    .getByRole('radio', { name: 'Magyar', exact: true })
-    .check();
+  await page.locator('[data-control-id="settings.item.language"]').click();
+  await page.getByRole('option', { name: 'Magyar', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Beállítások');
   await page.locator(byId('app.nav.libraries')).click();
   await expect(page.locator(byId('app.nav.libraries'))).toHaveAttribute('aria-current', 'page');

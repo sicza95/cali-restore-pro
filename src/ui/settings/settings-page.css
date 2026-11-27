@@ -12,6 +12,11 @@
   max-width: 720px;
   margin-inline: auto;
 }
+.settings-page,
+.settings-section,
+.settings-options {
+  grid-template-columns: minmax(0, 1fr);
+}
 .settings-section {
   display: grid;
   gap: 14px;
