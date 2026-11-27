@@ -200,7 +200,7 @@ button.danger:hover:enabled {
   display: flex;
   flex-wrap: nowrap;
   gap: 0;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   overflow-x: auto;
   border: 1px solid var(--cr-rule);
@@ -209,7 +209,7 @@ button.danger:hover:enabled {
 .settings-choices label {
   position: relative;
   display: block;
-  flex: none;
+  flex: 1 0 auto;
 }
 .settings-choices input {
   position: absolute;

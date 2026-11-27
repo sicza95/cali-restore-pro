@@ -60,12 +60,14 @@ export async function verifyMeasurementPreferences(page: Page, info: TestInfo) {
           probe.remove();
           return Array.from(element.querySelectorAll('.settings-choices')).every((group) => {
             const bounds = group.getBoundingClientRect();
+            const container = group.parentElement!.getBoundingClientRect();
             const segments = Array.from(group.querySelectorAll('label > span')).map((span) =>
               span.getBoundingClientRect(),
             );
             const selected = group.querySelector('input:checked + span')!;
             const style = getComputedStyle(selected);
             return (
+              Math.abs(bounds.width - container.width) < 1 &&
               style.color === expected.color &&
               style.backgroundColor === expected.background &&
               segments.every(

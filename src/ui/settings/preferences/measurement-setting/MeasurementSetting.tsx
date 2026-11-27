@@ -1,6 +1,7 @@
 import { useApp } from '../../../app-context/AppContext';
 import { SettingsItem } from '../../SettingsItem';
 import { settingsCopy } from '../../settings-copy';
+import { settingsHelpCopy } from '../../settings-help-copy';
 import { restorationPreferenceCopy } from '../copy';
 import { ChoiceButtons } from '../choice-buttons/ChoiceButtons';
 import { areaUnitControls, areaUnits, measurementSystems } from './constants';
@@ -23,6 +24,7 @@ export function MeasurementSetting(props: {
       icon="measure"
       group="defaults"
       title={c().measurement}
+      help={settingsHelpCopy[app.lang()].measurement}
       value={`${c()[system()]} · ${areaLabel(area())}`}
     >
       <div class="settings-measurement-field">

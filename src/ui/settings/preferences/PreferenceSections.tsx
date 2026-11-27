@@ -2,6 +2,7 @@ import { createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { useApp } from '../../app-context/AppContext';
 import { languageNames, languages } from '../../../platform/i18n/language';
 import { settingsCopy } from '../settings-copy';
+import { settingsHelpCopy } from '../settings-help-copy';
 import { navigationText } from '../../account-access/navigation-copy';
 import { SettingsItem, SettingsSection } from '../SettingsItem';
 import { ChoiceButtons as Choices } from './choice-buttons/ChoiceButtons';
@@ -30,6 +31,7 @@ const reportLanguages = { en: 'English', hu: 'Magyar' } as const;
 export function PreferenceSections() {
   const app = useApp();
   const c = () => settingsCopy[app.lang()];
+  const help = () => settingsHelpCopy[app.lang()];
   const id = untrack(() => app.account()!.id);
   const [prefs, setPrefs] = createSignal<Preferences>(loadPreferences(id));
   const [theme, setTheme] = createSignal(themeChoice(id));
@@ -76,6 +78,7 @@ export function PreferenceSections() {
       icon={icon}
       group="branding"
       title={c()[key]}
+      help={help()[key]}
       value={shown(prefs()[key])}
     >
       <label>
@@ -98,6 +101,7 @@ export function PreferenceSections() {
           icon="sun"
           group="appearance"
           title={c().theme}
+          help={help().theme}
           value={themeLabel(theme())}
         >
           <Choices
@@ -115,6 +119,7 @@ export function PreferenceSections() {
           icon="globe"
           group="appearance"
           title={navigationText(app.lang()).languageMenu}
+          help={help().language}
           value={languageNames[app.lang()]}
         >
           <Choices
@@ -131,6 +136,7 @@ export function PreferenceSections() {
           id="transparency"
           icon="layers"
           title={c().opaque}
+          help={help().opaque}
           control="preferences.transparency"
           checked={prefs().opaque}
           onChange={(value) => save({ opaque: value })}
@@ -149,6 +155,7 @@ export function PreferenceSections() {
           icon="currency"
           group="defaults"
           title={c().currency}
+          help={help().currency}
           value={prefs().currency}
         >
           <label>
@@ -168,6 +175,7 @@ export function PreferenceSections() {
           icon="globe"
           group="defaults"
           title={c().reportLanguage}
+          help={help().reportLanguage}
           value={reportLanguages[prefs().reportLanguage as keyof typeof reportLanguages]}
         >
           <label>
@@ -187,6 +195,7 @@ export function PreferenceSections() {
           id="snap"
           icon="magnet"
           title={c().snap}
+          help={help().snap}
           control="preferences.snap"
           checked={prefs().snap}
           onChange={(value) => save({ snap: value })}
@@ -206,6 +215,7 @@ export function PreferenceSections() {
           icon="palette"
           group="branding"
           title={c().accent}
+          help={help().accent}
           value={prefs().accent}
         >
           <label>
@@ -224,6 +234,7 @@ export function PreferenceSections() {
           icon="photo"
           group="branding"
           title={c().logo}
+          help={help().logo}
           value={prefs().logo ? '' : app.t('notSet')}
         >
           <Show when={prefs().logo}>

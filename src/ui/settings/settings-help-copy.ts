@@ -1,0 +1,38 @@
+import { defineCopy } from '../../platform/i18n/define';
+
+export const settingsHelpCopy = defineCopy({
+  en: {
+    name: 'Choose the name shown on your account.',
+    photo: 'Choose the photo shown beside your name.',
+    deletion: 'Check whether your account can be deleted and request deletion.',
+    theme: 'Use a light or dark appearance, or follow your device.',
+    language: 'Choose the language used throughout the app.',
+    opaque: 'Use opaque backgrounds for floating tools and overlays.',
+    measurement: 'Choose the default measurement system and area unit.',
+    currency: 'Choose the default currency for restoration estimates.',
+    reportLanguage: 'Choose the default language for reports.',
+    snap: 'Set the default preference for snapping drawing points.',
+    studio: 'Set the name used in report branding.',
+    contact: 'Set the contact information included in reports.',
+    footer: 'Add a short note to report footers.',
+    accent: 'Choose the heading color used in reports.',
+    logo: 'Choose the image used as your report logo.',
+  },
+  hu: {
+    name: 'Válassza ki a fiókján megjelenő nevet.',
+    photo: 'Válassza ki a neve mellett megjelenő fényképet.',
+    deletion: 'Ellenőrizze, hogy törölhető-e a fiókja, és kérje a törlést.',
+    theme: 'Használjon világos vagy sötét megjelenést, vagy kövesse az eszköz beállítását.',
+    language: 'Válassza ki az alkalmazás nyelvét.',
+    opaque: 'Használjon átlátszatlan hátteret a lebegő eszközöknél és fedvényeknél.',
+    measurement: 'Válassza ki az alapértelmezett mértékegységrendszert és területegységet.',
+    currency: 'Válassza ki a restaurálási költségbecslések alapértelmezett pénznemét.',
+    reportLanguage: 'Válassza ki a jelentések alapértelmezett nyelvét.',
+    snap: 'Állítsa be a rajzpontok illesztésének alapértelmezését.',
+    studio: 'Adja meg a jelentések arculatában megjelenő nevet.',
+    contact: 'Adja meg a jelentésekben megjelenő elérhetőségeket.',
+    footer: 'Adjon rövid megjegyzést a jelentések láblécéhez.',
+    accent: 'Válassza ki a jelentések címsorainak színét.',
+    logo: 'Válassza ki a jelentések logójaként használt képet.',
+  },
+});

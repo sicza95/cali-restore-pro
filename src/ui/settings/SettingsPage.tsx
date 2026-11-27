@@ -6,6 +6,7 @@ import { AccountDeletion } from './profile/AccountDeletion';
 import { PreferenceSections } from './preferences/PreferenceSections';
 import { SettingsItem, SettingsSection } from './SettingsItem';
 import { settingsCopy } from './settings-copy';
+import { settingsHelpCopy } from './settings-help-copy';
 import './settings-page.css';
 
 /** Where each settings address opens the page. */
@@ -31,6 +32,7 @@ export function SettingsPage(props: { destination: keyof typeof anchors }) {
           icon="trash"
           group="profile"
           title={c().deletion}
+          help={settingsHelpCopy[app.lang()].deletion}
           control="settings.item.delete-account"
         >
           <AccountDeletion path="/account" />
@@ -75,6 +77,7 @@ function ProfileItems() {
             icon="account"
             group="profile"
             title={app.t('fullName')}
+            help={settingsHelpCopy[app.lang()].name}
             value={account.name || app.t('notSet')}
           >
             <form
@@ -108,6 +111,7 @@ function ProfileItems() {
             icon="photo"
             group="profile"
             title={app.t('profilePhoto')}
+            help={settingsHelpCopy[app.lang()].photo}
             value={account.photo ? '' : app.t('noPhoto')}
           >
             <ProfileFields
