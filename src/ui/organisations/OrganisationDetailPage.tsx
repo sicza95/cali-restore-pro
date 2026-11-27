@@ -11,6 +11,7 @@ import { organisationLabel } from './OrganisationSwitcher';
 import { OrganisationMembers } from './OrganisationMembers';
 import { useOrgAction } from './org-actions';
 import { liveVersion } from './live-updates';
+import { OrganisationDefaults } from './defaults/OrganisationDefaults';
 
 /** One organisation: its members and invitations, its groups and its own settings. */
 export function OrganisationDetailPage(props: { id: string }) {
@@ -22,7 +23,10 @@ export function OrganisationDetailPage(props: { id: string }) {
     () => [props.id, liveVersion()] as const,
     ([id]) => app.request<OrganisationDetail>(`/organisations/${id}`),
   );
-  const current = () => (detail.state === 'ready' ? detail() : detail.latest);
+  const current = () => {
+    const value = detail.state === 'ready' ? detail() : detail.latest;
+    return value?.id === props.id ? value : undefined;
+  };
   const names = () => {
     const shown = current();
     return shown ? { [shown.id]: organisationLabel(shown, c().personal) } : {};
@@ -49,6 +53,9 @@ export function OrganisationDetailPage(props: { id: string }) {
                   {c().useThis}
                 </button>
               </div>
+            </Show>
+            <Show when={shown().id} keyed>
+              {(id) => <OrganisationDefaults detail={{ ...shown(), id }} changed={changed} />}
             </Show>
             <Show
               when={!shown().personal}

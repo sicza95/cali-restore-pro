@@ -3,14 +3,14 @@ import { registerPlatformControls } from '../account-access/register-platform-co
 export const settingsControls = [
   ...registerPlatformControls(
     {
-      composition: 'Account preferences',
+      composition: 'Account preferences and organisation defaults',
       owner: 'M-02',
-      permission: 'Signed-in account',
-      valueSource: 'Account-keyed local preferences form',
+      permission: 'Signed-in account; organisation defaults require its admin role to edit',
+      valueSource: 'Account-keyed personal preferences; server-backed organisation defaults',
       helpKey: 'localHelp',
       unavailable: {
-        failure: 'Show storage or input error and retain form inputs.',
-        empty: 'Use device defaults.',
+        failure: 'Show storage or server error and retain the last saved defaults.',
+        empty: 'Use device preferences or organisation defaults; Personal preserves legacy values.',
         locked: 'Preferences remain available with the vault locked.',
       },
     },

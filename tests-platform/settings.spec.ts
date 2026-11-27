@@ -1,8 +1,6 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { openAccountMenu, openSetting } from './app-navigation';
-import { verifyMeasurementPreferences } from './settings-measurement';
-import { verifySettingsDropdowns } from './settings-dropdowns';
 
 const member = {
   id: '00000000-0000-4000-8000-000000000001',
@@ -51,18 +49,17 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   // Each setting is its own row and is saved as soon as it changes.
   await page.getByRole('switch', { name: 'Reduce transparency' }).check();
   await expect(page.getByRole('status').filter({ hasText: 'Saved.' })).toBeVisible();
-  await page.locator('[data-control-id="preferences.report-language"]').click();
-  await page.getByRole('option', { name: 'Magyar', exact: true }).click();
-  await expect(page.locator('#report-language .settings-select-trigger')).toContainText('Magyar');
+  await expect(
+    page.locator('#defaults, #report-branding, #measurement, #currency, #report-language'),
+  ).toHaveCount(0);
+  await page.getByRole('switch', { name: 'Snap drawing points' }).check();
   await expect(
     page.getByRole('switch', { name: 'Allow optional crash and performance reports' }),
   ).not.toBeChecked();
   await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('body')).toHaveAttribute('data-transparency', 'opaque');
-  await expect(page.locator('#report-language .settings-select-trigger')).toContainText('Magyar');
-  await verifyMeasurementPreferences(page, info);
-  await verifySettingsDropdowns(page, info);
+  await expect(page.getByRole('switch', { name: 'Snap drawing points' })).toBeChecked();
   expect(
     await page.locator('.settings-toggle-row').evaluateAll((rows) =>
       rows.every((row) => {
@@ -84,7 +81,7 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
     { width: 834, height: 1194 },
   ]) {
     await page.setViewportSize(viewport);
-    for (const section of ['appearance', 'report-branding']) {
+    for (const section of ['appearance', 'drawing-preferences']) {
       await page.locator('#' + section).scrollIntoViewIfNeeded();
       await page.screenshot({
         path: info.outputPath(`settings-icons-${section}-${viewport.width}.png`),
@@ -103,7 +100,7 @@ test('settings survive reload and stay isolated by account', async ({ page }, in
   await openAccountMenu(page);
   await expect(page.locator('[data-control-id="app.menu.theme"]')).toContainText('Follow device');
   await page.keyboard.press('Escape');
-  await expect(page.locator('#report-language .settings-select-trigger')).toContainText('English');
+  await expect(page.getByRole('switch', { name: 'Snap drawing points' })).not.toBeChecked();
   for (const viewport of [
     { width: 1194, height: 834 },
     { width: 834, height: 1194 },

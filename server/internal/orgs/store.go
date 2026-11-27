@@ -12,11 +12,12 @@ import (
 
 // Summary is one organisation in the account's list.
 type Summary struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Personal bool   `json:"personal"`
-	Role     string `json:"role"`
-	Count    int    `json:"memberCount"`
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	Personal bool      `json:"personal"`
+	Role     string    `json:"role"`
+	Count    int       `json:"memberCount"`
+	Defaults *Defaults `json:"defaults,omitempty"`
 }
 
 // Invitation is an invitation addressed to the signed-in account.
@@ -64,7 +65,7 @@ func (s *Service) Overview(ctx context.Context, raw string) (Overview, error) {
 	out := Overview{Organisations: []Summary{}, Invitations: []Invitation{}}
 	err := s.with(ctx, raw, func(a access) error {
 		rows, err := a.tx.Query(ctx, `SELECT o.id::text,o.name,o.personal,m.role,
- (SELECT count(*)::int FROM organisation_members x WHERE x.organisation_id=o.id)
+ (SELECT count(*)::int FROM organisation_members x WHERE x.organisation_id=o.id),o.defaults
  FROM organisation_members m JOIN organisations o ON o.id=m.organisation_id
  WHERE m.account_id=$1 ORDER BY o.personal DESC, lower(o.name), o.id`, a.account)
 		if err != nil {
@@ -98,6 +99,9 @@ func (s *Service) Detail(ctx context.Context, raw, org string) (Detail, error) {
 		if err := a.tx.QueryRow(ctx, `SELECT name,(SELECT count(*)::int FROM organisation_members WHERE organisation_id=$1),
  (SELECT count(*)::int FROM hosted_projects WHERE organisation_id=$1) FROM organisations WHERE id=$1`, org).
 			Scan(&d.Name, &d.Count, &d.Projects); err != nil {
+			return err
+		}
+		if err := a.tx.QueryRow(ctx, `SELECT defaults FROM organisations WHERE id=$1`, org).Scan(&d.Defaults); err != nil {
 			return err
 		}
 		rows, err := a.tx.Query(ctx, `SELECT a.id::text,a.full_name,a.email,m.role,

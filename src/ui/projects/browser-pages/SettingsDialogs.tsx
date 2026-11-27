@@ -2,8 +2,8 @@ import { useDialogEntity } from './DialogEntity';
 import { projectItems } from '../../../platform/projects/browser/browser-model';
 import { Show } from 'solid-js';
 import type { SavedProject } from '../../../platform/projects/types';
-import { accountPaths } from '../../router/constants';
-import { followLink } from '../../router/routes';
+import { followLink, organisationHref } from '../../router/routes';
+import { useOrganisations } from '../../organisations/organisation-state';
 import { ProjectReviewLinks } from '../../project-review/ProjectReviewLinks';
 import { ProjectInvitations } from '../../sharing/ProjectInvitations';
 import { projectSnapshot } from '../../../platform/projects/shared-project';
@@ -17,13 +17,14 @@ import { subtreePhotos } from './useOriginals';
 import { pageCopy } from './copy';
 import type { Workspace } from './types';
 
-/** Root gear: the account's defaults and branding stay on the Settings page; this links to them. */
+/** Root settings links to the selected organisation's defaults and branding. */
 export function RootSettingsDialog(props: {
   ws: Workspace;
   localName: (id: string) => string | undefined;
   onClose: () => void;
 }) {
   const c = () => pageCopy[props.ws.language];
+  const orgs = useOrganisations();
   const p = () => projectCopy[props.ws.language];
   const go = (event: MouseEvent) => {
     // eslint-disable-next-line solid/reactivity -- followLink calls this during the click
@@ -43,14 +44,14 @@ export function RootSettingsDialog(props: {
         <nav class="project-settings-links">
           <a
             data-control-id="browser.settings.defaults"
-            href={accountPaths.preferences + '#defaults'}
+            href={organisationHref(orgs.selected()?.id) + '#defaults'}
             onClick={go}
           >
             {c().restorationLink}
           </a>
           <a
             data-control-id="browser.settings.branding"
-            href={accountPaths.preferences + '#report-branding'}
+            href={organisationHref(orgs.selected()?.id) + '#report-branding'}
             onClick={go}
           >
             {c().brandingLink}

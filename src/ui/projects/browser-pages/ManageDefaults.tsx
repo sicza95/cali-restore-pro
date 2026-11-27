@@ -11,10 +11,9 @@ import {
   resolveSettings,
 } from '../../../platform/projects/settings';
 import type { RestorationObject, Surface } from '../../../platform/projects/types';
-import { useApp } from '../../app-context/AppContext';
 
 import { BrandingOverridesSection, RestorationOverridesSection } from '../overrides';
-import { loadAccountSettings } from '../../settings/preferences/utils';
+import { useProjectDefaults } from '../../organisations/defaults/useProjectDefaults';
 
 import { chooseImage, importLogo } from './logo';
 import { withOverrides } from './overrides';
@@ -23,7 +22,6 @@ import { entityOf } from './types';
 import type { Workspace } from './types';
 
 export function ManageDefaults(props: { ws: Workspace; item: BrowserItemDescriptor }) {
-  const app = useApp();
   const target = () =>
     props.item.kind === 'project'
       ? ({ kind: 'project' } as const)
@@ -39,7 +37,7 @@ export function ManageDefaults(props: { ws: Workspace; item: BrowserItemDescript
     !!inspected() &&
     !inspected()!.project.archived &&
     !inspected()!.entity.archived;
-  const account = () => loadAccountSettings(app.account()?.id);
+  const account = useProjectDefaults(() => inspected()?.project ?? {});
   type Overrides = EntityOverrides | ProjectOverrides;
   // Shown at once while it saves; cleared after the save, so a failure rolls the controls back.
   const [pending, setPending] = createSignal<Overrides>();

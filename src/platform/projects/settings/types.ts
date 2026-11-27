@@ -6,10 +6,10 @@ import type {
   RestorationDefaults,
 } from '../browser-contracts';
 
-export type SettingsSource = 'account' | BrowserItemKind;
+export type SettingsSource = 'account' | 'organisation' | BrowserItemKind;
 export type ResolvedField<T> = { value: T; source: SettingsSource };
 export type ResolvedFields<T> = { [K in keyof T]: ResolvedField<T[K]> };
-/** Browser-local account logos never become project asset references. */
+/** Root branding logos (legacy Personal or organisation defaults) are not project assets. */
 export type AccountLogo = { accountDataUrl: string };
 export type EffectiveBranding = Omit<ReportBranding, 'logo'> & {
   logo: AssetReference | AccountLogo | null;
@@ -21,6 +21,10 @@ export type EffectiveBranding = Omit<ReportBranding, 'logo'> & {
 export type AccountSettings = {
   restoration: Omit<RestorationDefaults, 'areaUnit'> & { areaUnit: AreaUnit | null };
   branding: EffectiveBranding;
+  organisation?: {
+    restoration: Omit<AccountSettings['restoration'], 'snap'>;
+    branding: EffectiveBranding;
+  };
 };
 export type ResolvedSettings = {
   restoration: ResolvedFields<RestorationDefaults>;

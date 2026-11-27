@@ -2,13 +2,15 @@ import { createResource, createSignal, For, Show } from 'solid-js';
 import type { LocalVault } from '../../../platform/vault/vault';
 import { presetRepository } from '../../../platform/estimates/persistence';
 import { PatternReview } from '../../editor/checkpoint-review/PatternReview';
-import { accountPaths } from '../../router/constants';
+import { organisationHref } from '../../router/routes';
+import { useOrganisations } from '../../organisations/organisation-state';
 import type { Language } from '../../account-access/types';
 import './libraries.css';
 import { libraryCopy } from './library-copy';
 
 export function PrivateLibraries(props: { language: Language; vault: LocalVault }) {
   const c = () => libraryCopy[props.language];
+  const orgs = useOrganisations();
   const [rows, { refetch }] = createResource(() => presetRepository(props.vault).list());
   const [kind, setKind] = createSignal('rate');
   const [failed, setFailed] = createSignal(false);
@@ -88,7 +90,7 @@ export function PrivateLibraries(props: { language: Language; vault: LocalVault 
             )}
           </For>
           <a
-            href={accountPaths.preferences + '#report-branding'}
+            href={organisationHref(orgs.selected()?.id) + '#report-branding'}
             data-control-id="libraries.branding"
           >
             {c().branding}

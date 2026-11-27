@@ -12,7 +12,7 @@ import type { DeletionStatus } from '../../../platform/api/types.gen';
 import { useApp } from '../../app-context/AppContext';
 import { projectOrganisation, useOrganisations } from '../../organisations/organisation-state';
 import { projectHref } from '../../router/routes';
-import { loadPreferences } from '../../settings/preferences/utils';
+import { organisationDefaults } from '../../organisations/defaults/model';
 import { browserCopy } from '../browser/browser-copy';
 import { DialogShell } from '../browser/dialogs/DialogShell';
 import { ProjectBackup } from '../ProjectBackup';
@@ -129,7 +129,7 @@ export function ProjectsLevel(props: { ws: Workspace }) {
       name,
       null,
       null,
-      loadPreferences(account).currency,
+      organisationDefaults(orgs.selected() ?? { personal: true }, account).restoration.currency,
       orgs.selected()?.id,
       account,
     );

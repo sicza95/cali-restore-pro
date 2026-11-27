@@ -8,6 +8,21 @@ Restoration work is done by companies, and a company has to keep its projects wh
 
 ## Decision
 
+### Organisation defaults (owner request, 2026-11-27)
+
+Restoration defaults (measurement system, area unit, estimate currency and report language) and
+report branding are edited on each organisation's detail page, including Personal. Members can
+read them; admins can update them. Snap drawing points remains a browser-local account preference.
+Projects inherit from their own organisation before project, object and surface overrides.
+Existing estimate prices, saved report settings and issued outputs retain their captured values.
+
+Migration 0034 adds nullable organisation defaults. Old browser-local defaults remain the fallback
+for Personal until its first edit saves them; shared organisations start independently. The server
+uses the Personal seed only while no defaults are saved, so another old device cannot overwrite
+newer values. Updates merge individual fields under the organisation row lock and notify members.
+Overview caches include defaults for offline inheritance. Logo data uses bounded PNG data URLs
+during the current UX phase, consistently with the existing account branding representation.
+
 Organisations come in now, as plain server records, so the screens and the way people work can be shaped before E2EE v2 arrives.
 
 - Every account has a personal organisation (created with the account; migration 0030 adds one for existing accounts). It has no name of its own (the app calls it "Personal"), cannot be renamed, deleted or shared.

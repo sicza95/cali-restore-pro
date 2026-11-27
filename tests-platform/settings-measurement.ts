@@ -1,5 +1,5 @@
 import { expect, type Page, type TestInfo } from '@playwright/test';
-import { openSetting } from './app-navigation';
+import { chooseLanguage, openSetting } from './app-navigation';
 
 export async function verifyMeasurementPreferences(page: Page, info: TestInfo) {
   let measurement = await openSetting(page, 'measurement');
@@ -14,6 +14,7 @@ export async function verifyMeasurementPreferences(page: Page, info: TestInfo) {
   await expect(system().locator('input:checked')).toHaveCount(1);
   await expect(area().getByRole('radio', { name: 'Default (ft²)', exact: true })).toBeChecked();
   await area().getByRole('radio', { name: 'cm²', exact: true }).check();
+  await expect(page.locator('.org-defaults')).toHaveAttribute('aria-busy', 'false');
   await page.reload();
   measurement = await openSetting(page, 'measurement');
   await expect(system().getByRole('radio', { name: 'Imperial', exact: true })).toBeChecked();
@@ -30,8 +31,7 @@ export async function verifyMeasurementPreferences(page: Page, info: TestInfo) {
 
   for (const language of ['en', 'hu']) {
     if (language === 'hu') {
-      await page.locator('[data-control-id="settings.item.language"]').click();
-      await page.locator('[data-control-id="settings.language.hu"]').click();
+      await chooseLanguage(page, 'hu');
       await expect(page.locator('html')).toHaveAttribute('lang', 'hu');
       measurement = await openSetting(page, 'measurement');
       await page.locator('[data-control-id="preferences.measurement-units.imperial"]').check();
@@ -87,7 +87,6 @@ export async function verifyMeasurementPreferences(page: Page, info: TestInfo) {
       });
     }
   }
-  await page.locator('[data-control-id="settings.item.language"]').click();
-  await page.locator('[data-control-id="settings.language.en"]').click();
+  await chooseLanguage(page, 'en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 }

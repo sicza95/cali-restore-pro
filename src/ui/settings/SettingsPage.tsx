@@ -13,7 +13,7 @@ import './settings-page.css';
 const anchors = { profile: 'profile', security: 'security', preferences: 'appearance' } as const;
 
 /**
- * One Settings page: Profile, Security, Appearance, Restoration defaults, Report branding and
+ * One Settings page: Profile, Security, Appearance, Drawing and
  * Optional diagnostics. Each section lists its settings as rows that open in place.
  */
 export function SettingsPage(props: { destination: keyof typeof anchors }) {

@@ -28,8 +28,7 @@ import { ProjectOriginals } from './ProjectOriginals';
 import { projectCopy } from './project-copy';
 import { projectHref } from '../router/routes';
 import { resolveSettings } from '../../platform/projects/settings';
-import { loadAccountSettings } from '../settings/preferences/utils';
-import { useApp } from '../app-context/AppContext';
+import { useProjectDefaults } from '../organisations/defaults/useProjectDefaults';
 
 export function SurfaceWorkspace(props: {
   project: SavedProject;
@@ -46,7 +45,7 @@ export function SurfaceWorkspace(props: {
   ) => Promise<void>;
   onNavigate: (href: string) => void;
 }) {
-  const app = useApp();
+  const accountDefaults = useProjectDefaults(() => props.project);
   const c = () => projectCopy[props.language];
   const view = () => surfaceCopy[props.language];
   const draw = createMemo(() => drawingCopy(props.language));
@@ -55,7 +54,7 @@ export function SurfaceWorkspace(props: {
   const [checkpointStarted, setCheckpointStarted] = createSignal(false);
   const drawing = () => mode() === 'drawing';
   const imperial = () =>
-    resolveSettings(loadAccountSettings(app.account()?.id), props.project, {
+    resolveSettings(accountDefaults(), props.project, {
       objectId: props.object.id,
       surfaceId: props.surface.id,
     }).restoration.units.value === 'imperial';

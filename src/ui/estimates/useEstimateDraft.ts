@@ -12,8 +12,7 @@ import { validDecimal } from '../project-review/fields';
 import { saveFailure } from './save-failure';
 import { usePhaseMeasurements } from './usePhaseMeasurements';
 import { resolveSettings } from '../../platform/projects/settings';
-import { loadAccountSettings } from '../settings/preferences/utils';
-import { useApp } from '../app-context/AppContext';
+import { useProjectDefaults } from '../organisations/defaults/useProjectDefaults';
 
 /** The estimate being edited: inputs, live result, validity and saved versions. */
 export function useEstimateDraft(
@@ -21,9 +20,8 @@ export function useEstimateDraft(
   vault: () => LocalVault,
   copy: () => EstimateCopy,
 ) {
-  const app = useApp();
-  const defaults = () =>
-    resolveSettings(loadAccountSettings(app.account()?.id), project()).restoration;
+  const accountDefaults = useProjectDefaults(project);
+  const defaults = () => resolveSettings(accountDefaults(), project()).restoration;
   const model = createPhases(() => defaults().areaUnit.value);
   const measuring = usePhaseMeasurements(project, vault, model);
   const [selection, setSelection] = createSignal<'whole' | 'selected'>('whole');
@@ -92,7 +90,10 @@ export function useEstimateDraft(
   };
   onMount(async () => {
     try {
-      const saved = await estimateRepository(vault()).load(project().id);
+      const [saved] = await Promise.all([
+        estimateRepository(vault()).load(project().id),
+        accountDefaults.ready(),
+      ]);
       if (saved) {
         const draft = saved.document.draft;
         model.replace(draft.phases);
@@ -108,6 +109,9 @@ export function useEstimateDraft(
         setVersions(saved.document.snapshots);
         setStoredRevision(saved.revision);
         setVersion(String(saved.document.snapshots.length));
+      } else {
+        setCurrency(defaults().currency.value);
+        setPriceCurrency(defaults().currency.value);
       }
       setReady(true);
     } catch {

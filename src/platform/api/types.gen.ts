@@ -366,6 +366,7 @@ export type OrganisationSummary = {
   personal: boolean;
   role: 'admin' | 'member';
   memberCount: number;
+  defaults?: OrganisationDefaults;
 };
 
 export type OrganisationInvitation = {
@@ -456,6 +457,7 @@ export type OrganisationDetail = {
    * Hosted projects in the organisation
    */
   projects: number;
+  defaults?: OrganisationDefaults;
 };
 
 export type OrganisationCreateRequest = {
@@ -548,6 +550,48 @@ export type ProjectBrowserError =
   | {
       error: 'not_found' | 'visibility_conflict';
     };
+
+export type OrganisationDefaults = {
+  restoration: {
+    units: 'metric' | 'imperial';
+    areaUnit: 'cm²' | 'm²' | 'in²' | 'ft²' | null;
+    currency: string;
+    reportLanguage: 'en' | 'hu';
+  };
+  branding: {
+    studio: string;
+    contact: string;
+    footer: string;
+    accent: string;
+    /**
+     * PNG data URL (up to 256 KiB), or empty to clear.
+     */
+    logo: string;
+  };
+};
+
+export type OrganisationDefaultsPatch = {
+  restoration?: {
+    units?: 'metric' | 'imperial';
+    areaUnit?: 'cm²' | 'm²' | 'in²' | 'ft²' | null;
+    currency?: string;
+    reportLanguage?: 'en' | 'hu';
+  };
+  branding?: {
+    studio?: string;
+    contact?: string;
+    footer?: string;
+    accent?: string;
+    /**
+     * PNG data URL (up to 256 KiB), or empty to clear.
+     */
+    logo?: string;
+  };
+  /**
+   * Seed legacy Personal preferences only if no defaults were saved. Ignored for shared organisations or previously saved defaults.
+   */
+  initial?: OrganisationDefaults;
+};
 
 export type PlatformStatusData = {
   body?: never;
@@ -4921,3 +4965,59 @@ export type RemoveProjectHostingResponses = {
 
 export type RemoveProjectHostingResponse =
   RemoveProjectHostingResponses[keyof RemoveProjectHostingResponses];
+
+export type UpdateOrganisationDefaultsData = {
+  body: OrganisationDefaultsPatch;
+  headers: {
+    /**
+     * Must exactly match configured APP_ORIGIN.
+     */
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    org: string;
+  };
+  query?: never;
+  url: '/api/v1/organisations/{org}/defaults';
+};
+
+export type UpdateOrganisationDefaultsErrors = {
+  /**
+   * Invalid request or JSON
+   */
+  400: IdentityError;
+  /**
+   * Authentication required
+   */
+  401: IdentityError;
+  /**
+   * Not an admin of the organisation, or Origin or CSRF rejected
+   */
+  403: IdentityError;
+  /**
+   * Unknown organisation, member, group or invitation (also for organisations the account is not in)
+   */
+  404: IdentityError;
+  /**
+   * JSON content type required
+   */
+  415: IdentityError;
+  /**
+   * Dependency unavailable
+   */
+  503: IdentityError;
+};
+
+export type UpdateOrganisationDefaultsError =
+  UpdateOrganisationDefaultsErrors[keyof UpdateOrganisationDefaultsErrors];
+
+export type UpdateOrganisationDefaultsResponses = {
+  /**
+   * Success
+   */
+  200: OkResponse;
+};
+
+export type UpdateOrganisationDefaultsResponse =
+  UpdateOrganisationDefaultsResponses[keyof UpdateOrganisationDefaultsResponses];

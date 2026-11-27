@@ -53,6 +53,7 @@ var ok = map[string]bool{"ok": true}
 func (h *HTTP) Register(mux *http.ServeMux) {
 	route := h.auth.Guard(mux)
 	h.projectDirectoryRoutes(route)
+	h.defaultsRoutes(route)
 	token := h.auth.Token
 	// ids checks the path's ids; a malformed one is an unknown organisation.
 	ids := func(w http.ResponseWriter, r *http.Request, names ...string) ([]string, bool) {

@@ -3,6 +3,7 @@ import { defineCopy } from '../../../platform/i18n/define';
 export const overridesCopy = defineCopy({
   en: {
     account: 'Account',
+    organisation: 'Organisation',
     project: 'Project',
     object: 'Object',
     surface: 'Surface',
@@ -22,6 +23,7 @@ export const overridesCopy = defineCopy({
   },
   hu: {
     account: 'Fiók',
+    organisation: 'Szervezet',
     project: 'Projekt',
     object: 'Objektum',
     surface: 'Felület',

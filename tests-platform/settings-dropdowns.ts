@@ -18,6 +18,7 @@ export async function verifySettingsDropdowns(page: Page, info: TestInfo) {
   await expect(list).toHaveCount(0);
   await expect(currency).toBeFocused();
   await expect(currency).toContainText('USD');
+  await expect(page.locator('.org-defaults')).toHaveAttribute('aria-busy', 'false');
   await page.reload();
   await expect(currency).toContainText('USD');
   await currency.click();
@@ -38,6 +39,10 @@ export async function verifySettingsDropdowns(page: Page, info: TestInfo) {
   await page.keyboard.press('Tab');
   await expect(list).toHaveCount(0);
   await expect(page.locator('[data-control-id="preferences.report-language"]')).toBeFocused();
+  // Allow either edge placement even on a short organisation page.
+  await page.locator('.settings-page').evaluate((element) => {
+    element.style.paddingBlock = '100vh';
+  });
 
   for (const viewport of [
     { width: 1194, height: 834 },
@@ -89,6 +94,9 @@ export async function verifySettingsDropdowns(page: Page, info: TestInfo) {
       await page.keyboard.press('Escape');
     }
   }
+  await page.locator('.settings-page').evaluate((element) => {
+    element.style.removeProperty('padding-block');
+  });
   await page.setViewportSize({ width: 834, height: 1194 });
   await currency.click();
   await page.setViewportSize({ width: 390, height: 500 });
@@ -110,5 +118,6 @@ export async function verifySettingsDropdowns(page: Page, info: TestInfo) {
   await expect(list).toHaveCount(0);
   await currency.click();
   await list.getByRole('option', { name: 'HUF', exact: true }).click();
+  await expect(page.locator('.org-defaults')).toHaveAttribute('aria-busy', 'false');
   await page.setViewportSize({ width: 834, height: 1194 });
 }

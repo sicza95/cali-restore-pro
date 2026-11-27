@@ -98,7 +98,7 @@ export async function verifyUnavailable(flow: ProjectsFlow) {
   await expect(page.locator('[data-control-id="libraries.productivity"]')).toBeEnabled();
   await expect(page.locator('[data-control-id="libraries.branding"]')).toHaveAttribute(
     'href',
-    '/settings/preferences#report-branding',
+    '/organisations#report-branding',
   );
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 401, json: { error: 'authentication_required' } }),

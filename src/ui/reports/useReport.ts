@@ -9,7 +9,7 @@ import { workbookEstimate } from '../../platform/reports/workbook-estimate';
 import type { Branding, Draft, ReportIssuance, ReportSettings } from '../../platform/reports/types';
 import type { SavedProject } from '../../platform/projects/types';
 import type { LocalVault } from '../../platform/vault/vault';
-import { loadAccountSettings } from '../settings/preferences/utils';
+import { useProjectDefaults } from '../organisations/defaults/useProjectDefaults';
 import { reportDefaults, resolveReportBranding } from '../../platform/reports/settings';
 import { reportLogo } from '../../platform/reports/logo';
 import { resolveReportSurfaceUnits } from '../../platform/reports/surface-settings';
@@ -22,7 +22,10 @@ export function useReport(props: {
   account: string;
   target?: SettingsTarget;
 }) {
-  const accountDefaults = () => loadAccountSettings(props.account);
+  const accountDefaults = useProjectDefaults(
+    () => props.project,
+    () => props.account,
+  );
   const inherited = () => reportDefaults(accountDefaults(), props.project, props.target);
   // Keep the report-specific editor's existing flat branding interface.
   const defaults = {
@@ -88,6 +91,7 @@ export function useReport(props: {
     const [draft, estimate] = await Promise.allSettled([
       reports.load(projectId),
       estimates.load(projectId),
+      accountDefaults.ready(),
     ]);
     if (!mounted) return;
     if (draft.status === 'fulfilled') {
@@ -95,7 +99,7 @@ export function useReport(props: {
       if (saved) {
         set(reconcile(saved.document.settings));
         setBrand(saved.document.settings.branding);
-      }
+      } else set('language', inherited().restoration.reportLanguage.value);
       revision = saved?.revision ?? 0;
       setSavedRevision(saved?.document.projectRevision);
       setSavedIssuance(saved?.document.issuance);

@@ -36,6 +36,12 @@ export function resolveSettings(
     restoration: root(account.restoration),
     branding: root(account.branding),
   } as ResolvedSettings;
+  apply<AccountSettings['restoration']>(
+    result.restoration,
+    account.organisation?.restoration,
+    'organisation',
+  );
+  apply(result.branding, account.organisation?.branding, 'organisation');
   if (project.version === 1) apply(result.restoration, project.settings, 'project');
   apply(result.restoration, project.overrides?.restoration, 'project');
   apply(result.branding, project.overrides?.branding, 'project');

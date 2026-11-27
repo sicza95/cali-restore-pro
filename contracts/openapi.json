@@ -8956,6 +8956,9 @@
           }
         },
         "responses": {
+          "204": {
+            "description": "Hosting removed; local project retained"
+          },
           "400": {
             "description": "Invalid visibility, name, version or JSON",
             "content": {
@@ -9005,9 +9008,127 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/organisations/{org}/defaults": {
+      "patch": {
+        "operationId": "updateOrganisationDefaults",
+        "summary": "Patch organisation restoration and branding defaults (admin, including Personal)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           },
-          "204": {
-            "description": "Hosting removed; local project retained"
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must exactly match configured APP_ORIGIN."
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OKResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin of the organisation, or Origin or CSRF rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown organisation, member, group or invitation (also for organisations the account is not in)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "JSON content type required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependency unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganisationDefaultsPatch"
+              }
+            }
           }
         }
       }
@@ -10021,6 +10142,9 @@
           },
           "memberCount": {
             "type": "integer"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/OrganisationDefaults"
           }
         }
       },
@@ -10294,6 +10418,9 @@
           "projects": {
             "type": "integer",
             "description": "Hosted projects in the organisation"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/OrganisationDefaults"
           }
         }
       },
@@ -10511,6 +10638,123 @@
             }
           }
         ]
+      },
+      "OrganisationDefaults": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["restoration", "branding"],
+        "properties": {
+          "restoration": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "units": {
+                "type": "string",
+                "enum": ["metric", "imperial"]
+              },
+              "areaUnit": {
+                "type": ["string", "null"],
+                "enum": ["cm²", "m²", "in²", "ft²", null]
+              },
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$"
+              },
+              "reportLanguage": {
+                "type": "string",
+                "enum": ["en", "hu"]
+              }
+            },
+            "required": ["units", "areaUnit", "currency", "reportLanguage"]
+          },
+          "branding": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "studio": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "contact": {
+                "type": "string",
+                "maxLength": 254
+              },
+              "footer": {
+                "type": "string",
+                "maxLength": 240
+              },
+              "accent": {
+                "type": "string",
+                "pattern": "^#[a-fA-F0-9]{6}$"
+              },
+              "logo": {
+                "type": "string",
+                "maxLength": 350000,
+                "description": "PNG data URL (up to 256 KiB), or empty to clear."
+              }
+            },
+            "required": ["studio", "contact", "footer", "accent", "logo"]
+          }
+        }
+      },
+      "OrganisationDefaultsPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "restoration": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "units": {
+                "type": "string",
+                "enum": ["metric", "imperial"]
+              },
+              "areaUnit": {
+                "type": ["string", "null"],
+                "enum": ["cm²", "m²", "in²", "ft²", null]
+              },
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$"
+              },
+              "reportLanguage": {
+                "type": "string",
+                "enum": ["en", "hu"]
+              }
+            }
+          },
+          "branding": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "studio": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "contact": {
+                "type": "string",
+                "maxLength": 254
+              },
+              "footer": {
+                "type": "string",
+                "maxLength": 240
+              },
+              "accent": {
+                "type": "string",
+                "pattern": "^#[a-fA-F0-9]{6}$"
+              },
+              "logo": {
+                "type": "string",
+                "maxLength": 350000,
+                "description": "PNG data URL (up to 256 KiB), or empty to clear."
+              }
+            }
+          },
+          "initial": {
+            "$ref": "#/components/schemas/OrganisationDefaults",
+            "description": "Seed legacy Personal preferences only if no defaults were saved. Ignored for shared organisations or previously saved defaults."
+          }
+        }
       }
     },
     "securitySchemes": {

@@ -27,7 +27,7 @@ export const pageCopy = defineCopy({
     coverSaved: 'Cover image saved.',
     uploading: 'Uploading…',
     rootSettingsHelp:
-      'These defaults apply to every project unless a project, object or surface overrides them.',
+      'Organisation defaults apply to its projects unless a project, object or surface overrides them.',
     restorationLink: 'Open restoration defaults',
     brandingLink: 'Open report branding',
     projectTools: 'More',
@@ -91,7 +91,7 @@ export const pageCopy = defineCopy({
     coverSaved: 'Borítókép mentve.',
     uploading: 'Feltöltés…',
     rootSettingsHelp:
-      'Ezek az alapértékek minden projektre érvényesek, hacsak egy projekt, objektum vagy felület felül nem írja őket.',
+      'A szervezet alapértékei a projektjeire érvényesek, hacsak egy projekt, objektum vagy felület felül nem írja őket.',
     restorationLink: 'Restaurálási alapértékek megnyitása',
     brandingLink: 'A jelentés arculatának megnyitása',
     projectTools: 'Továbbiak',
