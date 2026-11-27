@@ -1,4 +1,11 @@
-import { objectHref, organisationHref, projectHref, projectReviewHref, routeHref } from './routes';
+import {
+  binHref,
+  objectHref,
+  organisationHref,
+  projectHref,
+  projectReviewHref,
+  routeHref,
+} from './routes';
 import type { AppRoute, ReviewStep, RouteName } from './types';
 
 /**
@@ -9,6 +16,7 @@ export type Crumb = { href: string } & (
   | { kind: 'route'; name: RouteName }
   | { kind: 'project'; id: string }
   | { kind: 'organisation'; id: string }
+  | { kind: 'bin' }
   | { kind: 'object'; id: string }
   | { kind: 'surface'; id: string }
   | { kind: 'review'; step: ReviewStep }
@@ -29,6 +37,7 @@ export function routeTrail(
     return [
       { kind: 'route', name: 'organisations', href: organisationHref() },
       { kind: 'organisation', id: route.organisation, href: organisationHref(route.organisation) },
+      ...(route.bin ? [{ kind: 'bin', href: binHref(route.organisation) } as const] : []),
     ];
   const top: Crumb = { kind: 'route', name: route.name, href: routeHref(route) };
   if (route.name !== 'projects' || !route.project) return [top];

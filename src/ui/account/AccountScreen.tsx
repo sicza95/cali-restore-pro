@@ -15,6 +15,7 @@ const InvitationInbox = lazyView(() =>
 const OrganisationsPage = lazyView(() =>
   import('../organisations/OrganisationsPage').then((m) => m.OrganisationsPage),
 ).View;
+const BinPage = lazyView(() => import('../bin/BinPage').then((m) => m.BinPage)).View;
 const Admin = lazyView(() => import('../settings/admin/Admin').then((m) => m.Admin)).View;
 const PrivateLibraries = lazyView(() =>
   import('../settings/preferences/PrivateLibraries').then((m) => m.PrivateLibraries),
@@ -22,7 +23,11 @@ const PrivateLibraries = lazyView(() =>
 
 /** The screen of a signed-in destination, rendered once its route guard allows it. */
 export function AccountScreen(props: { destination: AccountDestination; account: string }) {
-  const { lang } = useApp();
+  const { lang, router } = useApp();
+  const bin = () => {
+    const route = router.route();
+    return route.name === 'organisations' && route.bin ? route.organisation : undefined;
+  };
   return (
     <Switch>
       <Match
@@ -42,6 +47,17 @@ export function AccountScreen(props: { destination: AccountDestination; account:
           language={lang()}
           workspace={(vault) => <PrivateLibraries vault={vault} language={lang()} />}
         />
+      </Match>
+      <Match when={props.destination === 'organisations' && bin()} keyed>
+        {(organisation) => (
+          <VaultSection
+            account={props.account}
+            language={lang()}
+            workspace={(vault) => (
+              <BinPage vault={vault} account={props.account} organisation={organisation} />
+            )}
+          />
+        )}
       </Match>
       <Match when={props.destination === 'organisations'}>
         <OrganisationsPage />

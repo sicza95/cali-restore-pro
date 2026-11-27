@@ -24,6 +24,8 @@ export function usePageTrail() {
         return app.names()[crumb.id] ?? c.surface;
       case 'organisation':
         return app.names()[crumb.id] ?? c.organisationCrumb;
+      case 'bin':
+        return c.bin;
       case 'review':
         return estimateCopy[app.lang()][crumb.step];
     }

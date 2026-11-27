@@ -207,12 +207,12 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
     await expect(control(settings, id)).toBeVisible();
   await closeDialog(page);
 
-  // A child delete states its contents and that it cannot be undone.
+  // A child delete states its contents and that it moves to the Bin.
   await browserItem(page, 'Spare').click();
   await control(page, 'browser.delete').click();
   const remove = page.getByRole('dialog');
   await expect(remove).toContainText('Contents: 0 objects, 0 surfaces.');
-  await expect(remove).toContainText('This cannot be undone.');
+  await expect(remove).toContainText('move to the Bin on this device');
   await control(remove, 'browser.dialog.confirm').click();
   await expect(browserItem(page, 'Spare')).toHaveCount(0);
 
@@ -261,7 +261,7 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   await chooseLanguage(page, 'en');
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
-  // Root: a project that was never hosted is deleted for good, after a clear warning.
+  // Root: a project that was never hosted moves to the Bin on this device.
   await followTrail(page, '/projects');
   await browserItem(page, 'East Chapel').click();
   await control(page, 'browser.delete').click();
@@ -272,13 +272,14 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   await browserItem(page, 'North chapel').click();
   await control(page, 'browser.delete').click();
   const local = page.getByRole('dialog');
-  await expect(local).toContainText('This project is only on this device, so it has no trash.');
-  await expect(local).toContainText('This cannot be undone.');
-  await expect(control(local, 'browser.dialog.confirm')).toHaveText('Delete');
+  await expect(local).toContainText('This project is only on this device.');
+  await expect(local).not.toContainText('cannot be undone');
+  await expect(control(local, 'browser.dialog.confirm')).toHaveText('Move to trash');
   await page.screenshot({ path: info.outputPath('browser-local-delete.png') });
   await control(local, 'browser.dialog.confirm').click();
   await expect(local).toHaveCount(0);
   await expect(names(page)).toHaveText(['East Chapel']);
+  // Its sealed row moves into the Bin entry; the library no longer stores it.
   await expect.poll(() => projectRows(page)).toBe(1);
   await page.reload();
   await browserReady(page);

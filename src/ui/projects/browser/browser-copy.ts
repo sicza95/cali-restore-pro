@@ -93,9 +93,10 @@ export const browserCopy = defineCopy({
     deleteTitle: (name: string) => `Delete “${name}”?`,
     trash: 'Move to trash',
     projectDeleteHelp: 'The project and its contents move to trash, where they can be recovered.',
-    childDeleteHelp: 'This removes the item and its contents.',
+    childDeleteHelp:
+      'The item and its contents move to the Bin on this device, where they can be restored for 30 days.',
     localProjectDeleteHelp:
-      'This project is only on this device, so it has no trash. Deleting removes it with its photos, estimate and report from this device.',
+      'This project is only on this device. It moves with its photos, estimate and report to the Bin on this device, where it can be restored for 30 days.',
     cannotUndo: 'This cannot be undone.',
     descendantCounts: (objects: string, surfaces: string) =>
       `Contents: ${objects} objects, ${surfaces} surfaces.`,
@@ -195,9 +196,10 @@ export const browserCopy = defineCopy({
     deleteTitle: (name: string) => `Törlöd ezt: „${name}”?`,
     trash: 'Áthelyezés a kukába',
     projectDeleteHelp: 'A projekt és tartalma a kukába kerül, ahonnan visszaállítható.',
-    childDeleteHelp: 'Az elem és tartalma törlődik.',
+    childDeleteHelp:
+      'Az elem és tartalma ezen az eszközön a lomtárba kerül, ahonnan 30 napig visszaállítható.',
     localProjectDeleteHelp:
-      'Ez a projekt csak ezen az eszközön van, ezért nincs kukája. A törlés a fotóival, becslésével és jelentésével együtt eltávolítja erről az eszközről.',
+      'Ez a projekt csak ezen az eszközön van. A fotóival, becslésével és jelentésével együtt az eszköz lomtárába kerül, ahonnan 30 napig visszaállítható.',
     cannotUndo: 'Ez nem vonható vissza.',
     descendantCounts: (objects: string, surfaces: string) =>
       `Tartalom: ${objects} objektum, ${surfaces} felület.`,

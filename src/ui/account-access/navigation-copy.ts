@@ -26,6 +26,7 @@ const navigationCopy = defineCopy({
     languageMenu: 'Language',
     organisations: 'Organisations',
     organisationCrumb: 'Organisation',
+    bin: 'Bin',
   },
   hu: {
     notFound: 'Az oldal nem található',
@@ -48,6 +49,7 @@ const navigationCopy = defineCopy({
     languageMenu: 'Nyelv',
     organisations: 'Szervezetek',
     organisationCrumb: 'Szervezet',
+    bin: 'Lomtár',
   },
 });
 

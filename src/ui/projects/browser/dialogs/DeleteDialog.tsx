@@ -8,7 +8,6 @@ export function DeleteDialog(props: DeleteDialogProps) {
   const copy = () => browserCopy[props.language];
   const id = createUniqueId();
   const count = (value: number | null) => (value === null ? copy().unknown : String(value));
-  const permanent = () => props.item.kind !== 'project' || !!props.permanent;
   return (
     <DialogShell
       title={copy().delete}
@@ -43,11 +42,6 @@ export function DeleteDialog(props: DeleteDialogProps) {
             count(props.descendants.surfaces),
           )}
         </p>
-        <Show when={permanent()}>
-          <p>
-            <strong>{copy().cannotUndo}</strong>
-          </p>
-        </Show>
         <Show when={props.blockedReason}>
           <p id={id} class="browser-diagnostics">
             {props.blockedReason}
@@ -77,7 +71,8 @@ export function DeleteDialog(props: DeleteDialogProps) {
             disabled={props.busy}
             data-control-id="browser.dialog.confirm"
           >
-            {props.busy ? copy().working : permanent() ? copy().delete : copy().trash}
+            {/* Every deletion is recoverable: the Bin on this device or the hosted trash. */}
+            {props.busy ? copy().working : copy().trash}
           </button>
         </div>
       </form>

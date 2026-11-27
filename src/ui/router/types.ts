@@ -18,7 +18,7 @@ export type AppRoute =
   | { name: 'offline' }
   | { name: PublicRouteName }
   | ({ name: 'projects' } & ProjectLocation)
-  | { name: 'organisations'; organisation?: string }
+  | { name: 'organisations'; organisation?: string; bin?: true }
   | { name: Exclude<AccountDestination, 'projects' | 'organisations'> };
 
 export type RouteName = AppRoute['name'];

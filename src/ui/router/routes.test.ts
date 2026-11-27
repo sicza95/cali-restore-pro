@@ -30,6 +30,10 @@ describe('parseRoute', () => {
       ['/invitations', { name: 'invitations' }],
       ['/organisations', { name: 'organisations' }],
       [`/organisations/${project}`, { name: 'organisations', organisation: project }],
+      [
+        `/organisations/${project}/bin`,
+        { name: 'organisations', organisation: project, bin: true },
+      ],
       ['/settings/account', { name: 'profile' }],
       ['/settings/security', { name: 'security' }],
       ['/settings/preferences', { name: 'preferences' }],

@@ -30,6 +30,7 @@ export default defineConfig({
     'project-backups.browser.ts',
     'projects.browser.ts',
     'project-browser.browser.ts',
+    'bin.browser.ts',
     'browser-item-actions.browser.ts',
     'browser-toolbar.browser.ts',
     'project-browser-frame.browser.ts',

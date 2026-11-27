@@ -2,7 +2,8 @@ import { createResource, createSignal, For, Show, untrack } from 'solid-js';
 import type { OrganisationDetail, OrganisationGroupWrite } from '../../platform/api';
 import { useApp } from '../app-context/AppContext';
 import { accountPaths } from '../router/constants';
-import { followLink, organisationHref } from '../router/routes';
+import { binHref, followLink, organisationHref } from '../router/routes';
+import { binCopy } from '../bin/bin-copy';
 import { SettingsItem, SettingsSection } from '../settings/SettingsItem';
 import { emptyGroup, GroupEditor } from './GroupEditor';
 import { organisationCopy } from './organisation-copy';
@@ -54,6 +55,23 @@ export function OrganisationDetailPage(props: { id: string }) {
                 </button>
               </div>
             </Show>
+            <SettingsSection
+              id="bin"
+              title={binCopy[app.lang()].title}
+              help={binCopy[app.lang()].openHelp}
+            >
+              <a
+                class="settings-option-link"
+                href={binHref(shown().id)}
+                data-control-id="org.bin.open"
+                onClick={(event) => followLink(event, app.router.navigate)}
+              >
+                <span class="settings-option-text">
+                  <strong>{binCopy[app.lang()].title}</strong>
+                  <span>{binCopy[app.lang()].scope}</span>
+                </span>
+              </a>
+            </SettingsSection>
             <Show when={shown().id} keyed>
               {(id) => <OrganisationDefaults detail={{ ...shown(), id }} changed={changed} />}
             </Show>

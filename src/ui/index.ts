@@ -22,3 +22,6 @@ export { PhotoStrip } from './editor/photo-strip/PhotoStrip';
 export { referencePhoto } from './editor/constants';
 export type { EditorWorkspaceProps } from './editor/editor-workspace/types';
 export type { EditorCopy, EditorLayer, LayerId } from './editor/types';
+export { BinList } from './bin/BinList';
+export type { BinListProps } from './bin/BinList';
+export type { BinRow } from './bin/utils';
