@@ -39,6 +39,7 @@ export const browserControls = registerPlatformControls(
     ['browser.query.clear', 'clear', 'Clear query', 'Find row open'],
     ['browser.query.help', 'help', 'Open search syntax help', 'Find row open'],
     ['browser.settings', 'projectSettings', 'Request scoped settings', 'Scope allows settings'],
+    ['browser.actions.overflow', 'more', 'Open overflow actions', 'Browser visible'],
     ['browser.inspector', 'inspector', 'Toggle inspector', 'Browser visible'],
     ['browser.inspector.close', 'close', 'Close inspector', 'Inspector open'],
     ['browser.empty.new', 'newItem', 'Request new item', 'Empty level and creation allowed'],

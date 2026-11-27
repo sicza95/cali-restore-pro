@@ -1,20 +1,37 @@
 import { createEffect, For, onCleanup, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { Icon } from '../../../icon/Icon';
+import { ActionIcon } from './ActionIcon';
 import { ActionButton } from '../browser-toolbar/ActionButton';
+import { Popup } from '../browser-toolbar/Popup';
+import { useActionCapacity } from './useActionCapacity';
 import type { ItemAction } from './types';
 import './styles.css';
 
-export function ItemActionButtons(props: { actions: readonly ItemAction[]; label: string }) {
+export function ItemActionButtons(props: {
+  actions: readonly ItemAction[];
+  label: string;
+  settings: { label: string; reason?: string; run: () => void };
+}) {
+  let root!: HTMLDivElement;
+  const capacity = useActionCapacity(
+    () => root,
+    () => props.actions.length,
+  );
   return (
-    <div class="browser-item-actions" role="group" aria-label={props.label}>
-      <For each={props.actions.map((action) => action.id)}>
+    <div
+      ref={(element) => (root = element)}
+      class="browser-item-actions"
+      role="group"
+      aria-label={props.label}
+    >
+      <For each={props.actions.slice(0, capacity()).map((action) => action.id)}>
         {(id) => {
           const action = () => props.actions.find((action) => action.id === id)!;
           return (
             <ActionButton
               label={action().label}
               icon={action().icon}
+              supplement={action().supplement}
               controlId={
                 id === 'rename' || id === 'delete' ? 'browser.' + id : 'browser.action.' + id
               }
@@ -26,6 +43,25 @@ export function ItemActionButtons(props: { actions: readonly ItemAction[]; label
           );
         }}
       </For>
+      <Popup label={props.label} icon="more-vertical" controlId="browser.actions.overflow" menu>
+        <ActionMenuItems actions={props.actions.slice(capacity())} />
+        <Show when={capacity() < props.actions.length}>
+          <hr />
+        </Show>
+        <button
+          type="button"
+          role="menuitem"
+          data-control-id="browser.settings"
+          aria-disabled={!!props.settings.reason}
+          title={props.settings.reason}
+          onClick={() => {
+            if (!props.settings.reason) props.settings.run();
+          }}
+        >
+          <ActionIcon icon="settings" />
+          <span>{props.settings.label}</span>
+        </button>
+      </Popup>
     </div>
   );
 }
@@ -47,7 +83,7 @@ export function ActionMenuItems(props: { actions: readonly ItemAction[] }) {
               if (!action().reason) action().run();
             }}
           >
-            <Icon name={action().icon} size={18} />
+            <ActionIcon icon={action().icon} supplement={action().supplement} size={18} />
             <span>{action().label}</span>
             <Show when={action().checked !== undefined && id !== 'info'}>
               <span class="browser-switch" data-checked={action().checked} aria-hidden="true" />

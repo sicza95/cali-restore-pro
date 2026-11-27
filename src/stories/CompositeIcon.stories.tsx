@@ -2,6 +2,7 @@ import { For } from 'solid-js';
 import type { Meta, StoryObj } from 'storybook-solidjs-vite';
 import { CompositeIcon } from '../ui';
 import { StatusBadge } from '../ui/projects/browser';
+import { VisibilityBadge } from '../ui/projects/browser/status-badge/VisibilityBadge';
 
 const meta = {
   title: 'Foundations/Composite icon',
@@ -23,6 +24,13 @@ export const BrowserStatus: Story = {
         {(status) => (
           <div class="cr-status-example">
             <StatusBadge language="en" status={status} />
+          </div>
+        )}
+      </For>
+      <For each={['listed', 'private'] as const}>
+        {(visibility) => (
+          <div class="cr-status-example">
+            <VisibilityBadge visibility={visibility} language="en" />
           </div>
         )}
       </For>

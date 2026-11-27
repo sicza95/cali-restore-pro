@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { RevisionHead, RevisionWrite } from '../src/platform/projects/revisions';
 import { aead } from '../src/platform/vault/aead';
 import {
+  runItemAction,
   browserItem,
   browserReady,
   createProjectViaBrowser,
@@ -82,7 +83,7 @@ test('the editor recovers offline edits and rotates the project key', async ({
     await overrideRestoration(device, 'currency', currency);
   };
   const expectCurrency = async (device: typeof page, currency: string) => {
-    await device.locator('[data-control-id="browser.action.manage"]').click();
+    await runItemAction(device, 'manage');
     await expect(
       device.getByRole('dialog').locator('[data-control-id$=".restoration.currency"]'),
     ).toHaveValue(currency);

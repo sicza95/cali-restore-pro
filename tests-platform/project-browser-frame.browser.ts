@@ -27,7 +27,7 @@ test('browser frame stays put while fixed square tiles and list rows scroll', as
   for (let index = 0; index < 20; index++) await createItem(page, `Chapel ${index + 1}`);
   await expect(page.locator('.app-breadcrumbs li')).toHaveText(['Projects']);
   await expect(control(page, 'browser.import')).toBeVisible();
-  await expect(control(page, 'browser.import').locator('.fa-cloud-arrow-up')).toHaveCount(1);
+  await expect(control(page, 'browser.import').locator('.fa-upload')).toHaveCount(1);
   await expect(page.locator('.account-footer')).toHaveCount(0);
   const status = page.locator('.app-bar .app-connection');
   await expect(status).toHaveText('Online');

@@ -1,10 +1,11 @@
 import { createUniqueId, Show } from 'solid-js';
 import type { IconName } from '../../../icon/types';
-import { Icon } from '../../../icon/Icon';
+import { ActionIcon } from '../item-actions/ActionIcon';
 
 export function ActionButton(props: {
   label: string;
   icon: IconName;
+  supplement?: IconName;
   controlId: string;
   reason?: string;
   pressed?: boolean;
@@ -32,8 +33,9 @@ export function ActionButton(props: {
           if (!props.reason) props.onClick();
         }}
       >
-        <Icon
-          name={props.icon}
+        <ActionIcon
+          icon={props.icon}
+          supplement={props.supplement}
           size={18}
           class={props.toggle && props.pressed ? 'browser-active-icon' : undefined}
         />

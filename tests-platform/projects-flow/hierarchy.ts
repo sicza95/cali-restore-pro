@@ -3,6 +3,7 @@ import type { TestInfo } from '@playwright/test';
 import { drawingControl } from '../drawing-review';
 import { expectPageTrail } from '../app-navigation';
 import {
+  runItemAction,
   browserControl,
   browserItem,
   createItem,
@@ -25,7 +26,7 @@ export async function createProjectHierarchy(flow: ProjectsFlow, info: TestInfo)
   const control = (id: string) => controls(page, id);
   await page.setViewportSize({ width: 1194, height: 834 });
   await page.goto('/projects');
-  for (const id of ['browser.new', 'browser.sort', 'browser.find', 'browser.settings']) {
+  for (const id of ['browser.new', 'browser.sort', 'browser.find', 'browser.actions.overflow']) {
     await expect(browserControl(page, id)).toBeVisible();
   }
   // Import is the New button's second option; offline originals sit behind the root gear.
@@ -57,7 +58,7 @@ export async function createProjectHierarchy(flow: ProjectsFlow, info: TestInfo)
   await createItem(page, 'Upper plaster');
   // The surface inherits the object's imperial units.
   await inspect(page, 'Upper plaster');
-  await browserControl(page, 'browser.action.manage').click();
+  await runItemAction(page, 'manage');
   await expect(
     page.getByRole('dialog').locator('[data-control-id$=".restoration.units"]'),
   ).toHaveValue('imperial');

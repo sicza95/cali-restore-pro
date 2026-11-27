@@ -16,13 +16,14 @@ test('composite status icons keep one color and a clear lower-right supplement',
       'Synced',
     ]);
     const icons = page.locator('.cr-composite-icon');
-    await expect(icons).toHaveCount(7);
+    await expect(icons).toHaveCount(9);
     for (const icon of await icons.all()) {
       const geometry = await icon.evaluate((element) => {
         const base = element.querySelector('.cr-composite-icon-base')!;
         const supplement = element.querySelector('.cr-composite-icon-supplement')!;
         const b = base.getBoundingClientRect();
         const s = supplement.getBoundingClientRect();
+        const r = element.getBoundingClientRect();
         return {
           sameColor: getComputedStyle(base).color === getComputedStyle(supplement).color,
           smaller: s.width < b.width && s.height < b.height,
@@ -31,6 +32,10 @@ test('composite status icons keep one color and a clear lower-right supplement',
           overlaps: s.x < b.right && s.y < b.bottom,
           masked: getComputedStyle(base).maskImage !== 'none',
           transparent: getComputedStyle(element).backgroundColor === 'rgba(0, 0, 0, 0)',
+          contained: Array.from(element.querySelectorAll('span')).every((child) => {
+            const c = child.getBoundingClientRect();
+            return c.left >= r.left && c.top >= r.top && c.right <= r.right && c.bottom <= r.bottom;
+          }),
         };
       });
       expect(geometry).toEqual({
@@ -40,6 +45,7 @@ test('composite status icons keep one color and a clear lower-right supplement',
         overlaps: true,
         masked: true,
         transparent: true,
+        contained: true,
       });
     }
     for (const viewport of [

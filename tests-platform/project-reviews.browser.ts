@@ -8,6 +8,7 @@ import { projectTable, reportTable, revisionQueueTable } from '../src/platform/v
 import { expectTaskLanguage } from './copy-guard';
 import { touchTarget } from './touch-target';
 import {
+  runItemAction,
   createHierarchyViaBrowser,
   createItem,
   followTrail,
@@ -119,7 +120,7 @@ test('owner reviews work phases, scoped inputs and independent report output thr
   // North wall measures in imperial units: an object override in the inspector.
   await inspect(page, 'North wall');
   await overrideRestoration(page, 'units', 'imperial');
-  await page.locator('[data-control-id="browser.action.manage"]').click();
+  await runItemAction(page, 'manage');
   await expect(page.getByRole('dialog')).toContainText('Imperial');
   await page.getByRole('dialog').locator('[data-control-id="browser.dialog.close"]').click();
   const before = await revisions(page);

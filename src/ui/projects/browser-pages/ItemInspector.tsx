@@ -3,6 +3,7 @@ import { createMemo, createSignal, For, Show } from 'solid-js';
 import type { BrowserItemDescriptor } from '../../../platform/projects/browser-contracts';
 import { imageDeck } from '../../../platform/projects/browser/deck';
 import { Icon } from '../../icon/Icon';
+import { ActionIcon } from '../browser/item-actions/ActionIcon';
 import { StatusBadge } from '../browser';
 import type { BrowserPreview } from '../browser';
 import { browserCopy } from '../browser/browser-copy';
@@ -81,7 +82,10 @@ export function ItemInspector(props: {
       >
         {(action) => (
           <label class="project-info-toggle">
-            <span>{action.label}</span>
+            <span class="project-info-toggle-label">
+              <ActionIcon icon={action.icon} supplement={action.supplement} />
+              {action.label}
+            </span>
             <input
               type="checkbox"
               role="switch"

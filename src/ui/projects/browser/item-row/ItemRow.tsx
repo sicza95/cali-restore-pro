@@ -3,6 +3,7 @@ import { ItemMenuTrigger } from '../item-actions/ItemMenuTrigger';
 import { InlineName } from '../item-actions/InlineName';
 import { browserCopy } from '../browser-copy';
 import { StatusBadge } from '../status-badge/StatusBadge';
+import { VisibilityBadge } from '../status-badge/VisibilityBadge';
 import { ItemPreview } from '../item-preview/ItemPreview';
 import type { ItemProps } from '../types';
 import '../styles.css';
@@ -47,6 +48,9 @@ export function ItemRow(props: ItemProps) {
           hosted={props.item.hosted}
           status={props.item.access === 'directory' ? 'remote' : props.item.status}
         />
+      </span>
+      <span class="browser-item-visibility">
+        <VisibilityBadge visibility={props.item.visibility} language={props.language} />
       </span>
       <ItemPreview
         language={props.language}

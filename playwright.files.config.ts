@@ -31,6 +31,7 @@ export default defineConfig({
     'projects.browser.ts',
     'project-browser.browser.ts',
     'browser-item-actions.browser.ts',
+    'browser-toolbar.browser.ts',
     'project-browser-frame.browser.ts',
     'project-hosting.browser.ts',
     'surface-journal.browser.ts',

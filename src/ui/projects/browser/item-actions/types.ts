@@ -4,6 +4,7 @@ export type ItemAction = {
   id: string;
   label: string;
   icon: IconName;
+  supplement?: IconName;
   reason?: string;
   checked?: boolean;
   run: () => void;

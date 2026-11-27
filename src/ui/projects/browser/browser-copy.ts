@@ -3,6 +3,7 @@ import type { BrowserItemKind } from '../../../platform/projects/browser-contrac
 
 export const browserCopy = defineCopy({
   en: {
+    more: 'More actions',
     newItem: { project: 'New project', object: 'New object', surface: 'New surface' },
     kinds: { project: 'Project', object: 'Object', surface: 'Surface' },
     levels: { project: 'Projects', object: 'Objects', surface: 'Surfaces' },
@@ -103,6 +104,7 @@ export const browserCopy = defineCopy({
     working: 'Working…',
   },
   hu: {
+    more: 'További műveletek',
     newItem: { project: 'Új projekt', object: 'Új objektum', surface: 'Új felület' },
     kinds: { project: 'Projekt', object: 'Objektum', surface: 'Felület' },
     levels: { project: 'Projektek', object: 'Objektumok', surface: 'Felületek' },

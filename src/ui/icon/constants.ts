@@ -47,6 +47,7 @@ export const icons = {
   more: 'ellipsis',
   'more-vertical': 'ellipsis-vertical',
   download: 'download',
+  upload: 'upload',
   copy: 'copy',
   share: 'share-nodes',
   info: 'circle-info',

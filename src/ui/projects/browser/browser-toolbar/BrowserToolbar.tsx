@@ -36,38 +36,38 @@ export function BrowserToolbar(props: BrowserToolbarProps) {
         <Show when={props.level === 'project' && props.onImport}>
           <ActionButton
             label={copy().importBackup}
-            icon="cloud-upload"
+            icon="upload"
             controlId="browser.import"
             onClick={() => props.onImport?.()}
           />
         </Show>
         <span class="browser-toolbar-spacer" />
-        <Show
-          when={props.itemActions}
-          fallback={
-            <>
-              <ActionButton
-                label={copy().rename}
-                icon="pen"
-                controlId="browser.rename"
-                reason={props.renameDisabledReason}
-                onClick={props.onRename}
-              />
-              <ActionButton
-                label={copy().delete}
-                icon="trash"
-                controlId="browser.delete"
-                reason={props.deleteDisabledReason}
-                onClick={props.onDelete}
-              />
-            </>
+        <ItemActionButtons
+          actions={
+            props.itemActions?.filter((action) => action.id !== 'info') ?? [
+              {
+                id: 'rename',
+                label: copy().rename,
+                icon: 'pen',
+                reason: props.renameDisabledReason,
+                run: props.onRename,
+              },
+              {
+                id: 'delete',
+                label: copy().delete,
+                icon: 'trash',
+                reason: props.deleteDisabledReason,
+                run: props.onDelete,
+              },
+            ]
           }
-        >
-          <ItemActionButtons
-            actions={props.itemActions?.filter((action) => action.id !== 'info') ?? []}
-            label={itemActionCopy[props.language].more}
-          />
-        </Show>
+          label={itemActionCopy[props.language].more}
+          settings={{
+            label: props.level === 'project' ? copy().accountSettings : copy().projectSettings,
+            reason: props.settingsDisabledReason,
+            run: props.onSettings,
+          }}
+        />
         <Show when={props.showFilter}>
           <ShowFilterMenu
             language={props.language}
@@ -144,13 +144,6 @@ export function BrowserToolbar(props: BrowserToolbarProps) {
           <Icon name="search" size={18} />
           <span class="browser-action-label">{copy().find}</span>
         </button>
-        <ActionButton
-          label={props.level === 'project' ? copy().accountSettings : copy().projectSettings}
-          icon="gear"
-          controlId="browser.settings"
-          reason={props.settingsDisabledReason}
-          onClick={props.onSettings}
-        />
         <ActionButton
           label={itemActionCopy[props.language].info}
           icon="info"

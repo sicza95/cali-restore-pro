@@ -5,6 +5,7 @@ import { projectTable } from '../src/platform/vault/store';
 import { chooseLanguage, expectPageTrail } from './app-navigation';
 import { orientedJpeg } from './fixtures/images';
 import {
+  runItemAction,
   browserControl as control,
   browserItem,
   browserReady,
@@ -13,6 +14,7 @@ import {
   inspect,
   openProjectSettings,
   openRootSettings,
+  openToolbarOverflow,
   overrideRestoration,
 } from './project-browser';
 
@@ -150,7 +152,7 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   await expect(tile).not.toContainText('Originals available offline');
   await expect(tile.locator('.browser-originals')).toHaveCount(0);
   await inspect(page, 'North wall');
-  await control(page, 'browser.action.manage').click();
+  await runItemAction(page, 'manage');
   const manage = page.getByRole('dialog');
   const units = manage.locator('[data-control-id$=".restoration.units"]');
   const unitsOverride = manage.locator('[data-control-id$=".restoration.units.override"]');
@@ -219,7 +221,9 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
   await expect(page).toHaveURL(new RegExp(projectPath + '/objects/[0-9a-f-]{36}$'));
   await expectPageTrail(page, 'Projects › East Chapel › North wall');
   await createItem(page, 'Upper plaster');
+  await control(page, 'browser.actions.overflow').click();
   await expect(control(page, 'browser.settings')).toHaveAccessibleName('Project settings');
+  await page.keyboard.press('Escape');
   await browserItem(page, 'Upper plaster').focus();
   await page.keyboard.press('Alt+ArrowUp');
   await expect(page).toHaveURL(new RegExp(projectPath + '$'));
@@ -238,7 +242,16 @@ test('the project browser: three levels, toolbar, find, gear, inspector, keyboar
     });
   });
   expect(fits).toBe(true);
-  for (const id of ['browser.rename', 'browser.delete', 'browser.find', 'browser.inspector'])
+  for (const action of ['rename', 'delete']) {
+    if (await control(page, 'browser.' + action).isVisible())
+      await expect(control(page, 'browser.' + action)).toHaveAccessibleName(/\S/);
+    else {
+      await openToolbarOverflow(page);
+      await expect(control(page, 'browser.menu.' + action)).toHaveAccessibleName(/\S/);
+      await page.keyboard.press('Escape');
+    }
+  }
+  for (const id of ['browser.find', 'browser.inspector'])
     await expect(control(page, id)).toHaveAccessibleName(/\S/);
   await page.screenshot({ path: info.outputPath('browser-objects-hu-1194.png') });
   await page.setViewportSize({ width: 834, height: 1194 });

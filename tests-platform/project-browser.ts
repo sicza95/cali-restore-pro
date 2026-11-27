@@ -96,8 +96,26 @@ export async function followTrail(page: Page, path: string) {
   await expect(page).toHaveURL(new RegExp(path + '$'));
 }
 
-/** The gear inside a project (object or surface level): the project settings dialog. */
+/** Executes an item action from the bar or its responsive overflow menu. */
+export async function runItemAction(page: Page, action: string) {
+  const id =
+    action === 'rename' || action === 'delete' ? 'browser.' + action : 'browser.action.' + action;
+  const button = browserControl(page, id);
+  if (await button.isVisible()) await button.click();
+  else {
+    await openToolbarOverflow(page);
+    await browserControl(page, 'browser.menu.' + action).click();
+  }
+}
+
+export async function openToolbarOverflow(page: Page) {
+  const overflow = browserControl(page, 'browser.actions.overflow');
+  if ((await overflow.getAttribute('aria-expanded')) !== 'true') await overflow.click();
+}
+
+/** Advanced project/account settings remain available in the overflow menu. */
 export async function openProjectSettings(page: Page) {
+  await openToolbarOverflow(page);
   await browserControl(page, 'browser.settings').click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
@@ -134,7 +152,7 @@ export async function inspect(page: Page, name: string) {
  * reportLanguage) and waits until the override is saved.
  */
 export async function overrideRestoration(page: Page, key: string, value: string) {
-  await browserControl(page, 'browser.action.manage').click();
+  await runItemAction(page, 'manage');
   const inspector = page.getByRole('dialog');
   const toggle = inspector.locator(`[data-control-id$=".restoration.${key}.override"]`);
   if (!(await toggle.isChecked())) await toggle.check();

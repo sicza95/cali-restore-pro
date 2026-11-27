@@ -16,3 +16,10 @@
 .browser-status-text {
   color: var(--cr-muted);
 }
+.browser-visibility {
+  display: inline-flex;
+  color: var(--cr-status-local);
+}
+.browser-visibility[data-visibility='listed'] {
+  color: var(--cr-status-syncing);
+}

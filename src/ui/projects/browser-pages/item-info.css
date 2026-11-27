@@ -39,6 +39,11 @@
   gap: 12px;
   min-height: 44px;
 }
+.project-info-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
 .project-access-avatars {
   display: flex;
   gap: 8px;

@@ -87,6 +87,10 @@ export function useItemOperations(ws: Workspace) {
           ? { kind: 'object' as const, objectId: item.id }
           : { kind: 'surface' as const, objectId: item.objectId!, surfaceId: item.id };
     const entity = project ? entityOf(project, target)?.entity : undefined;
+    const visibility =
+      typeof hosting()?.[item.projectId] === 'object'
+        ? (hosting()?.[item.projectId] as HostedProjectVisibility).visibility
+        : item.visibility;
     const open = (kind: ItemDialog['kind']) => setDialog({ item, kind });
     return [
       {
@@ -140,11 +144,10 @@ export function useItemOperations(ws: Workspace) {
       {
         id: 'listed',
         label: c().listed,
-        icon: 'eye',
+        icon: 'organisation',
+        supplement: visibility === 'listed' ? 'globe' : 'lock',
         reason: reason ?? (!hosted(item.projectId) ? c().hosting : undefined),
-        checked:
-          typeof hosting()?.[item.projectId] === 'object' &&
-          (hosting()?.[item.projectId] as HostedProjectVisibility).visibility === 'listed',
+        checked: visibility === 'listed',
         run: () =>
           run(async () => {
             const current = await app.request<HostedProjectVisibility>(
@@ -222,6 +225,10 @@ export function useItemOperations(ws: Workspace) {
   );
   const describe = (item: BrowserItemDescriptor): BrowserItemDescriptor => ({
     ...item,
+    visibility:
+      typeof hosting()?.[item.projectId] === 'object'
+        ? (hosting()?.[item.projectId] as HostedProjectVisibility).visibility
+        : item.visibility,
     hosted: hosted(item.projectId),
     status: hosted(item.projectId) && item.status === 'local' ? 'paused' : item.status,
   });

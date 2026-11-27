@@ -11,8 +11,12 @@ export function CompositeIcon(props: CompositeIconProps) {
       style={{ width: `${size()}px`, height: `${size()}px`, 'font-size': `${size()}px` }}
       aria-hidden="true"
     >
-      <Icon name={props.base} size={size()} class="cr-composite-icon-base" />
-      <Icon name={props.supplement} size={size() * 0.55} class="cr-composite-icon-supplement" />
+      <span class="cr-composite-icon-base">
+        <Icon name={props.base} size={size() * 0.72} />
+      </span>
+      <span class="cr-composite-icon-supplement">
+        <Icon name={props.supplement} size={size() * 0.4} />
+      </span>
     </span>
   );
 }

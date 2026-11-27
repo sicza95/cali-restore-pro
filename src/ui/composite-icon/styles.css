@@ -9,12 +9,20 @@
 }
 
 .cr-composite-icon > .cr-composite-icon-base {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
   /* Cut out space around the supplement without painting a background. */
-  mask-image: radial-gradient(circle at 77.5% 77.5%, transparent 0.36em, #000 0.38em);
+  mask-image: radial-gradient(circle at 75% 75%, transparent 0.31em, #000 0.33em);
 }
 
 .cr-composite-icon > .cr-composite-icon-supplement {
   position: absolute;
-  right: -5%;
-  bottom: -5%;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  height: 50%;
+  display: grid;
+  place-items: center;
 }

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {
+  runItemAction,
   browserControl as control,
   browserItem,
   browserReady,
@@ -61,7 +62,7 @@ test('item menus, inline rename, copy, archive filters and scoped modals', async
   await control(page.getByRole('menu'), 'browser.menu.copy').click();
   await expect(browserItem(page, 'Renamed chapel (copy)')).toBeVisible();
   await browserItem(page, 'Renamed chapel').click();
-  await control(page, 'browser.action.archive').click();
+  await runItemAction(page, 'archive');
   await expect(browserItem(page, 'Renamed chapel')).toHaveCount(0);
   await control(page, 'browser.show').click();
   await control(page, 'browser.show.archived').click();
@@ -71,9 +72,11 @@ test('item menus, inline rename, copy, archive filters and scoped modals', async
   await control(page, 'browser.show.offline').click();
   await page.keyboard.press('Escape');
   await browserItem(page, 'Renamed chapel').click();
-  await control(page, 'browser.action.archive').click();
-  await expect(control(page, 'browser.action.archive')).toHaveAccessibleName('Archive');
-  await control(page, 'browser.action.share').click();
+  await runItemAction(page, 'archive');
+  await control(page, 'browser.actions.overflow').click();
+  await expect(control(page, 'browser.menu.archive')).toHaveAccessibleName('Archive');
+  await page.keyboard.press('Escape');
+  await runItemAction(page, 'share');
   await expect(page.getByRole('dialog')).toContainText(
     'Sharing and downloads apply to the entire project',
   );
@@ -81,10 +84,10 @@ test('item menus, inline rename, copy, archive filters and scoped modals', async
   await expect(page.getByRole('dialog')).toContainText('Invitations are individual');
   await page.screenshot({ path: info.outputPath('share-groups-1194.png') });
   await control(page.getByRole('dialog'), 'browser.dialog.close').click();
-  await control(page, 'browser.action.manage').click();
+  await runItemAction(page, 'manage');
   await page.screenshot({ path: info.outputPath('manage-1194.png') });
   await control(page.getByRole('dialog'), 'browser.dialog.close').click();
-  await control(page, 'browser.action.reports').click();
+  await runItemAction(page, 'reports');
   for (const tab of ['estimates', 'reports', 'outputs']) {
     await control(page.getByRole('dialog'), 'project.review.' + tab).click();
     await expect(control(page, 'project.review.' + tab)).toHaveAttribute('aria-current', 'page');
@@ -119,6 +122,7 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
   const account = '00000000-0000-4000-8000-000000000001';
   const epoch = '00000000-0000-4000-8000-000000000033';
   let hosted = false;
+  let visibility = 'private';
   let head: Record<string, unknown> | null = null;
   let writes = 0;
   await page.route('**/api/v1/auth/me', (route) =>
@@ -135,13 +139,15 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
     hosted = true;
     return route.fulfill({ status: 204 });
   });
-  await page.route('**/api/v1/hosted-projects/*/visibility', (route) =>
-    route.fulfill(
+  await page.route('**/api/v1/hosted-projects/*/visibility', (route) => {
+    if (route.request().method() === 'PATCH')
+      visibility = route.request().postDataJSON().visibility;
+    return route.fulfill(
       hosted
-        ? { json: { visibility: 'private', version: 1, name: 'Chapel' } }
+        ? { json: { visibility, version: 1, name: 'Chapel' } }
         : { status: 404, json: { error: 'not_found' } },
-    ),
-  );
+    );
+  });
   await page.route('**/api/v1/hosted-projects/*/revision', (route) => {
     if (route.request().method() === 'PUT') {
       const body = route.request().postDataJSON();
@@ -179,8 +185,10 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
   });
   await page.goto('/projects');
   await createItem(page, 'Chapel');
+  if ((await control(page, 'browser.inspector').getAttribute('aria-pressed')) === 'true')
+    await control(page, 'browser.inspector').click();
   await expect(control(page, 'browser.more')).toHaveCount(0);
-  await control(page, 'browser.action.hosting').click();
+  await runItemAction(page, 'hosting');
   await expect(control(page, 'browser.action.hosting')).toHaveAttribute('aria-pressed', 'true');
   await expect(control(page, 'browser.action.sync')).toHaveAttribute('aria-pressed', 'true');
   await expect(browserItem(page, 'Chapel').locator('[data-status="synced"]')).toHaveCount(1);
@@ -188,11 +196,15 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
   const status = browserItem(page, 'Chapel').locator('.browser-status');
   await expect(status.locator('.cr-composite-icon .fa-cloud')).toHaveCount(1);
   await expect(status.locator('.cr-composite-icon .fa-circle-check')).toHaveCount(1);
+  await expect(browserItem(page, 'Chapel').locator('.browser-visibility .fa-lock')).toHaveCount(1);
+  await runItemAction(page, 'listed');
+  await expect(browserItem(page, 'Chapel').locator('.browser-visibility .fa-globe')).toHaveCount(1);
+  await expect(control(page, 'browser.action.listed').locator('.fa-globe')).toHaveCount(1);
   const active = control(page, 'browser.action.hosting');
   expect(await active.locator('.cr-icon').evaluate((el) => getComputedStyle(el).color)).not.toBe(
     await active.evaluate((el) => getComputedStyle(el).color),
   );
-  await control(page, 'browser.action.sync').click();
+  await runItemAction(page, 'sync');
   await expect(browserItem(page, 'Chapel').locator('[data-status="paused"]')).toHaveCount(1);
   await expect(status.locator('.cr-composite-icon .fa-circle-xmark')).toHaveCount(1);
   await browserItem(page, 'Chapel').click({ button: 'right' });
@@ -201,6 +213,7 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
     'Cloud sync',
     'Listed in organization',
   ]);
+  await expect(control(page, 'browser.menu.listed').locator('.fa-globe')).toHaveCount(1);
   await expect(
     page.locator('[data-control-id="browser.menu.hosting"] .browser-switch'),
   ).toHaveAttribute('data-checked', 'true');
@@ -208,6 +221,7 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
   if ((await control(page, 'browser.inspector').getAttribute('aria-pressed')) !== 'true')
     await control(page, 'browser.inspector').click();
   const panel = page.locator('.browser-inspector');
+  await expect(panel.locator('.project-info-toggle-label .fa-globe')).toHaveCount(1);
   await expect(panel.locator('.project-access-role')).toHaveText(['Owner', 'Estimator']);
   await expect(panel.getByRole('heading', { name: 'Owners', exact: true })).toHaveCount(0);
   await expect(panel.getByText('1.23 MB', { exact: true })).toHaveAttribute('title', /1,234,567/);
@@ -216,7 +230,7 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
     'Cloud sync',
     'Listed in organization',
   ]);
-  await control(page, 'browser.action.manage').click();
+  await runItemAction(page, 'manage');
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('heading', { level: 2 })).toHaveText('Manage');
   const before = await dialog.locator('.browser-dialog-context').boundingBox();
@@ -229,7 +243,7 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
   expect(await dialog.locator('.browser-dialog-context').boundingBox()).toEqual(before);
   await page.screenshot({ path: info.outputPath('scoped-manage-1194.png') });
   await control(dialog, 'browser.dialog.close').click();
-  await control(page, 'browser.action.hosting').click();
+  await runItemAction(page, 'hosting');
   await expect(dialog.getByRole('heading', { level: 2 })).toHaveText('Remove server hosting');
   await expect(dialog.locator('.browser-dialog-context')).toContainText('Chapel');
   await expect(control(dialog, 'browser.hosting.remove')).toHaveText('Remove server hosting');

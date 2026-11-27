@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import type { TestInfo } from '@playwright/test';
 import {
+  runItemAction,
   browserControl,
   browserItem,
   browserReady,
@@ -32,7 +33,7 @@ export async function archiveAndRestore(flow: ProjectsFlow, info: TestInfo) {
   await control('surface.project').click();
   // The project's currency is set on the project; children show it read-only.
   await inspect(page, 'North wall');
-  await browserControl(page, 'browser.action.manage').click();
+  await runItemAction(page, 'manage');
   await expect(page.getByRole('dialog')).toContainText('USD');
   await expect(
     page.getByRole('dialog').locator('[data-control-id$=".restoration.units"]'),

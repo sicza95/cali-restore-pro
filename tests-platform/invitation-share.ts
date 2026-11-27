@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { orientedJpeg } from './fixtures/images';
 import { enableHostingAndSync } from './invitation-hosting';
 import {
+  runItemAction,
   createHierarchyViaBrowser,
   createItem,
   followTrail,
@@ -54,7 +55,7 @@ export async function shareFirstSnapshot(project: Page, inbox: Page) {
   await createItem(project, 'Surface 1');
   await createItem(project, 'Upper plaster');
   await inspect(project, 'Upper plaster');
-  await project.locator('[data-control-id="browser.action.manage"]').click();
+  await runItemAction(project, 'manage');
   await expect(
     project.getByRole('dialog').locator('[data-control-id$=".restoration.units"]'),
   ).toHaveValue('metric');
