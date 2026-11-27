@@ -1,8 +1,11 @@
 package projects
 
 import (
+	"context"
 	"errors"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Bin lifecycle contract. Wire values match the Bin* schemas in contracts/openapi.json and the
@@ -164,4 +167,28 @@ func binReplay(storedDigest, digest string) (replay bool, err error) {
 		return false, errBinDigestMismatch
 	}
 	return true, nil
+}
+
+// cleanupBin is the bounded, retry-safe Bin worker step. Expired child entries become purged
+// (reads and commands already refuse them by deadline, independent of this worker), their
+// payloads and pins are released, and staged chunks abandoned for a day are removed.
+// Whole-project entries follow project_deletions, which the project purge handles.
+func cleanupBin(ctx context.Context, tx pgx.Tx) error {
+	if _, err := tx.Exec(ctx, `WITH due AS (
+ SELECT deletion_id FROM bin_entries WHERE state='retained' AND entity_kind<>'project' AND recover_until<=clock_timestamp()
+ ORDER BY recover_until,deletion_id LIMIT 100 FOR UPDATE SKIP LOCKED
+), ended AS (
+ UPDATE bin_entries e SET state='purged',purge_reason='expired',version=e.version+1 FROM due WHERE e.deletion_id=due.deletion_id
+ RETURNING e.deletion_id,e.project_id,e.entity_id,e.version
+), fenced AS (
+ INSERT INTO bin_fences(project_id,entity_id,deletion_id,state,version,digest)
+ SELECT project_id,entity_id,deletion_id,'purged',version,repeat('0',64) FROM ended ON CONFLICT DO NOTHING
+), pins AS (
+ DELETE FROM bin_pins WHERE deletion_id IN (SELECT deletion_id FROM ended)
+)
+DELETE FROM bin_chunks WHERE deletion_id IN (SELECT deletion_id FROM ended)`); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `DELETE FROM bin_chunks WHERE NOT committed AND staged_at<clock_timestamp()-interval '24 hours'`)
+	return err
 }

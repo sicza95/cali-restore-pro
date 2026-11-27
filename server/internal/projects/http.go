@@ -39,6 +39,7 @@ func (h *HTTP) Register(mux *http.ServeMux) {
 		h.hostingRoutes(route)
 		h.browserInfoRoutes(route)
 		h.revisionRoutes(route)
+		h.binRoutes(route)
 		h.cloudProjectRoutes(route)
 		h.revisionKeyRoutes(route)
 	}

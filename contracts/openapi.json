@@ -9132,6 +9132,752 @@
           }
         }
       }
+    },
+    "/api/v1/organisations/{org}/bin": {
+      "get": {
+        "operationId": "listBin",
+        "summary": "Retained Bin entries of one organisation the account manages, newest deleted first",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "org",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalog page and watermark",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BinCatalog"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bin/{deletion}": {
+      "get": {
+        "operationId": "getBinEntry",
+        "summary": "Entry with its sealed manifest; the current role is rechecked",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deletion",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entry detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BinDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bin/{deletion}/chunks/{index}": {
+      "get": {
+        "operationId": "getBinChunk",
+        "summary": "One committed recovery chunk",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deletion",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 63
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chunk bytes",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/bin/staging/{deletion}/{index}": {
+      "put": {
+        "operationId": "stageBinChunk",
+        "summary": "Stage one bounded, hashed recovery chunk before its lifecycle command",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "deletion",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 63
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BinStagedChunk"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Staged"
+          },
+          "400": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hosted-projects/{project}/bin/operations": {
+      "post": {
+        "operationId": "runBinOperation",
+        "summary": "Atomic lifecycle command: head, entries, chunks, pins, fences and receipt commit together",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BinCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Committed outcome, or the stored outcome of an identical retry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BinOutcome"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Typed Bin failure or request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["error"],
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -10835,6 +11581,430 @@
           },
           "device_export": {
             "$ref": "#/components/schemas/BinCapability"
+          }
+        }
+      },
+      "BinSealed": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["salt", "ciphertext"],
+        "properties": {
+          "salt": {
+            "type": "string",
+            "contentEncoding": "base64"
+          },
+          "ciphertext": {
+            "type": "string",
+            "contentEncoding": "base64"
+          }
+        }
+      },
+      "BinCatalogEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deletionId",
+          "projectId",
+          "entityKind",
+          "entityId",
+          "state",
+          "version",
+          "deletedAt",
+          "deletedBy",
+          "recoverUntil",
+          "manifestSchema",
+          "manifestSha256",
+          "coverageMissing",
+          "coverageLegacy",
+          "sourceRevision",
+          "logicalBytes",
+          "chunkCount",
+          "display",
+          "legacy",
+          "capabilities"
+        ],
+        "properties": {
+          "deletionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entityKind": {
+            "$ref": "#/components/schemas/BinEntityKind"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "objectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/BinEntryState"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recoverUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "manifestSchema": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "manifestSha256": {
+            "type": "string"
+          },
+          "coverageMissing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coverageLegacy": {
+            "type": "boolean"
+          },
+          "sourceRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "logicalBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "chunkCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "display": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BinSealed"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legacy": {
+            "type": "boolean",
+            "description": "Pre-Bin hosted project deletion surfaced by the adapter."
+          },
+          "capabilities": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["read", "restore", "purge", "device_export"],
+            "properties": {
+              "read": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["allowed"],
+                "properties": {
+                  "allowed": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "$ref": "#/components/schemas/BinFailureCode"
+                  }
+                }
+              },
+              "restore": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["allowed"],
+                "properties": {
+                  "allowed": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "$ref": "#/components/schemas/BinFailureCode"
+                  }
+                }
+              },
+              "purge": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["allowed"],
+                "properties": {
+                  "allowed": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "$ref": "#/components/schemas/BinFailureCode"
+                  }
+                }
+              },
+              "device_export": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["allowed"],
+                "properties": {
+                  "allowed": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "$ref": "#/components/schemas/BinFailureCode"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "BinCatalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entries", "next", "asOf"],
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BinCatalogEntry"
+            }
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "asOf": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BinDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BinCatalogEntry"
+          },
+          {
+            "type": "object",
+            "required": ["manifest"],
+            "properties": {
+              "manifest": {
+                "$ref": "#/components/schemas/BinSealed"
+              }
+            }
+          }
+        ]
+      },
+      "BinStagedChunk": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sha256", "body"],
+        "properties": {
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "body": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "maxLength": 1398104
+          }
+        }
+      },
+      "BinTrash": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deletionId",
+          "entityKind",
+          "entityId",
+          "manifestSchema",
+          "manifestSha256",
+          "coverageMissing",
+          "sourceRevision",
+          "logicalBytes",
+          "chunkCount",
+          "assets",
+          "display",
+          "manifest"
+        ],
+        "properties": {
+          "deletionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entityKind": {
+            "$ref": "#/components/schemas/BinEntityKind"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "objectId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "manifestSchema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "manifestSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "coverageMissing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sourceRevision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "logicalBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "chunkCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 10000
+          },
+          "display": {
+            "$ref": "#/components/schemas/BinSealed"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/BinSealed"
+          }
+        }
+      },
+      "BinCommand": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["operationId", "digest", "writerProtocol", "intent"],
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "writerProtocol": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "intent": {
+            "enum": ["trash", "restore", "purge"]
+          },
+          "deletionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 100
+          },
+          "expectedVersions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "head": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectRevisionWrite"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trash": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BinTrash"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "BinOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["versions", "cascaded", "recoverUntil", "head"],
+        "properties": {
+          "versions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "cascaded": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "recoverUntil": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "head": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProjectRevisionHead"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       }

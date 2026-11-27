@@ -29,6 +29,9 @@ func (s *Service) PurgeDeleted(ctx context.Context, root string) error {
 	if err := purgeProject(ctx, tx, root); err != nil {
 		return err
 	}
+	if err := cleanupBin(ctx, tx); err != nil {
+		return err
+	}
 	if _, err := tx.Exec(ctx, `WITH due AS (
  SELECT d.id FROM account_deletions d WHERE purged_at IS NULL AND recover_until<=clock_timestamp()
  AND NOT EXISTS (SELECT 1 FROM project_owners o WHERE o.account_id=d.id)

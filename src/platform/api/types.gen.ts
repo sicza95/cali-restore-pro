@@ -645,6 +645,109 @@ export type BinCapabilities = {
   device_export: BinCapability;
 };
 
+export type BinSealed = {
+  salt: string;
+  ciphertext: string;
+};
+
+export type BinCatalogEntry = {
+  deletionId: string;
+  projectId: string;
+  entityKind: BinEntityKind;
+  entityId: string;
+  objectId?: string;
+  state: BinEntryState;
+  version: number;
+  deletedAt: string;
+  deletedBy: string | null;
+  recoverUntil: string;
+  manifestSchema: number;
+  manifestSha256: string;
+  coverageMissing: Array<string>;
+  coverageLegacy: boolean;
+  sourceRevision: number;
+  logicalBytes: number;
+  chunkCount: number;
+  display: BinSealed | null;
+  /**
+   * Pre-Bin hosted project deletion surfaced by the adapter.
+   */
+  legacy: boolean;
+  capabilities: {
+    read: {
+      allowed: boolean;
+      reason?: BinFailureCode;
+    };
+    restore: {
+      allowed: boolean;
+      reason?: BinFailureCode;
+    };
+    purge: {
+      allowed: boolean;
+      reason?: BinFailureCode;
+    };
+    device_export: {
+      allowed: boolean;
+      reason?: BinFailureCode;
+    };
+  };
+};
+
+export type BinCatalog = {
+  entries: Array<BinCatalogEntry>;
+  next: string | null;
+  asOf: string;
+};
+
+export type BinDetail = BinCatalogEntry & {
+  manifest: BinSealed;
+};
+
+export type BinStagedChunk = {
+  sha256: string;
+  body: string;
+};
+
+export type BinTrash = {
+  deletionId: string;
+  entityKind: BinEntityKind;
+  entityId: string;
+  objectId?: string | null;
+  manifestSchema: number;
+  manifestSha256: string;
+  coverageMissing: Array<string>;
+  sourceRevision: number;
+  logicalBytes: number;
+  chunkCount: number;
+  assets: Array<string>;
+  display: BinSealed;
+  manifest: BinSealed;
+};
+
+export type BinCommand = {
+  operationId: string;
+  digest: string;
+  writerProtocol: number;
+  intent: 'trash' | 'restore' | 'purge';
+  deletionIds?: Array<string>;
+  expectedVersions?: {
+    [key: string]: number;
+  };
+  head?: ProjectRevisionWrite | null;
+  trash?: BinTrash | null;
+};
+
+export type BinOutcome = {
+  versions: {
+    [key: string]: number;
+  };
+  cascaded: Array<string>;
+  recoverUntil: {
+    [key: string]: string;
+  };
+  head: ProjectRevisionHead | null;
+};
+
 export type PlatformStatusData = {
   body?: never;
   path?: never;
@@ -5073,3 +5176,312 @@ export type UpdateOrganisationDefaultsResponses = {
 
 export type UpdateOrganisationDefaultsResponse =
   UpdateOrganisationDefaultsResponses[keyof UpdateOrganisationDefaultsResponses];
+
+export type ListBinData = {
+  body?: never;
+  path: {
+    org: string;
+  };
+  query?: {
+    before?: string;
+    limit?: number;
+  };
+  url: '/api/v1/organisations/{org}/bin';
+};
+
+export type ListBinErrors = {
+  /**
+   * Typed Bin failure or request rejected
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  409: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  503: {
+    error: string;
+  };
+};
+
+export type ListBinError = ListBinErrors[keyof ListBinErrors];
+
+export type ListBinResponses = {
+  /**
+   * Catalog page and watermark
+   */
+  200: BinCatalog;
+};
+
+export type ListBinResponse = ListBinResponses[keyof ListBinResponses];
+
+export type GetBinEntryData = {
+  body?: never;
+  path: {
+    deletion: string;
+  };
+  query?: never;
+  url: '/api/v1/bin/{deletion}';
+};
+
+export type GetBinEntryErrors = {
+  /**
+   * Typed Bin failure or request rejected
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  409: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  503: {
+    error: string;
+  };
+};
+
+export type GetBinEntryError = GetBinEntryErrors[keyof GetBinEntryErrors];
+
+export type GetBinEntryResponses = {
+  /**
+   * Entry detail
+   */
+  200: BinDetail;
+};
+
+export type GetBinEntryResponse = GetBinEntryResponses[keyof GetBinEntryResponses];
+
+export type GetBinChunkData = {
+  body?: never;
+  path: {
+    deletion: string;
+    index: number;
+  };
+  query?: never;
+  url: '/api/v1/bin/{deletion}/chunks/{index}';
+};
+
+export type GetBinChunkErrors = {
+  /**
+   * Typed Bin failure or request rejected
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  409: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  503: {
+    error: string;
+  };
+};
+
+export type GetBinChunkError = GetBinChunkErrors[keyof GetBinChunkErrors];
+
+export type GetBinChunkResponses = {
+  /**
+   * Chunk bytes
+   */
+  200: Blob | File;
+};
+
+export type GetBinChunkResponse = GetBinChunkResponses[keyof GetBinChunkResponses];
+
+export type StageBinChunkData = {
+  body: BinStagedChunk;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+    deletion: string;
+    index: number;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/bin/staging/{deletion}/{index}';
+};
+
+export type StageBinChunkErrors = {
+  /**
+   * Typed Bin failure or request rejected
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  409: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  503: {
+    error: string;
+  };
+};
+
+export type StageBinChunkError = StageBinChunkErrors[keyof StageBinChunkErrors];
+
+export type StageBinChunkResponses = {
+  /**
+   * Staged
+   */
+  204: void;
+};
+
+export type StageBinChunkResponse = StageBinChunkResponses[keyof StageBinChunkResponses];
+
+export type RunBinOperationData = {
+  body: BinCommand;
+  headers: {
+    Origin: string;
+    'X-CSRF-Token': string;
+  };
+  path: {
+    project: string;
+  };
+  query?: never;
+  url: '/api/v1/hosted-projects/{project}/bin/operations';
+};
+
+export type RunBinOperationErrors = {
+  /**
+   * Typed Bin failure or request rejected
+   */
+  400: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  401: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  403: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  404: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  409: {
+    error: string;
+  };
+  /**
+   * Typed Bin failure or request rejected
+   */
+  503: {
+    error: string;
+  };
+};
+
+export type RunBinOperationError = RunBinOperationErrors[keyof RunBinOperationErrors];
+
+export type RunBinOperationResponses = {
+  /**
+   * Committed outcome, or the stored outcome of an identical retry
+   */
+  200: BinOutcome;
+};
+
+export type RunBinOperationResponse = RunBinOperationResponses[keyof RunBinOperationResponses];

@@ -39,10 +39,16 @@ type revisionWrite struct {
 }
 
 func (a fileAccess) projectRevision(ctx context.Context, project string, next *revisionWrite) (revisionState, error) {
-	var state revisionState
 	if err := a.requireProjectOwner(ctx, project); err != nil {
-		return state, err
+		return revisionState{}, err
 	}
+	return a.revisionHead(ctx, project, next)
+}
+
+// revisionHead reads, and with next compare-and-sets, the project head. Callers authorize first:
+// ordinary sync requires an owner, Bin commands use the purpose-scoped Bin authorizer.
+func (a fileAccess) revisionHead(ctx context.Context, project string, next *revisionWrite) (revisionState, error) {
+	var state revisionState
 	var host *string
 	if err := a.tx.QueryRow(ctx, `SELECT sync_epoch::text,host_id::text FROM hosted_projects WHERE id=$1`, project).Scan(&state.Epoch, &host); err != nil {
 		return state, err
