@@ -185,13 +185,16 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
   await expect(control(page, 'browser.action.sync')).toHaveAttribute('aria-pressed', 'true');
   await expect(browserItem(page, 'Chapel').locator('[data-status="synced"]')).toHaveCount(1);
   expect(writes).toBeGreaterThan(0);
-  await expect(browserItem(page, 'Chapel').locator('.browser-hosted-indicator')).toHaveCount(1);
+  const status = browserItem(page, 'Chapel').locator('.browser-status');
+  await expect(status.locator('.cr-composite-icon .fa-cloud')).toHaveCount(1);
+  await expect(status.locator('.cr-composite-icon .fa-circle-check')).toHaveCount(1);
   const active = control(page, 'browser.action.hosting');
   expect(await active.locator('.cr-icon').evaluate((el) => getComputedStyle(el).color)).not.toBe(
     await active.evaluate((el) => getComputedStyle(el).color),
   );
   await control(page, 'browser.action.sync').click();
   await expect(browserItem(page, 'Chapel').locator('[data-status="paused"]')).toHaveCount(1);
+  await expect(status.locator('.cr-composite-icon .fa-circle-xmark')).toHaveCount(1);
   await browserItem(page, 'Chapel').click({ button: 'right' });
   await expect(page.getByRole('menuitemcheckbox')).toHaveText([
     'Server hosting',

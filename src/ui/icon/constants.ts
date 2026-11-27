@@ -1,5 +1,7 @@
 export const icons = {
   cloud: 'cloud',
+  'circle-check': 'circle-check',
+  'circle-x': 'circle-xmark',
   'cloud-check': 'circle-check',
   'cloud-question': 'circle-question',
   'cloud-upload': 'cloud-arrow-up',

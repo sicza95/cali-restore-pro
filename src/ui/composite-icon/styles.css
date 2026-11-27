@@ -1,0 +1,20 @@
+.cr-composite-icon {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  color: inherit;
+  vertical-align: middle;
+  line-height: 1;
+  isolation: isolate;
+}
+
+.cr-composite-icon > .cr-composite-icon-base {
+  /* Cut out space around the supplement without painting a background. */
+  mask-image: radial-gradient(circle at 77.5% 77.5%, transparent 0.36em, #000 0.38em);
+}
+
+.cr-composite-icon > .cr-composite-icon-supplement {
+  position: absolute;
+  right: -5%;
+  bottom: -5%;
+}

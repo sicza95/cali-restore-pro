@@ -1,4 +1,6 @@
 export { Icon } from './icon/Icon';
+export { CompositeIcon } from './composite-icon/CompositeIcon';
+export type { CompositeIconProps } from './composite-icon/types';
 export type { IconName } from './icon/types';
 export { Button } from './controls/button/Button';
 export { IconButton } from './controls/icon-button/IconButton';

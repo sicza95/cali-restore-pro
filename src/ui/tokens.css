@@ -60,10 +60,10 @@
   --cr-accent: #006b7a;
   --cr-accent-ink: #ffffff;
   --cr-selected: #dceef0;
-  --cr-status-local: #8b959a;
-  --cr-status-off: #be7a7a;
-  --cr-status-syncing: #7197c4;
-  --cr-status-synced: #719b81;
+  --cr-status-local: #adb7bc;
+  --cr-status-off: #ffacac;
+  --cr-status-syncing: #9dc4f5;
+  --cr-status-synced: #8ad5b0;
   --cr-positive: #276d4d;
   --cr-warning: #805b18;
   --cr-negative: #ad3737;

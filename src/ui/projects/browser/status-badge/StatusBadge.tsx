@@ -1,36 +1,24 @@
-import { itemActionCopy } from '../item-actions/copy';
 import { Show } from 'solid-js';
 import { Icon } from '../../../icon/Icon';
-import type { IconName } from '../../../icon/types';
-import type { BrowserItemStatus } from '../../../../platform/projects/browser-contracts';
+import { CompositeIcon } from '../../../composite-icon/CompositeIcon';
+import { supplements } from './constants';
 import { browserCopy } from '../browser-copy';
 import type { StatusBadgeProps } from '../types';
 import '../styles.css';
-
-const icons: Record<BrowserItemStatus, IconName> = {
-  local: 'devices',
-  paused: 'sync',
-  remote: 'cloud',
-  synced: 'cloud-check',
-  pending: 'sync',
-  conflict: 'alert',
-  error: 'alert',
-  unknown: 'cloud-question',
-};
+import './styles.css';
 
 /** Intentionally silent on refresh. Selection and command announcements belong to the browser. */
 export function StatusBadge(props: StatusBadgeProps) {
   const copy = () => browserCopy[props.language];
   return (
     <span class="browser-status-group">
-      <Show when={props.hosted}>
-        <span class="browser-hosted-indicator" title={itemActionCopy[props.language].hosting}>
-          <Icon name="cloud" size={16} />
-          <span class="browser-sr-only">{itemActionCopy[props.language].hosting}</span>
-        </span>
-      </Show>
       <span class="browser-status" data-status={props.status} title={copy().statuses[props.status]}>
-        <Icon name={icons[props.status]} size={16} />
+        <Show
+          when={supplements[props.status]}
+          fallback={<Icon name={props.status === 'local' ? 'devices' : 'cloud'} size={20} />}
+        >
+          {(supplement) => <CompositeIcon base="cloud" supplement={supplement()} size={20} />}
+        </Show>
         <span class="browser-status-text">{copy().statuses[props.status]}</span>
       </span>
       <Show when={props.originals !== 'empty' && props.originals}>
