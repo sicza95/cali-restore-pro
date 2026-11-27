@@ -1,0 +1,55 @@
+.browser-thumbnail {
+  position: relative;
+  flex: none;
+  width: 128px;
+  height: 128px;
+}
+.browser-thumbnail > .browser-item-more {
+  top: -8px;
+  right: -8px;
+  z-index: 5;
+}
+.browser-tile .browser-thumbnail > .browser-item-status,
+.browser-row .browser-thumbnail > .browser-item-status {
+  position: absolute;
+  top: auto;
+  bottom: -4px;
+  left: auto;
+  right: -6px;
+  z-index: 4;
+  min-width: 24px;
+  width: auto;
+  background: transparent;
+  pointer-events: none;
+}
+.browser-thumbnail > .browser-item-visibility {
+  position: absolute;
+  left: -6px;
+  bottom: -4px;
+  z-index: 4;
+  display: inline-flex;
+  pointer-events: none;
+}
+
+/* Keep the 44px menu target beside the smaller list thumbnail, with its states below. */
+.browser-row {
+  grid-template-columns: 96px minmax(0, 1fr);
+}
+.browser-row .browser-thumbnail {
+  width: 96px;
+  height: 68px;
+}
+.browser-row .browser-thumbnail > .browser-item-more {
+  top: 0;
+  right: auto;
+  left: 48px;
+  transform: none;
+}
+.browser-row .browser-thumbnail > .browser-item-status {
+  right: 52px;
+  bottom: 0;
+}
+.browser-row .browser-thumbnail > .browser-item-visibility {
+  left: 0;
+  bottom: 0;
+}

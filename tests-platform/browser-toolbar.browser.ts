@@ -84,15 +84,22 @@ test('toolbar moves a suffix into overflow and keeps corner indicators inside ea
   await expect(control(page, 'browser.actions.overflow')).toBeFocused();
   const item = browserItem(page, 'Toolbar project');
   const corners = await item.evaluate((el) => {
-    const r = el.getBoundingClientRect();
+    const r = el.querySelector('.browser-preview')!.getBoundingClientRect();
     const left = el.querySelector('.browser-item-visibility')!.getBoundingClientRect();
     const right = el.querySelector('.browser-item-status')!.getBoundingClientRect();
+    const menu = el.querySelector('.browser-item-more')!.getBoundingClientRect();
+    const name = el.querySelector('.browser-item-name')!.getBoundingClientRect();
     return (
-      left.left >= r.left &&
+      Math.abs(left.left - r.left) <= 8 &&
       left.top > r.top + r.height / 2 &&
-      right.right <= r.right &&
+      Math.abs(right.right - r.right) <= 8 &&
       right.top > r.top + r.height / 2 &&
-      left.right < right.left
+      Math.abs(left.bottom - r.bottom) <= 8 &&
+      Math.abs(right.bottom - r.bottom) <= 8 &&
+      left.right < right.left &&
+      menu.right <= r.right + 8 &&
+      menu.top <= r.top &&
+      name.top >= Math.max(left.bottom, right.bottom) + 4
     );
   });
   expect(corners).toBe(true);

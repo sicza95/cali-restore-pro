@@ -14,7 +14,7 @@
   display: grid;
   place-items: center;
   /* Cut out space around the supplement without painting a background. */
-  mask-image: radial-gradient(circle at 75% 75%, transparent 0.31em, #000 0.33em);
+  mask-image: radial-gradient(circle at 75% 75%, transparent 0.31em, currentColor 0.33em);
 }
 
 .cr-composite-icon > .cr-composite-icon-supplement {

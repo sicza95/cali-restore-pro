@@ -257,8 +257,14 @@ test('hosting starts synced, scoped dialogs retain context, and Info shows acces
   await expect(browserItem(page, 'Chapel').locator('[data-status="local"]')).toHaveCount(1);
   await control(page, 'browser.view.list').click();
   const row = browserItem(page, 'Chapel');
-  const rowBox = (await row.boundingBox())!;
+  const previewBox = (await row.locator('.browser-preview').boundingBox())!;
   const moreBox = (await row.getByRole('button', { name: 'More actions' }).boundingBox())!;
-  expect(Math.abs(rowBox.y + rowBox.height / 2 - moreBox.y - moreBox.height / 2)).toBeLessThan(1);
-  expect(rowBox.x + rowBox.width - moreBox.x - moreBox.width).toBeGreaterThanOrEqual(8);
+  expect(
+    Math.abs(previewBox.y + previewBox.height / 2 - moreBox.y - moreBox.height / 2),
+  ).toBeLessThan(1);
+  expect(moreBox.x - previewBox.x - previewBox.width).toBeGreaterThanOrEqual(4);
+  expect(moreBox.x - previewBox.x - previewBox.width).toBeLessThanOrEqual(8);
+  await page.screenshot({ path: info.outputPath('thumbnail-list-834.png') });
+  await page.setViewportSize({ width: 1194, height: 834 });
+  await page.screenshot({ path: info.outputPath('thumbnail-list-1194.png') });
 });
