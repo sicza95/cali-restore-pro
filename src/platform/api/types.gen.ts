@@ -593,6 +593,58 @@ export type OrganisationDefaultsPatch = {
   initial?: OrganisationDefaults;
 };
 
+/**
+ * Kind of entity a Bin entry retains.
+ */
+export type BinEntityKind = 'project' | 'object' | 'surface';
+
+/**
+ * Stored state of one deletion event; restored and purged are terminal.
+ */
+export type BinEntryState = 'retained' | 'restored' | 'purged';
+
+export type BinLifecycleIntent = 'trash' | 'restore' | 'purge' | 'expire';
+
+export type BinAction = 'read' | 'restore' | 'purge' | 'device_export';
+
+/**
+ * Typed Bin lifecycle failure.
+ */
+export type BinFailureCode =
+  | 'forbidden'
+  | 'hosting_unavailable'
+  | 'quota_exceeded'
+  | 'offline'
+  | 'expired'
+  | 'not_retained'
+  | 'missing_parent'
+  | 'archived_destination'
+  | 'project_purged'
+  | 'incomplete_recovery'
+  | 'identity_collision'
+  | 'stale_revision'
+  | 'pending_sync'
+  | 'digest_mismatch'
+  | 'protocol_outdated'
+  | 'drafts_unresolved'
+  | 'irreversible';
+
+export type BinCapability =
+  | {
+      allowed: true;
+    }
+  | {
+      allowed: false;
+      reason: BinFailureCode;
+    };
+
+export type BinCapabilities = {
+  read: BinCapability;
+  restore: BinCapability;
+  purge: BinCapability;
+  device_export: BinCapability;
+};
+
 export type PlatformStatusData = {
   body?: never;
   path?: never;

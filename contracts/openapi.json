@@ -10755,6 +10755,88 @@
             "description": "Seed legacy Personal preferences only if no defaults were saved. Ignored for shared organisations or previously saved defaults."
           }
         }
+      },
+      "BinEntityKind": {
+        "description": "Kind of entity a Bin entry retains.",
+        "enum": ["project", "object", "surface"]
+      },
+      "BinEntryState": {
+        "description": "Stored state of one deletion event; restored and purged are terminal.",
+        "enum": ["retained", "restored", "purged"]
+      },
+      "BinLifecycleIntent": {
+        "enum": ["trash", "restore", "purge", "expire"]
+      },
+      "BinAction": {
+        "enum": ["read", "restore", "purge", "device_export"]
+      },
+      "BinFailureCode": {
+        "description": "Typed Bin lifecycle failure.",
+        "enum": [
+          "forbidden",
+          "hosting_unavailable",
+          "quota_exceeded",
+          "offline",
+          "expired",
+          "not_retained",
+          "missing_parent",
+          "archived_destination",
+          "project_purged",
+          "incomplete_recovery",
+          "identity_collision",
+          "stale_revision",
+          "pending_sync",
+          "digest_mismatch",
+          "protocol_outdated",
+          "drafts_unresolved",
+          "irreversible"
+        ]
+      },
+      "BinCapability": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["allowed"],
+            "properties": {
+              "allowed": {
+                "const": true
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["allowed", "reason"],
+            "properties": {
+              "allowed": {
+                "const": false
+              },
+              "reason": {
+                "$ref": "#/components/schemas/BinFailureCode"
+              }
+            }
+          }
+        ]
+      },
+      "BinCapabilities": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["read", "restore", "purge", "device_export"],
+        "properties": {
+          "read": {
+            "$ref": "#/components/schemas/BinCapability"
+          },
+          "restore": {
+            "$ref": "#/components/schemas/BinCapability"
+          },
+          "purge": {
+            "$ref": "#/components/schemas/BinCapability"
+          },
+          "device_export": {
+            "$ref": "#/components/schemas/BinCapability"
+          }
+        }
       }
     },
     "securitySchemes": {
