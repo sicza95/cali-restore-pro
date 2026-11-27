@@ -31,25 +31,31 @@
   pointer-events: none;
 }
 
-/* Keep the 44px menu target beside the smaller list thumbnail, with its states below. */
+/* List controls belong to the row's right edge, leaving the small thumbnail clear. */
 .browser-row {
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr);
+  padding-inline-end: 128px;
 }
 .browser-row .browser-thumbnail {
-  width: 96px;
-  height: 68px;
+  display: contents;
+  position: static;
 }
 .browser-row .browser-thumbnail > .browser-item-more {
-  top: 0;
-  right: auto;
-  left: 48px;
-  transform: none;
+  top: 50%;
+  right: 8px;
+  left: auto;
+  transform: translateY(-50%);
 }
 .browser-row .browser-thumbnail > .browser-item-status {
-  right: 52px;
-  bottom: 0;
+  top: 50%;
+  right: 60px;
+  bottom: auto;
+  transform: translateY(-50%);
 }
 .browser-row .browser-thumbnail > .browser-item-visibility {
-  left: 0;
-  bottom: 0;
+  top: 50%;
+  left: auto;
+  right: 92px;
+  bottom: auto;
+  transform: translateY(-50%);
 }
