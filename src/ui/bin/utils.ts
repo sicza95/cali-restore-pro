@@ -25,6 +25,7 @@ export type BinRow = {
   limitedRecovery?: boolean;
   restoreDenied?: BinFailureCode | 'device_copy_required';
   purgeDenied?: BinFailureCode | 'device_copy_required';
+  remotePurge?: true;
   state: BinAvailability;
   /** Whole days left, rounded up; zero once expired. */
   days: number;
@@ -75,7 +76,9 @@ export function mergeHostedRows(
     const reason = (action: 'restore' | 'purge') => {
       const capability = remote.capabilities[action];
       if (!capability.allowed) return capability.reason ?? 'forbidden';
-      return matching ? undefined : 'device_copy_required';
+      if (matching || (action === 'purge' && remote.entityKind !== 'project' && !remote.legacy))
+        return undefined;
+      return 'device_copy_required';
     };
     accepted.set(remote.deletionId, {
       entry: {
@@ -95,6 +98,8 @@ export function mergeHostedRows(
       limitedRecovery: remote.coverageLegacy || remote.coverageMissing.length > 0,
       restoreDenied: reason('restore'),
       purgeDenied: reason('purge'),
+      remotePurge:
+        !matching && remote.entityKind !== 'project' && !remote.legacy ? true : undefined,
       state: now >= recoverUntil ? 'expired' : 'recoverable',
       days: Math.max(0, Math.ceil((recoverUntil - now) / day)),
     });

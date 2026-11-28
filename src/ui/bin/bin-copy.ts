@@ -20,7 +20,8 @@ const en = {
   },
   /** Why the server refused a deletion; other codes use the general failure text. */
   syncFailures: {
-    stale_revision: 'The project changed on another device. Review the sync conflict.',
+    stale_revision:
+      'The project changed on another device. Restore this item here before syncing the project.',
     quota_exceeded: 'There is not enough server storage for its recovery copy.',
     forbidden: 'You can no longer change this project on the server.',
   } as Partial<Record<BinFailureCode, string>>,
@@ -115,7 +116,7 @@ export const binCopy = defineCopy({
     },
     syncFailures: {
       stale_revision:
-        'A projekt egy másik eszközön megváltozott. Nézd át a szinkronizálási ütközést.',
+        'A projekt egy másik eszközön megváltozott. Szinkronizálás előtt állítsd vissza itt ezt az elemet.',
       quota_exceeded: 'Nincs elég tárhely a szerveren a helyreállítási másolatához.',
       forbidden: 'Ezt a projektet már nem módosíthatod a szerveren.',
     },

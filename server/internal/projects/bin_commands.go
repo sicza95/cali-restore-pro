@@ -54,9 +54,13 @@ func (a fileAccess) binExecute(ctx context.Context, project string, cmd binComma
 	if err := checkWriterProtocol(cmd.WriterProtocol); err != nil {
 		return outcome, err
 	}
+	actor, err := a.binManager(ctx, project)
+	if err != nil {
+		return outcome, err
+	}
 	var stored string
 	var saved []byte
-	err := a.tx.QueryRow(ctx, `SELECT digest,outcome FROM bin_receipts WHERE operation_id=$1`, cmd.OperationID).Scan(&stored, &saved)
+	err = a.tx.QueryRow(ctx, `SELECT digest,outcome FROM bin_receipts WHERE operation_id=$1 AND project_id=$2`, cmd.OperationID, project).Scan(&stored, &saved)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return outcome, err
 	}
@@ -64,10 +68,6 @@ func (a fileAccess) binExecute(ctx context.Context, project string, cmd binComma
 		if err == nil {
 			err = json.Unmarshal(saved, &outcome)
 		}
-		return outcome, err
-	}
-	actor, err := a.binManager(ctx, project)
-	if err != nil {
 		return outcome, err
 	}
 	now, err := a.now(ctx)

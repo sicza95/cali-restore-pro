@@ -1,4 +1,11 @@
-import { connect, projectTable, revisionQueueTable, revisionSyncTable, vaultTable } from './store';
+import {
+  binOutboxTable,
+  connect,
+  projectTable,
+  revisionQueueTable,
+  revisionSyncTable,
+  vaultTable,
+} from './store';
 import type { VaultRow } from './store';
 import { abortOnSignal, abortTransaction } from './transaction-abort';
 
@@ -25,7 +32,7 @@ export function revisionTransaction(
       signal.throwIfAborted();
       return await new Promise<T>((resolve, reject) => {
         const tx = db.transaction(
-          [vaultTable, projectTable, revisionQueueTable, revisionSyncTable],
+          [vaultTable, projectTable, revisionQueueTable, revisionSyncTable, binOutboxTable],
           mode,
           { durability: 'strict' },
         );

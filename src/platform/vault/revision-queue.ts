@@ -1,6 +1,6 @@
 import { importCode, newCode, open, seal } from './crypto';
 import type { Envelope } from './crypto';
-import { accountRange, projectTable } from './store';
+import { accountRange, binOutboxTable, projectTable } from './store';
 import { revisionBlockFor, revisionRemote, sealRevision } from '../projects/revisions';
 import type {
   RevisionBase,
@@ -95,6 +95,15 @@ export function revisionQueue(
             commit();
           };
         };
+        const checkBin = () => {
+          const pending = store.transaction
+            .objectStore(binOutboxTable)
+            .getKey(IDBKeyRange.bound(key, [...key, []]));
+          pending.onsuccess = () => {
+            if (pending.result === undefined) commitReviewed();
+            else result(false);
+          };
+        };
         if (next?.editor && !next.blocked) {
           const check = sync.get(key);
           check.onsuccess = () => {
@@ -105,10 +114,11 @@ export function revisionQueue(
               saved.epoch === base.epoch &&
               saved.localRevision === base.localRevision
             )
-              commitReviewed();
+              checkBin();
             else result(false);
           };
-        } else commit();
+        } else if (next && !next.blocked) checkBin();
+        else commit();
       };
     });
   }

@@ -6,11 +6,12 @@ import { upgradeProject } from '../projects';
 import { sealRevision, type RevisionKey } from '../revisions';
 import type { SavedProject } from '../types';
 import { binWriterProtocol } from './constants';
-import { canonical } from './digest';
 import { BinError, isBinError } from './errors';
 import {
   BinTransportError,
+  commandDigest,
   hostedRemote,
+  purgeHostedEntries,
   type HostedChunk,
   type HostedCommand,
   type HostedOutcome,
@@ -26,11 +27,6 @@ const hex = (bytes: ArrayBuffer) =>
 const base64 = (bytes: Uint8Array) =>
   btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(''));
 const sha256 = async (bytes: Bytes) => hex(await crypto.subtle.digest('SHA-256', bytes));
-
-/** Replay identity: the whole command except the digest itself, so a resealed head differs. */
-async function commandDigest(command: Omit<HostedCommand, 'digest'>) {
-  return sha256(new TextEncoder().encode(canonical({ ...command, digest: undefined })));
-}
 
 /**
  * Hosted Bin commands. A hosted child deletion is committed locally first and queued here; the
@@ -181,8 +177,14 @@ export function hostedBin(
   /** One pass over the outbox; true when something should be retried later. */
   async function dispatch(csrf: string) {
     let retry = false;
-    for (let row of await outbox().list()) {
+    const rows = await outbox().list();
+    const counts = new Map<string, number>();
+    for (const { projectId } of rows) counts.set(projectId, (counts.get(projectId) ?? 0) + 1);
+    for (let row of rows) {
       try {
+        // Older clients could queue multiple deletions in the same graph. A new head can
+        // carry just one deletion until the others have been undone on this device.
+        if (row.stage !== 'dispatched' && counts.get(row.projectId)! > 1) continue;
         const checkpoint = await ready(row.projectId);
         if (!checkpoint) continue;
         if (row.stage === 'conflict') {
@@ -215,9 +217,7 @@ export function hostedBin(
     if (entry.entity.kind === 'project' || !prep.text || !('next' in project))
       throw new BinError('forbidden');
     const checkpoint = await ready(projectId);
-    const held = (await outbox().list()).some(
-      (row) => row.projectId === projectId && row.stage !== 'conflict',
-    );
+    const held = (await outbox().list()).some((row) => row.projectId === projectId);
     // Other unsynchronised local changes would ride along in the head: sync them first.
     if (!checkpoint || held || project.expected !== checkpoint.localRevision)
       throw new BinError('pending_sync');
@@ -254,30 +254,19 @@ export function hostedBin(
     });
   }
 
-  /** Permanently deletes accepted hosted entries on the server; already-ended ones are fine. */
+  /** Permanently deletes accepted hosted entries on the server. */
   async function purge(projectId: string, entries: readonly BinEntry[], csrf: () => string) {
     const hosted = entries.filter((row) => row.scope === 'hosted' && !row.provisional);
     if (!hosted.length) return;
-    const command: Omit<HostedCommand, 'digest'> = {
-      operationId: crypto.randomUUID(),
-      writerProtocol: binWriterProtocol,
-      intent: 'purge',
-      deletionIds: hosted.map(({ deletionId }) => deletionId),
-      expectedVersions: Object.fromEntries(hosted.map((row) => [row.deletionId, row.version])),
-      head: null,
-      trash: null,
-    };
-    try {
-      await remote.execute(projectId, { ...command, digest: await commandDigest(command) }, csrf());
-    } catch (error) {
-      if (!isBinError(error) || !['not_retained', 'expired'].includes(error.code)) throw error;
-    }
+    await purgeHostedEntries(remote, projectId, hosted, csrf());
   }
 
   return {
     dispatch,
     restore,
     purge,
+    purgeRemote: (project: string, entry: { deletionId: string; version: number }, csrf: string) =>
+      purgeHostedEntries(remote, project, [entry], csrf),
     retryable: (error: unknown) => error instanceof BinTransportError,
   };
 }

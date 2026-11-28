@@ -212,14 +212,17 @@ it('opens catalog display data using the saved project key and the deletion iden
   ]);
 });
 
-it('marks a stale head as a conflict and lets ordinary sync raise the review', async () => {
-  await trashNorth(await hosted());
+it('holds ordinary sync on a stale head until the deletion is undone locally', async () => {
+  const { entry } = await trashNorth(await hosted());
   head = 5; // another device wrote meanwhile
   await bin().dispatch('csrf');
   expect((await entries())[0]!.pending).toMatchObject({
     stage: 'conflict',
     failure: 'stale_revision',
   });
+  await sync().stagePending();
+  expect(await vault.revisions().drafts()).toHaveLength(0);
+  await bin().restore(entry.deletionId);
   await sync().stagePending();
   expect(await vault.revisions().drafts()).toHaveLength(1);
 });
@@ -234,12 +237,38 @@ it('keeps the remote source live when the server refuses the deletion', async ()
   });
   // Blocked, but not stale: the deletion must not reach the server without its entry.
   expect(await bin().dispatch('csrf')).toBe(false);
+  await sync().stagePending();
+  const base = await checkpoint();
+  const queue = vault.revisions();
+  const changed = (await vault.projects().changed(base.project, base.localRevision))!;
+  const key = await queue.projectKey(base.project, base.epoch);
+  await expect(queue.stageEditor(base, changed.revision, key, changed.text)).rejects.toThrow();
+  await queue.retry('csrf');
   expect(revisions).toHaveLength(1);
   expect(commands).toHaveLength(1);
 });
 
-it('cancels a queued deletion on this device before anything is sent', async () => {
+it('keeps a second hosted child deletion out of the first recovery command', async () => {
+  await trashNorth(await hosted());
+  const after = await local();
+  const [object] = after.objects;
+  const target = {
+    kind: 'surface' as const,
+    objectId: object!.id,
+    surfaceId: object!.surfaces[0]!.id,
+  };
+  await expect(bin().trash(after, target)).rejects.toMatchObject({ code: 'pending_sync' });
+  expect(await local()).toEqual(after);
+  await bin().dispatch('csrf');
+  await bin().trash(after, target);
+  await bin().dispatch('csrf');
+  expect(commands).toHaveLength(2);
+  expect(commands[0]!.deletionIds).not.toEqual(commands[1]!.deletionIds);
+});
+
+it('cancels a queued deletion offline before anything is sent', async () => {
   const { entry, surface } = await trashNorth(await hosted());
+  vi.stubGlobal('navigator', { onLine: false });
   await bin().restore(entry.deletionId);
   expect(commands).toEqual([]);
   expect(await vault.binOutbox().list()).toEqual([]);
@@ -284,8 +313,13 @@ it('requires other local changes to sync before a hosted restore', async () => {
 it('permanently deletes an accepted entry on the server and then locally', async () => {
   const { entry } = await trashNorth(await hosted());
   await bin().dispatch('csrf');
-  await bin().purge([{ deletionId: entry.deletionId, version: 1 }]);
+  const target = [{ deletionId: entry.deletionId, version: 1 }];
+  fails = ['lost'];
+  await expect(bin().purge(target)).rejects.toThrow();
+  expect(await entries()).toHaveLength(1);
+  await bin().purge(target);
   expect(commands[1]).toMatchObject({ intent: 'purge', head: null });
+  expect(commands[2]).toEqual(commands[1]);
   expect(await entries()).toEqual([]);
 });
 

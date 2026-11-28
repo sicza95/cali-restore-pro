@@ -128,24 +128,27 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
     }
   }
   async function purge(row: BinRow) {
-    if (
-      !rows().some(
-        (current) =>
-          current.entry.deletionId === row.entry.deletionId &&
-          current.entry.version === row.entry.version &&
-          !current.purgeDenied,
-      )
-    ) {
+    const current = rows().find(
+      (current) =>
+        current.entry.deletionId === row.entry.deletionId &&
+        current.entry.version === row.entry.version &&
+        !current.entry.pending &&
+        !current.purgeDenied,
+    );
+    if (!current) {
       setError(copy().failures.stale_revision);
       return;
     }
     setBusy(row.entry.deletionId);
     setError(undefined);
     try {
-      const plan = await bin.purge([
-        { deletionId: row.entry.deletionId, version: row.entry.version },
-      ]);
-      if (plan.denied.length) throw new BinError(plan.denied[0]!.reason);
+      const { deletionId, version, entity } = current.entry;
+      const target = { deletionId, version };
+      if (current.remotePurge) await bin.purgeRemote(entity.projectId, target);
+      else {
+        const plan = await bin.purge([target]);
+        if (plan.denied.length) throw new BinError(plan.denied[0]!.reason);
+      }
       setPurging(undefined);
       setAnnouncement(copy().purged(row.name));
       await refetch();

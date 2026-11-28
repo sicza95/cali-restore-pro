@@ -128,6 +128,7 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	if err != nil || !again.RecoverUntil[d1].Equal(first.RecoverUntil[d1]) {
 		t.Fatalf("identical retry: %+v %v", again, err)
 	}
+	is(oneErr(run(memberSession, cmd)), errBinForbidden, "member replays an owner receipt")
 	altered := cmd
 	altered.Digest = digest([]byte("altered"))
 	is(oneErr(run(hostSession, altered)), errBinDigestMismatch, "altered reuse")

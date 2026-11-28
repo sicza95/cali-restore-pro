@@ -118,28 +118,35 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
       outbox?: BinOutboxRow,
     ) {
       return transact<void>('readwrite', (tx, finish, abort) => {
-        if (outbox)
-          tx.objectStore(binOutboxTable).put(outbox, key(outbox.projectId, outbox.operationId));
         const projects = tx.objectStore(projectTable);
-        get(projects, key(change.id), (value) => {
-          const current = value as ProjectRow | undefined;
-          if (current?.revision !== change.expected) return abort();
-          checkJournals(
-            tx,
-            journals,
-            () => {
-              if ('whole' in change) {
-                putRecovery(tx, { ...sealed, row: { ...sealed.row, projectRow: current } });
-                projects.delete(key(change.id));
-              } else {
-                putRecovery(tx, sealed);
-                projects.put(change.next, key(change.id));
-              }
-              finish(undefined);
-            },
-            abort,
-          );
-        });
+        const writeProject = () =>
+          get(projects, key(change.id), (value) => {
+            const current = value as ProjectRow | undefined;
+            if (current?.revision !== change.expected) return abort();
+            checkJournals(
+              tx,
+              journals,
+              () => {
+                if ('whole' in change) {
+                  putRecovery(tx, { ...sealed, row: { ...sealed.row, projectRow: current } });
+                  projects.delete(key(change.id));
+                } else {
+                  putRecovery(tx, sealed);
+                  projects.put(change.next, key(change.id));
+                }
+                finish(undefined);
+              },
+              abort,
+            );
+          });
+        if (!outbox) return writeProject();
+        const pending = tx.objectStore(binOutboxTable);
+        const existing = pending.getKey(IDBKeyRange.bound(key(change.id), key(change.id, [])));
+        existing.onsuccess = () => {
+          if (existing.result !== undefined) return abort();
+          pending.add(outbox, key(outbox.projectId, outbox.operationId));
+          writeProject();
+        };
       });
     },
 

@@ -94,6 +94,11 @@ export function localBin(
     const synced =
       target.kind !== 'project' &&
       (await vault.revisions().checkpoints()).some((row) => row.project === project.id);
+    if (
+      synced &&
+      (await vault.binOutbox().list()).some(({ projectId }) => projectId === project.id)
+    )
+      throw new BinError('pending_sync');
     const plan = planTrash(
       project,
       target,
@@ -151,10 +156,12 @@ export function localBin(
     else if (entry.pending?.stage === 'dispatched') throw new BinError('pending_sync');
     else if (entry.pending) {
       // Not accepted by the server: restoring cancels the queued trash on this device only.
+      if (prep.change.transitions.length !== 1) throw new BinError('pending_sync');
       const row = (await vault.binOutbox().list()).find(
         ({ operationId }) => operationId === entry.pending!.operationId,
       );
-      await store().finish({ ...prep.change, ...(row ? { cancel: row } : {}) });
+      if (!row) throw new BinError('stale_revision');
+      await store().finish({ ...prep.change, cancel: row });
     } else await hosted().restore(prep, options, token());
     return prep.plan;
   }
@@ -208,6 +215,8 @@ export function localBin(
     restore,
     /** Sends queued hosted commands; true when something should be retried later. */
     dispatch: (csrfToken: string) => hosted().dispatch(csrfToken),
+    purgeRemote: (project: string, entry: { deletionId: string; version: number }) =>
+      hosted().purgeRemote(project, entry, token()),
     async list() {
       return store().list();
     },

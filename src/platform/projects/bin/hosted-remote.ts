@@ -1,6 +1,8 @@
 import type { BinCatalog } from '../../api';
 import { assertID } from '../../vault/file-format';
 import type { RevisionHead, RevisionWrite } from '../revisions';
+import { binWriterProtocol } from './constants';
+import { canonical } from './digest';
 import { BinError } from './errors';
 import { binFailureCodes, type BinFailureCode } from './types';
 
@@ -43,6 +45,12 @@ export type HostedOutcome = {
 
 /** A sealed chunk as staged: the base64 body and the SHA-256 of its bytes. */
 export type HostedChunk = { sha256: string; body: string };
+
+export async function commandDigest(command: Omit<HostedCommand, 'digest'>) {
+  const bytes = new TextEncoder().encode(canonical(command));
+  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return Array.from(hash, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 
 /** Transport failure (offline, 5xx, rate limit): the request may be retried unchanged. */
 export class BinTransportError extends Error {
@@ -133,3 +141,26 @@ export function hostedRemote(signal: AbortSignal) {
 }
 
 export type HostedRemote = ReturnType<typeof hostedRemote>;
+
+export async function purgeHostedEntries(
+  remote: HostedRemote,
+  project: string,
+  entries: readonly { deletionId: string; version: number }[],
+  csrf: string,
+) {
+  const command = {
+    writerProtocol: binWriterProtocol,
+    intent: 'purge',
+    deletionIds: entries.map(({ deletionId }) => deletionId).sort(),
+    expectedVersions: Object.fromEntries(
+      entries.map(({ deletionId, version }) => [deletionId, version]),
+    ),
+    head: null,
+    trash: null,
+  } satisfies Omit<HostedCommand, 'digest' | 'operationId'>;
+  // A purge of the same event versions retries the same operation even after a reload.
+  const hash = await commandDigest({ ...command, operationId: project });
+  const operationId = `${hash.slice(0, 8)}-${hash.slice(8, 12)}-8${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+  const payload = { ...command, operationId };
+  return remote.execute(project, { ...payload, digest: await commandDigest(payload) }, csrf);
+}

@@ -41,7 +41,13 @@ export async function prepareRestore(
   const found = catalog.find((row) => row.deletionId === deletionId);
   if (!found) throw new Error('Bin entry not found');
   // The caller decides what the entry's own pending command means (cancel, wait or replay).
-  const entry = { ...found, pending: null };
+  const cancelsLocalTrash =
+    found.provisional && found.pending?.intent === 'trash' && found.pending.stage !== 'dispatched';
+  const entry: BinEntry = {
+    ...found,
+    scope: cancelsLocalTrash ? 'local' : found.scope,
+    pending: null,
+  };
   const projectId = entry.entity.projectId;
   const siblings = catalog
     .filter((row) => row.entity.projectId === projectId && row.state === 'retained')

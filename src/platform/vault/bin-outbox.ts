@@ -4,11 +4,17 @@ import type { BinFailureCode, BinLifecycleIntent, BinPendingStage } from '../pro
 import type { BinEntryRow } from './bin-store';
 import { binTransaction, getThen } from './bin-transaction';
 import type { SyncCheckpoint } from './revision-queue';
-import { accountRange, binEntryTable, binOutboxTable, revisionSyncTable } from './store';
+import {
+  accountRange,
+  binEntryTable,
+  binOutboxTable,
+  revisionQueueTable,
+  revisionSyncTable,
+} from './store';
 
 /**
  * A hosted lifecycle command waiting for, or sent to, the server. The local change is already
- * committed; while a row is queued or dispatched, ordinary sync of that project waits, so the
+ * committed for trash; while a row remains in the outbox, ordinary sync waits, so the
  * graph change reaches the server only together with its Bin entry.
  */
 export type BinOutboxRow = {
@@ -142,12 +148,17 @@ export function binOutbox(account: string, stamp: string, signal: AbortSignal) {
     add: (row: BinOutboxRow) =>
       transact<void>('readwrite', (tx, finish, abort) => {
         const outbox = tx.objectStore(binOutboxTable);
-        getThen(outbox, rowKey(row), (value) => {
-          if (value) return abort();
-          outbox.put(row, rowKey(row));
-          mirror(tx, row, abort);
-          finish(undefined);
-        });
+        const project = key(row.projectId);
+        const pending = outbox.getKey(IDBKeyRange.bound(project, [...project, []]));
+        pending.onsuccess = () => {
+          if (pending.result !== undefined) return abort();
+          getThen(tx.objectStore(revisionQueueTable), project, (draft) => {
+            if (draft) return abort();
+            outbox.add(row, rowKey(row));
+            mirror(tx, row, abort);
+            finish(undefined);
+          });
+        };
       }),
     /** Ends a hosted trash that no longer applies; the entry stays as a local recovery copy. */
     release: (row: BinOutboxRow) => end(row, { scope: 'local', provisional: false, pending: null }),

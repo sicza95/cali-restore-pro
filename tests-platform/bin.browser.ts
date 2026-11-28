@@ -21,6 +21,7 @@ async function signedIn(page: Page) {
     route.fulfill({
       json: {
         account: { id: account, email: 'restorer@example.test', state: 'active', role: 'member' },
+        csrfToken: 'synthetic-csrf',
       },
     }),
   );
@@ -45,6 +46,7 @@ const row = (page: Page, name: string) => rows(page).filter({ hasText: name });
 
 test('deleted work moves to the Bin and comes back with its contents', async ({ page }, info) => {
   test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1194, height: 834 });
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await signedIn(page);
@@ -185,6 +187,18 @@ test('the hosted Bin loads every catalog page and reports an incomplete refresh'
   );
   child.display = { salt, ciphertext };
   let unavailable = false;
+  let purged = false;
+  await page.route(`**/api/v1/hosted-projects/${projectId}/bin/operations`, (route) => {
+    expect(route.request().headers()['x-csrf-token']).toBe('synthetic-csrf');
+    expect(route.request().postDataJSON()).toMatchObject({
+      intent: 'purge',
+      deletionIds: [child.deletionId],
+      expectedVersions: { [child.deletionId]: child.version },
+      head: null,
+    });
+    purged = true;
+    return route.fulfill({ json: { versions: { [child.deletionId]: 2 }, head: null } });
+  });
   await page.route(
     (url) => url.pathname === `/api/v1/organisations/${personal}/bin`,
     (route) => {
@@ -193,7 +207,7 @@ test('the hosted Bin loads every catalog page and reports an incomplete refresh'
       return route.fulfill({
         json:
           next === cursor
-            ? { entries: [child], next: null, asOf }
+            ? { entries: purged ? [] : [child], next: null, asOf }
             : { entries: [project], next: cursor, asOf },
       });
     },
@@ -207,10 +221,12 @@ test('the hosted Bin loads every catalog page and reports an incomplete refresh'
     'title',
     'Server hosting is not available for this project.',
   );
-  await expect(control(row(page, 'Altar'), 'bin.purge')).toBeDisabled();
+  await expect(control(row(page, 'Altar'), 'bin.purge')).toBeEnabled();
+  await expect(control(row(page, 'Altar'), 'bin.restore')).toBeDisabled();
   await page.screenshot({ path: info.outputPath('hosted-bin-1194.png') });
-  await page.setViewportSize({ width: 834, height: 1194 });
   await page.emulateMedia({ colorScheme: 'dark' });
+  await page.screenshot({ path: info.outputPath('hosted-bin-dark-1194.png') });
+  await page.setViewportSize({ width: 834, height: 1194 });
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 834);
   await page.screenshot({ path: info.outputPath('hosted-bin-834.png') });
   await control(row(page, 'Deleted project'), 'bin.info').click();
@@ -229,4 +245,9 @@ test('the hosted Bin loads every catalog page and reports an incomplete refresh'
   await chooseLanguage(page, 'hu');
   await expect(row(page, 'Altar')).toContainText('Objektum · Chapel');
   await page.screenshot({ path: info.outputPath('hosted-bin-hu-834.png') });
+  await control(row(page, 'Altar'), 'bin.purge').click();
+  await control(page.getByRole('dialog'), 'bin.purge.confirm').click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(row(page, 'Altar')).toHaveCount(0);
+  await expect(rows(page)).toHaveCount(1);
 });
