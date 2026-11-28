@@ -108,7 +108,7 @@ func (a fileAccess) binCatalog(ctx context.Context, organisation string, before 
   e.coverage_legacy,e.source_revision,e.logical_bytes,e.chunk_count,e.display_salt,e.display_ciphertext,false AS legacy
  FROM bin_entries e JOIN managed m ON m.id=e.project_id WHERE e.state='retained'
  UNION ALL
- SELECT d.id::text,d.id::text,'project',d.id::text,NULL,'retained',1,d.deleted_at,NULL,d.recover_until,0,'',$5::text[],true,0,0,0,NULL,NULL,true
+ SELECT d.id::text,d.id::text,'project',d.id::text,NULL,'retained',`+legacyVersion+`,d.deleted_at,NULL,d.recover_until,0,'',$5::text[],true,0,0,0,NULL,NULL,true
  FROM project_deletions d JOIN managed m ON m.id=d.id
  WHERE d.purged_at IS NULL AND NOT EXISTS (SELECT 1 FROM bin_entries e WHERE e.project_id=d.id AND e.entity_kind='project' AND e.state='retained')
 )

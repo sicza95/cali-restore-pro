@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
-// Invitations and the two-device Bin test use distinct accounts so their local vaults cannot
+// Invitations and the two-device Bin tests use distinct accounts so their local vaults cannot
 // compete for one server sharing identity. Tokens live only in the Playwright processes.
 // The specs leave hosted projects behind, so each run needs a fresh stack.
 const accounts = [
@@ -9,6 +9,7 @@ const accounts = [
   ['M06_RECIPIENT_SESSION', 'recipient@example.test', true, 1],
   ['M06_REMAINING_SESSION', 'remaining@example.test', false, 0],
   ['M06_BIN_SESSION', 'bin-owner@example.test', true, 1],
+  ['M06_BIN_RECOVERY_SESSION', 'bin-recovery@example.test', true, 1],
 ] as const;
 
 /** Seeds the M06 sessions on a disposable development Compose project (`IDENTITY_SMOKE_DISPOSABLE=1`). */

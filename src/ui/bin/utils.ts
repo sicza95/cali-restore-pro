@@ -27,6 +27,8 @@ export type BinRow = {
   purgeDenied?: BinFailureCode | 'device_copy_required';
   remotePurge?: true;
   remoteRestore?: true;
+  /** A whole project deleted before the Bin: restored on the server, no recovery bundle. */
+  legacyProject?: true;
   state: BinAvailability;
   /** Whole days left, rounded up; zero once expired. */
   days: number;
@@ -77,6 +79,7 @@ export function mergeHostedRows(
     const reason = (action: 'restore' | 'purge') => {
       const capability = remote.capabilities[action];
       if (!capability.allowed) return capability.reason ?? 'forbidden';
+      if (remote.legacy) return undefined;
       if (action === 'restore' && remote.entityKind !== 'project' && !remote.legacy)
         return undefined;
       if (matching || (action === 'purge' && remote.entityKind !== 'project' && !remote.legacy))
@@ -101,9 +104,10 @@ export function mergeHostedRows(
       limitedRecovery: remote.coverageLegacy || remote.coverageMissing.length > 0,
       restoreDenied: reason('restore'),
       remoteRestore: remote.entityKind !== 'project' && !remote.legacy ? true : undefined,
+      legacyProject: remote.legacy ? true : undefined,
       purgeDenied: reason('purge'),
       remotePurge:
-        !matching && remote.entityKind !== 'project' && !remote.legacy ? true : undefined,
+        remote.legacy || (!matching && remote.entityKind !== 'project') ? true : undefined,
       state: now >= recoverUntil ? 'expired' : 'recoverable',
       days: Math.max(0, Math.ceil((recoverUntil - now) / day)),
     });

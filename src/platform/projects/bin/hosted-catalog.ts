@@ -31,8 +31,18 @@ export async function readHostedCatalog(
     }
     return key;
   }
-  async function displayFor(row: BinCatalogEntry) {
-    if (!row.display || !row.capabilities.read.allowed) return;
+  async function displayFor(row: BinCatalogEntry): Promise<BinDisplay | undefined> {
+    if (!row.capabilities.read.allowed) return;
+    // A project deleted before the Bin has no sealed display; this device may still hold it.
+    if (row.legacy) {
+      const name = await vault
+        .projects()
+        .changed(row.projectId, 0)
+        .then((saved) => saved && (JSON.parse(saved.text) as { name?: unknown }).name)
+        .catch(() => undefined);
+      return typeof name === 'string' ? { name, path: [] } : undefined;
+    }
+    if (!row.display) return;
     const root = await (plaintextKey ?? projectKey(row.projectId));
     if (!root) return;
     try {

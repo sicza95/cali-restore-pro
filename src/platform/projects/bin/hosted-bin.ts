@@ -12,7 +12,7 @@ import {
   BinTransportError,
   commandDigest,
   hostedRemote,
-  purgeHostedEntries,
+  finishHostedEntries,
   type HostedChunk,
   type HostedCommand,
   type HostedOutcome,
@@ -276,7 +276,7 @@ export function hostedBin(
   async function purge(projectId: string, entries: readonly BinEntry[], csrf: () => string) {
     const hosted = entries.filter((row) => row.scope === 'hosted' && !row.provisional);
     if (!hosted.length) return;
-    await purgeHostedEntries(remote, projectId, hosted, csrf());
+    await finishHostedEntries(remote, projectId, hosted, csrf());
   }
 
   return {
@@ -284,7 +284,10 @@ export function hostedBin(
     restore,
     purge,
     purgeRemote: (project: string, entry: { deletionId: string; version: number }, csrf: string) =>
-      purgeHostedEntries(remote, project, [entry], csrf),
+      finishHostedEntries(remote, project, [entry], csrf),
+    /** Restores a whole project deleted before the Bin; its hosted head never left the server. */
+    restoreLegacyProject: (project: string, version: number, csrf: string) =>
+      finishHostedEntries(remote, project, [{ deletionId: project, version }], csrf, 'restore'),
     retryable: (error: unknown) => error instanceof BinTransportError,
   };
 }

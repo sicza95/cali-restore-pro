@@ -228,6 +228,8 @@ export function localBin(
     dispatch: (csrfToken: string) => hosted().dispatch(csrfToken),
     purgeRemote: (project: string, entry: { deletionId: string; version: number }) =>
       hosted().purgeRemote(project, entry, token()),
+    restoreLegacyProject: (project: string, version: number) =>
+      hosted().restoreLegacyProject(project, version, token()),
     async list() {
       return store().list();
     },

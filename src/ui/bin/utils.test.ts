@@ -1,6 +1,8 @@
 import { expect, it } from 'vitest';
 import type { BinEntry } from '../../platform/projects/bin/types';
-import { binRows, forOrganisation, visibleRows } from './utils';
+import type { HostedCatalogItem } from '../../platform/projects/bin/hosted-catalog';
+import { binCopy } from './bin-copy';
+import { binRows, forOrganisation, mergeHostedRows, visibleRows } from './utils';
 
 const day = 24 * 60 * 60 * 1000;
 const entry = (id: string, organisationId: string | null, deletedAt: number): BinEntry => ({
@@ -53,4 +55,37 @@ it('derives deadlines, filters by organisation and orders without dropping rows'
     'Gamma',
   ]);
   expect(visibleRows(rows, 'chap', 'name', 'en').map(({ name }) => name)).toEqual(['Beta']);
+});
+
+it('offers restore and permanent delete for a whole project deleted before the Bin', () => {
+  const allowed = { allowed: true };
+  const legacy = {
+    remote: {
+      deletionId: 'p',
+      projectId: 'p',
+      entityKind: 'project',
+      entityId: 'p',
+      objectId: null,
+      state: 'retained',
+      version: 3,
+      deletedAt: new Date(0).toISOString(),
+      recoverUntil: new Date(30 * day).toISOString(),
+      manifestSchema: 0,
+      coverageMissing: ['journals'],
+      coverageLegacy: true,
+      legacy: true,
+      capabilities: { read: allowed, restore: allowed, purge: allowed },
+    },
+  } as unknown as HostedCatalogItem;
+  const [row] = mergeHostedRows([], [legacy], binCopy.en, day);
+  expect(row).toMatchObject({
+    entry: { deletionId: 'p', version: 3, entity: { kind: 'project' } },
+    name: binCopy.en.unnamed.project,
+    legacyProject: true,
+    remotePurge: true,
+    limitedRecovery: true,
+  });
+  expect(row!.restoreDenied).toBeUndefined();
+  expect(row!.purgeDenied).toBeUndefined();
+  expect(row!.remoteRestore).toBeUndefined();
 });

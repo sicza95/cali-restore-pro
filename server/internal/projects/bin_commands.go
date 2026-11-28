@@ -175,6 +175,8 @@ func (a fileAccess) binTrash(ctx context.Context, project string, cmd binCommand
 type binRow struct {
 	id, kind, entity string
 	facts            binEntryFacts
+	// legacy marks a pre-Bin project deletion that has no bin_entries row.
+	legacy bool
 }
 
 // binFinish restores or purges entries of one project at their expected versions.
@@ -191,7 +193,7 @@ func (a fileAccess) binFinish(ctx context.Context, project string, cmd binComman
 	if cmd.ExpectedVersions == nil {
 		cmd.ExpectedVersions = map[string]int64{}
 	}
-	rows, err := a.lockBinEntries(ctx, project, ids)
+	rows, err := a.lockFinishRows(ctx, project, ids)
 	if err != nil {
 		return err
 	}
@@ -234,11 +236,17 @@ func (a fileAccess) binFinish(ctx context.Context, project string, cmd binComman
 				reason = "project_purged"
 			}
 		}
-		if _, err := a.tx.Exec(ctx, `UPDATE bin_entries SET state=$2,version=$3,purge_reason=$4 WHERE deletion_id=$1`, row.id, next.state, next.version, reason); err != nil {
-			return err
+		if !row.legacy {
+			if _, err := a.tx.Exec(ctx, `UPDATE bin_entries SET state=$2,version=$3,purge_reason=$4 WHERE deletion_id=$1`, row.id, next.state, next.version, reason); err != nil {
+				return err
+			}
 		}
-		if _, err := a.tx.Exec(ctx, `INSERT INTO bin_fences(project_id,entity_id,deletion_id,state,version,digest) VALUES($1,$2,$3,$4,$5,$6)`,
-			project, row.entity, row.id, next.state, next.version, cmd.Digest); err != nil {
+		fence := `INSERT INTO bin_fences(project_id,entity_id,deletion_id,state,version,digest) VALUES($1,$2,$3,$4,$5,$6)`
+		if row.legacy {
+			// Legacy deletions of one project share the project ID; the fence keeps the latest.
+			fence += ` ON CONFLICT (project_id,entity_id,deletion_id) DO UPDATE SET state=excluded.state,version=excluded.version,digest=excluded.digest,created_at=clock_timestamp()`
+		}
+		if _, err := a.tx.Exec(ctx, fence, project, row.entity, row.id, next.state, next.version, cmd.Digest); err != nil {
 			return err
 		}
 		if _, err := a.tx.Exec(ctx, `DELETE FROM bin_chunks WHERE deletion_id=$1`, row.id); err != nil {

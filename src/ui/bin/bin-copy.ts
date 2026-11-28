@@ -70,6 +70,7 @@ const en = {
       : `${count} more items of this project in the Bin are removed with them.`,
   cannotUndo: 'This cannot be undone.',
   restored: (name: string) => `Restored “${name}”.`,
+  restoredWithParent: (name: string) => `Restored “${name}” and the deleted object it belongs to.`,
   purged: (name: string) => `Permanently deleted “${name}”.`,
   failures: {
     forbidden: 'You cannot manage this item.',
@@ -164,6 +165,7 @@ export const binCopy = defineCopy({
       `A projekt további ${count} lomtárbeli eleme is törlődik vele.`,
     cannotUndo: 'Ez nem vonható vissza.',
     restored: (name: string) => `Visszaállítva: „${name}”.`,
+    restoredWithParent: (name: string) => `Visszaállítva: „${name}”, a törölt objektumával együtt.`,
     purged: (name: string) => `Véglegesen törölve: „${name}”.`,
     failures: {
       forbidden: 'Ezt az elemet nem kezelheted.',

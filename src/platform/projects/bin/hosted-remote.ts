@@ -149,15 +149,20 @@ export function hostedRemote(signal: AbortSignal) {
 
 export type HostedRemote = ReturnType<typeof hostedRemote>;
 
-export async function purgeHostedEntries(
+/**
+ * A restore or purge that carries no graph head: hosted entries purged without a device copy,
+ * and whole projects deleted before the Bin, whose hosted head stayed in place.
+ */
+export async function finishHostedEntries(
   remote: HostedRemote,
   project: string,
   entries: readonly { deletionId: string; version: number }[],
   csrf: string,
+  intent: 'restore' | 'purge' = 'purge',
 ) {
   const command = {
     writerProtocol: binWriterProtocol,
-    intent: 'purge',
+    intent,
     deletionIds: entries.map(({ deletionId }) => deletionId).sort(),
     expectedVersions: Object.fromEntries(
       entries.map(({ deletionId, version }) => [deletionId, version]),
@@ -165,7 +170,7 @@ export async function purgeHostedEntries(
     head: null,
     trash: null,
   } satisfies Omit<HostedCommand, 'digest' | 'operationId'>;
-  // A purge of the same event versions retries the same operation even after a reload.
+  // The same command for the same event versions retries one operation even after a reload.
   const hash = await commandDigest({ ...command, operationId: project });
   const operationId = `${hash.slice(0, 8)}-${hash.slice(8, 12)}-8${hash.slice(13, 16)}-8${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
   const payload = { ...command, operationId };

@@ -69,12 +69,18 @@ export async function prepareHostedRestore(
 
   const text = await openRevision(projectId, head, key);
   const graph = validateProject(JSON.parse(text) as Project, projectId);
+  const targets = [{ detail, entity }];
   if (entity.kind === 'surface' && !graph.objects.some(({ id }) => id === entity.objectId))
-    throw new BinError('missing_parent', { objectId: entity.objectId });
+    targets.unshift(await hostedAncestor(remote, organisationId, projectId, entity.objectId));
 
-  const sealed = await downloadRecovery(remote, store, key.key, detail, entity, organisationId);
-  await downloadBinAssets(vault, projectId, sealed.pins);
-  await store.retain(sealed);
+  // Verify every payload of the dependency group before caching any of them.
+  const sealed = [];
+  for (const target of targets)
+    sealed.push(
+      await downloadRecovery(remote, store, key.key, target.detail, target.entity, organisationId),
+    );
+  for (const row of sealed) await downloadBinAssets(vault, projectId, row.pins);
+  for (const row of sealed) await store.retain(row);
   if (!checkpoint) {
     if (!(await queue.acceptKey(projectId, head, plaintextCode, text)))
       throw new BinError('stale_revision');
@@ -83,6 +89,27 @@ export async function prepareHostedRestore(
     const next = await store.sealProject(projectId, checkpoint.localRevision + 1, text);
     await vault.binOutbox().refreshProject(checkpoint, next, head);
   }
+}
+
+/** The retained hosted object a surface restore needs; it returns in the same command. */
+async function hostedAncestor(
+  remote: ReturnType<typeof hostedRemote>,
+  organisationId: string,
+  projectId: string,
+  objectId: string,
+) {
+  const row = (await remote.catalog(organisationId)).find(
+    (row) =>
+      row.projectId === projectId &&
+      row.state === 'retained' &&
+      row.entityKind === 'object' &&
+      row.entityId === objectId &&
+      !row.legacy,
+  );
+  if (!row) throw new BinError('missing_parent', { objectId });
+  const detail = await remote.detail(row.deletionId);
+  const target = { deletionId: row.deletionId, version: row.version };
+  return { detail, entity: checkDetail(detail, projectId, target) };
 }
 
 async function downloadRecovery(

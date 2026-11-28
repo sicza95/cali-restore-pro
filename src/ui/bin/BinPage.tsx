@@ -119,10 +119,18 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
     setError(undefined);
     try {
       const { deletionId, version, entity } = row.entry;
-      if (row.remoteRestore)
-        await bin.restoreRemote(props.organisation, entity.projectId, { deletionId, version });
-      else await bin.restore(deletionId);
-      setAnnouncement(copy().restored(row.name));
+      if (row.legacyProject) {
+        await bin.restoreLegacyProject(entity.projectId, version);
+        setAnnouncement(copy().restored(row.name));
+      } else {
+        const plan = row.remoteRestore
+          ? await bin.restoreRemote(props.organisation, entity.projectId, { deletionId, version })
+          : await bin.restore(deletionId);
+        // A surface whose object was also in the Bin brings that object back with it.
+        setAnnouncement(
+          plan.group.length > 1 ? copy().restoredWithParent(row.name) : copy().restored(row.name),
+        );
+      }
       await refetch();
     } catch (failure) {
       setError(failureText(copy(), failure));
