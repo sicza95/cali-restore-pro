@@ -15,6 +15,8 @@ export const syncCopy = defineCopy({
     noHead: 'There is no cloud copy.',
     archived: 'Archived',
     keepLocal: 'Publish this device’s copy',
+    binChanged:
+      'This device’s copy is older than a change made in the Bin. Use the cloud copy to continue syncing.',
     keepCloud: 'Use the cloud copy',
   },
   hu: {
@@ -33,6 +35,8 @@ export const syncCopy = defineCopy({
     noHead: 'Nincs felhőmásolat.',
     archived: 'Archiválva',
     keepLocal: 'Az eszközön lévő másolat közzététele',
+    binChanged:
+      'Az eszközön lévő másolat régebbi, mint a Kukában végzett módosítás. A szinkronizálás folytatásához használd a felhőmásolatot.',
     keepCloud: 'Felhőmásolat használata',
   },
 });

@@ -111,6 +111,14 @@ func TestPostgresBinLifecycle(t *testing.T) {
 			t.Fatalf("%s: got %v, want %v", what, err, want)
 		}
 	}
+	ordinary := func(expected int, source *int) error {
+		next := head(expected)
+		next.SourceRevision = source
+		return s.withFiles(ctx, hostSession, func(a fileAccess) error {
+			_, err := a.projectRevision(ctx, project, next)
+			return err
+		})
+	}
 	object := uuid(70)
 
 	// Trash a surface: staged chunk, graph head and entry commit together.
@@ -125,6 +133,9 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	if err != nil || first.Versions[d1] != 1 || first.Head == nil || first.Head.Revision != 1 {
 		t.Fatalf("trash: %+v %v", first, err)
 	}
+	beforeTrash := 0
+	is(ordinary(1, nil), errBinProtocolOutdated, "legacy writer after trash")
+	is(ordinary(1, &beforeTrash), errRevisionBinFloor, "rebased snapshot from before trash")
 	again, err := run(hostSession, cmd)
 	if err != nil || !again.RecoverUntil[d1].Equal(first.RecoverUntil[d1]) {
 		t.Fatalf("identical retry: %+v %v", again, err)
@@ -182,6 +193,8 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	if err != nil || restored.Versions[d1] != 2 || restored.Head.Revision != 2 {
 		t.Fatalf("restore: %+v %v", restored, err)
 	}
+	beforeRestore := 1
+	is(ordinary(2, &beforeRestore), errRevisionBinFloor, "rebased snapshot from before restore")
 	is(oneErr(run(hostSession, finish(uuid(109), "purge", nil, map[string]int64{d1: 2}))), errBinNotRetained, "terminal")
 	is(s.withFiles(ctx, hostSession, func(a fileAccess) error {
 		_, err := a.binDetail(ctx, d1)
@@ -209,6 +222,10 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	wg.Wait()
 	if (results[0] == nil) == (results[1] == nil) {
 		t.Fatalf("race outcomes: %v", results)
+	}
+	if results[1] == nil {
+		beforePurge := 2
+		is(ordinary(3, &beforePurge), errRevisionBinFloor, "rebased snapshot after purge")
 	}
 
 	// Trash a child, then the whole project; the project purge cascades to the child.
@@ -246,6 +263,8 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	if err := tx.Commit(ctx); err != nil {
 		t.Fatal(err)
 	}
+	beforeExpiry := revision - 1
+	is(ordinary(revision, &beforeExpiry), errRevisionBinFloor, "rebased snapshot after expiry")
 	var state, reason string
 	var leftovers int
 	if err := admin.QueryRow(ctx, `SELECT state,purge_reason,(SELECT count(*) FROM bin_chunks WHERE deletion_id IN ($1,$2))

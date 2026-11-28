@@ -131,9 +131,13 @@ export function revisionQueue(
     reviewed?: string,
     editor?: EditorWrite,
     reviewedLocal?: ReviewLocal,
+    sourceRevision?: number,
   ) {
     const id = crypto.randomUUID();
     const write = await sealRevision(project, state, key, text);
+    write.sourceRevision =
+      sourceRevision ??
+      (editor && !reviewedLocal?.next ? editor.checkpoint.revision : write.expected);
     const local = await seal(root, account, `sync:draft:${project}:${id}`, text);
     if (
       !(await replace(
@@ -317,6 +321,8 @@ export function revisionQueue(
       expected: number,
       replaceLocal: boolean,
     ) {
+      if (!replaceLocal && base.revision < (review.state.binRevisionFloor ?? 0))
+        throw new Error('The device copy predates a Bin change');
       const revision = expected + Number(replaceLocal);
       const next = replaceLocal
         ? {
@@ -358,13 +364,26 @@ export function revisionQueue(
       signal.throwIfAborted();
       return { id, blocked, text };
     },
-    resolve: (
+    async resolve(
       project: string,
       reviewed: string,
       state: RevisionState,
       key: RevisionKey,
       text: string,
-    ) => stage(project, state, key, text, reviewed),
+    ) {
+      const draft = (await rows()).find((row) => row.project === project && row.id === reviewed);
+      if (!draft?.blocked) throw new Error('A queued edit changed; reload it before replacing it');
+      return stage(
+        project,
+        state,
+        key,
+        text,
+        reviewed,
+        undefined,
+        undefined,
+        draft.write.sourceRevision ?? 0,
+      );
+    },
     discard: (project: string, reviewed: string) => replace(project, reviewed, undefined, true),
     retry,
   };

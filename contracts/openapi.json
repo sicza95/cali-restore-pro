@@ -6090,7 +6090,7 @@
             }
           },
           "409": {
-            "description": "Revision or epoch changed, rotation is pending, or hosting quota was exceeded",
+            "description": "Revision, epoch or Bin state changed, the writer protocol is outdated, rotation is pending, or hosting quota was exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -10694,11 +10694,16 @@
       "ProjectRevisionState": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["epoch", "head"],
+        "required": ["epoch", "head", "binRevisionFloor"],
         "properties": {
           "epoch": {
             "type": "string",
             "format": "uuid"
+          },
+          "binRevisionFloor": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Oldest source revision allowed for an ordinary write following a Bin graph change."
           },
           "head": {
             "anyOf": [
@@ -10721,6 +10726,12 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 2147483646
+          },
+          "sourceRevision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483646,
+            "description": "Head the graph was based on before conflict review. Required for ordinary writes after a Bin graph change and at most expected."
           },
           "epoch": {
             "type": "string",

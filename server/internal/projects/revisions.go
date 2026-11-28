@@ -14,6 +14,7 @@ import (
 var (
 	errRevisionConflict = errors.New("project revision conflict")
 	errRevisionEpoch    = errors.New("project revision epoch changed")
+	errRevisionBinFloor = errors.New("project revision predates a Bin change")
 )
 
 type revisionCiphertext struct {
@@ -28,29 +29,33 @@ type revisionHead struct {
 }
 
 type revisionState struct {
-	Epoch string        `json:"epoch"`
-	Head  *revisionHead `json:"head"`
+	Epoch            string        `json:"epoch"`
+	Head             *revisionHead `json:"head"`
+	BinRevisionFloor int           `json:"binRevisionFloor"`
 }
 
 type revisionWrite struct {
 	revisionCiphertext
 	Expected *int   `json:"expected"`
 	Epoch    string `json:"epoch"`
+	// SourceRevision is the head the submitted graph was based on before any conflict review.
+	SourceRevision *int `json:"sourceRevision,omitempty"`
 }
 
 func (a fileAccess) projectRevision(ctx context.Context, project string, next *revisionWrite) (revisionState, error) {
 	if err := a.requireProjectOwner(ctx, project); err != nil {
 		return revisionState{}, err
 	}
-	return a.revisionHead(ctx, project, next)
+	return a.revisionHead(ctx, project, next, false)
 }
 
 // revisionHead reads, and with next compare-and-sets, the project head. Callers authorize first:
 // ordinary sync requires an owner, Bin commands use the purpose-scoped Bin authorizer.
-func (a fileAccess) revisionHead(ctx context.Context, project string, next *revisionWrite) (revisionState, error) {
+func (a fileAccess) revisionHead(ctx context.Context, project string, next *revisionWrite, binChange bool) (revisionState, error) {
 	var state revisionState
 	var host *string
-	if err := a.tx.QueryRow(ctx, `SELECT sync_epoch::text,host_id::text FROM hosted_projects WHERE id=$1`, project).Scan(&state.Epoch, &host); err != nil {
+	if err := a.tx.QueryRow(ctx, `SELECT sync_epoch::text,host_id::text,bin_revision_floor FROM hosted_projects WHERE id=$1`, project).
+		Scan(&state.Epoch, &host, &state.BinRevisionFloor); err != nil {
 		return state, err
 	}
 	var head revisionHead
@@ -69,6 +74,14 @@ func (a fileAccess) revisionHead(ctx context.Context, project string, next *revi
 	}
 	if next.Epoch != state.Epoch {
 		return state, errRevisionEpoch
+	}
+	if !binChange && state.BinRevisionFloor > 0 {
+		if next.SourceRevision == nil {
+			return state, errBinProtocolOutdated
+		}
+		if *next.SourceRevision < state.BinRevisionFloor {
+			return state, errRevisionBinFloor
+		}
 	}
 	if err := a.checkOriginalPublication(ctx, project, ""); err != nil {
 		return state, err
@@ -89,7 +102,7 @@ func (a fileAccess) revisionHead(ctx context.Context, project string, next *revi
 	if head.Revision != expected {
 		// A lost response can replay the identical sealed request. Only the
 		// current head can acknowledge a replay, and only in its current epoch.
-		if head.Revision == expected+1 && head.Epoch == next.Epoch &&
+		if !binChange && head.Revision == expected+1 && head.Epoch == next.Epoch &&
 			bytes.Equal(head.Salt, next.Salt) && bytes.Equal(head.Ciphertext, next.Ciphertext) {
 			return state, nil
 		}
@@ -109,6 +122,10 @@ func (a fileAccess) revisionHead(ctx context.Context, project string, next *revi
  SET revision=excluded.revision,epoch=excluded.epoch,salt=excluded.salt,ciphertext=excluded.ciphertext`,
 		project, expected+1, next.Epoch, next.Salt, next.Ciphertext)
 	state.Head = &revisionHead{revisionCiphertext: next.revisionCiphertext, Revision: expected + 1, Epoch: next.Epoch}
+	if err == nil && binChange {
+		state.BinRevisionFloor = state.Head.Revision
+		_, err = a.tx.Exec(ctx, `UPDATE hosted_projects SET bin_revision_floor=$2 WHERE id=$1`, project, state.BinRevisionFloor)
+	}
 	return state, err
 }
 
@@ -127,6 +144,7 @@ func (h *HTTP) revisionRoutes(route func(string, bool, http.HandlerFunc)) {
 				return
 			}
 			if next.Expected == nil || *next.Expected < 0 || *next.Expected >= 2147483647 ||
+				next.SourceRevision != nil && (*next.SourceRevision < 0 || *next.SourceRevision > *next.Expected) ||
 				!httpjson.UUID(next.Epoch) || len(next.Salt) != 32 || len(next.Ciphertext) < 16 || len(next.Ciphertext) > 65552 {
 				identity.Failure(w, identity.ErrInvalid)
 				return
@@ -146,6 +164,10 @@ func (h *HTTP) revisionRoutes(route func(string, bool, http.HandlerFunc)) {
 			httpjson.Respond(w, 409, map[string]string{"error": "revision_conflict"})
 		case errors.Is(err, errRevisionEpoch):
 			httpjson.Respond(w, 409, map[string]string{"error": "revision_epoch_changed"})
+		case errors.Is(err, errRevisionBinFloor):
+			httpjson.Respond(w, 409, map[string]string{"error": "revision_bin_changed"})
+		case errors.Is(err, errBinProtocolOutdated):
+			binFailure(w, err)
 		case err != nil:
 			fileFailure(w, err)
 		default:

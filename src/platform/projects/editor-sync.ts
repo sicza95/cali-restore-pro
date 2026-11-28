@@ -70,7 +70,8 @@ export function editorSync(vault: LocalVault) {
       : undefined;
     const base = (await queue.checkpoints()).find((row) => row.project === project.id);
     if (!base) throw new Error('Sync is not enabled');
-    return { id: draft.id, state, base, remote, local: project };
+    const canPublishLocal = base.revision >= (state.binRevisionFloor ?? 0);
+    return { id: draft.id, state, base, remote, local: project, canPublishLocal };
   }
 
   async function resolve(

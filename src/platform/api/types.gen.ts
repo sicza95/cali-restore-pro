@@ -301,11 +301,19 @@ export type ProjectRevisionKeyTransfer = {
 
 export type ProjectRevisionState = {
   epoch: string;
+  /**
+   * Oldest source revision allowed for an ordinary write following a Bin graph change.
+   */
+  binRevisionFloor: number;
   head: ProjectRevisionHead | null;
 };
 
 export type ProjectRevisionWrite = {
   expected: number;
+  /**
+   * Head the graph was based on before conflict review. Required for ordinary writes after a Bin graph change and at most expected.
+   */
+  sourceRevision?: number;
   epoch: string;
   salt: string;
   ciphertext: string;
@@ -3683,7 +3691,7 @@ export type PutProjectRevisionErrors = {
     error: string;
   };
   /**
-   * Revision or epoch changed, rotation is pending, or hosting quota was exceeded
+   * Revision, epoch or Bin state changed, the writer protocol is outdated, rotation is pending, or hosting quota was exceeded
    */
   409: {
     error: string;

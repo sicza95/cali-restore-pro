@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { BinCatalog } from '../src/platform/api';
 import { aead } from '../src/platform/vault/aead';
+import { chooseLanguage } from './app-navigation';
 import { enableHostingAndSync } from './invitation-hosting';
 import { orientedJpeg } from './fixtures/images';
 import {
@@ -9,15 +10,17 @@ import {
   browserReady,
   createHierarchyViaBrowser,
   followTrail,
+  inspect,
   openProjectSettings,
+  overrideRestoration,
   runItemAction,
 } from './project-browser';
 
 test('a second device restores hosted work and reconciles a lost receipt after reload', async ({
   browser,
   baseURL,
-}) => {
-  const session = process.env.M06_OWNER_SESSION;
+}, info) => {
+  const session = process.env.M06_BIN_SESSION;
   test.skip(!session || aead.enabled, 'Requires a disposable owner session in plaintext mode');
   test.setTimeout(60_000);
   const source = await browser.newContext({ baseURL, viewport: { width: 1194, height: 834 } });
@@ -100,7 +103,40 @@ test('a second device restores hosted work and reconciles a lost receipt after r
         },
       },
     );
-    expect(await revision.json()).toMatchObject({ head: { revision: 3 } });
+    expect(await revision.json()).toMatchObject({ head: { revision: 3 }, binRevisionFloor: 3 });
+
+    // The original device still has the graph from before the restore. A normal edit
+    // must not publish that graph over the restored object.
+    await original.goto('/projects');
+    await inspect(original, 'Hosted Bin chapel');
+    await overrideRestoration(original, 'currency', 'CHF');
+    await original.goto(created.projectPath);
+    const conflict = await openProjectSettings(original);
+    await browserControl(conflict, 'project.sync.review').click();
+    await expect(browserControl(conflict, 'project.sync.keep-local')).toBeDisabled();
+    await expect(conflict.getByRole('region', { name: 'This device' })).toContainText('CHF');
+    await expect(conflict.getByRole('region', { name: 'Cloud copy' })).toContainText('Choir loft');
+    await browserControl(conflict, 'project.sync.keep-cloud').scrollIntoViewIfNeeded();
+    await original.screenshot({ path: info.outputPath('bin-sync-landscape.png') });
+    await browserControl(conflict, 'browser.dialog.close').click();
+    await chooseLanguage(original, 'hu');
+    await original.setViewportSize({ width: 834, height: 1194 });
+    await openProjectSettings(original);
+    await browserControl(conflict, 'project.sync.review').click();
+    await expect(conflict).toContainText(
+      'A szinkronizálás folytatásához használd a felhőmásolatot.',
+    );
+    await browserControl(conflict, 'project.sync.keep-cloud').scrollIntoViewIfNeeded();
+    await original.screenshot({ path: info.outputPath('bin-sync-portrait.png') });
+    await browserControl(conflict, 'project.sync.keep-cloud').click();
+    await expect(
+      conflict.getByRole('region', { name: 'Felhőszinkronizálás' }).getByRole('status'),
+    ).toHaveText('Felhőbe mentve');
+    await browserControl(conflict, 'browser.dialog.close').click();
+    await expect(browserItem(original, 'Choir loft')).toHaveAttribute(
+      'data-browser-item',
+      created.object,
+    );
   } finally {
     await Promise.all([source.close(), receiver.close()]);
   }

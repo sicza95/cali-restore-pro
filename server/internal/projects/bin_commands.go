@@ -141,7 +141,7 @@ func (a fileAccess) binTrash(ctx context.Context, project string, cmd binCommand
 		if err := a.requireLiveProject(ctx, project); err != nil {
 			return err
 		}
-		state, err := a.revisionHead(ctx, project, cmd.Head)
+		state, err := a.revisionHead(ctx, project, cmd.Head, true)
 		if errors.Is(err, errRevisionConflict) || errors.Is(err, errRevisionEpoch) {
 			return errBinStale
 		}
@@ -268,7 +268,7 @@ func (a fileAccess) binFinish(ctx context.Context, project string, cmd binComman
 		if err := a.requireLiveProject(ctx, project); err != nil {
 			return err
 		}
-		state, err := a.revisionHead(ctx, project, cmd.Head)
+		state, err := a.revisionHead(ctx, project, cmd.Head, true)
 		if errors.Is(err, errRevisionConflict) || errors.Is(err, errRevisionEpoch) {
 			return errBinStale
 		}

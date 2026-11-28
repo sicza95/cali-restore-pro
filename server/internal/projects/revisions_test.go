@@ -205,4 +205,20 @@ func TestPostgresProjectRevisions(t *testing.T) {
 		t.Fatal(err)
 	}
 	call("PUT", revision, alice, aliceToken, next, 200)
+	if _, err := admin.Exec(ctx, `UPDATE hosted_projects SET bin_revision_floor=3 WHERE id=$1`, project); err != nil {
+		t.Fatal(err)
+	}
+	if current := read(); current.BinRevisionFloor != 3 {
+		t.Fatalf("missing Bin floor: %+v", current)
+	}
+	ordinary := write(3, rotated.Epoch, 5)
+	conflict(call("PUT", revision, alice, aliceToken, ordinary, 409), "protocol_outdated")
+	source := 2
+	ordinary.SourceRevision = &source
+	conflict(call("PUT", revision, alice, aliceToken, ordinary, 409), "revision_bin_changed")
+	source = 4
+	call("PUT", revision, alice, aliceToken, ordinary, 400)
+	source = 3
+	call("PUT", revision, alice, aliceToken, ordinary, 200)
+	call("PUT", revision, alice, aliceToken, ordinary, 200) // lost response after Bin change
 }

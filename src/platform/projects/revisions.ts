@@ -4,10 +4,14 @@ import { assertID } from '../vault/file-format';
 
 type Ciphertext = Omit<Envelope, 'version'>;
 export type RevisionHead = Ciphertext & { revision: number; epoch: string };
-export type RevisionState = { epoch: string; head: RevisionHead | null };
+export type RevisionState = { epoch: string; head: RevisionHead | null; binRevisionFloor?: number };
 export type RevisionBase = { epoch: string; head: { revision: number } | null };
 export type RevisionKey = { epoch: string; key: CryptoKey };
-export type RevisionWrite = Ciphertext & { expected: number; epoch: string };
+export type RevisionWrite = Ciphertext & {
+  expected: number;
+  epoch: string;
+  sourceRevision?: number;
+};
 
 export async function sealRevision(
   project: string,
@@ -86,7 +90,8 @@ export type RevisionBlock = 'conflict' | 'epoch' | 'access' | 'rejected';
 
 export function revisionBlockFor(error: unknown): RevisionBlock | undefined {
   if (!(error instanceof RevisionError)) return;
-  if (error.code === 'revision_conflict') return 'conflict';
+  if (['revision_conflict', 'revision_bin_changed', 'protocol_outdated'].includes(error.code))
+    return 'conflict';
   if (error.code === 'revision_epoch_changed') return 'epoch';
   if ([401, 403, 404].includes(error.status)) return 'access';
   if (error.code === 'original_rotation_pending' || error.status === 429 || error.status >= 500)

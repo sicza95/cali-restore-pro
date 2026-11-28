@@ -77,6 +77,9 @@ export function ProjectSync(props: {
       <Show when={activeReview()} keyed>
         {(value) => (
           <>
+            <Show when={!value.canPublishLocal}>
+              <p>{c().binChanged}</p>
+            </Show>
             <div class="project-detail">
               <CopyPreview title={c().local} project={value.local} language={props.language} />
               <Show when={value.remote} fallback={<p>{c().noHead}</p>}>
@@ -88,7 +91,7 @@ export function ProjectSync(props: {
             <div class="project-fields">
               <button
                 data-control-id="project.sync.keep-local"
-                disabled={props.busy}
+                disabled={props.busy || !value.canPublishLocal}
                 onClick={() => resolve(value, false)}
               >
                 {c().keepLocal}
