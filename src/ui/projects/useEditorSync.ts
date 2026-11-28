@@ -1,6 +1,7 @@
 import { projectAssetIds } from '../../platform/projects/browser/assets';
 import { createSignal, onCleanup, onMount } from 'solid-js';
 import { cloudProjects } from '../../platform/projects/cloud-projects';
+import { localBin } from '../../platform/projects/bin/local-bin';
 import { editorSync } from '../../platform/projects/editor-sync';
 import { itemStatus as browserStatus } from '../../platform/projects/browser/status';
 import type { SavedProject } from '../../platform/projects/types';
@@ -9,6 +10,7 @@ import type { LocalVault } from '../../platform/vault/vault';
 export function useEditorSync(vault: LocalVault, csrf: () => string) {
   const sync = editorSync(vault);
   const cloud = cloudProjects(vault);
+  const bin = localBin(vault, vault.revisions().account, Date.now, csrf);
   const [state, setState] = createSignal<Awaited<ReturnType<typeof sync.status>>>();
   const [errors, setErrors] = createSignal<string[]>([]);
   const [unavailable, setUnavailable] = createSignal(false);
@@ -17,6 +19,9 @@ export function useEditorSync(vault: LocalVault, csrf: () => string) {
   function refresh() {
     return (running ??= (async () => {
       try {
+        // Hosted Bin commands go first: ordinary sync of their project waits for them.
+        const token = csrf();
+        if (token && navigator.onLine) await bin.dispatch(token).catch(() => undefined);
         const errors = await sync.stagePending();
         const state = await sync.status();
         if (!disposed) {

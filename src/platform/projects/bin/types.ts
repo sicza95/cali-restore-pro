@@ -23,6 +23,8 @@ export type BinPending = {
   intent: BinLifecycleIntent;
   operationId: string;
   stage: BinPendingStage;
+  /** Why a hosted command stopped; shown until it is retried or cancelled. */
+  failure?: BinFailureCode;
 };
 
 /** Saved-content classes a recovery bundle may declare. */

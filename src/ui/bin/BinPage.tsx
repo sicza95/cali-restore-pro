@@ -27,9 +27,14 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
   const bin = localBin(
     untrack(() => props.vault),
     untrack(() => props.account),
+    Date.now,
+    () => app.csrf(),
   );
-  // Deadlines are enforced on read: expired entries are removed before listing.
+  // Deadlines are enforced on read: expired entries are removed before listing. Queued hosted
+  // deletions are sent first, so their state is current.
   const [entries, { refetch }] = createResource(async () => {
+    const token = app.csrf();
+    if (token && navigator.onLine) await bin.dispatch(token).catch(() => undefined);
     await bin.expire().catch(() => undefined);
     return bin.list();
   });

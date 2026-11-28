@@ -17,6 +17,7 @@ function row(
   name: string,
   path: string[],
   age: number,
+  overrides: Partial<BinEntry> = {},
 ): BinRow {
   const deletionId = `00000000-0000-4000-8000-00000000000${index}`;
   const projectId = '10000000-0000-4000-8000-000000000001';
@@ -46,6 +47,7 @@ function row(
       sourceRevision: 1,
       operationId: deletionId,
       pending: null,
+      ...overrides,
     },
     name,
     path,
@@ -94,6 +96,45 @@ export const Hungarian: Story = {
       <BinList
         language="hu"
         rows={rows}
+        busy={null}
+        onRestore={() => undefined}
+        onPurge={() => undefined}
+        onInfo={() => undefined}
+      />
+    </main>
+  ),
+};
+
+const pending = (stage: 'queued' | 'dispatched' | 'conflict', failure?: 'quota_exceeded') => ({
+  scope: 'hosted' as const,
+  provisional: true,
+  pending: { intent: 'trash' as const, operationId: 'op', stage, ...(failure ? { failure } : {}) },
+});
+const hostedRows = [
+  row(5, 'surface', 'South wall', ['Chapel restoration', 'Altar'], 0, pending('queued')),
+  row(6, 'object', 'Pulpit', ['Chapel restoration'], 0, pending('dispatched')),
+  row(
+    7,
+    'surface',
+    'Vault rib',
+    ['Chapel restoration', 'Nave'],
+    0,
+    pending('conflict', 'quota_exceeded'),
+  ),
+  row(8, 'surface', 'Door panel', ['Chapel restoration', 'Door'], 2, { scope: 'hosted' }),
+];
+
+/** Hosted deletions: waiting, sending, refused by the server, and kept on the server. */
+export const SyncStates: Story = {
+  render: () => (
+    <main class="cr-story-page">
+      <header class="cr-story-title">
+        <h1>Bin sync states</h1>
+        <p>Deletions in synchronised projects reach the server Bin with their recovery data.</p>
+      </header>
+      <BinList
+        language="en"
+        rows={hostedRows}
         busy={null}
         onRestore={() => undefined}
         onPurge={() => undefined}

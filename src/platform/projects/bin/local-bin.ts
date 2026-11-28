@@ -4,50 +4,69 @@ import { deletionJournals } from '../browser/deletion';
 import type { BrowserTarget } from '../browser/mutations';
 import { localProjects, upgradeProject } from '../projects';
 import type { ProjectV2, SavedProject, SavedProjectV2 } from '../types';
-import { decodeBundle, encodeBundle } from './bundle';
+import { encodeBundle } from './bundle';
 import { captureRecovery, type BinCaptureReaders } from './capture';
 import { operationDigest } from './digest';
+import { BinError } from './errors';
 import { applyGraphEdits, type BinGraphEdit } from './graph';
+import { hostedBin } from './hosted-bin';
 import { planExpiry, planPurge, terminalFence } from './plan-purge';
-import { planRestore } from './plan-restore';
 import { planTrash, type BinCommandContext } from './plan-trash';
 import { reachableAssets } from './reachability';
-import { entityRef, findEntity, surfacesOf, type BinEntity } from './subtree';
-import type { BinActor, BinEntry } from './types';
+import { decodedEntry, prepareRestore, stripRevision, type RestoreOptions } from './restore-prep';
+import { entityRef, findEntity, surfacesOf } from './subtree';
+import type { BinActor, BinEntry, BinScope } from './types';
 
 /** Local chunks are sealed as base64 text, which must fit one local document envelope. */
 const localChunkBytes = 384 * 1024;
 
-const stripRevision = (project: SavedProjectV2) => {
-  const value: Partial<SavedProjectV2> = { ...project };
-  delete value.revision;
-  return value;
-};
-
 /**
- * Local Bin for projects that live in this vault. Each command is one atomic vault commit:
- * graph, Bin entry, sealed recovery chunks, pins and fences change together or not at all.
+ * Bin for projects in this vault. Each command is one atomic vault commit: graph, Bin entry,
+ * sealed recovery chunks, pins and fences change together or not at all. Children of a
+ * synchronised project are hosted: trash reaches the server Bin through the outbox, restore and
+ * purge go to the server first and need the session `csrf` token.
  */
-export function localBin(vault: LocalVault, account: string, clock: () => number = Date.now) {
+export function localBin(
+  vault: LocalVault,
+  account: string,
+  clock: () => number = Date.now,
+  csrf: () => string = () => '',
+) {
   const store = () => vault.bin();
-  const actor = (): BinActor => ({
+  // The server rechecks hosted roles, hosting and quota inside every command.
+  const actor = (scope: BinScope = 'local'): BinActor => ({
     accountId: account,
-    projectOwner: false,
+    projectOwner: scope === 'hosted',
     organisationRole: null,
     localVaultAccount: account,
-    hostingEntitled: false,
-    quotaAvailable: false,
+    hostingEntitled: scope === 'hosted',
+    quotaAvailable: scope === 'hosted',
     exportAllowed: true,
-    online: true,
+    online: scope === 'local' || navigator.onLine,
   });
-  const context = (organisationId: string | null): BinCommandContext => ({
-    actor: actor(),
-    scope: 'local',
+  const context = (
+    organisationId: string | null,
+    scope: BinScope = 'local',
+  ): BinCommandContext => ({
+    actor: actor(scope),
+    scope,
     organisationId,
     now: clock(),
     operationId: crypto.randomUUID(),
     epoch: null,
   });
+  let hostedCommands: ReturnType<typeof hostedBin> | undefined;
+  const hosted = () =>
+    (hostedCommands ??= hostedBin(
+      vault,
+      (entry) => context(entry.organisationId, entry.scope),
+      clock,
+    ));
+  const token = () => {
+    const value = csrf();
+    if (!value) throw new BinError('offline');
+    return value;
+  };
   const readers: BinCaptureReaders = {
     journal: (ref) => vault.projects().readJournal(ref),
     estimate: (id) => vault.estimates().changed(id, 0),
@@ -56,11 +75,7 @@ export function localBin(vault: LocalVault, account: string, clock: () => number
   };
   const live = async (id: string) =>
     (await localProjects(vault).list()).find((project) => project.id === id) ?? null;
-  async function decoded(deletionId: string) {
-    const { row, manifest, chunks } = await store().payload(deletionId);
-    if (!row.entry.manifest) throw new Error('Bin entry has no manifest');
-    return { manifest, body: await decodeBundle(row.entry.manifest, manifest, chunks) };
-  }
+  const decoded = (deletionId: string) => decodedEntry(store(), deletionId);
   async function sealGraph(
     project: SavedProjectV2,
     edits: readonly BinGraphEdit[],
@@ -76,11 +91,14 @@ export function localBin(vault: LocalVault, account: string, clock: () => number
   }
 
   async function trash(project: SavedProject, target: BrowserTarget) {
+    const synced =
+      target.kind !== 'project' &&
+      (await vault.revisions().checkpoints()).some((row) => row.project === project.id);
     const plan = planTrash(
       project,
       target,
       crypto.randomUUID(),
-      context(project.organisation ?? null),
+      context(project.organisation ?? null, synced ? 'hosted' : 'local'),
     );
     // Fail closed on drafts, as before; the journals stay in place and are captured as well.
     const journals =
@@ -102,65 +120,43 @@ export function localBin(vault: LocalVault, account: string, clock: () => number
     }
     const graph = { ...upgradeProject(project), revision: project.revision };
     const write = await sealGraph(graph, plan.edits, project.revision);
-    await store().trash(sealed, write, journals);
+    // A hosted child waits in the outbox; ordinary sync of the project holds until it is sent.
+    const outbox = synced
+      ? {
+          operationId: plan.operation.operationId,
+          deletionId: plan.entry.deletionId,
+          projectId: project.id,
+          intent: 'trash' as const,
+          stage: 'queued' as const,
+        }
+      : undefined;
+    await store().trash(sealed, write, journals, outbox);
     const next = applyGraphEdits(graph, plan.edits, new Map(), clock());
     return { entry: sealed.row.entry, project: { ...next, revision: write.next.revision } };
   }
 
-  async function restore(
-    deletionId: string,
-    options: { destinationObjectId?: string; unarchive?: string[] } = {},
-  ) {
-    const catalog = (await store().list()).map(({ entry }) => entry);
-    const entry = catalog.find((row) => row.deletionId === deletionId);
-    if (!entry) throw new Error('Bin entry not found');
-    const projectId = entry.entity.projectId;
-    const siblings = catalog.filter(
-      (row) => row.entity.projectId === projectId && row.state === 'retained',
+  async function restore(deletionId: string, options: RestoreOptions = {}) {
+    const listed = (await store().list()).find(({ entry }) => entry.deletionId === deletionId);
+    if (!listed) throw new Error('Bin entry not found');
+    const prep = await prepareRestore(
+      store(),
+      await live(listed.entry.entity.projectId),
+      deletionId,
+      options,
+      (entry) => context(entry.organisationId, entry.scope),
+      clock(),
     );
-    const payloads = new Map<string, BinEntity>();
-    const manifests = new Map<string, readonly string[]>();
-    for (const row of siblings)
-      if (row.deletionId === deletionId || row.entity.kind !== 'surface') {
-        const { manifest, body } = await decoded(row.deletionId);
-        payloads.set(row.deletionId, body.captured);
-        manifests.set(row.deletionId, manifest.assets);
-      }
-    const current = await live(projectId);
-    const plan = planRestore(
-      { project: current, entry, catalog: siblings, payloads, ...options },
-      context(entry.organisationId),
-    );
-    const digest = await operationDigest(plan.operation);
-    const projectEntry = plan.edits.find((edit) => edit.op === 'restore-project');
-    const childEdits = plan.edits.filter((edit) => edit.op !== 'restore-project');
-    let project: ProjectWrite | { id: string; restoreRowFrom: string };
-    if (projectEntry && !childEdits.length)
-      project = { id: projectId, restoreRowFrom: projectEntry.deletionId };
-    else {
-      const base = projectEntry
-        ? {
-            ...(payloads.get(projectEntry.deletionId) as ProjectV2),
-            revision: siblings.find((row) => row.deletionId === projectEntry.deletionId)!
-              .sourceRevision,
-          }
-        : { ...upgradeProject(current!), revision: current!.revision };
-      const next = applyGraphEdits(base, childEdits, payloads, clock());
-      const expected = projectEntry ? null : current!.revision;
-      const revision = base.revision + 1;
-      project = {
-        id: projectId,
-        expected,
-        next: await store().sealProject(projectId, revision, JSON.stringify(stripRevision(next))),
-      };
-    }
-    await store().finish({
-      transitions: plan.transitions,
-      manifests,
-      fences: plan.transitions.map((row) => terminalFence(row, digest)),
-      project,
-    });
-    return plan;
+    const { entry } = prep;
+    if (entry.scope === 'local') await store().finish(prep.change);
+    else if (entry.pending?.stage === 'dispatched') throw new BinError('pending_sync');
+    else if (entry.pending) {
+      // Not accepted by the server: restoring cancels the queued trash on this device only.
+      const row = (await vault.binOutbox().list()).find(
+        ({ operationId }) => operationId === entry.pending!.operationId,
+      );
+      await store().finish({ ...prep.change, ...(row ? { cancel: row } : {}) });
+    } else await hosted().restore(prep, options, token());
+    return prep.plan;
   }
 
   /** Purges or expires transitions grouped per project, deleting only unreachable files. */
@@ -210,12 +206,26 @@ export function localBin(vault: LocalVault, account: string, clock: () => number
   return {
     trash,
     restore,
+    /** Sends queued hosted commands; true when something should be retried later. */
+    dispatch: (csrfToken: string) => hosted().dispatch(csrfToken),
     async list() {
       return store().list();
     },
     async purge(targets: readonly { deletionId: string; version: number }[]) {
       const catalog = (await store().list()).map(({ entry }) => entry);
-      const plan = planPurge(targets, catalog, actor(), clock());
+      const scopes = new Set(
+        targets.map(
+          ({ deletionId }) => catalog.find((row) => row.deletionId === deletionId)?.scope,
+        ),
+      );
+      const plan = planPurge(
+        targets,
+        catalog,
+        actor(scopes.has('hosted') ? 'hosted' : 'local'),
+        clock(),
+      );
+      // The server forgets a hosted entry first; this device then removes its own copy.
+      for (const group of plan.groups) await hosted().purge(group.projectId, group.entries, token);
       const operationId = crypto.randomUUID();
       const digest = await operationDigest({
         operationId,

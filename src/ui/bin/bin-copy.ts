@@ -5,7 +5,21 @@ const en = {
   title: 'Bin',
   intro:
     'Deleted projects, objects and surfaces stay here for 30 days. Restore puts them back where they were; after the deadline they are removed.',
-  scope: 'Items deleted on this device.',
+  scope:
+    'Items deleted on this device. Deleted objects and surfaces of synchronised projects are also kept on the server.',
+  hosted: 'Also kept on the server',
+  sync: {
+    queued: 'Waiting to sync to the server',
+    dispatched: 'Sending to the server…',
+    conflict: (reason: string) =>
+      `Not on the server yet. ${reason} Restore it to undo the deletion.`,
+  },
+  /** Why the server refused a deletion; other codes use the general failure text. */
+  syncFailures: {
+    stale_revision: 'The project changed on another device. Review the sync conflict.',
+    quota_exceeded: 'There is not enough server storage for its recovery copy.',
+    forbidden: 'You can no longer change this project on the server.',
+  } as Partial<Record<BinFailureCode, string>>,
   openHelp: 'Restore or permanently delete deleted projects, objects and surfaces.',
   find: 'Find in Bin',
   sort: 'Order',
@@ -78,7 +92,21 @@ export const binCopy = defineCopy({
     title: 'Lomtár',
     intro:
       'A törölt projektek, objektumok és felületek 30 napig itt maradnak. A visszaállítás az eredeti helyükre teszi őket; a határidő után eltávolítjuk őket.',
-    scope: 'Ezen az eszközön törölt elemek.',
+    scope:
+      'Ezen az eszközön törölt elemek. A szinkronizált projektek törölt objektumai és felületei a szerveren is megmaradnak.',
+    hosted: 'A szerveren is megőrizve',
+    sync: {
+      queued: 'Szinkronizálásra vár a szerverre',
+      dispatched: 'Küldés a szerverre…',
+      conflict: (reason: string) =>
+        `Még nincs a szerveren. ${reason} Visszaállítással visszavonhatod a törlést.`,
+    },
+    syncFailures: {
+      stale_revision:
+        'A projekt egy másik eszközön megváltozott. Nézd át a szinkronizálási ütközést.',
+      quota_exceeded: 'Nincs elég tárhely a szerveren a helyreállítási másolatához.',
+      forbidden: 'Ezt a projektet már nem módosíthatod a szerveren.',
+    },
     openHelp: 'Törölt projektek, objektumok és felületek visszaállítása vagy végleges törlése.',
     find: 'Keresés a lomtárban',
     sort: 'Sorrend',

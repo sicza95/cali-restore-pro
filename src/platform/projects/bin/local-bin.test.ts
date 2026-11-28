@@ -2,7 +2,9 @@ import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { importCode } from '../../vault/crypto';
+import { binOutbox } from '../../vault/bin-outbox';
 import { binDocuments } from '../../vault/bin-store';
+import { revisionQueue } from '../../vault/revision-queue';
 import { projectDocuments } from '../../vault/project-store';
 import {
   binEntryTable,
@@ -60,6 +62,8 @@ beforeEach(async () => {
     estimates: () => projectDocuments(root, account, 'stamp', signal, estimateTable),
     reports: () => projectDocuments(root, account, 'stamp', signal, reportTable),
     bin: () => binDocuments(root, account, 'stamp', signal),
+    binOutbox: () => binOutbox(account, 'stamp', signal),
+    revisions: () => revisionQueue(root, account, () => 'stamp', signal),
   } as unknown as LocalVault;
 });
 const bin = () => localBin(vault, account, () => now);

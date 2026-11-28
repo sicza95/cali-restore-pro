@@ -25,8 +25,18 @@ export function editorSync(vault: LocalVault) {
 
   async function stagePending() {
     const { checkpoints, drafts } = await status();
+    // A queued Bin command carries the graph head itself: the deletion must not reach the
+    // server as an ordinary revision without its recoverable entry.
+    const held = new Set(
+      (await vault.binOutbox().list())
+        .filter((row) => row.stage !== 'conflict')
+        .map((row) => row.projectId),
+    );
     const available = checkpoints.filter(
-      (base) => !base.paused && !drafts.some((row) => row.project === base.project),
+      (base) =>
+        !base.paused &&
+        !held.has(base.project) &&
+        !drafts.some((row) => row.project === base.project),
     );
     const errors: string[] = [];
     for (const base of available) {

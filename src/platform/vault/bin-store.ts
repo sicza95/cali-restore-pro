@@ -4,23 +4,24 @@ import { open, seal, type Envelope } from './crypto';
 import { assertID } from './file-format';
 import type { LocalFile } from './file-store';
 import type { JournalWrite, ProjectRow } from './project-store';
+import { advanceCheckpoint, type BinOutboxRow } from './bin-outbox';
+import { binTransaction, getThen as get } from './bin-transaction';
+import type { HostedOutcome } from '../projects/bin/hosted-remote';
+import type { SyncCheckpoint } from './revision-queue';
 import {
   accountRange,
   binEntryTable,
   binFenceTable,
+  binOutboxTable,
   binPayloadTable,
   binPinTable,
-  connect,
   estimateTable,
   fileTable,
   journalTable,
   projectTable,
   reportTable,
   thumbnailTable,
-  vaultTable,
-  type VaultRow,
 } from './store';
-import { abortOnSignal, abortTransaction } from './transaction-abort';
 
 /** Name and original path, sealed like every other document. */
 export type BinDisplay = { name: string; path: string[] };
@@ -36,19 +37,6 @@ export type SealedBin = { row: BinEntryRow; chunks: Envelope[]; pins: string[] }
 /** expected null: the project row must be absent (a whole project coming back with changes). */
 export type ProjectWrite = { id: string; expected: number | null; next: ProjectRow };
 
-const tables = [
-  vaultTable,
-  projectTable,
-  journalTable,
-  fileTable,
-  estimateTable,
-  reportTable,
-  thumbnailTable,
-  binEntryTable,
-  binPayloadTable,
-  binPinTable,
-  binFenceTable,
-];
 const base64 = (bytes: Uint8Array) =>
   btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(''));
 const unbase64 = (text: string) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
@@ -56,44 +44,7 @@ const unbase64 = (text: string) => Uint8Array.from(atob(text), (c) => c.charCode
 /** Local Bin persistence. Every mutation is one strict transaction checked against the vault stamp. */
 export function binDocuments(root: CryptoKey, account: string, stamp: string, signal: AbortSignal) {
   const key = (...parts: (string | number | never[])[]) => [account, ...parts];
-  async function transact<T>(
-    mode: IDBTransactionMode,
-    work: (tx: IDBTransaction, finish: (value: T) => void, abort: () => void) => void,
-  ) {
-    signal.throwIfAborted();
-    const db = await connect();
-    try {
-      return await new Promise<T>((resolve, reject) => {
-        const tx = db.transaction(tables, mode, { durability: 'strict' });
-        let result: T;
-        abortOnSignal(tx, signal);
-        tx.oncomplete = () => (signal.aborted ? reject(signal.reason) : resolve(result));
-        tx.onabort = () =>
-          reject(
-            signal.reason ??
-              tx.error ??
-              new Error('The vault or project changed. Reopen it and try again.'),
-          );
-        const vault = tx.objectStore(vaultTable).get(account);
-        vault.onsuccess = () => {
-          if ((vault.result as VaultRow | undefined)?.stamp !== stamp) abortTransaction(tx);
-          else
-            work(
-              tx,
-              (value) => (result = value),
-              () => abortTransaction(tx),
-            );
-        };
-      });
-    } finally {
-      db.close();
-    }
-  }
-  /** Runs requests in order; aborts the whole transaction when a check fails. */
-  const get = (store: IDBObjectStore, k: IDBValidKey, next: (value: unknown) => void) => {
-    const request = store.get(k);
-    request.onsuccess = () => next(request.result);
-  };
+  const transact = binTransaction(account, stamp, signal);
 
   function putRecovery(tx: IDBTransaction, sealed: SealedBin) {
     const id = sealed.row.entry.deletionId;
@@ -164,8 +115,11 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
       sealed: SealedBin,
       change: ProjectWrite | { id: string; expected: number; whole: true },
       journals: readonly JournalWrite[],
+      outbox?: BinOutboxRow,
     ) {
       return transact<void>('readwrite', (tx, finish, abort) => {
+        if (outbox)
+          tx.objectStore(binOutboxTable).put(outbox, key(outbox.projectId, outbox.operationId));
         const projects = tx.objectStore(projectTable);
         get(projects, key(change.id), (value) => {
           const current = value as ProjectRow | undefined;
@@ -256,6 +210,15 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
       project?: ProjectWrite | { id: string; restoreRowFrom: string };
       purgeProject?: string;
       collectable?: readonly string[];
+      /** Hosted command answered by the server: advance sync and drop the outbox row. */
+      hosted?: {
+        row: BinOutboxRow;
+        checkpoint: SyncCheckpoint;
+        outcome: HostedOutcome;
+        localRevision: number;
+      };
+      /** A queued hosted trash cancelled before dispatch; nothing reached the server. */
+      cancel?: BinOutboxRow;
     }) {
       return transact<void>('readwrite', (tx, finish, abort) => {
         const entries = tx.objectStore(binEntryTable);
@@ -274,7 +237,7 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
         const applyProject = () => {
           const projects = tx.objectStore(projectTable);
           const target = change.project;
-          if (!target) return commit();
+          if (!target) return outbox();
           get(projects, key(target.id), (value) => {
             const current = value as ProjectRow | undefined;
             if ('restoreRowFrom' in target) {
@@ -285,7 +248,35 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
               if ((current?.revision ?? null) !== target.expected) return abort();
               projects.put(target.next, key(target.id));
             }
-            commit();
+            outbox();
+          });
+        };
+        const outbox = () => {
+          const rows = tx.objectStore(binOutboxTable);
+          const hosted = change.hosted;
+          const cancel = change.cancel;
+          if (cancel)
+            return get(rows, key(cancel.projectId, cancel.operationId), (value) => {
+              if ((value as BinOutboxRow | undefined)?.stage === 'dispatched' || !value)
+                return abort();
+              rows.delete(key(cancel.projectId, cancel.operationId));
+              commit();
+            });
+          if (!hosted) return commit();
+          const { row } = hosted;
+          get(rows, key(row.projectId, row.operationId), (value) => {
+            if ((value as BinOutboxRow | undefined)?.command?.digest !== row.command?.digest)
+              return abort();
+            rows.delete(key(row.projectId, row.operationId));
+            advanceCheckpoint(
+              tx,
+              key,
+              hosted.checkpoint,
+              hosted.outcome,
+              hosted.localRevision,
+              commit,
+              abort,
+            );
           });
         };
         const commit = () => {
@@ -345,3 +336,5 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
     };
   }
 }
+
+export type BinDocuments = ReturnType<typeof binDocuments>;

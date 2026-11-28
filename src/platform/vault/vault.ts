@@ -15,6 +15,7 @@ import { revisionQueue } from './revision-queue';
 import { projectDocuments } from './project-store';
 import { originalPins } from './original-pins';
 import { projectBackups } from './project-backups';
+import { binOutbox } from './bin-outbox';
 import { binDocuments } from './bin-store';
 import { recipientReportDocuments } from './recipient-reports';
 
@@ -213,6 +214,12 @@ export class LocalVault {
   bin() {
     const { root, row } = this.#unlocked();
     return binDocuments(root, this.account, row.stamp, this.#fileAccess.signal);
+  }
+
+  /** Hosted Bin commands waiting for, or sent to, the server. */
+  binOutbox() {
+    const { row } = this.#unlocked();
+    return binOutbox(this.account, row.stamp, this.#fileAccess.signal);
   }
 
   projectBackups() {

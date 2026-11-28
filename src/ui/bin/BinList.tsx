@@ -25,8 +25,24 @@ export function BinList(props: BinListProps) {
     <ul class="bin-list" aria-label={copy().title}>
       <For each={props.rows}>
         {(row) => {
+          const pending = () => row.entry.pending;
+          // A queued trash can still be restored here (that cancels it); a sent one cannot.
           const restoreReason = () =>
-            row.state === 'expired' ? copy().failures.expired : undefined;
+            row.state === 'expired'
+              ? copy().failures.expired
+              : pending()?.stage === 'dispatched'
+                ? copy().failures.pending_sync
+                : undefined;
+          const purgeReason = () => (pending() ? copy().failures.pending_sync : undefined);
+          const syncText = () => {
+            const state = pending();
+            if (!state) return row.entry.scope === 'hosted' ? copy().hosted : undefined;
+            if (state.stage !== 'conflict') return copy().sync[state.stage];
+            const reason = state.failure
+              ? (copy().syncFailures[state.failure] ?? copy().failures[state.failure])
+              : copy().unknownFailure;
+            return copy().sync.conflict(reason);
+          };
           return (
             <li
               class="bin-row"
@@ -54,6 +70,17 @@ export function BinList(props: BinListProps) {
                     </span>
                   </Show>
                 </span>
+                <Show when={syncText()}>
+                  {(text) => (
+                    <span
+                      class="bin-row-meta"
+                      data-bin-sync={pending()?.stage ?? 'hosted'}
+                      role={pending()?.stage === 'conflict' ? 'note' : undefined}
+                    >
+                      {text()}
+                    </span>
+                  )}
+                </Show>
               </div>
               <div class="bin-row-actions">
                 <button
@@ -70,8 +97,9 @@ export function BinList(props: BinListProps) {
                   type="button"
                   class="cr-button cr-button--danger"
                   data-control-id="bin.purge"
-                  aria-disabled={props.busy !== null}
-                  onClick={() => props.busy === null && props.onPurge(row)}
+                  aria-disabled={!!purgeReason() || props.busy !== null}
+                  title={purgeReason()}
+                  onClick={() => !purgeReason() && props.busy === null && props.onPurge(row)}
                 >
                   {copy().purge}
                 </button>

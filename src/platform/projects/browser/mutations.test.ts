@@ -7,6 +7,7 @@ import type { LocalVault } from '../../vault/vault';
 import { importCode } from '../../vault/crypto';
 import { connect, estimateTable, reportTable, vaultTable } from '../../vault/store';
 import { binDocuments } from '../../vault/bin-store';
+import { revisionQueue } from '../../vault/revision-queue';
 import { projectDocuments } from '../../vault/project-store';
 import { emptyJournal, journalText } from '../surface-journal';
 import {
@@ -41,6 +42,7 @@ beforeEach(async () => {
     estimates: () => projectDocuments(root, actor, 'stamp', signal, estimateTable),
     reports: () => projectDocuments(root, actor, 'stamp', signal, reportTable),
     bin: () => binDocuments(root, actor, 'stamp', signal),
+    revisions: () => revisionQueue(root, actor, () => 'stamp', signal),
   } as unknown as LocalVault;
 });
 

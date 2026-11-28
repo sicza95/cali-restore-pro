@@ -69,6 +69,11 @@
   justify-content: flex-end;
 }
 
+.bin-row-actions [aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .bin-empty {
   padding: 32px 0;
   color: var(--cr-muted);
