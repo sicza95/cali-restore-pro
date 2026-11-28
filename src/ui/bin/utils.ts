@@ -26,6 +26,7 @@ export type BinRow = {
   restoreDenied?: BinFailureCode | 'device_copy_required';
   purgeDenied?: BinFailureCode | 'device_copy_required';
   remotePurge?: true;
+  remoteRestore?: true;
   state: BinAvailability;
   /** Whole days left, rounded up; zero once expired. */
   days: number;
@@ -76,6 +77,8 @@ export function mergeHostedRows(
     const reason = (action: 'restore' | 'purge') => {
       const capability = remote.capabilities[action];
       if (!capability.allowed) return capability.reason ?? 'forbidden';
+      if (action === 'restore' && remote.entityKind !== 'project' && !remote.legacy)
+        return undefined;
       if (matching || (action === 'purge' && remote.entityKind !== 'project' && !remote.legacy))
         return undefined;
       return 'device_copy_required';
@@ -97,6 +100,7 @@ export function mergeHostedRows(
       size: remote.manifestSchema ? remote.logicalBytes : undefined,
       limitedRecovery: remote.coverageLegacy || remote.coverageMissing.length > 0,
       restoreDenied: reason('restore'),
+      remoteRestore: remote.entityKind !== 'project' && !remote.legacy ? true : undefined,
       purgeDenied: reason('purge'),
       remotePurge:
         !matching && remote.entityKind !== 'project' && !remote.legacy ? true : undefined,

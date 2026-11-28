@@ -83,6 +83,9 @@ func (a fileAccess) binDetail(ctx context.Context, deletion string) (binDetail, 
 	if err != nil {
 		return d, err
 	}
+	if err := binPayloadAvailable(d.State, d.RecoverUntil, now); err != nil {
+		return d, err
+	}
 	d.Display = &display
 	d.Capabilities = capabilitiesOf(d.facts(), actor, now)
 	return d, nil

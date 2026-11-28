@@ -7,6 +7,7 @@ import { sealRevision, type RevisionKey } from '../revisions';
 import type { SavedProject } from '../types';
 import { binWriterProtocol } from './constants';
 import { BinError, isBinError } from './errors';
+import { uploadBinAssets } from './hosted-assets';
 import {
   BinTransportError,
   commandDigest,
@@ -141,22 +142,38 @@ export function hostedBin(
       row.deletionId,
       row.restore ?? {},
       context,
-      clock(),
+      row.restoreAt ?? clock(),
+      vault,
     );
-    // The local graph is pushed again by ordinary sync, carrying any later local edits.
+    // When there were later device edits, ordinary sync carries them after reconciliation.
+    const unchanged = current?.saved.revision === row.localRevision;
+    const next = prep.change.project;
     await vault.bin().finish({
       ...prep.change,
-      hosted: { row, checkpoint: row.checkpoint!, outcome, localRevision: row.localRevision! },
+      hosted: {
+        row,
+        checkpoint: row.checkpoint!,
+        outcome,
+        localRevision: unchanged && 'next' in next ? next.next.revision : row.localRevision!,
+      },
     });
   }
 
   async function send(row: BinOutboxRow, csrf: string) {
     try {
-      for (const [index, chunk] of (row.chunks ?? []).entries())
-        await remote.stage(row.projectId, row.deletionId, index, chunk, csrf).catch((error) => {
-          // Already committed by a request whose response was lost; the receipt follows.
+      let committed = false;
+      for (const [index, chunk] of (row.chunks ?? []).entries()) {
+        try {
+          await remote.stage(row.projectId, row.deletionId, index, chunk, csrf);
+        } catch (error) {
           if (!isBinError(error) || error.code !== 'not_retained') throw error;
-        });
+          // The server already committed this entry. Ask for the receipt without new uploads.
+          committed = true;
+          break;
+        }
+      }
+      if (!committed && row.command?.trash)
+        await uploadBinAssets(vault, row.projectId, row.command.trash.assets, csrf);
       return await remote.execute(row.projectId, row.command!, csrf);
     } catch (error) {
       if (!isBinError(error)) throw error;
@@ -245,6 +262,7 @@ export function hostedBin(
       checkpoint,
       localRevision: checkpoint.localRevision,
       restore: options,
+      restoreAt: prep.now,
     };
     await outbox().add(row);
     const outcome = await send(row, csrf);

@@ -1,4 +1,4 @@
-import type { BinCatalog } from '../../api';
+import type { BinCatalog, BinDetail } from '../../api';
 import { assertID } from '../../vault/file-format';
 import type { RevisionHead, RevisionWrite } from '../revisions';
 import { binWriterProtocol } from './constants';
@@ -65,10 +65,9 @@ const known = new Set<string>(binFailureCodes);
 async function failure(response: Response) {
   const body = (await response.json().catch(() => null)) as { error?: string } | null;
   const code = body?.error;
-  if (response.status === 401 || response.status === 404) return new BinError('forbidden');
   if (code && known.has(code) && response.status < 500)
     return new BinError(code as BinFailureCode, { status: response.status });
-  if (response.status === 403) return new BinError('forbidden');
+  if ([401, 403, 404].includes(response.status)) return new BinError('forbidden');
   if (response.status >= 400 && response.status < 500 && response.status !== 429)
     return new BinError('incomplete_recovery', { status: response.status, code });
   return new BinTransportError(response.status);
@@ -95,6 +94,14 @@ export function hostedRemote(signal: AbortSignal) {
     return response;
   }
   return {
+    async detail(deletion: string) {
+      assertID(deletion);
+      return (await (await send(`/api/v1/bin/${deletion}`)).json()) as BinDetail;
+    },
+    async chunk(deletion: string, index: number) {
+      assertID(deletion);
+      return (await send(`/api/v1/bin/${deletion}/chunks/${index}`)).text();
+    },
     async catalog(organisation: string) {
       assertID(organisation);
       const entries: BinCatalog['entries'] = [];

@@ -9,6 +9,9 @@ import { planRestore } from './plan-restore';
 import type { BinCommandContext } from './plan-trash';
 import type { BinEntity } from './subtree';
 import type { BinEntry } from './types';
+import type { LocalVault } from '../../vault/vault';
+import type { BinRecoveryBody } from './capture';
+import { restoreDocuments } from './restore-documents';
 
 export const stripRevision = (project: SavedProjectV2) => {
   const value: Partial<SavedProjectV2> = { ...project };
@@ -36,6 +39,7 @@ export async function prepareRestore(
   options: RestoreOptions,
   context: (entry: BinEntry) => BinCommandContext,
   now: number,
+  vault: LocalVault,
 ) {
   const catalog = (await store.list()).map(({ entry }) => entry);
   const found = catalog.find((row) => row.deletionId === deletionId);
@@ -54,21 +58,24 @@ export async function prepareRestore(
     .map((row) => (row.deletionId === deletionId ? entry : row));
   const payloads = new Map<string, BinEntity>();
   const manifests = new Map<string, readonly string[]>();
+  const bodies = new Map<string, BinRecoveryBody>();
   for (const row of siblings)
     if (row.deletionId === deletionId || row.entity.kind !== 'surface') {
       const { manifest, body } = await decodedEntry(store, row.deletionId);
       payloads.set(row.deletionId, body.captured);
+      bodies.set(row.deletionId, body);
       manifests.set(row.deletionId, manifest.assets);
     }
   const plan = planRestore(
     { project: current, entry, catalog: siblings, payloads, ...options },
-    context(entry),
+    { ...context(entry), now },
   );
   const digest = await operationDigest(plan.operation);
   const projectEntry = plan.edits.find((edit) => edit.op === 'restore-project');
   const childEdits = plan.edits.filter((edit) => edit.op !== 'restore-project');
   let project: ProjectWrite | { id: string; restoreRowFrom: string };
   let text: string | null = null;
+  let documents;
   if (projectEntry && !childEdits.length)
     project = { id: projectId, restoreRowFrom: projectEntry.deletionId };
   else {
@@ -82,11 +89,18 @@ export async function prepareRestore(
     const next = applyGraphEdits(base, childEdits, payloads, now);
     const expected = projectEntry ? null : current!.revision;
     const revision = base.revision + 1;
+    const restored = await restoreDocuments(
+      vault,
+      { ...next, revision },
+      plan.group.map(({ deletionId }) => bodies.get(deletionId)!),
+    );
+    documents = await store.sealRestoredDocuments(projectId, restored);
     text = JSON.stringify(stripRevision(next));
     project = { id: projectId, expected, next: await store.sealProject(projectId, revision, text) };
   }
   return {
     entry: found,
+    now,
     plan,
     text,
     change: {
@@ -94,6 +108,7 @@ export async function prepareRestore(
       manifests,
       fences: plan.transitions.map((row) => terminalFence(row, digest)),
       project,
+      documents,
     },
   };
 }

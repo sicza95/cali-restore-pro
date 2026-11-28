@@ -214,11 +214,34 @@ func (a fileAccess) binChunk(ctx context.Context, deletion string, index int) ([
 		return nil, err
 	}
 	var body []byte
-	err := a.tx.QueryRow(ctx, `SELECT body FROM bin_chunks WHERE deletion_id=$1 AND idx=$2 AND committed`, deletion, index).Scan(&body)
+	var state binState
+	var deadline, now time.Time
+	err := a.tx.QueryRow(ctx, `SELECT e.state,e.recover_until,clock_timestamp(),c.body FROM bin_entries e
+ LEFT JOIN bin_chunks c ON c.deletion_id=e.deletion_id AND c.idx=$2 AND c.committed
+ WHERE e.deletion_id=$1`, deletion, index).Scan(&state, &deadline, &now, &body)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, errFileMissing
 	}
-	return body, err
+	if err != nil {
+		return nil, err
+	}
+	if err := binPayloadAvailable(state, deadline, now); err != nil {
+		return nil, err
+	}
+	if body == nil {
+		return nil, errFileMissing
+	}
+	return body, nil
+}
+
+func binPayloadAvailable(state binState, deadline, now time.Time) error {
+	if state != binRetained {
+		return errBinNotRetained
+	}
+	if !now.Before(deadline) {
+		return errBinExpired
+	}
+	return nil
 }
 
 // binGrowth charges newly uploaded recovery data to the project's host, like other hosted bytes.

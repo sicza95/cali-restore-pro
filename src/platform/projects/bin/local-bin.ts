@@ -10,6 +10,7 @@ import { operationDigest } from './digest';
 import { BinError } from './errors';
 import { applyGraphEdits, type BinGraphEdit } from './graph';
 import { hostedBin } from './hosted-bin';
+import { prepareHostedRestore } from './hosted-restore';
 import { planExpiry, planPurge, terminalFence } from './plan-purge';
 import { planTrash, type BinCommandContext } from './plan-trash';
 import { reachableAssets } from './reachability';
@@ -150,6 +151,7 @@ export function localBin(
       options,
       (entry) => context(entry.organisationId, entry.scope),
       clock(),
+      vault,
     );
     const { entry } = prep;
     if (entry.scope === 'local') await store().finish(prep.change);
@@ -213,6 +215,15 @@ export function localBin(
   return {
     trash,
     restore,
+    async restoreRemote(
+      organisation: string,
+      project: string,
+      target: { deletionId: string; version: number },
+    ) {
+      token();
+      await prepareHostedRestore(vault, organisation, project, target);
+      return restore(target.deletionId);
+    },
     /** Sends queued hosted commands; true when something should be retried later. */
     dispatch: (csrfToken: string) => hosted().dispatch(csrfToken),
     purgeRemote: (project: string, entry: { deletionId: string; version: number }) =>
@@ -254,7 +265,10 @@ export function localBin(
     /** Applies recovery deadlines; safe to call at any time and idempotent. */
     async expire() {
       const catalog = (await store().list()).map(({ entry }) => entry);
-      const expired = planExpiry(catalog, clock());
+      const expired = planExpiry(
+        catalog.filter((row) => row.scope === 'local' && !row.pending),
+        clock(),
+      );
       const groups = new Map<string, BinEntry[]>();
       for (const row of expired)
         groups.set(row.entity.projectId, [...(groups.get(row.entity.projectId) ?? []), row]);

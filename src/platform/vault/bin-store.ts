@@ -8,6 +8,7 @@ import { advanceCheckpoint, type BinOutboxRow } from './bin-outbox';
 import { binTransaction, getThen as get } from './bin-transaction';
 import type { HostedOutcome } from '../projects/bin/hosted-remote';
 import type { SyncCheckpoint } from './revision-queue';
+import { putRestoredDocuments, sealRestoredDocuments } from './bin-restored-documents';
 import {
   accountRange,
   binEntryTable,
@@ -77,6 +78,8 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
   }
 
   return {
+    sealRestoredDocuments: (project: string, docs: Parameters<typeof sealRestoredDocuments>[3]) =>
+      sealRestoredDocuments(root, account, project, docs),
     async seal(bundle: BinBundle, entry: BinEntry, display: BinDisplay): Promise<SealedBin> {
       const id = entry.deletionId;
       assertID(id);
@@ -105,6 +108,36 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
         revision,
         envelope: await seal(root, account, `project:${id}:${revision}`, text),
       };
+    },
+
+    /** Cache a verified hosted payload without replacing a pending or terminal local event. */
+    retain(sealed: SealedBin) {
+      const { entry } = sealed.row;
+      const entity = entry.entity;
+      const id =
+        entity.kind === 'surface'
+          ? entity.surfaceId
+          : entity.kind === 'object'
+            ? entity.objectId
+            : entity.projectId;
+      return transact<void>('readwrite', (tx, finish, abort) => {
+        get(tx.objectStore(binFenceTable), key(entity.projectId, id, entry.deletionId), (fence) => {
+          if (fence) return abort();
+          get(tx.objectStore(binEntryTable), key(entry.deletionId), (value) => {
+            const existing = (value as BinEntryRow | undefined)?.entry;
+            if (
+              existing &&
+              (existing.pending ||
+                existing.scope !== 'hosted' ||
+                existing.version !== entry.version ||
+                existing.manifest?.sha256 !== entry.manifest?.sha256)
+            )
+              return abort();
+            if (!existing) putRecovery(tx, sealed);
+            finish(undefined);
+          });
+        });
+      });
     },
 
     /**
@@ -215,6 +248,7 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
       manifests: ReadonlyMap<string, readonly string[]>;
       fences: readonly BinTerminalFence[];
       project?: ProjectWrite | { id: string; restoreRowFrom: string };
+      documents?: Awaited<ReturnType<typeof sealRestoredDocuments>>;
       purgeProject?: string;
       collectable?: readonly string[];
       /** Hosted command answered by the server: advance sync and drop the outbox row. */
@@ -244,7 +278,9 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
         const applyProject = () => {
           const projects = tx.objectStore(projectTable);
           const target = change.project;
-          if (!target) return outbox();
+          const applyDocuments = () =>
+            putRestoredDocuments(tx, change.documents ?? [], outbox, abort);
+          if (!target) return applyDocuments();
           get(projects, key(target.id), (value) => {
             const current = value as ProjectRow | undefined;
             if ('restoreRowFrom' in target) {
@@ -255,7 +291,7 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
               if ((current?.revision ?? null) !== target.expected) return abort();
               projects.put(target.next, key(target.id));
             }
-            outbox();
+            applyDocuments();
           });
         };
         const outbox = () => {
@@ -279,7 +315,7 @@ export function binDocuments(root: CryptoKey, account: string, stamp: string, si
               tx,
               key,
               hosted.checkpoint,
-              hosted.outcome,
+              hosted.outcome.head,
               hosted.localRevision,
               commit,
               abort,

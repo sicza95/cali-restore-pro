@@ -4,10 +4,12 @@ import type { BinFailureCode, BinLifecycleIntent, BinPendingStage } from '../pro
 import type { BinEntryRow } from './bin-store';
 import { binTransaction, getThen } from './bin-transaction';
 import type { SyncCheckpoint } from './revision-queue';
+import type { ProjectRow } from './project-store';
 import {
   accountRange,
   binEntryTable,
   binOutboxTable,
+  projectTable,
   revisionQueueTable,
   revisionSyncTable,
 } from './store';
@@ -34,6 +36,7 @@ export type BinOutboxRow = {
   conflictAt?: number;
   /** Restore choices, reapplied when a lost restore response is reconciled. */
   restore?: RestoreOptions;
+  restoreAt?: number;
 };
 
 const sameCheckpoint = (a: SyncCheckpoint | undefined, b: SyncCheckpoint) =>
@@ -44,16 +47,28 @@ export function advanceCheckpoint(
   tx: IDBTransaction,
   key: (...parts: string[]) => IDBValidKey,
   base: SyncCheckpoint,
-  outcome: HostedOutcome,
+  head: HostedOutcome['head'],
   localRevision: number,
   next: () => void,
   abort: () => void,
+  requireUnpaused = false,
 ) {
   const sync = tx.objectStore(revisionSyncTable);
   getThen(sync, key(base.project), (value) => {
-    if (!sameCheckpoint(value as SyncCheckpoint | undefined, base) || !outcome.head) return abort();
+    const current = value as SyncCheckpoint | undefined;
+    if (
+      !sameCheckpoint(current, base) ||
+      head?.epoch !== base.epoch ||
+      (requireUnpaused && current?.paused)
+    )
+      return abort();
     sync.put(
-      { ...base, revision: outcome.head.revision, localRevision } satisfies SyncCheckpoint,
+      {
+        ...base,
+        paused: current?.paused,
+        revision: head.revision,
+        localRevision,
+      } satisfies SyncCheckpoint,
       key(base.project),
     );
     next();
@@ -98,6 +113,42 @@ export function binOutbox(account: string, stamp: string, signal: AbortSignal) {
     });
 
   return {
+    /** Refresh an unchanged device copy before planning against a newer cloud head. */
+    refreshProject: (
+      base: SyncCheckpoint,
+      next: ProjectRow,
+      head: NonNullable<HostedOutcome['head']>,
+    ) =>
+      transact<void>('readwrite', (tx, finish, abort) => {
+        const project = key(base.project);
+        const pending = tx
+          .objectStore(binOutboxTable)
+          .getKey(IDBKeyRange.bound(project, [...project, []]));
+        pending.onsuccess = () => {
+          if (pending.result !== undefined) return abort();
+          getThen(tx.objectStore(revisionQueueTable), project, (draft) => {
+            if (draft) return abort();
+            const projects = tx.objectStore(projectTable);
+            getThen(projects, project, (current) => {
+              if ((current as typeof next | undefined)?.revision !== base.localRevision)
+                return abort();
+              advanceCheckpoint(
+                tx,
+                key,
+                base,
+                head,
+                next.revision,
+                () => {
+                  projects.put(next, project);
+                  finish(undefined);
+                },
+                abort,
+                true,
+              );
+            });
+          });
+        };
+      }),
     list: () =>
       transact<BinOutboxRow[]>('readonly', (tx, finish) => {
         const request = tx.objectStore(binOutboxTable).getAll(accountRange(account));
@@ -115,7 +166,7 @@ export function binOutbox(account: string, stamp: string, signal: AbortSignal) {
             tx,
             key,
             row.checkpoint,
-            outcome,
+            outcome.head,
             row.localRevision!,
             () => {
               const entries = tx.objectStore(binEntryTable);
@@ -154,9 +205,22 @@ export function binOutbox(account: string, stamp: string, signal: AbortSignal) {
           if (pending.result !== undefined) return abort();
           getThen(tx.objectStore(revisionQueueTable), project, (draft) => {
             if (draft) return abort();
-            outbox.add(row, rowKey(row));
-            mirror(tx, row, abort);
-            finish(undefined);
+            getThen(tx.objectStore(revisionSyncTable), project, (value) => {
+              const checkpoint = value as SyncCheckpoint | undefined;
+              if (
+                !row.checkpoint ||
+                checkpoint?.paused ||
+                !sameCheckpoint(checkpoint, row.checkpoint)
+              )
+                return abort();
+              getThen(tx.objectStore(projectTable), project, (document) => {
+                if ((document as ProjectRow | undefined)?.revision !== row.localRevision)
+                  return abort();
+                outbox.add(row, rowKey(row));
+                mirror(tx, row, abort);
+                finish(undefined);
+              });
+            });
           });
         };
       }),

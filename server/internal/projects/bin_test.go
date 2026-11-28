@@ -77,6 +77,7 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	uuid := func(n int) string {
 		return "b1000000-0000-4000-8000-" + hex.EncodeToString([]byte{0, 0, 0, 0, 0, byte(n)})
 	}
+	exec(`INSERT INTO encrypted_files(id,project_id,source_bytes,manifest_bytes,state) VALUES($1,$2,256,32,'committed')`, uuid(80), project)
 	stage := func(raw, deletion string) error {
 		body := random(256)
 		return s.withFiles(ctx, raw, func(a fileAccess) error {
@@ -138,6 +139,9 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	incomplete := trash(uuid(103), uuid(3), "surface", head(1), &object)
 	incomplete.Trash.CoverageMissing = []string{"journals"}
 	is(oneErr(run(hostSession, incomplete)), errBinIncomplete, "incomplete coverage")
+	incomplete.Trash.CoverageMissing = nil
+	incomplete.Trash.Assets = []string{uuid(81)}
+	is(oneErr(run(hostSession, incomplete)), errBinIncomplete, "missing hosted asset")
 	if err := stage(hostSession, uuid(4)); err != nil {
 		t.Fatal(err)
 	}
@@ -179,6 +183,10 @@ func TestPostgresBinLifecycle(t *testing.T) {
 		t.Fatalf("restore: %+v %v", restored, err)
 	}
 	is(oneErr(run(hostSession, finish(uuid(109), "purge", nil, map[string]int64{d1: 2}))), errBinNotRetained, "terminal")
+	is(s.withFiles(ctx, hostSession, func(a fileAccess) error {
+		_, err := a.binDetail(ctx, d1)
+		return err
+	}), errBinNotRetained, "terminal payload")
 	var fences, chunks int
 	if err := admin.QueryRow(ctx, `SELECT (SELECT count(*) FROM bin_fences WHERE deletion_id=$1),(SELECT count(*) FROM bin_chunks WHERE deletion_id=$1)`, d1).Scan(&fences, &chunks); err != nil || fences != 1 || chunks != 0 {
 		t.Fatalf("fence %d chunks %d: %v", fences, chunks, err)
@@ -220,6 +228,10 @@ func TestPostgresBinLifecycle(t *testing.T) {
 	revision++
 	exec(`UPDATE bin_entries SET recover_until=clock_timestamp()-interval '1 second' WHERE deletion_id=$1`, d8)
 	is(oneErr(run(hostSession, finish(uuid(117), "restore", head(revision), map[string]int64{d8: 1}))), errBinExpired, "expired restore")
+	is(s.withFiles(ctx, hostSession, func(a fileAccess) error {
+		_, err := a.binChunk(ctx, d8, 0)
+		return err
+	}), errBinExpired, "expired chunk")
 	if err := stage(hostSession, uuid(9)); err != nil {
 		t.Fatal(err)
 	}

@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { aead } from '../../vault/aead';
+import { aead, plaintextCode } from '../../vault/aead';
 import { binOutbox } from '../../vault/bin-outbox';
 import { binDocuments } from '../../vault/bin-store';
 import { importCode } from '../../vault/crypto';
@@ -11,10 +11,10 @@ import { connect, estimateTable, reportTable, vaultTable } from '../../vault/sto
 import type { LocalVault } from '../../vault/vault';
 import { editorSync } from '../editor-sync';
 import { localProjects, newObject, newProject, newSurface } from '../projects';
-import type { RevisionWrite } from '../revisions';
+import type { RevisionHead, RevisionWrite } from '../revisions';
 import type { SavedProjectV2 } from '../types';
 import { readHostedCatalog } from './hosted-catalog';
-import type { HostedCommand } from './hosted-remote';
+import type { HostedChunk, HostedCommand } from './hosted-remote';
 import { localBin } from './local-bin';
 
 const account = '11111111-1111-4111-8111-111111111111';
@@ -23,13 +23,15 @@ const deadline = '2027-01-01T00:00:00Z';
 let vault: LocalVault;
 let controller: AbortController;
 
-/** A stand-in for the hosted revision and Bin endpoints, with receipts like the real server. */
 type Fail = { status: number; error: string } | 'lost';
 let head: number;
 let fails: Fail[];
 let commands: HostedCommand[];
 let revisions: RevisionWrite[];
 let staged: string[];
+let savedHead: RevisionHead;
+let projectId: string;
+const chunks = new Map<string, HostedChunk>();
 const receipts = new Map<string, { digest: string; outcome: unknown }>();
 const committed = new Set<string>();
 
@@ -37,18 +39,37 @@ async function server(input: string | URL | Request, init?: RequestInit) {
   const path = String(input);
   const body = JSON.parse(String(init?.body ?? 'null')) as unknown;
   if (path.endsWith('/revision')) {
+    if (init?.method === 'GET') return Response.json({ epoch, head: savedHead });
+    projectId = path.split('/').at(-2)!;
     const write = body as RevisionWrite;
     revisions.push(write);
     if (write.expected !== head)
       return Response.json({ error: 'revision_conflict' }, { status: 409 });
     head += 1;
-    return Response.json({ epoch, head: { ...write, revision: head } });
+    savedHead = { ...write, revision: head };
+    return Response.json({ epoch, head: savedHead });
   }
   if (path.includes('/bin/staging/')) {
     const deletion = path.split('/').at(-2)!;
     staged.push(path);
     if (committed.has(deletion)) return Response.json({ error: 'not_retained' }, { status: 409 });
+    chunks.set(path.split('/').slice(-2).join('/'), body as HostedChunk);
     return new Response(null, { status: 204 });
+  }
+  if (path.startsWith('/api/v1/bin/')) {
+    const [, , , , deletion, , index] = path.split('/');
+    if (index) return new Response(atob(chunks.get(`${deletion}/${index}`)!.body));
+    const trash = commands.find((cmd) => cmd.trash?.deletionId === deletion)!.trash!;
+    return Response.json({
+      ...trash,
+      projectId,
+      state: 'retained',
+      version: 1,
+      deletedAt: new Date().toISOString(),
+      deletedBy: account,
+      recoverUntil: deadline,
+      capabilities: { read: { allowed: true }, restore: { allowed: true } },
+    });
   }
   const command = body as HostedCommand;
   commands.push(command);
@@ -58,7 +79,7 @@ async function server(input: string | URL | Request, init?: RequestInit) {
   if (fail && fail !== 'lost') return Response.json({ error: fail.error }, { status: fail.status });
   if (command.head && command.head.expected !== head)
     return Response.json({ error: 'stale_revision' }, { status: 409 });
-  if (command.head) head += 1;
+  if (command.head) savedHead = { ...command.head, revision: ++head };
   const id = command.deletionIds[0]!;
   const version = command.intent === 'trash' ? 1 : (command.expectedVersions[id] ?? 0) + 1;
   const outcome = {
@@ -74,7 +95,6 @@ async function server(input: string | URL | Request, init?: RequestInit) {
 }
 
 beforeEach(async () => {
-  vi.stubGlobal('indexedDB', new IDBFactory());
   vi.stubGlobal('fetch', vi.fn(server));
   vi.stubGlobal('navigator', { onLine: true });
   head = 0;
@@ -84,6 +104,12 @@ beforeEach(async () => {
   staged = [];
   receipts.clear();
   committed.clear();
+  chunks.clear();
+  await openDevice();
+});
+
+async function openDevice() {
+  vi.stubGlobal('indexedDB', new IDBFactory());
   controller = new AbortController();
   const signal = controller.signal;
   const root = await importCode('01'.repeat(32));
@@ -102,7 +128,7 @@ beforeEach(async () => {
     binOutbox: () => binOutbox(account, 'stamp', signal),
     revisions: () => revisionQueue(root, account, () => 'stamp', signal),
   } as unknown as LocalVault;
-});
+}
 afterEach(() => controller.abort());
 afterEach(() => {
   aead.enabled = false;
@@ -114,7 +140,6 @@ const local = async () => (await localProjects(vault).list())[0]!;
 const checkpoint = async () => (await vault.revisions().checkpoints())[0]!;
 const entries = async () => (await bin().list()).map(({ entry }) => entry);
 
-/** A synchronised project: the server holds its first head. */
 async function hosted(): Promise<SavedProjectV2> {
   const value = newProject('Chapel', null, null, 'EUR', undefined, account);
   value.objects.push({
@@ -235,7 +260,6 @@ it('keeps the remote source live when the server refuses the deletion', async ()
     stage: 'conflict',
     failure: 'quota_exceeded',
   });
-  // Blocked, but not stale: the deletion must not reach the server without its entry.
   expect(await bin().dispatch('csrf')).toBe(false);
   await sync().stagePending();
   const base = await checkpoint();
@@ -334,10 +358,43 @@ it('finishes a restore whose response was lost from the stored receipt', async (
   expect(commands[2]).toEqual(commands[1]);
   expect(head).toBe(3);
   expect((await local()).objects[0]!.surfaces.map(({ id }) => id)).toContain(surface.id);
-  // The reconciled graph is pushed again by ordinary sync on top of the accepted head.
-  expect(await checkpoint()).toMatchObject({ revision: 3, localRevision: synced });
+  expect(await checkpoint()).toMatchObject({ revision: 3, localRevision: synced + 1 });
   await sync().stagePending();
   await vault.revisions().retry('csrf');
-  expect(revisions.at(-1)).toMatchObject({ expected: 3 });
-  expect(head).toBe(4);
+  expect(head).toBe(3);
+});
+
+it('refreshes a clean device with an older graph before restoring a hosted item', async () => {
+  const before = await hosted();
+  const originalHead = savedHead;
+  const originalText = (await vault.projects().changed(before.id, 0))!.text;
+  const { entry, surface, project } = await trashNorth(before);
+  await bin().dispatch('csrf');
+  await localProjects(vault).save({ ...project!, name: 'Chapel (newer cloud edit)' });
+  await sync().stagePending();
+  await vault.revisions().retry('csrf');
+  controller.abort();
+  await openDevice();
+  await vault.revisions().acceptKey(before.id, originalHead, plaintextCode, originalText);
+  await bin().restoreRemote(account, project!.id, { deletionId: entry.deletionId, version: 1 });
+  expect(await local()).toMatchObject({ name: 'Chapel (newer cloud edit)' });
+  expect((await local()).objects[0]!.surfaces).toEqual(expect.arrayContaining([surface]));
+  expect(await checkpoint()).toMatchObject({ revision: 4, localRevision: 3 });
+  expect(await entries()).toEqual([]);
+});
+
+it('rejects a corrupt hosted bundle before opening a project on a new device', async () => {
+  const { entry, project } = await trashNorth(await hosted());
+  await bin().dispatch('csrf');
+  chunks.set(`${entry.deletionId}/0`, { sha256: '', body: btoa('{}') });
+  controller.abort();
+  await openDevice();
+  await expect(
+    bin().restoreRemote(account, project!.id, {
+      deletionId: entry.deletionId,
+      version: 1,
+    }),
+  ).rejects.toMatchObject({ code: 'incomplete_recovery' });
+  expect(await local()).toBeUndefined();
+  expect(commands).toHaveLength(1);
 });

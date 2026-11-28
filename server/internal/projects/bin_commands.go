@@ -108,6 +108,16 @@ func (a fileAccess) binTrash(ctx context.Context, project string, cmd binCommand
 	if len(t.CoverageMissing) > 0 {
 		return errBinIncomplete
 	}
+	var missingAsset bool
+	if err := a.tx.QueryRow(ctx, `SELECT EXISTS (
+ SELECT 1 FROM unnest($2::uuid[]) AS asset(id) WHERE NOT EXISTS (
+  SELECT 1 FROM encrypted_files f WHERE f.id=asset.id AND f.project_id=$1 AND f.state='committed'
+ ))`, project, t.Assets).Scan(&missingAsset); err != nil {
+		return err
+	}
+	if missingAsset {
+		return errBinIncomplete
+	}
 	var staged int
 	if err := a.tx.QueryRow(ctx, `SELECT count(*) FROM bin_chunks WHERE deletion_id=$1 AND project_id=$2 AND NOT committed AND idx<$3`,
 		t.DeletionID, project, t.ChunkCount).Scan(&staged); err != nil {

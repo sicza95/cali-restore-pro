@@ -2,6 +2,12 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type { BinCatalogEntry } from '../src/platform/api';
+import { context } from '../src/platform/projects/bin/bin-fixtures';
+import { encodeBundle } from '../src/platform/projects/bin/bundle';
+import { captureRecovery } from '../src/platform/projects/bin/capture';
+import { planTrash } from '../src/platform/projects/bin/plan-trash';
+import { newObject, newProject } from '../src/platform/projects/projects';
+import { openRevision, sealRevision } from '../src/platform/projects/revisions';
 import { plaintextCode } from '../src/platform/vault/aead';
 import { importCode, seal } from '../src/platform/vault/crypto';
 import { chooseLanguage } from './app-navigation';
@@ -250,4 +256,122 @@ test('the hosted Bin loads every catalog page and reports an incomplete refresh'
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(row(page, 'Altar')).toHaveCount(0);
   await expect(rows(page)).toHaveCount(1);
+});
+
+test('a fresh browser can restore a hosted object into the latest cloud project', async ({
+  page,
+}) => {
+  await signedIn(page);
+  const { revision, ...project } = newProject('Chapel', null, null, 'EUR', undefined, account);
+  const object = newObject('Altar', 'North wall', account);
+  const deletionId = crypto.randomUUID();
+  const epoch = crypto.randomUUID();
+  const now = Date.now();
+  const plan = planTrash(
+    { ...project, revision, objects: [object] },
+    {
+      kind: 'object',
+      objectId: object.id,
+    },
+    deletionId,
+    context({ scope: 'hosted', organisationId: personal, now }),
+  );
+  const capture = await captureRecovery(plan, {
+    journal: async () => undefined,
+    estimate: async () => undefined,
+    report: async () => undefined,
+    assetBytes: async () => undefined,
+  });
+  const bundle = await encodeBundle(plan, capture, null);
+  const key = { epoch, key: await importCode(plaintextCode) };
+  async function envelope(part: string, text: string) {
+    const { salt, ciphertext } = await seal(key.key, project.id, `bin:${deletionId}:${part}`, text);
+    return { salt, ciphertext };
+  }
+  const accepted = { allowed: true };
+  const entry: BinCatalogEntry = {
+    deletionId,
+    projectId: project.id,
+    entityId: object.id,
+    entityKind: 'object',
+    state: 'retained',
+    version: 1,
+    deletedAt: new Date(now).toISOString(),
+    deletedBy: account,
+    recoverUntil: new Date(plan.entry.recoverUntil).toISOString(),
+    manifestSchema: bundle.ref.schema,
+    manifestSha256: bundle.ref.sha256,
+    coverageMissing: [],
+    sourceRevision: revision,
+    chunkCount: bundle.chunks.length,
+    logicalBytes: bundle.manifest.logicalBytes,
+    display: await envelope('display', JSON.stringify({ name: 'Altar', path: ['Chapel'] })),
+    legacy: false,
+    coverageLegacy: false,
+    capabilities: {
+      read: accepted,
+      restore: accepted,
+      purge: accepted,
+      device_export: { allowed: false },
+    },
+  };
+  const manifest = await envelope('manifest', JSON.stringify(bundle.manifest));
+  const cloud = { ...project, name: 'Chapel (cloud edit)' };
+  const head = {
+    ...(await sealRevision(
+      project.id,
+      { epoch, head: { revision: 2 } },
+      key,
+      JSON.stringify(cloud),
+    )),
+    revision: 3,
+  };
+  let restored = false;
+  await page.route('**/api/v1/organisations/*/bin', (route) =>
+    route.fulfill({
+      json: {
+        entries: restored ? [] : [entry],
+        next: null,
+        asOf: new Date().toISOString(),
+      },
+    }),
+  );
+  await page.route(`**/api/v1/bin/${deletionId}`, (route) =>
+    route.fulfill({ json: { ...entry, manifest } }),
+  );
+  await page.route(`**/api/v1/bin/${deletionId}/chunks/*`, async (route) => {
+    const index = Number(route.request().url().split('/').at(-1));
+    const chunk = Buffer.from(bundle.chunks[index]!).toString('base64');
+    await route.fulfill({
+      contentType: 'application/octet-stream',
+      body: JSON.stringify(await envelope(String(index), chunk)),
+    });
+  });
+  await page.route(`**/api/v1/hosted-projects/${project.id}/revision`, (route) =>
+    route.fulfill({ json: { epoch, head } }),
+  );
+  await page.route(`**/api/v1/hosted-projects/${project.id}/bin/operations`, async (route) => {
+    const command = route.request().postDataJSON();
+    expect(command).toMatchObject({
+      intent: 'restore',
+      expectedVersions: { [deletionId]: 1 },
+      head: { expected: 3 },
+    });
+    const next = { ...command.head, revision: 4 };
+    expect(JSON.parse(await openRevision(project.id, next, key))).toMatchObject({
+      name: cloud.name,
+      objects: [{ id: object.id, name: object.name }],
+    });
+    restored = true;
+    await route.fulfill({
+      json: { versions: { [deletionId]: 2 }, head: next, recoverUntil: {}, cascaded: [] },
+    });
+  });
+  await page.goto(`/organisations/${personal}/bin`);
+  await control(row(page, 'Altar'), 'bin.restore').click();
+  await expect(page.getByRole('status').filter({ hasText: 'Restored “Altar”.' })).toHaveCount(1);
+  await expect(page.locator('.bin-empty')).toHaveText('The Bin is empty.');
+  await page.goto('/projects');
+  await browserReady(page);
+  await expect(browserItem(page, cloud.name)).toBeVisible();
 });

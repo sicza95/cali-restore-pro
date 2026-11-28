@@ -118,7 +118,10 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
     setBusy(row.entry.deletionId);
     setError(undefined);
     try {
-      await bin.restore(row.entry.deletionId);
+      const { deletionId, version, entity } = row.entry;
+      if (row.remoteRestore)
+        await bin.restoreRemote(props.organisation, entity.projectId, { deletionId, version });
+      else await bin.restore(deletionId);
       setAnnouncement(copy().restored(row.name));
       await refetch();
     } catch (failure) {
