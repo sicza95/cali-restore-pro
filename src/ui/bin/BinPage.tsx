@@ -1,5 +1,15 @@
-import { createMemo, createResource, createSignal, Match, Show, Switch, untrack } from 'solid-js';
+import {
+  createMemo,
+  createResource,
+  createSignal,
+  Match,
+  onCleanup,
+  Show,
+  Switch,
+  untrack,
+} from 'solid-js';
 import { BinError } from '../../platform/projects/bin/errors';
+import { readHostedCatalog } from '../../platform/projects/bin/hosted-catalog';
 import { localBin } from '../../platform/projects/bin/local-bin';
 import type { LocalVault } from '../../platform/vault/vault';
 import { useApp } from '../app-context/AppContext';
@@ -14,12 +24,13 @@ import {
   binRows,
   failureText,
   forOrganisation,
+  mergeHostedRows,
   visibleRows,
   type BinOrder,
   type BinRow,
 } from './utils';
 
-/** `/organisations/<id>/bin`: this device's recoverable deletions for one organisation. */
+/** Local and hosted deletions for one organisation. */
 export function BinPage(props: { vault: LocalVault; account: string; organisation: string }) {
   const app = useApp();
   const orgs = useOrganisations();
@@ -30,13 +41,35 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
     Date.now,
     () => app.csrf(),
   );
-  // Deadlines are enforced on read: expired entries are removed before listing. Queued hosted
-  // deletions are sent first, so their state is current.
+  const lifetime = new AbortController();
+  let request: AbortController | undefined;
   const [entries, { refetch }] = createResource(async () => {
+    request?.abort();
+    const current = (request = new AbortController());
+    const signal = AbortSignal.any([lifetime.signal, current.signal]);
     const token = app.csrf();
     if (token && navigator.onLine) await bin.dispatch(token).catch(() => undefined);
-    await bin.expire().catch(() => undefined);
-    return bin.list();
+    signal.throwIfAborted();
+    const [device, hosted] = await Promise.allSettled([
+      bin
+        .expire()
+        .catch(() => undefined)
+        .then(() => bin.list()),
+      navigator.onLine
+        ? readHostedCatalog(props.organisation, props.vault, signal)
+        : Promise.reject(new BinError('offline')),
+    ]);
+    return { device, hosted };
+  });
+  const refresh = () => void refetch();
+  window.addEventListener('online', refresh);
+  window.addEventListener('offline', refresh);
+  window.addEventListener('focus', refresh);
+  onCleanup(() => {
+    lifetime.abort();
+    window.removeEventListener('online', refresh);
+    window.removeEventListener('offline', refresh);
+    window.removeEventListener('focus', refresh);
   });
   const [find, setFind] = createSignal('');
   const [order, setOrder] = createSignal<BinOrder>('newest');
@@ -55,9 +88,21 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
   });
   const rows = createMemo(() => {
     const known = new Set(orgs.list().map(({ id }) => id));
-    const all = binRows(entries() ?? [], Date.now());
-    return forOrganisation(all, props.organisation, organisation()?.personal ?? false, known);
+    const now = Date.now();
+    const result = entries.latest;
+    const device = result?.device.status === 'fulfilled' ? result.device.value : [];
+    const local = forOrganisation(
+      device,
+      props.organisation,
+      organisation()?.personal ?? false,
+      known,
+    );
+    const hosted =
+      !entries.loading && result?.hosted.status === 'fulfilled' ? result.hosted.value : [];
+    return mergeHostedRows(binRows(local, now), hosted, copy(), now);
   });
+  const incomplete = () =>
+    entries.latest?.device.status === 'rejected' || entries.latest?.hosted.status === 'rejected';
   const shown = () => visibleRows(rows(), find(), order(), app.lang());
   const cascade = (row: BinRow) =>
     row.entry.entity.kind === 'project'
@@ -69,6 +114,7 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
       : 0;
 
   async function restore(row: BinRow) {
+    if (!rows().some((current) => current === row && !current.restoreDenied)) return;
     setBusy(row.entry.deletionId);
     setError(undefined);
     try {
@@ -82,6 +128,17 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
     }
   }
   async function purge(row: BinRow) {
+    if (
+      !rows().some(
+        (current) =>
+          current.entry.deletionId === row.entry.deletionId &&
+          current.entry.version === row.entry.version &&
+          !current.purgeDenied,
+      )
+    ) {
+      setError(copy().failures.stale_revision);
+      return;
+    }
     setBusy(row.entry.deletionId);
     setError(undefined);
     try {
@@ -129,28 +186,30 @@ export function BinPage(props: { vault: LocalVault; account: string; organisatio
           {error()}
         </p>
       </Show>
-      <Switch>
-        <Match when={entries.loading && !entries.latest}>
-          <p role="status">{copy().loading}</p>
-        </Match>
-        <Match when={entries.error}>
-          <p role="alert">{copy().failed}</p>
-          <button
-            type="button"
-            class="cr-button"
-            data-control-id="bin.retry"
-            onClick={() => void refetch()}
-          >
+      <Show when={!entries.loading && incomplete()}>
+        <div class="browser-diagnostics" role="status">
+          <Show when={entries.latest?.device.status === 'rejected'}>
+            <p>{copy().failed}</p>
+          </Show>
+          <Show when={entries.latest?.hosted.status === 'rejected'}>
+            <p>{copy().hostedUnavailable}</p>
+          </Show>
+          <button type="button" class="cr-button" data-control-id="bin.retry" onClick={refresh}>
             {copy().retry}
           </button>
+        </div>
+      </Show>
+      <Switch>
+        <Match when={entries.loading && !rows().length}>
+          <p role="status">{copy().loading}</p>
         </Match>
-        <Match when={!rows().length}>
+        <Match when={!rows().length && !incomplete()}>
           <p class="bin-empty">{copy().empty}</p>
         </Match>
-        <Match when={!shown().length}>
+        <Match when={!shown().length && !incomplete() && !entries.loading}>
           <p class="bin-empty">{copy().noMatch}</p>
         </Match>
-        <Match when={true}>
+        <Match when={shown().length > 0}>
           <BinList
             language={app.lang()}
             rows={shown()}

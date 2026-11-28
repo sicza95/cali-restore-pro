@@ -1,7 +1,7 @@
 import { For, Show } from 'solid-js';
 import type { Language } from '../../platform/i18n/language';
 import { binCopy } from './bin-copy';
-import { pathText, type BinRow } from './utils';
+import { commandReason, pathText, type BinRow } from './utils';
 import './bin.css';
 
 export type BinListProps = {
@@ -32,8 +32,9 @@ export function BinList(props: BinListProps) {
               ? copy().failures.expired
               : pending()?.stage === 'dispatched'
                 ? copy().failures.pending_sync
-                : undefined;
-          const purgeReason = () => (pending() ? copy().failures.pending_sync : undefined);
+                : commandReason(copy(), row.restoreDenied);
+          const purgeReason = () =>
+            pending() ? copy().failures.pending_sync : commandReason(copy(), row.purgeDenied);
           const syncText = () => {
             const state = pending();
             if (!state) return row.entry.scope === 'hosted' ? copy().hosted : undefined;

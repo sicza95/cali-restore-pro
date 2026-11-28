@@ -23,26 +23,25 @@ const entry = (id: string, organisationId: string | null, deletedAt: number): Bi
 });
 
 it('derives deadlines, filters by organisation and orders without dropping rows', () => {
-  const rows = binRows(
-    [
-      { entry: entry('a', null, 0), display: { name: 'Alpha', path: [] } },
-      { entry: entry('b', 'org', 10 * day), display: { name: 'Beta', path: ['Chapel'] } },
-      { entry: entry('c', 'gone', 20 * day), display: { name: 'Gamma', path: [] } },
-      { entry: { ...entry('d', null, 0), state: 'restored' }, display: { name: 'Done', path: [] } },
-    ],
-    30 * day,
-  );
+  const entries: Parameters<typeof binRows>[0] = [
+    { entry: entry('a', null, 0), display: { name: 'Alpha', path: [] } },
+    { entry: entry('b', 'org', 10 * day), display: { name: 'Beta', path: ['Chapel'] } },
+    { entry: entry('c', 'gone', 20 * day), display: { name: 'Gamma', path: [] } },
+    { entry: { ...entry('d', null, 0), state: 'restored' }, display: { name: 'Done', path: [] } },
+  ];
+  const rows = binRows(entries, 30 * day);
   expect(rows.map(({ name, state, days }) => [name, state, days])).toEqual([
     ['Alpha', 'expired', 0],
     ['Beta', 'recoverable', 10],
     ['Gamma', 'recoverable', 20],
   ]);
   const known = new Set(['personal', 'org']);
-  expect(forOrganisation(rows, 'personal', true, known).map(({ name }) => name)).toEqual([
-    'Alpha',
-    'Gamma',
-  ]);
-  expect(forOrganisation(rows, 'org', false, known).map(({ name }) => name)).toEqual(['Beta']);
+  expect(
+    binRows(forOrganisation(entries, 'personal', true, known), 30 * day).map(({ name }) => name),
+  ).toEqual(['Alpha', 'Gamma']);
+  expect(
+    binRows(forOrganisation(entries, 'org', false, known), 30 * day).map(({ name }) => name),
+  ).toEqual(['Beta']);
   expect(visibleRows(rows, '', 'newest', 'en').map(({ name }) => name)).toEqual([
     'Gamma',
     'Beta',

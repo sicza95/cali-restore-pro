@@ -5,9 +5,13 @@ const en = {
   title: 'Bin',
   intro:
     'Deleted projects, objects and surfaces stay here for 30 days. Restore puts them back where they were; after the deadline they are removed.',
-  scope:
-    'Items deleted on this device. Deleted objects and surfaces of synchronised projects are also kept on the server.',
-  hosted: 'Also kept on the server',
+  scope: 'Shows items deleted on this device and hosted items you can manage.',
+  hosted: 'Kept on the server',
+  hostedUnavailable: 'Hosted items could not be loaded. Items from this device may still appear.',
+  unnamed: { project: 'Deleted project', object: 'Deleted object', surface: 'Deleted surface' },
+  pathUnavailable: 'Original place unavailable',
+  deviceCopyRequired: 'This action requires a recovery copy on this device.',
+  limitedRecovery: 'Some saved content was unavailable when this item was deleted.',
   sync: {
     queued: 'Waiting to sync to the server',
     dispatched: 'Sending to the server…',
@@ -57,6 +61,8 @@ const en = {
   recoverable: 'Can be restored',
   purgeTitle: (name: string) => `Permanently delete “${name}”?`,
   purgeHelp: 'This removes the item and its saved recovery data from this device.',
+  hostedPurgeHelp:
+    'This removes the item and its saved recovery data from the server and this device.',
   purgeCascade: (count: number) =>
     count === 1
       ? 'One more item of this project in the Bin is removed with it.'
@@ -93,8 +99,14 @@ export const binCopy = defineCopy({
     intro:
       'A törölt projektek, objektumok és felületek 30 napig itt maradnak. A visszaállítás az eredeti helyükre teszi őket; a határidő után eltávolítjuk őket.',
     scope:
-      'Ezen az eszközön törölt elemek. A szinkronizált projektek törölt objektumai és felületei a szerveren is megmaradnak.',
-    hosted: 'A szerveren is megőrizve',
+      'Az ezen az eszközön törölt elemeket és az általad kezelhető szerveres elemeket mutatja.',
+    hosted: 'A szerveren megőrizve',
+    hostedUnavailable:
+      'A szerveres elemek nem tölthetők be. Az eszközön lévő elemek továbbra is megjelenhetnek.',
+    unnamed: { project: 'Törölt projekt', object: 'Törölt objektum', surface: 'Törölt felület' },
+    pathUnavailable: 'Az eredeti hely nem érhető el',
+    deviceCopyRequired: 'Ehhez a művelethez helyreállítási másolat szükséges ezen az eszközön.',
+    limitedRecovery: 'A törléskor a mentett tartalom egy része nem volt elérhető.',
     sync: {
       queued: 'Szinkronizálásra vár a szerverre',
       dispatched: 'Küldés a szerverre…',
@@ -145,6 +157,8 @@ export const binCopy = defineCopy({
     recoverable: 'Visszaállítható',
     purgeTitle: (name: string) => `Véglegesen törlöd: „${name}”?`,
     purgeHelp: 'Ez eltávolítja az elemet és a mentett helyreállítási adatait erről az eszközről.',
+    hostedPurgeHelp:
+      'Ez eltávolítja az elemet és mentett helyreállítási adatait a szerverről és erről az eszközről.',
     purgeCascade: (count: number) =>
       `A projekt további ${count} lomtárbeli eleme is törlődik vele.`,
     cannotUndo: 'Ez nem vonható vissza.',

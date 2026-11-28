@@ -4,20 +4,14 @@ import { formatFileSize } from '../../platform/format/number';
 import { DialogItem } from '../projects/browser/dialogs/DialogItem';
 import { DialogShell } from '../projects/browser/dialogs/DialogShell';
 import { binCopy } from './bin-copy';
-import { pathText, type BinRow } from './utils';
+import { commandReason, pathText, type BinRow } from './utils';
 
 const date = (language: Language, value: number) =>
   new Intl.DateTimeFormat(language, { dateStyle: 'long', timeStyle: 'short' }).format(value);
 
 /** Read-only details: no editing, renaming or thumbnail controls. */
-export function BinInfoDialog(props: {
-  language: Language;
-  row: BinRow;
-  size?: number;
-  onClose: () => void;
-}) {
+export function BinInfoDialog(props: { language: Language; row: BinRow; onClose: () => void }) {
   const copy = () => binCopy[props.language];
-  const counts = () => props.row.entry.counts;
   return (
     <DialogShell
       title={copy().info}
@@ -41,15 +35,26 @@ export function BinInfoDialog(props: {
         <dt>{copy().recoverUntil}</dt>
         <dd>{date(props.language, props.row.entry.recoverUntil)}</dd>
         <dt>{copy().availability}</dt>
-        <dd>{props.row.state === 'expired' ? copy().expired : copy().recoverable}</dd>
-        <Show when={props.row.entry.entity.kind !== 'surface'}>
-          <dt>{copy().contentsLabel}</dt>
-          <dd>{copy().contents(counts().objects, counts().surfaces, counts().photos)}</dd>
+        <dd>
+          {props.row.state === 'expired'
+            ? copy().expired
+            : (commandReason(copy(), props.row.restoreDenied) ?? copy().recoverable)}
+        </dd>
+        <Show when={props.row.limitedRecovery}>
+          <dd>{copy().limitedRecovery}</dd>
         </Show>
-        <Show when={props.size !== undefined}>
+        <Show when={props.row.entry.entity.kind !== 'surface' && props.row.counts} keyed>
+          {(counts) => (
+            <>
+              <dt>{copy().contentsLabel}</dt>
+              <dd>{copy().contents(counts.objects, counts.surfaces, counts.photos)}</dd>
+            </>
+          )}
+        </Show>
+        <Show when={props.row.size !== undefined}>
           <dt>{copy().size}</dt>
-          <dd title={`${props.size} B`}>
-            {formatFileSize(props.size!, props.language)}
+          <dd title={`${props.row.size} B`}>
+            {formatFileSize(props.row.size!, props.language)}
             <small>{copy().sizeHelp}</small>
           </dd>
         </Show>
@@ -91,7 +96,7 @@ export function BinPurgeDialog(props: {
           kind={props.row.entry.entity.kind}
           name={props.row.name}
         >
-          <p>{copy().purgeHelp}</p>
+          <p>{props.row.entry.scope === 'hosted' ? copy().hostedPurgeHelp : copy().purgeHelp}</p>
         </DialogItem>
       }
     >

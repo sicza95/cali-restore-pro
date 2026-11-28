@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { aead } from '../../vault/aead';
 import { binOutbox } from '../../vault/bin-outbox';
 import { binDocuments } from '../../vault/bin-store';
 import { importCode } from '../../vault/crypto';
@@ -12,6 +13,7 @@ import { editorSync } from '../editor-sync';
 import { localProjects, newObject, newProject, newSurface } from '../projects';
 import type { RevisionWrite } from '../revisions';
 import type { SavedProjectV2 } from '../types';
+import { readHostedCatalog } from './hosted-catalog';
 import type { HostedCommand } from './hosted-remote';
 import { localBin } from './local-bin';
 
@@ -102,6 +104,9 @@ beforeEach(async () => {
   } as unknown as LocalVault;
 });
 afterEach(() => controller.abort());
+afterEach(() => {
+  aead.enabled = false;
+});
 
 const bin = () => localBin(vault, account, Date.now, () => 'csrf');
 const sync = () => editorSync(vault);
@@ -178,6 +183,33 @@ it('replays the identical command after a lost response instead of a new revisio
   expect(commands[1]).toEqual(commands[0]);
   expect(head).toBe(2);
   expect((await entries())[0]).toMatchObject({ provisional: false, pending: null });
+});
+
+it('opens catalog display data using the saved project key and the deletion identity', async () => {
+  aead.enabled = true;
+  const project = await hosted();
+  const { entry } = await trashNorth(project);
+  await bin().dispatch('csrf');
+  const valid = {
+    projectId: project.id,
+    deletionId: entry.deletionId,
+    display: commands[0]!.trash!.display,
+    capabilities: { read: { allowed: true } },
+  };
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() =>
+      Response.json({
+        entries: [valid, { ...valid, deletionId: crypto.randomUUID() }],
+        next: null,
+      }),
+    ),
+  );
+  const catalog = await readHostedCatalog(account, vault, controller.signal);
+  expect(catalog.map(({ display }) => display)).toEqual([
+    { name: 'North', path: ['Chapel', 'Altar'] },
+    undefined,
+  ]);
 });
 
 it('marks a stale head as a conflict and lets ordinary sync raise the review', async () => {

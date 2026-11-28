@@ -1,3 +1,4 @@
+import type { BinCatalog } from '../../api';
 import { assertID } from '../../vault/file-format';
 import type { RevisionHead, RevisionWrite } from '../revisions';
 import { BinError } from './errors';
@@ -67,15 +68,15 @@ async function failure(response: Response) {
 
 /** Hosted Bin endpoints. Writes carry the session CSRF token; every response is no-store. */
 export function hostedRemote(signal: AbortSignal) {
-  async function send(path: string, method: string, csrf: string, body: unknown) {
+  async function send(path: string, write?: { method: string; csrf: string; body: unknown }) {
     let response: Response;
     try {
       response = await fetch(path, {
-        method,
-        body: JSON.stringify(body),
+        method: write?.method ?? 'GET',
+        body: write && JSON.stringify(write.body),
         cache: 'no-store',
         redirect: 'error',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        headers: write && { 'Content-Type': 'application/json', 'X-CSRF-Token': write.csrf },
         signal,
       });
     } catch (error) {
@@ -86,6 +87,22 @@ export function hostedRemote(signal: AbortSignal) {
     return response;
   }
   return {
+    async catalog(organisation: string) {
+      assertID(organisation);
+      const entries: BinCatalog['entries'] = [];
+      const cursors = new Set<string>();
+      let before: string | null = null;
+      do {
+        const query = before ? `?before=${encodeURIComponent(before)}` : '';
+        const response = await send(`/api/v1/organisations/${organisation}/bin${query}`);
+        const page = (await response.json()) as BinCatalog;
+        entries.push(...page.entries);
+        before = page.next;
+        if (before && cursors.has(before)) throw new Error('Repeated Bin catalog cursor');
+        if (before) cursors.add(before);
+      } while (before);
+      return entries;
+    },
     /** Staging is idempotent until commit; a committed chunk answers `not_retained`. */
     async stage(
       project: string,
@@ -96,22 +113,20 @@ export function hostedRemote(signal: AbortSignal) {
     ) {
       assertID(project);
       assertID(deletion);
-      await send(
-        `/api/v1/hosted-projects/${project}/bin/staging/${deletion}/${index}`,
-        'PUT',
+      await send(`/api/v1/hosted-projects/${project}/bin/staging/${deletion}/${index}`, {
+        method: 'PUT',
         csrf,
-        chunk,
-      );
+        body: chunk,
+      });
     },
     /** An identical retry of a committed operation returns its stored receipt. */
     async execute(project: string, command: HostedCommand, csrf: string) {
       assertID(project);
-      const response = await send(
-        `/api/v1/hosted-projects/${project}/bin/operations`,
-        'POST',
+      const response = await send(`/api/v1/hosted-projects/${project}/bin/operations`, {
+        method: 'POST',
         csrf,
-        command,
-      );
+        body: command,
+      });
       return (await response.json()) as HostedOutcome;
     },
   };
